@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/logo-bullweb.png" />
+    <link rel="apple-touch-icon" href="/logo-bullweb.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#1B2B5E" />
+    <meta name="description" content="BullWeb Chile — Sistema POS profesional para restaurantes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="BullWeb Chile" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta property="og:image" content="https://www.bullwebchile.com/images/bullweb-logo.png" />
+    <link rel="manifest" href="/manifest-mesero.json" id="mesero-manifest" />
+    <title>BullWeb Chile | POS para Restaurantes</title>
+  </head>
+  <body>
+    <script>
+    (function(){
+      var isMesero = location.pathname.startsWith('/mesero');
+      if (isMesero) {
+        var def = document.querySelector('link[rel="manifest"][href="/manifest.webmanifest"]');
+        if (def) def.remove();
+        var tc = document.querySelector('meta[name="theme-color"]');
+        if (tc) tc.setAttribute('content', '#f97316');
+        var at = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+        if (at) at.setAttribute('content', 'BullWeb Mesero');
+      } else {
+        var mm = document.getElementById('mesero-manifest');
+        if (mm) mm.remove();
+      }
+    })();
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

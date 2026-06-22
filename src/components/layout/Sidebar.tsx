@@ -172,8 +172,7 @@ const adminSections: MenuSection[] = [
     title: 'Seguridad',
     superAdminOnly: true,
     items: [
-      // Auditoría, Sesiones y API Keys son herramientas técnicas — ocultas
-      { name: '2FA',       icon: Lock,              path: '/admin/2fa'      },
+      { name: '2FA', icon: Lock, path: '/admin/2fa' },
     ]
   },
   {
@@ -201,6 +200,12 @@ const adminSections: MenuSection[] = [
     ]
   },
   {
+    title: 'Cumplimiento',
+    items: [
+      { name: 'Auditoría', icon: FileText, path: '/admin/audit', permission: 'audit.view' },
+    ]
+  },
+  {
     title: 'Infraestructura',
     superAdminOnly: true,
     items: [
@@ -224,7 +229,6 @@ const adminSections: MenuSection[] = [
       { name: 'Feature Flags',  icon: Cpu,      path: '/admin/feature-flags' },
       { name: 'API Playground', icon: Monitor,  path: '/admin/api-playground'},
       { name: 'Integraciones',  icon: Plug2,    path: '/admin/integrations'  },
-      { name: 'Audit',          icon: FileText, path: '/admin/audit'         },
       { name: 'Audit Trail',    icon: FileText, path: '/admin/audit-trail'   },
     ]
   },
@@ -353,7 +357,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <nav className="flex-1 overflow-y-auto py-4 px-3">
               <div className="space-y-5">
                 {adminSections
-                  .filter(s => !s.superAdminOnly || isSuperAdmin)
+                  .filter(s => (!s.superAdminOnly || isSuperAdmin) && s.items.some(i => (!i.superAdminOnly || isSuperAdmin) && canSee(i.permission)))
                   .map(section => (
                   <div key={section.title}>
                     <p className="px-2 mb-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
@@ -361,7 +365,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                     </p>
                     <div className="space-y-0.5">
                       {section.items
-                        .filter(item => !item.superAdminOnly || isSuperAdmin)
+                        .filter(item => (!item.superAdminOnly || isSuperAdmin) && canSee(item.permission))
                         .map(item => {
                         const Icon    = item.icon;
                         const active  = location.pathname === item.path ||
@@ -446,13 +450,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
           <div>
             {visibleSections.map((section, sIdx) => (
               <div key={section.title}>
-                <div className="flex items-center gap-2 px-4 pt-2 pb-0.5">
-                  <p className="text-[10px] font-bold tracking-[0.15em] uppercase text-white/30 whitespace-nowrap">
+                <div className={cn('flex items-center gap-2 px-4 pb-1', sIdx === 0 ? 'pt-2' : 'mt-6')}>
+                  <p className="text-xs font-bold tracking-wider uppercase text-white/40 whitespace-nowrap">
                     {section.title}
                   </p>
                   <div className="flex-1 h-px bg-white/[0.08]" />
                 </div>
-                <div className="space-y-0.5">
+                <div className="space-y-1 px-1">
                   {section.items.map((item) => {
                     const Icon        = item.icon;
                     const isActive    = location.pathname === item.path;
@@ -464,18 +468,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           to={item.path}
                           onClick={() => { if (window.innerWidth < 1024) onClose(); }}
                           className={cn(
-                          'relative flex items-center gap-3 px-4 py-1.5 rounded-xl mx-1',
-                            'text-sm font-medium transition-all duration-150',
+                          'relative flex items-center gap-3 px-3 py-2 rounded-xl',
+                            'text-sm font-medium transition-all duration-150 border-l-4',
                             isActive || childActive
-                              ? 'bg-white/10 text-white'
-                              : 'text-white/60 hover:text-white hover:bg-white/5'
+                              ? 'bg-white/10 text-white border-orange-500'
+                              : 'text-white/60 hover:text-white hover:bg-white/5 border-transparent'
                           )}
                         >
-                          {(isActive || childActive) && (
-                            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-orange-500 rounded-r-full" />
-                          )}
                           <Icon className={cn(
-                            'h-4 w-4 flex-shrink-0',
+                            'w-5 h-5 flex-shrink-0',
                             isActive || childActive
                               ? 'text-orange-400'
                               : (section.colorClass ?? 'text-white/40')
@@ -505,12 +506,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                     type="button"
                                     onClick={() => { window.open(resolvedPath, '_blank'); if (window.innerWidth < 1024) onClose(); }}
                                     className={cn(
-                                      'relative flex items-center gap-3 px-4 py-1.5 rounded-xl w-full',
+                                      'relative flex items-center gap-3 px-3 py-2 rounded-xl w-full border-l-4 border-transparent',
                                       'text-sm font-medium transition-all duration-150',
                                       'text-white/60 hover:text-white hover:bg-white/5'
                                     )}
                                   >
-                                    <SubIcon className={cn('h-3.5 w-3.5 flex-shrink-0', section.colorClass ?? 'text-white/40')} />
+                                    <SubIcon className={cn('w-4 h-4 flex-shrink-0', section.colorClass ?? 'text-white/40')} />
                                     <span>{sub.name}</span>
                                   </button>
                                 );
@@ -521,18 +522,15 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                                   to={sub.path}
                                   onClick={() => window.innerWidth < 1024 && onClose()}
                                   className={cn(
-                                    'relative flex items-center gap-3 px-4 py-1.5 rounded-xl',
-                                    'text-sm font-medium transition-all duration-150',
+                                    'relative flex items-center gap-3 px-3 py-2 rounded-xl',
+                                    'text-sm font-medium transition-all duration-150 border-l-4',
                                     isSubActive
-                                      ? 'bg-white/10 text-white'
-                                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                                      ? 'bg-white/10 text-white border-orange-500'
+                                      : 'text-white/60 hover:text-white hover:bg-white/5 border-transparent'
                                   )}
                                 >
-                                  {isSubActive && (
-                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-orange-500 rounded-r-full" />
-                                  )}
                                   <SubIcon className={cn(
-                                    'h-3.5 w-3.5 flex-shrink-0',
+                                    'w-4 h-4 flex-shrink-0',
                                     isSubActive ? 'text-orange-400' : (section.colorClass ?? 'text-white/40')
                                   )} />
                                   <span>{sub.name}</span>

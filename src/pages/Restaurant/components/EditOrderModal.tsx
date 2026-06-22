@@ -8,6 +8,7 @@ import { X, Search, Plus, Minus, Trash2, Pencil, Star } from 'lucide-react';
 import type { Product, ProductCategory, CartItem } from '../../../types/restaurant.types';
 import type { Sale, SaleItem } from '../../../types/sales.types';
 import { restaurantService } from '../../../services/restaurantService';
+import { useRemovalReason } from '../../../hooks/useRemovalReason';
 
 interface EditOrderModalProps {
   order: Sale;
@@ -33,6 +34,9 @@ export const EditOrderModal = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // ── Hook para pedir motivo de eliminación (batch) ──
+  const { promptReason, modalElement: removalReasonModal } = useRemovalReason();
 
   const orderType = (order as any).type === 'delivery' ? 'delivery' : 'mostrador';
   const accent = orderType === 'delivery' ? 'purple' : 'blue';
@@ -95,11 +99,19 @@ export const EditOrderModal = ({
   /* ── Guardar cambios ── */
   const handleSave = async () => {
     if (!hasChanges) { onClose(); return; }
+
+    // Si hay eliminaciones, pedir motivo obligatorio (único para todo el lote)
+    let reason = '';
+    if (pendingDeletes.size > 0) {
+      reason = (await promptReason(`${pendingDeletes.size} producto(s)`)) ?? '';
+      if (!reason) return; // cancelado
+    }
+
     setLoading(true);
     setError('');
     try {
       for (const itemId of Array.from(pendingDeletes)) {
-        await restaurantService.removeItemFromOrder(order.id, itemId);
+        await restaurantService.removeItemFromOrder(order.id, itemId, reason);
       }
       if (newCart.length > 0) {
         await restaurantService.addItemsToSale(order.id, newCart.map(item => ({
@@ -149,7 +161,7 @@ export const EditOrderModal = ({
             <div>
               <h2 className="font-bold text-base leading-tight">Editar Venta #{orderNum}</h2>
               <p className={`${accentText} text-xs`}>
-                {existingItems.length} producto{existingItems.length !== 1 ? 's' : ''} · {(order as any).customerName || ''}
+                {existingItems.filter(i => !i.isCancelled).length} producto{existingItems.filter(i => !i.isCancelled).length !== 1 ? 's' : ''} · {(order as any).customerName || ''}
               </p>
             </div>
           </div>
@@ -174,36 +186,55 @@ export const EditOrderModal = ({
                 <p className="text-xs text-gray-400 italic">Sin productos</p>
               )}
               {existingItems.map(item => {
-                const isMarked = pendingDeletes.has(item.id);
+                const isMarked  = pendingDeletes.has(item.id);
+                const cancelled = !!item.isCancelled;
                 return (
                   <div
                     key={item.id}
                     className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border transition-all ${
-                      isMarked
-                        ? 'bg-red-50 border-red-200'
-                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                      cancelled
+                        ? 'bg-slate-50 border-slate-200'
+                        : isMarked
+                          ? 'bg-red-50 border-red-200'
+                          : 'bg-gray-50 border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    <span className={`w-6 text-sm font-bold flex-shrink-0 ${isMarked ? 'text-red-400 line-through' : 'text-gray-500'}`}>
+                    <span className={`w-6 text-sm font-bold flex-shrink-0 ${
+                      cancelled ? 'text-slate-300 line-through'
+                      : isMarked ? 'text-red-400 line-through' : 'text-gray-500'
+                    }`}>
                       {item.quantity}×
                     </span>
-                    <span className={`flex-1 text-sm truncate ${isMarked ? 'line-through text-red-400' : 'text-gray-900 font-medium'}`}>
-                      {item.productName}
-                    </span>
-                    <span className={`text-sm font-bold whitespace-nowrap flex-shrink-0 ${isMarked ? 'line-through text-red-400' : 'text-gray-700'}`}>
+                    <div className="flex-1 min-w-0">
+                      <span className={`text-sm truncate block ${
+                        cancelled ? 'line-through text-slate-400'
+                        : isMarked ? 'line-through text-red-400' : 'text-gray-900 font-medium'
+                      }`}>
+                        {item.productName}
+                      </span>
+                      {cancelled && item.cancelReason && (
+                        <span className="text-[11px] text-red-500">✕ {item.cancelReason}</span>
+                      )}
+                    </div>
+                    <span className={`text-sm font-bold whitespace-nowrap flex-shrink-0 ${
+                      cancelled ? 'line-through text-slate-400'
+                      : isMarked ? 'line-through text-red-400' : 'text-gray-700'
+                    }`}>
                       ${fmt(item.total ?? (item as any).subtotal ?? 0)}
                     </span>
-                    <button
-                      onClick={() => toggleDelete(item.id)}
-                      title={isMarked ? 'Deshacer' : 'Eliminar'}
-                      className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                        isMarked
-                          ? 'bg-red-200 text-red-600 hover:bg-red-300'
-                          : 'bg-gray-200 text-gray-500 hover:bg-red-100 hover:text-red-500'
-                      }`}
-                    >
-                      {isMarked ? <Plus size={12} /> : <Trash2 size={12} />}
-                    </button>
+                    {!cancelled && (
+                      <button
+                        onClick={() => toggleDelete(item.id)}
+                        title={isMarked ? 'Deshacer' : 'Eliminar'}
+                        className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                          isMarked
+                            ? 'bg-red-200 text-red-600 hover:bg-red-300'
+                            : 'bg-gray-200 text-gray-500 hover:bg-red-100 hover:text-red-500'
+                        }`}
+                      >
+                        {isMarked ? <Plus size={12} /> : <Trash2 size={12} />}
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -369,6 +400,9 @@ export const EditOrderModal = ({
           </button>
         </div>
       </div>
+
+      {/* Modal de motivo de eliminación (batch) */}
+      {removalReasonModal}
     </>
   );
 };

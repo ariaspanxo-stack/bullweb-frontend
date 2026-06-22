@@ -291,7 +291,7 @@ export default function App() {
               <Route path="propina"         element={<TipSettingsPanel />} />
               <Route path="mesero-app"      element={<MeseroAppPage />} />
               {/* ── Rutas exclusivas SuperAdmin ─────────────────────────────────── */}
-              <Route path="audit"           element={<SuperAdminRoute><AuditLogPanel /></SuperAdminRoute>} />
+              <Route path="audit"           element={<PermissionGuard permission="audit.view"><AuditLogPanel /></PermissionGuard>} />
               <Route path="branches"        element={<SuperAdminRoute><Branches /></SuperAdminRoute>} />
               <Route path="keys"            element={<SuperAdminRoute><ApiKeys /></SuperAdminRoute>} />
               <Route path="webhooks"        element={<SuperAdminRoute><Webhooks /></SuperAdminRoute>} />

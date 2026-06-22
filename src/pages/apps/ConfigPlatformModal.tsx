@@ -120,7 +120,7 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
 
         {/* Progress */}
         <div className="flex gap-0 border-b">
-          {(['Credenciales', 'Test conexión', 'Activar'] as const).map((label, i) => (
+          {(['Credenciales', 'Validar datos', 'Activar'] as const).map((label, i) => (
             <div
               key={label}
               className={`flex-1 py-2 text-xs font-medium text-center transition-colors ${
@@ -189,7 +189,7 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
           {step === 2 && (
             <>
               <p className="text-sm text-gray-500">
-                Haz clic en <strong>Probar conexión</strong> para verificar que las credenciales son correctas.
+                Haz clic en <strong>Validar datos</strong> para confirmar que las credenciales requeridas están guardadas. No se realiza una llamada real a la API externa.
               </p>
 
               {testResult && (
@@ -213,8 +213,8 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2.5 font-medium transition-colors disabled:opacity-50"
                 >
                   {testMutation.isPending
-                    ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Probando...</span>
-                    : '🔗 Probar conexión'}
+                    ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Validando...</span>
+                    : '✓ Validar datos'}
                 </button>
                 {testResult?.ok && (
                   <button onClick={() => setStep(3)} className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-lg py-2.5 font-medium">
@@ -231,7 +231,7 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
               <div className="bg-green-50 rounded-lg p-4 flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-green-800">¡Conexión verificada!</p>
+                  <p className="text-sm font-medium text-green-800">¡Credenciales guardadas!</p>
                   <p className="text-xs text-green-600 mt-0.5">Ahora configura el webhook en la plataforma.</p>
                 </div>
               </div>

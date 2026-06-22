@@ -78,7 +78,7 @@ export function RestaurantProfilePage() {
     try {
       const fd = new FormData();
       fd.append('logo', file);
-      const r: any = await (api as any).postForm('/tenant/profile/logo', fd);
+      const r: any = await api.postForm('/tenant/profile/logo', fd);
       const url = r?.data?.logo_url ?? r?.logo_url ?? r?.data?.data?.logo_url;
       if (url) setProfile(p => p ? { ...p, logo_url: url } : p);
       toast.success('Logo actualizado');

@@ -158,7 +158,7 @@ interface RestaurantContextValue {
   handleCreateMostradorOrder: (cart: CartItem[], customerName: string, deliveryPhone: string, pickupTime?: string, paymentMethod?: string, customerId?: string) => Promise<void>;
   handleCreateDeliveryOrder:  (cart: CartItem[], customerName: string, customerPhone: string, customerAddress: string, deliveryCity: string, deliveryNotes: string, deliveryCost: number, paymentMethod?: string, customerId?: string) => Promise<void>;
   handleCloseCart:            () => void;
-  handleRemoveExistingItem:   (itemId: string) => Promise<void>;
+  handleRemoveExistingItem:   (itemId: string, reason: string) => Promise<void>;
   handleUpdateMostradorStatus:(order: Sale, newStatus: string) => Promise<void>;
   handleCancelOrder:          (order: Sale) => Promise<void>;
   handleOrderEdited:          () => Promise<void>;
@@ -938,11 +938,16 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
     setExistingItems([]);
   };
 
-  const handleRemoveExistingItem = async (itemId: string) => {
+  const handleRemoveExistingItem = async (itemId: string, reason: string) => {
     if (!activeOrderId) return;
     try {
-      await restaurantService.removeItemFromOrder(activeOrderId, itemId);
-      setExistingItems(prev => prev.filter(i => i.id !== itemId));
+      await restaurantService.removeItemFromOrder(activeOrderId, itemId, reason);
+      // Soft-delete visual: NO sacar el ítem del array, marcarlo como cancelado
+      setExistingItems(prev => prev.map(i =>
+        i.id === itemId
+          ? { ...i, isCancelled: true, cancelReason: reason }
+          : i
+      ));
     } catch (err: any) {
       hotToast.error(err.response?.data?.error ?? 'No se puede eliminar el ítem');
     }

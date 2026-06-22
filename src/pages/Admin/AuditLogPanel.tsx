@@ -15,6 +15,47 @@ import { exportSheet, fmtDateTime } from '@/utils/exportExcel';
 import toast from 'react-hot-toast';
 
 // ---------------------------------------------------------------------------
+// Helpers de fecha — timezone-safe.
+// REGLA CRÍTICA: NUNCA usar new Date().toISOString() porque emite UTC puro y,
+// al combinarse con `new Date('YYYY-MM-DD')` en el backend, excluye eventos
+// nocturnos de Chile (después de las 20:00). Aquí armamos ISO strings con
+// offset de timezone local (ej: 2026-06-17T00:00:00-04:00) para que el backend
+// los interprete como instantes absolutos correctos sin pérdida de eventos.
+// ---------------------------------------------------------------------------
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/** Formatea un Date local a ISO string CON offset de timezone (ej: ...-04:00). */
+const formatLocalISO = (date: Date): string => {
+  const tzMin = -date.getTimezoneOffset(); // minutos (positivo si local va por delante de UTC)
+  const sign  = tzMin >= 0 ? '+' : '-';
+  const abs   = Math.abs(tzMin);
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}` +
+    `${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`
+  );
+};
+
+/** Devuelve "hoy" en formato YYYY-MM-DD (hora local del navegador). */
+const todayStr = (): string => {
+  const d = new Date();
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+/** Convierte 'YYYY-MM-DD' → ISO local con hora 00:00:00 (inicio del día). */
+const dateStrToLocalStart = (dateStr: string): string => {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  // Constructor (y, m, d, h...) interpreta en hora local — clave para el offset.
+  return formatLocalISO(new Date(y, m - 1, d, 0, 0, 0, 0));
+};
+
+/** Convierte 'YYYY-MM-DD' → ISO local con hora 23:59:59.999 (fin del día). */
+const dateStrToLocalEnd = (dateStr: string): string => {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return formatLocalISO(new Date(y, m - 1, d, 23, 59, 59, 999));
+};
+
+// ---------------------------------------------------------------------------
 // Severity Badge
 // ---------------------------------------------------------------------------
 const SeverityBadge = ({ severity }: { severity: AuditSeverity }) => {
@@ -40,44 +81,59 @@ const LogRow = ({ log }: { log: AuditLog & { before?: any; after?: any } }) => {
   const [expanded, setExpanded] = useState(false);
   const hasDiff = log.before || log.after;
 
+  // --- Cálculo de la celda "Actor" ---
+  // Casos: (a) usuario con nombre → nombre arriba / correo abajo;
+  //        (b) correo pero sin nombre → correo arriba / "Sin nombre" abajo;
+  //        (c) proceso automático → "Sistema" / "Automático".
+  // ⚠️ El backend NO envía `actor`. Devuelve:
+  //    - log.userName : snapshot del nombre al momento del evento (preferido)
+  //    - log.users    : relación con la tabla users (fallback si no hay snapshot)
+  //    - log.actorEmail : snapshot del correo
+  const actorName  = log.userName ?? log.users?.name ?? log.actor?.name ?? null;
+  const actorEmail = log.actorEmail ?? log.users?.email ?? log.actor?.email ?? null;
+  const isSystem   = !actorName && !actorEmail;
+  const line1 = isSystem ? 'Sistema' : (actorName ?? actorEmail);
+  const line2 = isSystem ? 'Automático' : (actorName ? (actorEmail ?? '') : 'Sin nombre');
+
   return (
     <>
       <tr
-        className={`border-b hover:bg-gray-50 transition-colors ${hasDiff ? 'cursor-pointer' : ''}`}
+        className={`border-b bg-white hover:bg-slate-50 transition-colors ${hasDiff ? 'cursor-pointer' : ''}`}
         onClick={() => hasDiff && setExpanded(!expanded)}
       >
-        <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap font-mono">
+        <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap font-mono">
           {new Date(log.createdAt).toLocaleString('es-CL')}
         </td>
         <td className="px-4 py-3">
           <SeverityBadge severity={log.severity} />
         </td>
-        <td className="px-4 py-3">
-          <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded font-mono">{log.action}</code>
+        <td className="px-4 py-3 text-slate-800">
+          <code className="text-xs bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded font-mono">{log.action}</code>
         </td>
-        <td className="px-4 py-3 text-xs text-gray-600">
+        <td className="px-4 py-3 text-xs">
           <span className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-xs">{log.module}</span>
         </td>
-        <td className="px-4 py-3 text-sm">
-          <div>
-            <p className="text-gray-800 font-medium">{log.actor?.name ?? 'Sistema'}</p>
-            <p className="text-gray-400 text-xs">{log.actorEmail ?? ''}</p>
+        {/* Columna Actor — Nombre arriba / Correo abajo (o "Sistema" si es automático) */}
+        <td className="px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-slate-900 truncate">{line1}</p>
+            <p className="text-xs text-slate-500 truncate">{line2}</p>
           </div>
         </td>
-        <td className="px-4 py-3 text-sm text-gray-600">
-          {log.branch?.name ?? <span className="text-gray-300">—</span>}
+        <td className="px-4 py-3 text-sm text-slate-700">
+          {log.branch?.name ?? <span className="text-slate-300">—</span>}
         </td>
-        <td className="px-4 py-3 text-sm text-gray-600 max-w-[200px] truncate" title={log.targetDesc ?? ''}>
-          {log.targetDesc ?? <span className="text-gray-300">—</span>}
+        <td className="px-4 py-3 text-sm text-slate-700 max-w-[200px] truncate" title={log.targetDesc ?? ''}>
+          {log.targetDesc ?? <span className="text-slate-300">—</span>}
         </td>
-        <td className="px-4 py-3 text-xs text-gray-400 font-mono">
+        <td className="px-4 py-3 text-xs text-slate-500 font-mono">
           {log.ipAddress ?? '—'}
         </td>
         <td className="px-4 py-3 w-8">
           {hasDiff && (
             <ChevronRight
               size={14}
-              className={`text-gray-400 transition-transform ${expanded ? 'rotate-90' : ''}`}
+              className={`text-slate-400 transition-transform ${expanded ? 'rotate-90' : ''}`}
             />
           )}
         </td>
@@ -116,12 +172,16 @@ const LogRow = ({ log }: { log: AuditLog & { before?: any; after?: any } }) => {
 // Main Panel
 // ---------------------------------------------------------------------------
 export const AuditLogPanel = () => {
+  // Default: SIEMPRE carga "Hoy" (00:00 → 23:59 hora local de Chile).
+  // Se guarda como YYYY-MM-DD (formato del input type=date) y se convierte a
+  // ISO local al enviar al backend (ver queryFn).
+  const today = todayStr();
   const [filters, setFilters] = useState({
     search:   '',
     module:   '',
     severity: '' as AuditSeverity | '',
-    dateFrom: '',
-    dateTo:   '',
+    dateFrom: today,
+    dateTo:   today,
     page:     1,
   });
   const setF = (k: string, v: string) =>
@@ -133,8 +193,10 @@ export const AuditLogPanel = () => {
       search:   filters.search   || undefined,
       module:   filters.module   || undefined,
       severity: (filters.severity || undefined) as AuditSeverity | undefined,
-      dateFrom: filters.dateFrom || undefined,
-      dateTo:   filters.dateTo   || undefined,
+      // ISO local con hora 00:00 / 23:59 + offset → el backend lo parsea como
+      // instante absoluto y NO se pierden eventos después de las 20:00 CL.
+      dateFrom: filters.dateFrom ? dateStrToLocalStart(filters.dateFrom) : undefined,
+      dateTo:   filters.dateTo   ? dateStrToLocalEnd(filters.dateTo)    : undefined,
       page:     filters.page,
       limit:    50,
     }),
@@ -151,13 +213,17 @@ export const AuditLogPanel = () => {
         'Severidad':   l.severity,
         'Acción':      l.action,
         'Módulo':      l.module,
-        'Actor':       l.actor?.name ?? 'Sistema',
-        'Email actor': l.actorEmail ?? '',
+        // Mismo orden de prioridad que la celda Actor de la tabla:
+        // userName (snapshot) → users.name (relación) → actor.name (legacy).
+        'Actor':       l.userName ?? l.users?.name ?? l.actor?.name
+                       ?? (l.users?.email ?? l.actorEmail ?? l.actor?.email)
+                       ?? 'Sistema',
+        'Email actor': l.actorEmail ?? l.users?.email ?? l.actor?.email ?? '',
         'Sucursal':    l.branch?.name ?? '',
         'Descripción': l.targetDesc ?? '',
         'IP':          l.ipAddress ?? '',
       })),
-      `auditoria_${new Date().toISOString().slice(0,10)}`,
+      `auditoria_${todayStr()}`,
       'Auditoría',
     );
     toast.success(`${logs.length} registros exportados a Excel`);
@@ -236,7 +302,11 @@ export const AuditLogPanel = () => {
           {(filters.search || filters.module || filters.severity || filters.dateFrom) && (
             <button
               className="text-sm text-blue-600 hover:text-blue-700"
-              onClick={() => setFilters({ search:'', module:'', severity:'', dateFrom:'', dateTo:'', page: 1 })}
+              onClick={() => {
+                // Al limpiar, volvemos al default: "Hoy".
+                const t = todayStr();
+                setFilters({ search:'', module:'', severity:'', dateFrom: t, dateTo: t, page: 1 });
+              }}
             >
               Limpiar filtros
             </button>

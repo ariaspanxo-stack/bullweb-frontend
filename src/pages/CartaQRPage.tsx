@@ -3,9 +3,10 @@
 // Tabs: Código QR / Vista previa / Instrucciones / Horarios
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import QRCode from 'qrcode';
 import api from '../services/api';
+import { useAuthStore } from '../store/authStore';
 import {
   ExternalLink, Download, Copy, Check,
   Smartphone, Eye, QrCode, Loader2,
@@ -116,8 +117,6 @@ export default function CartaQRPage() {
   useEffect(() => {
     api.get('/menu/carta-settings')
       .then(res => {
-        // handleResponse ya desenvuelve data.data, así que res.data = el payload directo
-        // Pero por seguridad usamos: res.data?.data ?? res.data
         const s = res.data?.data ?? res.data ?? {};
         if (s.cartaLogo)      setCartaLogo(s.cartaLogo);
         if (s.cartaBannerUrl) setCartaBanner(s.cartaBannerUrl);
@@ -134,7 +133,6 @@ export default function CartaQRPage() {
           setCartaSlug(s.cartaSlug);
           setSlugEdit(s.cartaSlug);
         } else if (name) {
-          // Auto-generar slug del nombre del restaurante
           const derived = name.toLowerCase()
             .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
             .replace(/[^a-z0-9]+/g, '-')
@@ -239,9 +237,26 @@ export default function CartaQRPage() {
     }
   };
 
+  // ── Resolver slug efectivo para URLs de QR ──────────────────────
+  // El backend devuelve cartaSlug desde la BD, pero si quedó con un valor
+  // inválido ("test", "demo", vacío, etc.) el QR generado apunta a una URL
+  // inexistente (404). Validamos y caemos a tenantSlug/tenantId del usuario
+  // autenticado, que son fuentes confiables para resolver el tenant.
+  const user = useAuthStore(s => s.user);
+  const INVALID_SLUGS = ['test', 'demo', 'example', 'undefined', 'null', ''];
+  const resolvedSlug = useMemo(() => {
+    const candidates = [cartaSlug, (user as any)?.tenantSlug, (user as any)?.tenantId];
+    for (const c of candidates) {
+      if (!c) continue;
+      const s = String(c).toLowerCase().trim();
+      if (s && !INVALID_SLUGS.includes(s)) return s;
+    }
+    return '';
+  }, [cartaSlug, user]);
+
   // URL dinámica según slug + mesa seleccionada
-  const baseCartaUrl = cartaSlug
-    ? `${window.location.origin}/carta/${cartaSlug}`
+  const baseCartaUrl = resolvedSlug
+    ? `${window.location.origin}/carta/${resolvedSlug}`
     : `${window.location.origin}/carta`;
   const cartaUrl = selectedTable
     ? `${baseCartaUrl}?mesa=${selectedTable}`
@@ -289,13 +304,13 @@ export default function CartaQRPage() {
 
   // Cargar horarios existentes al montar
   useEffect(() => {
-    if (!cartaSlug) return;
-    api.get(`/public/hours?slug=${cartaSlug}`)
+    if (!resolvedSlug) return;
+    api.get(`/public/hours?slug=${resolvedSlug}`)
       .then(res => {
         if (res.data.data?.hours) setBusinessHours(res.data.data.hours);
       })
       .catch(() => { /* usar defaults */ });
-  }, [cartaSlug]);
+  }, [resolvedSlug]);
 
   // Generar QR al montar y al cambiar colores/mesa
   useEffect(() => {
@@ -312,11 +327,11 @@ export default function CartaQRPage() {
 
   // Generar QRs de mesas cuando se activa el tab
   useEffect(() => {
-    if (activeTab !== 'mesas' || tables.length === 0 || !cartaSlug) return;
+    if (activeTab !== 'mesas' || tables.length === 0 || !resolvedSlug) return;
     setLoadingMesaQrs(true);
     Promise.all(
       tables.map(table =>
-        QRCode.toDataURL(`https://app.bullwebchile.com/mesa/${cartaSlug}?mesa=${table.number}`, {
+        QRCode.toDataURL(`https://app.bullwebchile.com/mesa/${resolvedSlug}?mesa=${table.number}`, {
           width: 512, margin: 2, errorCorrectionLevel: 'H',
           color: { dark: '#1f2937', light: '#ffffff' },
         }).then(url => ({ number: String(table.number), url }))
@@ -326,7 +341,7 @@ export default function CartaQRPage() {
       results.forEach(r => { map[r.number] = r.url; });
       setMesaQrUrls(map);
     }).catch(() => {}).finally(() => setLoadingMesaQrs(false));
-  }, [activeTab, tables, cartaSlug]);
+  }, [activeTab, tables, resolvedSlug]);
 
   // ── Copiar URL ───────────────────────────────────────────────
   const handleCopy = async () => {
@@ -398,7 +413,6 @@ export default function CartaQRPage() {
   // ── Imprimir hoja A4 con 4 tarjetas ──────────────────────────
   const handlePrintTemplate = async () => {
     if (!qrDataUrl) return;
-    // Generar también SVG para máxima calidad en la plantilla
     let svgDataUrl = qrDataUrl;
     try {
       const svgStr = await QRCode.toString(cartaUrl, {
@@ -451,13 +465,12 @@ export default function CartaQRPage() {
 
   // ── Imprimir QR para todas las mesas ────────────────────────
   const handlePrintAllTables = async () => {
-    if (tables.length === 0) return;
-    const origin = window.location.origin;
+    if (tables.length === 0 || !resolvedSlug) return;
     try {
       const results = await Promise.all(
         tables.map(table =>
           QRCode.toString(
-            `${origin}/carta?mesa=${table.number}`,
+            `https://app.bullwebchile.com/mesa/${resolvedSlug}?mesa=${table.number}`,
             { type: 'svg', errorCorrectionLevel: 'H', margin: 1,
               color: { dark: qrFgColor, light: qrBgColor } }
           ).then(svg => ({ table, svg }))
@@ -563,14 +576,14 @@ export default function CartaQRPage() {
 
   // ── Imprimir todos los QRs de mesa ────────────────────────────
   const handlePrintAllMesaQrs = async () => {
-    if (tables.length === 0 || !cartaSlug) return;
+    if (tables.length === 0 || !resolvedSlug) return;
     const theme = cartaTheme || '#f97316';
     const name = restaurantName || 'Restaurante';
     try {
       const results = await Promise.all(
         tables.map(table =>
           QRCode.toDataURL(
-            `https://app.bullwebchile.com/mesa/${cartaSlug}?mesa=${table.number}`,
+            `https://app.bullwebchile.com/mesa/${resolvedSlug}?mesa=${table.number}`,
             { width: 512, margin: 2, errorCorrectionLevel: 'H', color: { dark: '#1f2937', light: '#ffffff' } }
           ).then(url => ({ table, url }))
         )
@@ -634,7 +647,8 @@ export default function CartaQRPage() {
           { id: 'qr',            icon: QrCode,     label: 'Código QR'     },
           { id: 'preview',       icon: Eye,         label: 'Vista previa'  },
           { id: 'instrucciones', icon: Smartphone,  label: 'Instrucciones' },
-          { id: 'horarios',      icon: Clock,       label: 'Horarios'      },          { id: 'personalizar',  icon: Palette,     label: 'Personalizar'  },
+          { id: 'horarios',      icon: Clock,       label: 'Horarios'      },
+          { id: 'personalizar',  icon: Palette,     label: 'Personalizar'  },
           { id: 'analiticas',    icon: BarChart2,   label: 'Analíticas'    },
           { id: 'pedidos',      icon: ShoppingBag, label: 'Pedidos'       },
           { id: 'mesas',        icon: LayoutGrid,  label: 'QR Mesas'     },
@@ -761,7 +775,7 @@ export default function CartaQRPage() {
                   <div className="flex items-center gap-1.5 bg-gray-100 rounded-lg px-3 py-2 cursor-not-allowed">
                     <span className="text-xs text-gray-400 shrink-0">/carta/</span>
                     <span className="flex-1 text-sm text-gray-600 font-mono truncate">
-                      {cartaSlug || <span className="text-gray-400 italic">sin configurar</span>}
+                      {resolvedSlug || <span className="text-gray-400 italic">sin configurar</span>}
                     </span>
                     <button
                       onClick={handleCopy}
@@ -1542,7 +1556,7 @@ export default function CartaQRPage() {
       {/* ─── TAB: QR MESAS ──────────────────────────────────────── */}
       {activeTab === 'mesas' && (
         <div className="space-y-6">
-          {!cartaSlug ? (
+          {!resolvedSlug ? (
             <div className="text-center py-16 text-gray-400">
               <LayoutGrid className="w-12 h-12 mx-auto mb-3 opacity-40" />
               <p className="text-sm">Configura un slug para tu carta primero (tab Personalizar).</p>

@@ -3,7 +3,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useState } from 'react';
-import { Plus, Truck } from 'lucide-react';
+import { Plus, Truck, PackageOpen } from 'lucide-react';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { OrderCardCompact } from '../shared/OrderCardCompact';
 import { DeliveryOrderModal } from '../shared/DeliveryOrderModal';
@@ -107,17 +107,7 @@ export function DeliveryTab() {
       {/* Empty State — sin ordenes */}
       {deliveryOrders.length === 0 ? (
         <div className="flex flex-col items-center py-20 bg-gradient-to-b from-purple-50 to-white rounded-2xl border border-dashed border-purple-200">
-          <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-5">
-            <circle cx="60" cy="60" r="56" fill="#F5F3FF" />
-            <rect x="18" y="52" width="68" height="30" rx="8" fill="#DDD6FE" />
-            <rect x="18" y="52" width="46" height="30" rx="8" fill="#C4B5FD" />
-            <circle cx="34" cy="84" r="9" fill="#7C3AED" />
-            <circle cx="34" cy="84" r="4.5" fill="#EDE9FE" />
-            <circle cx="70" cy="84" r="9" fill="#7C3AED" />
-            <circle cx="70" cy="84" r="4.5" fill="#EDE9FE" />
-            <path d="M86 66V50L70 36H58v30h28z" fill="#8B5CF6" />
-            <path d="M70 36v18h16" stroke="#EDE9FE" strokeWidth="2.5" strokeLinejoin="round" />
-          </svg>
+          <PackageOpen className="w-16 h-16 text-zinc-400 mb-5" />
           <p className="text-lg font-semibold text-gray-700">Sin deliveries activos</p>
           <p className="text-sm text-gray-400 mt-1 mb-6">Los nuevos pedidos apareceran aqui</p>
           <button

@@ -19,7 +19,7 @@ interface TableMapProps {
 
 const statusColors = {
   AVAILABLE: 'bg-green-100 border-green-500 text-green-700 hover:bg-green-200',
-  OCCUPIED: 'bg-red-100 border-red-500 text-red-700 hover:bg-red-200',
+  OCCUPIED: 'bg-amber-500 border-amber-600 text-white hover:bg-amber-600',
   RESERVED: 'bg-yellow-100 border-yellow-500 text-yellow-700 hover:bg-yellow-200',
   CLEANING: 'bg-gray-100 border-gray-500 text-gray-700 hover:bg-gray-200'
 };

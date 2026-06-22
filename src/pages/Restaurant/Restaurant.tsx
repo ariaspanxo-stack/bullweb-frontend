@@ -107,32 +107,41 @@ function RestaurantInner() {
       )}
 
       {/* PaymentModal */}
-      {ctx.showPaymentModal && (ctx.selectedTable || ctx.orderForPayment) && (
+      {ctx.showPaymentModal && (ctx.selectedTable || ctx.orderForPayment) && (() => {
+        // CRÍTICO: filtrar ítems cancelados para NO cobrarlos
+        const activeExisting = ctx.existingItems.filter(i => !i.isCancelled);
+        const activeOrderItems = ctx.orderForPayment
+          ? ((ctx.orderForPayment.items as any) || []).filter((i: any) => !i.isCancelled)
+          : [];
+
+        const pmSubtotal = ctx.orderForPayment
+          ? activeOrderItems.reduce((s: number, i: any) => s + (i.total ?? i.subtotal ?? 0), 0)
+          : activeExisting.reduce((s, i) => s + (i.total ?? 0), 0)
+            + ctx.cart.reduce((s, i) => s + (i.subtotal || 0), 0);
+
+        const pmDeliveryFee = (ctx.orderForPayment as any)?.deliveryFee ?? 0;
+        const pmTotal = ctx.orderForPayment
+          ? pmSubtotal + pmDeliveryFee
+          : activeExisting.reduce((s, i) => s + (i.total ?? 0), 0)
+            + ctx.cart.reduce((s, i) => s + (i.subtotal || 0), 0);
+
+        return (
         <PaymentModal
           table={ctx.selectedTable || undefined}
-          total={(() => {
-            if (ctx.orderForPayment) return ctx.orderForPayment.total || 0;
-            // Chile: precios ya incluyen IVA — no agregar impuesto adicional
-            return ctx.existingItems.reduce((s, i) => s + (i.total ?? 0), 0)
-                 + ctx.cart.reduce((s, i) => s + (i.subtotal || 0), 0);
-          })()}
-          subtotal={ctx.orderForPayment
-            ? (ctx.orderForPayment.subtotal || ctx.orderForPayment.total || 0)
-            : ctx.existingItems.reduce((s, i) => s + (i.total ?? 0), 0)
-              + ctx.cart.reduce((s, i) => s + (i.subtotal || 0), 0)
-          }
+          total={pmTotal}
+          subtotal={pmSubtotal}
           tax={ctx.orderForPayment
             ? ctx.orderForPayment.tax
             : Math.round(
                 // IVA contenido en precio final (19/119 del total con IVA incluido)
-                (ctx.existingItems.reduce((s, i) => s + (i.total ?? 0), 0)
+                (activeExisting.reduce((s, i) => s + (i.total ?? 0), 0)
                 + ctx.cart.reduce((s, i) => s + (i.subtotal || 0), 0)) * 19 / 119
               )
           }
-          deliveryFee={(ctx.orderForPayment as any)?.deliveryFee ?? 0}
+          deliveryFee={pmDeliveryFee}
           items={ctx.orderForPayment
-            ? (ctx.orderForPayment.items as any)
-            : [...ctx.existingItems, ...ctx.cart]
+            ? ((ctx.orderForPayment.items as any) || [])
+            : [...(ctx.existingItems || []), ...ctx.cart]
           }
           orderNumber={ctx.orderForPayment?.orderNumber || (ctx.orderForPayment as any)?.saleNumber}
           onClose={() => {
@@ -150,7 +159,8 @@ function RestaurantInner() {
             : ctx.handleConfirmPayment
           }
         />
-      )}
+        );
+      })()}
 
       {/* NewMostradorModal */}
       {ctx.showMostradorModal && (

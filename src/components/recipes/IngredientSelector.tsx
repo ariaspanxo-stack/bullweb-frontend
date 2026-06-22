@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { PlusIcon, TrashIcon } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { PlusIcon, TrashIcon, Search, PackageSearch } from 'lucide-react';
 import type { RecipeIngredient } from '../../types/recipe.types';
 import type { Ingredient, IngredientCategory } from '../../types/ingredient.types';
 import { calculateIngredientCost } from '../../utils/recipeCalculator';
@@ -19,6 +19,10 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
   onChange,
 }) => {
   const [showSelector, setShowSelector] = useState(false);
+  // PASO 1: estado del buscador instantáneo
+  const [searchQuery, setSearchQuery] = useState('');
+  // PASO 2: estado del filtro por categoría (chips)
+  const [activeCategory, setActiveCategory] = useState<string>('all');
 
   const handleAddIngredient = (ingredientId: string) => {
     const ingredient = availableIngredients.find((i) => i.id === ingredientId);
@@ -39,6 +43,9 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
 
     onChange([...selectedIngredients, newIngredient]);
     setShowSelector(false);
+    // Limpiar búsqueda al agregar
+    setSearchQuery('');
+    setActiveCategory('all');
   };
 
   const handleUpdateQuantity = (index: number, quantity: number) => {
@@ -76,6 +83,51 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
     const cat = ingredientCategories.find((c) => c.id === categoryId);
     return cat ? cat.icon : '📦';
   };
+
+  // PASO 1 + 2: ingredientes filtrados por búsqueda y categoría (memoizado)
+  const filteredAvailable = useMemo(() => {
+    return availableIngredients.filter((ing) => {
+      // Excluir los ya seleccionados
+      const notSelected = !selectedIngredients.some(
+        (si) => si.ingredientId === ing.id
+      );
+      if (!notSelected) return false;
+
+      // Filtro por categoría
+      if (activeCategory !== 'all' && ing.categoryId !== activeCategory) {
+        return false;
+      }
+
+      // Filtro por texto (case-insensitive, ignora acentos básicos)
+      if (searchQuery.trim()) {
+        const q = searchQuery
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+        const name = ing.name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '');
+        return name.includes(q);
+      }
+
+      return true;
+    });
+  }, [availableIngredients, selectedIngredients, searchQuery, activeCategory]);
+
+  // PASO 2: categorías que tienen al menos un ingrediente disponible (no seleccionado)
+  const categoriesWithIngredients = useMemo(() => {
+    const usedCategoryIds = new Set(
+      availableIngredients
+        .filter(
+          (ing) =>
+            !selectedIngredients.some((si) => si.ingredientId === ing.id)
+        )
+        .map((ing) => ing.categoryId)
+        .filter(Boolean)
+    );
+    return ingredientCategories.filter((cat) => usedCategoryIds.has(cat.id));
+  }, [availableIngredients, selectedIngredients, ingredientCategories]);
 
   return (
     <div className="space-y-4">
@@ -184,19 +236,78 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
             <h4 className="font-medium text-gray-900">Selecciona un ingrediente</h4>
             <button
               type="button"
-              onClick={() => setShowSelector(false)}
+              onClick={() => {
+                setShowSelector(false);
+                setSearchQuery('');
+                setActiveCategory('all');
+              }}
               className="text-gray-600 hover:text-gray-900"
             >
               Cancelar
             </button>
           </div>
-          <div className="max-h-64 overflow-y-auto space-y-1">
-            {availableIngredients
-              .filter(
-                (ing) =>
-                  !selectedIngredients.some((si) => si.ingredientId === ing.id)
-              )
-              .map((ingredient) => (
+
+          {/* PASO 1: Buscador instantáneo */}
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Buscar ingrediente por nombre..."
+              autoFocus
+              className="bg-slate-100 rounded-lg p-2 pl-9 w-full text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            />
+          </div>
+
+          {/* PASO 2: Chips de categorías */}
+          {categoriesWithIngredients.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-3 max-h-24 overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => setActiveCategory('all')}
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  activeCategory === 'all'
+                    ? 'bg-amber-500 text-white'
+                    : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                }`}
+              >
+                Todos
+              </button>
+              {categoriesWithIngredients.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                    activeCategory === cat.id
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                  }`}
+                >
+                  <span className="mr-1">{cat.icon}</span>
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Lista filtrada + PASO 3: Empty state */}
+          {filteredAvailable.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <PackageSearch className="w-10 h-10 text-gray-300 mb-2" />
+              <p className="text-sm text-gray-500 font-medium">
+                No se encontraron ingredientes
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                {searchQuery.trim()
+                  ? `Sin resultados para "${searchQuery}"`
+                  : 'Intenta cambiar el filtro de categoría'}
+              </p>
+            </div>
+          ) : (
+            <div className="max-h-64 overflow-y-auto space-y-1">
+              {filteredAvailable.map((ingredient) => (
                 <button
                   key={ingredient.id}
                   type="button"
@@ -217,7 +328,8 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                   </div>
                 </button>
               ))}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>

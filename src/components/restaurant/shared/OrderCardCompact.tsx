@@ -17,18 +17,18 @@ import { usePermission } from '../../../hooks/usePermission';
 
 // ─── Borde izquierdo por estado ────────────────────────────────
 const BORDER: Record<string, string> = {
-  PENDING:   'border-l-red-400',
-  PREPARING: 'border-l-yellow-400',
-  READY:     'border-l-green-400',
+  PENDING:   'border-l-amber-500',
+  PREPARING: 'border-l-blue-500',
+  READY:     'border-l-green-500',
   CANCELLED: 'border-l-gray-300',
 };
 
 // ─── Badge por estado ──────────────────────────────────────────
 const BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  PENDING:   { bg: 'bg-red-100',    text: 'text-red-700',    label: 'Pendiente' },
-  PREPARING: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'En Prep.' },
-  READY:     { bg: 'bg-green-100',  text: 'text-green-700',  label: 'Listo' },
-  CANCELLED: { bg: 'bg-gray-100',   text: 'text-gray-600',   label: 'Cancelado' },
+  PENDING:   { bg: 'bg-amber-500',  text: 'text-white', label: 'Pendiente' },
+  PREPARING: { bg: 'bg-blue-500',   text: 'text-white', label: 'En Prep.' },
+  READY:     { bg: 'bg-green-500',  text: 'text-white', label: 'Listo' },
+  CANCELLED: { bg: 'bg-gray-400',   text: 'text-white', label: 'Cancelado' },
 };
 
 // ─── Props ─────────────────────────────────────────────────────
@@ -44,11 +44,13 @@ export interface OrderCardCompactProps {
 
 // ─── Resumen inline de ítems ───────────────────────────────────
 function ItemsSummaryInline({ items }: { items: any[] }) {
-  if (!items || items.length === 0) {
+  // Soft-delete: excluir ítems cancelados del resumen
+  const active = (items ?? []).filter((i: any) => !i.isCancelled);
+  if (active.length === 0) {
     return <p className="text-xs text-gray-400 italic">Sin ítems</p>;
   }
-  const visible = items.slice(0, 2);
-  const hidden  = items.length - 2;
+  const visible = active.slice(0, 2);
+  const hidden  = active.length - 2;
   const parts   = visible.map((i: any) => `${i.quantity}× ${i.productName}`);
   return (
     <p className="text-xs text-gray-600 truncate leading-tight">

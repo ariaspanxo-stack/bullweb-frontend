@@ -245,9 +245,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 )}
               >
                 {/* Avatar */}
-                <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span className="text-sm font-semibold text-white">
-                    {user?.name?.charAt(0).toUpperCase() || 'U'}
+                <div className="bg-amber-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs">
+                  <span>
+                    {(user?.name || 'Usuario')
+                      .split(' ')
+                      .slice(0, 2)
+                      .map((w: string) => w.charAt(0).toUpperCase())
+                      .join('')}
                   </span>
                 </div>
 

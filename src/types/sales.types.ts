@@ -62,6 +62,10 @@ export interface SaleItem {
   modifiers?: ProductModifier[];  // CHANGE: De string[] a objeto completo
   modifiersPrice?: number;  // ADD: Precio total de modificadores
   notes?: string;
+  subtotal?: number;
+  isCancelled?: boolean;   // Soft-delete visual: el backend ya canceló el item
+  cancelReason?: string;   // Motivo de la cancelación (para mostrar en UI)
+  cancelledAt?: string | null;  // Fecha de cancelación (ISO string)
 }
 
 // ADD: Tipo para modificadores estructurados

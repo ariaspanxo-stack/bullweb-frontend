@@ -41,6 +41,10 @@ function mapOrder(raw: any): Sale {
     modifiers: i.modifiers || [],
     modifiersPrice: Number(i.modifiersPrice || 0),
     notes: i.notes || undefined,
+    // Soft-delete (bug fix: antes se perdían al recargar y el PaymentModal cobraba de más)
+    isCancelled:  !!i.isCancelled,
+    cancelReason: i.cancelReason ?? null,
+    cancelledAt:  i.cancelledAt ?? null,
   }));
 
   return {
@@ -377,9 +381,9 @@ class RestaurantService {
     }
   }
 
-  async removeItemFromOrder(orderId: string, itemId: string): Promise<void> {
+  async removeItemFromOrder(orderId: string, itemId: string, reason: string): Promise<void> {
     try {
-      await api.delete(`/pos/orders/${orderId}/items/${itemId}`);
+      await api.delete(`/pos/orders/${orderId}/items/${itemId}`, { reason });
       _ordersCache = [];
       _ordersCacheTs = 0;
     } catch (error) {

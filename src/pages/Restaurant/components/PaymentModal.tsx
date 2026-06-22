@@ -280,16 +280,30 @@ export const PaymentModal = ({
     }
   }, [couponCode, total]);
 
+  // ── DOBLE SEGURIDAD: recalcular totales excluyendo ítems cancelados ──
+  // El padre (Restaurant.tsx) ya filtra isCancelled, pero si por algún motivo
+  // llegaran items cancelados en la lista, los excluimos del cobro.
+  const activeItemsForCalc = items.filter((i: any) => !i.isCancelled);
+  const internalSubtotal = activeItemsForCalc.reduce(
+    (s, i) => s + (Number(i.total ?? i.subtotal ?? 0)), 0
+  ) + deliveryFee;
+  // Si el recálculo interno difiere del total recibido por props (por ej. porque
+  // el padre no filtró correctamente), confiamos en el cálculo local defensivo.
+  const effectiveTotal = internalSubtotal > 0 && Math.abs(internalSubtotal - total) > 0.5
+    ? internalSubtotal
+    : total;
+  const effectiveSubtotal = subtotal > 0 ? Math.min(subtotal, internalSubtotal || subtotal) : subtotal;
+
   const discountAmount = (() => {
     const v = parseFloat(discountValue) || 0;
     if (!discountEnabled || v <= 0) return 0;
-    if (discountType === 'PERCENTAGE') return Math.round(total * Math.min(v, 100) / 100);
-    return Math.min(Math.round(v), total);
+    if (discountType === 'PERCENTAGE') return Math.round(effectiveTotal * Math.min(v, 100) / 100);
+    return Math.min(Math.round(v), effectiveTotal);
   })();
 
   const tipTotal = tipRows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
   const payTotal = payRows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
-  const finalTotal = total - discountAmount + tipTotal;
+  const finalTotal = effectiveTotal - discountAmount + tipTotal;
   const balance = payTotal - finalTotal; // negativo = falta, positivo = vuelto
 
   // ── helpers ──────────────────────────────────────────────
@@ -433,17 +447,38 @@ export const PaymentModal = ({
                 {items.length === 0 && (
                   <p className="text-xs text-gray-400 text-center pt-3">Sin items</p>
                 )}
-                {items.map((item, i) => (
-                  <div key={item.id ?? i} className="flex items-center gap-1.5 bg-white rounded-lg px-2 py-1.5 border border-gray-100">
-                    <span className="w-5 h-5 rounded-md bg-slate-800 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0">
+                {items.map((item, i) => {
+                  const cancelled = !!(item as any).isCancelled;
+                  return (
+                  <div
+                    key={item.id ?? i}
+                    className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 border ${
+                      cancelled
+                        ? 'bg-red-50/60 border-red-100 opacity-60'
+                        : 'bg-white border-gray-100'
+                    }`}
+                  >
+                    <span className={`w-5 h-5 rounded-md text-[10px] font-black flex items-center justify-center flex-shrink-0 ${
+                      cancelled ? 'bg-red-200 text-red-600' : 'bg-slate-800 text-white'
+                    }`}>
                       {item.quantity}
                     </span>
-                    <span className="flex-1 text-gray-800 text-xs font-medium leading-snug truncate">{item.productName}</span>
-                    <span className="font-black text-gray-900 text-xs whitespace-nowrap">
+                    <span className={`flex-1 text-xs font-medium leading-snug truncate ${
+                      cancelled ? 'text-red-500 line-through' : 'text-gray-800'
+                    }`}>{item.productName}</span>
+                    <span className={`font-black text-xs whitespace-nowrap ${
+                      cancelled ? 'text-red-400 line-through' : 'text-gray-900'
+                    }`}>
                       ${fmt(item.total ?? item.subtotal ?? 0)}
                     </span>
+                    {cancelled && (item as any).cancelReason && (
+                      <span className="text-[9px] text-red-500 font-semibold flex-shrink-0" title={(item as any).cancelReason}>
+                        ✕
+                      </span>
+                    )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Totales fijos */}

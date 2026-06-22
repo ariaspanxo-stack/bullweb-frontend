@@ -63,6 +63,11 @@ export interface AuditLog {
   createdAt:  string;
   actor:      { id: string; name: string; email: string } | null;
   branch:     { id: string; name: string } | null;
+  // El backend incluye estos campos extra (snapshot del nombre al momento
+  // del evento + relación con users). Se usan como fallback si `actor`
+  // no viene populado.
+  userName?:  string | null;
+  users?:     { id: string; name: string; email: string } | null;
 }
 
 export interface Branch {

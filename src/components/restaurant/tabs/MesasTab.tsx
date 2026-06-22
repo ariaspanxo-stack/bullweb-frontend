@@ -193,29 +193,27 @@ export function MesasTab() {
         <div className="flex items-center gap-4">
           {/* Buscador */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
             <input
               type="text"
               placeholder="Buscar mesa por número..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 bg-slate-100 border border-transparent rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:bg-white focus:border-transparent transition-colors"
             />
           </div>
 
           {/* Secciones */}
           {sections.length > 0 && (
-            <div className="flex rounded-xl overflow-hidden border-2 border-orange-300 shadow-sm">
-              {sections.map((section: any, idx: number) => (
+            <div className="flex gap-1">
+              {sections.map((section: any) => (
                 <button
                   key={section.id}
                   onClick={() => setSelectedSection(section.id)}
-                  className={`px-8 py-2.5 font-bold text-sm tracking-wide transition-all ${
-                    idx > 0 ? 'border-l-2 border-orange-300' : ''
-                  } ${
+                  className={`px-5 py-2.5 rounded-md font-medium text-sm tracking-wide transition-all ${
                     selectedSection === section.id
-                      ? 'bg-orange-500 text-white'
-                      : 'bg-white text-orange-600 hover:bg-orange-50'
+                      ? 'bg-slate-100 text-slate-900 font-semibold'
+                      : 'text-slate-500 hover:text-slate-900'
                   }`}
                 >
                   {section.name.toUpperCase()}

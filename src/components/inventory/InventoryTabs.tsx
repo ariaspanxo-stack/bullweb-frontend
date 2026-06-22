@@ -1,4 +1,4 @@
-import { Package, BookOpen, ShoppingCart, Activity, Truck } from 'lucide-react';
+import { Package, ShoppingCart, Activity, Truck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface InventoryTabsProps {
@@ -8,7 +8,8 @@ interface InventoryTabsProps {
 
 const tabs = [
   { value: 'ingredients', label: 'Ingredientes', icon: Package },
-  { value: 'recipes', label: 'Recetas', icon: BookOpen },
+  // Tab "Recetas" oculto: se usa la vista premium de Productos (Fichas Técnicas).
+  // { value: 'recipes', label: 'Recetas', icon: BookOpen },
   { value: 'purchases', label: 'Compras', icon: ShoppingCart },
   { value: 'movements', label: 'Movimientos', icon: Activity },
   { value: 'suppliers', label: 'Proveedores', icon: Truck },

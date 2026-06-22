@@ -16,6 +16,7 @@ import { posService } from '../../../services/posService';
 import type { Sale, Product, SaleItem, ProductModifier } from '../../../types/restaurant.types';
 import toast from 'react-hot-toast';
 import { usePermission } from '../../../hooks/usePermission';
+import { useRemovalReason } from '../../../hooks/useRemovalReason';
 
 // ─── Props ──────────────────────────────────────────────────────
 interface DeliveryOrderModalProps {
@@ -91,6 +92,9 @@ export function DeliveryOrderModal({
 
   const canSendToKitchen = usePermission('pos.create_order');
 
+  // ── Hook para pedir motivo de eliminación ──
+  const { promptReason, modalElement: removalReasonModal } = useRemovalReason();
+
   const searchRef = useRef<HTMLInputElement>(null);
 
   // ── Colores según variante ────────────────────────────────────
@@ -152,7 +156,10 @@ export function DeliveryOrderModal({
     const modP = pi.modifiers.reduce((a, m) => a + (m.price ?? 0), 0);
     return s + (pi.product.price + modP) * pi.quantity;
   }, 0);
-  const subtotal      = existingItems.reduce((s, i) => s + (i.total ?? i.unitPrice * i.quantity), 0) + pendingSubtotal;
+  // Soft-delete visual: excluir items cancelados del total
+  const subtotal      = existingItems
+    .filter(i => !i.isCancelled)
+    .reduce((s, i) => s + (i.total ?? i.unitPrice * i.quantity), 0) + pendingSubtotal;
   // Descuento: siempre desde BD. El panel solo calcula preview local.
   const orderDiscount = Number(currentOrder.discount ?? 0);
   const total         = subtotal - orderDiscount + deliveryFee;
@@ -211,10 +218,26 @@ export function DeliveryOrderModal({
 
   /** Quitar un item de la orden */
   async function handleRemoveItem(item: SaleItem) {
+    // Pedir motivo obligatorio antes de eliminar
+    const reason = await promptReason(item.productName);
+    if (!reason) return; // cancelado
+
     setSubmitting(true);
     try {
-      await restaurantService.removeItemFromOrder(currentOrder.id, item.id);
-      await reloadOrder();
+      await restaurantService.removeItemFromOrder(currentOrder.id, item.id, reason);
+      // Soft-delete visual: marcar como cancelado en estado local
+      // NO recargar del servidor porque pisaría el flag isCancelled
+      setCurrentOrder(prev => prev
+        ? {
+            ...prev,
+            items: (prev.items ?? []).map(i =>
+              i.id === item.id
+                ? { ...i, isCancelled: true, cancelReason: reason }
+                : i
+            ),
+          }
+        : prev
+      );
       onUpdate();
     } catch {
       toast.error('No se pudo quitar el producto');
@@ -582,46 +605,61 @@ export function DeliveryOrderModal({
                     const localNote = itemNotes[item.id] ?? item.notes ?? '';
                     const hasNote   = !!localNote;
                     const isEditing = editingNote === item.id;
+                    const cancelled = !!item.isCancelled;
                     return (
                       <div
                         key={item.id}
-                        className="bg-gray-50 rounded-lg px-2.5 py-2 hover:bg-gray-100 transition-colors"
+                        className={`rounded-lg px-2.5 py-2 transition-colors ${cancelled ? 'bg-red-50/60' : 'bg-gray-50 hover:bg-gray-100'}`}
                       >
                         {/* Fila principal */}
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-gray-400 w-6 text-center flex-shrink-0">
+                          <span className={`text-sm font-bold w-6 text-center flex-shrink-0 ${cancelled ? 'text-red-300 line-through' : 'text-gray-400'}`}>
                             {item.quantity}×
                           </span>
-                          <span className="text-sm font-semibold text-gray-800 flex-1 min-w-0 leading-snug">
+                          <span className={`text-sm font-semibold flex-1 min-w-0 leading-snug ${cancelled ? 'text-slate-400 line-through' : 'text-gray-800'}`}>
                             {item.productName}
                           </span>
-                          <span className="text-sm font-bold text-gray-700 flex-shrink-0">
+                          <span className={`text-sm font-bold flex-shrink-0 ${cancelled ? 'text-slate-400 line-through' : 'text-gray-700'}`}>
                             {fmt(item.total ?? item.unitPrice * item.quantity)}
                           </span>
-                          {/* Botón nota */}
-                          <button
-                            onClick={() => setEditingNote(isEditing ? null : item.id)}
-                            title="Agregar nota"
-                            className={`flex-shrink-0 p-1 rounded transition-colors ${
-                              hasNote
-                                ? 'text-blue-500 hover:text-blue-700'
-                                : 'text-gray-300 hover:text-gray-500'
-                            }`}
-                          >
-                            <Pencil size={13} />
-                          </button>
-                          {/* Botón quitar */}
-                          <button
-                            onClick={() => !submitting && handleRemoveItem(item)}
-                            disabled={submitting}
-                            className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 transition-colors disabled:opacity-40"
-                          >
-                            <Minus size={10} />
-                          </button>
+                          {/* Botones: ocultos si está cancelado */}
+                          {cancelled ? (
+                            <span className="text-xs text-red-500 flex-shrink-0">✕</span>
+                          ) : (
+                            <>
+                              {/* Botón nota */}
+                              <button
+                                onClick={() => setEditingNote(isEditing ? null : item.id)}
+                                title="Agregar nota"
+                                className={`flex-shrink-0 p-1 rounded transition-colors ${
+                                  hasNote
+                                    ? 'text-blue-500 hover:text-blue-700'
+                                    : 'text-gray-300 hover:text-gray-500'
+                                }`}
+                              >
+                                <Pencil size={13} />
+                              </button>
+                              {/* Botón quitar */}
+                              <button
+                                onClick={() => !submitting && handleRemoveItem(item)}
+                                disabled={submitting}
+                                className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 transition-colors disabled:opacity-40"
+                              >
+                                <Minus size={10} />
+                              </button>
+                            </>
+                          )}
                         </div>
 
+                        {/* Motivo de cancelación */}
+                        {cancelled && item.cancelReason && (
+                          <p className="ml-7 mt-0.5 text-xs text-red-500 flex items-center gap-1">
+                            ✕ {item.cancelReason}
+                          </p>
+                        )}
+
                         {/* Input de nota */}
-                        {isEditing && (
+                        {isEditing && !cancelled && (
                           <input
                             autoFocus
                             type="text"
@@ -644,7 +682,7 @@ export function DeliveryOrderModal({
                         )}
 
                         {/* Nota guardada visible */}
-                        {!isEditing && hasNote && (
+                        {!isEditing && !cancelled && hasNote && (
                           <p
                             className="ml-7 mt-1 text-sm font-medium text-orange-500 cursor-pointer hover:text-orange-700"
                             onClick={() => setEditingNote(item.id)}
@@ -801,6 +839,9 @@ export function DeliveryOrderModal({
           onClose={() => { setShowModifiers(false); setPendingProduct(null); }}
         />
       )}
+
+      {/* Modal de motivo de eliminación */}
+      {removalReasonModal}
     </>
   );
 }

@@ -618,6 +618,30 @@ const httpClient = {
     return { data };
   },
 
+  // Subida de archivos (multipart/form-data).
+  // NO setea Content-Type: el navegador debe generar el boundary automáticamente.
+  postForm: async <T = any>(url: string, formData: FormData): Promise<{ data: T }> => {
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+    // Headers de auth SIN Content-Type application/json
+    const headers: HeadersInit = {};
+    const token = localStorage.getItem('bullweb_token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    try {
+      const authData = JSON.parse(localStorage.getItem('auth-storage') || '{}');
+      const tenantSlug = authData?.state?.user?.tenantSlug;
+      if (tenantSlug) headers['x-tenant-slug'] = tenantSlug;
+    } catch { /* silencioso */ }
+    const response = await fetchWithRefresh(() =>
+      fetch(fullUrl, {
+        method:  'POST',
+        headers,
+        body:    formData,
+      })
+    );
+    const data = await handleResponse<T>(response);
+    return { data };
+  },
+
   put: async <T = any>(url: string, body?: any): Promise<{ data: T }> => {
     const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
     const response = await fetchWithRefresh(() =>
@@ -636,10 +660,15 @@ const httpClient = {
     return { data };
   },
 
-  delete: async <T = any>(url: string): Promise<{ data: T }> => {
+  // DELETE con body opcional (algunos endpoints requieren un motivo en el body)
+  delete: async <T = any>(url: string, body?: any): Promise<{ data: T }> => {
     const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
     const response = await fetchWithRefresh(() =>
-      fetch(fullUrl, { method: 'DELETE', headers: getAuthHeaders() })
+      fetch(fullUrl, {
+        method:  'DELETE',
+        headers: getAuthHeaders(),
+        body:    body !== undefined ? JSON.stringify(body) : undefined,
+      })
     );
     const data = await handleResponse<T>(response);
     return { data };

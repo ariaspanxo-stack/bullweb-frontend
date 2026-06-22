@@ -24,6 +24,7 @@ import CustomerAutocomplete from '../../../components/CustomerAutocomplete';
 import toast from 'react-hot-toast';
 import { usePermission } from '../../../hooks/usePermission';
 import tablesService from '../../../services/tablesService';
+import { useRemovalReason } from '../../../hooks/useRemovalReason';
 
 interface OrderModalProps {
   table: Table;
@@ -36,7 +37,7 @@ interface OrderModalProps {
   onAddProduct: (product: Product) => void;
   onUpdateQuantity: (itemId: string, quantity: number) => void;
   onRemoveItem: (itemId: string) => void;
-  onRemoveExistingItem?: (itemId: string) => void;
+  onRemoveExistingItem?: (itemId: string, reason: string) => void;
   onEditOrder?: () => void;
   onAddNote: (itemId: string, note: string) => void;
   onUpdateModifiers?: (itemId: string, modifiers: any[], unitPrice: number) => void;
@@ -89,6 +90,9 @@ export const OrderModal = ({
   const [showWaiterPicker, setShowWaiterPicker] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+
+  // ── Hook para pedir motivo de eliminación ──
+  const { promptReason, modalElement: removalReasonModal } = useRemovalReason();
 
   const { data: waiters = [] } = useQuery({
     queryKey: ['order-waiters'],
@@ -183,7 +187,10 @@ export const OrderModal = ({
   });
 
   // ── Cálculos ──
-  const existingSubtotal = existingItems.reduce((s, i) => s + (i.total ?? 0), 0);
+  // Soft-delete visual: excluir items cancelados del total
+  const existingSubtotal = existingItems
+    .filter(i => !i.isCancelled)
+    .reduce((s, i) => s + (i.total ?? 0), 0);
   const newSubtotal      = cart.reduce((s, i) => s + i.subtotal, 0);
   const subtotal         = existingSubtotal + newSubtotal;
   const discountValue    = parseFloat(discountInput) || 0;
@@ -525,25 +532,37 @@ export const OrderModal = ({
                         {existingItems.map(item => (
                           <div
                             key={item.id}
-                            className="flex items-center gap-2 py-2 border-b border-gray-100"
+                            className={`flex items-center gap-2 py-2 border-b border-gray-100 ${item.isCancelled ? 'opacity-60' : ''}`}
                           >
-                            <div className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded text-gray-500 text-xs font-bold flex-shrink-0">
+                            <div className={`w-6 h-6 flex items-center justify-center rounded text-xs font-bold flex-shrink-0 ${
+                              item.isCancelled ? 'bg-red-100 text-red-400 line-through' : 'bg-gray-100 text-gray-500'
+                            }`}>
                               {item.quantity}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[14px] text-gray-600 font-medium truncate">{item.productName}</p>
-                              {item.notes && (
+                              <p className={`text-[14px] font-medium truncate ${item.isCancelled ? 'text-slate-400 line-through' : 'text-gray-600'}`}>
+                                {item.productName}
+                              </p>
+                              {item.isCancelled && item.cancelReason && (
+                                <p className="text-xs text-red-500 truncate flex items-center gap-1">
+                                  ✕ {item.cancelReason}
+                                </p>
+                              )}
+                              {!item.isCancelled && item.notes && (
                                 <p className="text-xs text-amber-700 truncate flex items-center gap-1">
                                   <MessageSquare size={10} /> {item.notes}
                                 </p>
                               )}
                             </div>
-                            <span className="text-[14px] font-bold text-gray-500 whitespace-nowrap flex-shrink-0">
+                            <span className={`text-[14px] font-bold whitespace-nowrap flex-shrink-0 ${item.isCancelled ? 'text-slate-400 line-through' : 'text-gray-500'}`}>
                               ${(item.total ?? 0).toLocaleString()}
                             </span>
-                            {onRemoveExistingItem && (
+                            {onRemoveExistingItem && !item.isCancelled && (
                               <button
-                                onClick={() => onRemoveExistingItem(item.id)}
+                                onClick={async () => {
+                                  const reason = await promptReason(item.productName);
+                                  if (reason) onRemoveExistingItem(item.id, reason);
+                                }}
                                 className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
                               >
                                 <X size={14} />
@@ -923,6 +942,9 @@ export const OrderModal = ({
           </div>
         </div>
       )}
+
+      {/* Modal de motivo de eliminación */}
+      {removalReasonModal}
 
     </>
   );

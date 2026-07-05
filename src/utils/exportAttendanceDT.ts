@@ -6,7 +6,7 @@
  *
  * Requiere: exceljs (npm install exceljs)
  */
-import ExcelJS from 'exceljs';
+import type ExcelJS from 'exceljs';
 
 // ── Colores DT ────────────────────────────────────────────────────────────────
 const COLOR_HEADER_BG   = '1F3864';   // azul oscuro
@@ -255,6 +255,10 @@ export async function exportAttendanceDT(
   dateTo:   string,
   est: EstablishmentInfo = {}
 ): Promise<void> {
+  // ▸ Import dinámico: 'exceljs' (~450KB) solo se carga aquí, bajo demanda.
+  // Coexiste con el `import type ExcelJS` (espacio de tipos) sin conflicto.
+  const ExcelJS = (await import('exceljs')).default;
+
   const wb = new ExcelJS.Workbook();
   wb.creator  = 'BullWeb';
   wb.created  = new Date();

@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Building2, Plus, RefreshCw, Search, Eye, Download, Trash2, ChevronLeft, ChevronRight, Archive, ArchiveRestore } from 'lucide-react';
+import { Building2, Plus, RefreshCw, Search, Eye, Download, Trash2, ChevronLeft, ChevronRight, Archive, ArchiveRestore, Mail, MessageCircle } from 'lucide-react';
 import superadminService, { type Tenant } from '@/services/superadmin/superadminService';
 import SuperAdminTenantModal from './SuperAdminTenantModal';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
@@ -52,18 +52,53 @@ function fmtRelative(d?: string | null): { text: string; isOld: boolean; isOnlin
   return { text: months === 1 ? 'Hace 1 mes' : `Hace ${months} meses`, isOld: true, isOnline: false };
 }
 
-function calcSemaforo(t: any): 'green' | 'yellow' | 'red' {
+// Devuelve color + motivo real del semáforo para mostrarlo en el tooltip
+function getSemaforoInfo(t: any): { color: 'green' | 'yellow' | 'red'; reason: string } {
   const now = Date.now();
-  if (t.status === 'SUSPENDED' || t.status === 'CANCELLED') return 'red';
-  if (t.status === 'TRIAL' && t.trialEndsAt && new Date(t.trialEndsAt).getTime() < now) return 'red';
+
+  // ── Casos ROJOS ──
+  if (t.status === 'SUSPENDED') return { color: 'red', reason: 'Cliente suspendido' };
+  if (t.status === 'CANCELLED') return { color: 'red', reason: 'Cliente cancelado' };
+
+  if (t.status === 'TRIAL' && t.trialEndsAt) {
+    const trialEnd = new Date(t.trialEndsAt).getTime();
+    if (trialEnd < now) {
+      const diasVencido = Math.max(1, Math.floor((now - trialEnd) / 86_400_000));
+      return { color: 'red', reason: `Trial vencido hace ${diasVencido} ${diasVencido === 1 ? 'día' : 'días'}` };
+    }
+  }
+
   const diff = t.lastLogin ? now - new Date(t.lastLogin).getTime() : Infinity;
   const days = diff / 86_400_000;
-  if (diff < 10 * 60_000) return 'green'; // en línea ahora mismo
-  if (days > 14) return 'red';
+
+  // En línea ahora mismo → verde
+  if (diff < 10 * 60_000) return { color: 'green', reason: 'Activo y saludable' };
+
+  // Inactivo mucho tiempo → rojo
+  if (days > 14) {
+    const diasSinLogin = Math.floor(days);
+    return { color: 'red', reason: `Sin login hace ${diasSinLogin} ${diasSinLogin === 1 ? 'día' : 'días'}` };
+  }
+
+  // ── Casos AMARILLOS ──
   const trialSoon = t.status === 'TRIAL' && t.trialEndsAt &&
     new Date(t.trialEndsAt).getTime() - now < 3 * 86400000;
-  if (days > 7 || trialSoon) return 'yellow';
-  return 'green';
+  if (trialSoon) return { color: 'yellow', reason: 'Atención: Trial vence pronto' };
+  if (days > 7) return { color: 'yellow', reason: 'Poca actividad reciente' };
+
+  // ── VERDE por defecto ──
+  return { color: 'green', reason: 'Activo y saludable' };
+}
+
+function calcSemaforo(t: any): 'green' | 'yellow' | 'red' {
+  return getSemaforoInfo(t).color;
+}
+
+// Normaliza un teléfono chileno para wa.me: quita no-dígitos y prepone 56 si falta
+function normalizeWaNumber(raw: string): string {
+  const digits = raw.replace(/\D/g, '');
+  // Si ya tiene el prefijo 56 y es largo, lo dejamos; si no, lo agregamos
+  return digits.startsWith('56') && digits.length > 9 ? digits : `56${digits}`;
 }
 
 function getMrr(t: any): number {
@@ -380,9 +415,13 @@ export default function SuperAdminTenants() {
                 </thead>
                 <tbody className="divide-y divide-gray-800">
                   {paginated.map((t: any) => {
-                    const sem = calcSemaforo(t);
+                    const semInfo = getSemaforoInfo(t);
+                    const sem = semInfo.color;
                     const { text: lastAccess, isOld, isOnline } = fmtRelative(t.lastLogin);
                     const mrr = getMrr(t);
+                    const phone = t.contact_phone ?? t.contactPhone;
+                    const email = t.contact_email ?? t.contactEmail;
+                    const waNumber = phone ? normalizeWaNumber(phone) : null;
                     return (
                       <tr key={t.id} className="hover:bg-gray-800/40 transition-colors">
 
@@ -390,7 +429,7 @@ export default function SuperAdminTenants() {
                         <td className="px-3 py-3">
                           <div
                             className={`w-3 h-3 rounded-full mx-auto ${sem === 'green' ? 'bg-emerald-400' : sem === 'yellow' ? 'bg-amber-400' : 'bg-rose-500'}`}
-                            title={sem === 'green' ? 'Activo y saludable' : sem === 'yellow' ? 'Atención requerida' : 'Crítico'}
+                            title={semInfo.reason}
                           />
                         </td>
 
@@ -463,6 +502,47 @@ export default function SuperAdminTenants() {
                         {/* Acciones */}
                         <td className="px-3 py-3">
                           <div className="flex items-center justify-end gap-1.5 flex-nowrap">
+                            {/* WhatsApp */}
+                            {waNumber ? (
+                              <a
+                                href={`https://wa.me/${waNumber}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title={`WhatsApp: ${phone}`}
+                                className="text-xs p-1.5 rounded-md bg-emerald-800/50 hover:bg-emerald-700/60 text-emerald-300 transition-colors flex items-center"
+                              >
+                                <MessageCircle className="w-3 h-3" />
+                              </a>
+                            ) : (
+                              <span
+                                title="Sin teléfono de contacto"
+                                className="text-xs p-1.5 rounded-md bg-gray-800/40 text-gray-700 flex items-center cursor-not-allowed"
+                              >
+                                <MessageCircle className="w-3 h-3" />
+                              </span>
+                            )}
+
+                            {/* Email */}
+                            {email ? (
+                              <a
+                                href={`mailto:${email}`}
+                                title={`Email: ${email}`}
+                                className="text-xs p-1.5 rounded-md bg-blue-800/50 hover:bg-blue-700/60 text-blue-300 transition-colors flex items-center"
+                              >
+                                <Mail className="w-3 h-3" />
+                              </a>
+                            ) : (
+                              <span
+                                title="Sin email de contacto"
+                                className="text-xs p-1.5 rounded-md bg-gray-800/40 text-gray-700 flex items-center cursor-not-allowed"
+                              >
+                                <Mail className="w-3 h-3" />
+                              </span>
+                            )}
+
+                            {/* Separador */}
+                            <span className="w-px h-5 bg-gray-700/50 mx-0.5" />
+
                             <Link
                               to={`/superadmin/tenants/${t.id}`}
                               className="text-xs px-2.5 py-1 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-200 transition-colors"
@@ -520,8 +600,8 @@ export default function SuperAdminTenants() {
                               </button>
                             )}
 
-                            {/* Eliminar — solo TEST */}
-                            {t.isTest && (
+                            {/* Eliminar — solo archivados (evita borrado de clientes activos) */}
+                            {t.isArchived && (
                               <button
                                 onClick={() => setDeleteTarget(t)}
                                 disabled={deleteMut.isPending}

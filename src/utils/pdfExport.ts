@@ -1,6 +1,9 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-
+/**
+ * BULLWEB — PDF Export Utility (jsPDF + autoTable)
+ *
+ * NOTA: 'jspdf' y 'jspdf-autotable' se cargan con import() dinámico para que
+ * NO entren al bundle principal. Solo se descargan al hacer click en "Exportar".
+ */
 export interface PdfColumn {
   header: string;
   dataKey: string;
@@ -15,11 +18,17 @@ export interface PdfOptions {
   primaryColor?: [number, number, number]; // RGB
 }
 
-export function exportToPdf(
+export async function exportToPdf(
   data: Record<string, unknown>[],
   columns: PdfColumn[],
   options: PdfOptions = {}
-): void {
+): Promise<void> {
+  // ▸ Import dinámico: jspdf + autotable (~350KB) solo se cargan aquí, bajo demanda.
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
+
   const {
     title = 'Reporte',
     subtitle,

@@ -8,7 +8,6 @@ import { TabMovimientos } from './tabs/TabMovimientos';
 import { TabArqueos } from './tabs/TabArqueos';
 import { TabPropinas } from './tabs/TabPropinas';
 import { TabDescuentos } from './tabs/TabDescuentos';
-import { TabCerrado } from './tabs/TabCerrado';
 import type { Sale, SalesFilters as Filters, SalesStats as Stats } from '../../types/sales.types';
 import { salesService } from '../../services/salesService';
 import { cashRegistersService } from '../../services/cashRegistersService';
@@ -16,7 +15,7 @@ import { DollarSign, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { usePermission } from '@/hooks/usePermission';
 
-type TabType = 'ventas' | 'movimientos' | 'arqueos' | 'cerrado' | 'propinas' | 'descuentos';
+type TabType = 'ventas' | 'movimientos' | 'arqueos' | 'propinas' | 'descuentos';
 
 export const Sales = () => {
   const qc = useQueryClient();
@@ -265,16 +264,6 @@ export const Sales = () => {
         >
           Arqueos de Caja
         </button>
-        <button
-          onClick={() => setActiveTab('cerrado')}
-          className={`px-4 py-2 font-semibold transition-colors ${
-            activeTab === 'cerrado'
-              ? 'text-orange-600 border-b-2 border-orange-600'
-              : 'text-gray-600 hover:text-gray-800'
-          }`}
-        >
-          Cerrado
-        </button>
         {canViewTips && (
         <button
           onClick={() => setActiveTab('propinas')}
@@ -350,8 +339,6 @@ export const Sales = () => {
       {activeTab === 'arqueos' && <TabArqueos />}
       {activeTab === 'propinas' && canViewTips && <TabPropinas filters={filters} />}
       {activeTab === 'descuentos' && <TabDescuentos sales={sales} isLoading={loading} hasSearched={hasSearched} />}
-      
-      {activeTab === 'cerrado' && <TabCerrado />}
 
       {/* Modal Abrir Caja */}
       {showCashModal && (

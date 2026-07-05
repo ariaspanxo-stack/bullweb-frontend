@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle, Zap, Star, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react';
 import api from '@/services/api';
+import { useAuthStore } from '@/store/authStore';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -63,9 +64,11 @@ const PLANS = [
 // ─── Componente ───────────────────────────────────────────────────────────────
 
 export default function Subscription() {
+  const tenantId = useAuthStore(s => s.user?.tenantId);
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [loading,       setLoading]       = useState(true);
   const [subscribing,   setSubscribing]   = useState<string | null>(null);
+  const [paying,        setPaying]        = useState(false);
   const [error,         setError]         = useState<string | null>(null);
 
   useEffect(() => {
@@ -84,8 +87,8 @@ export default function Subscription() {
   async function loadStatus() {
     try {
       setLoading(true);
-      const data = await api.get<BillingStatus>('/api/billing/status');
-      setBillingStatus(data);
+      const response = await api.get<BillingStatus>('/api/billing/status');
+      setBillingStatus(response.data);
     } catch {
       // Si no hay tenant, mostramos los planes de todas formas
       setBillingStatus(null);
@@ -100,10 +103,23 @@ export default function Subscription() {
       setSubscribing(plan);
       const result = await api.post<{ redirectUrl: string }>('/api/billing/subscribe', { plan });
       // Redirigir a Flow para registro de tarjeta
-      window.location.href = result.redirectUrl;
+      window.location.href = result.data.redirectUrl;
     } catch (err: any) {
       setError(err.message ?? 'Error iniciando suscripción. Intenta nuevamente.');
       setSubscribing(null);
+    }
+  }
+
+  // ── Pago único vía Flow (backend genera orden $29.000 + webhook automático) ─────
+  async function handlePaySubscription() {
+    try {
+      setError(null);
+      setPaying(true);
+      const response = await api.post<{ flowUrl: string }>('/api/payments/flow/create');
+      window.location.href = response.data.flowUrl;
+    } catch (err: any) {
+      setError(err.message ?? 'Error al generar el link de pago. Intenta nuevamente.');
+      setPaying(false);
     }
   }
 
@@ -192,6 +208,37 @@ export default function Subscription() {
           onConfirm={() => { setCancelConfirmOpen(false); handleCancel(); }}
           onCancel={() => setCancelConfirmOpen(false)}
         />
+
+        {/* ── Plan Premium — Pagar Suscripción (Flow) ────────────────────── */}
+        {!loading && (
+          <div className="mb-8 p-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg text-white">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-white/20 rounded-xl">
+                  <Star size={28} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold">Plan Premium</h3>
+                  <p className="text-indigo-100 text-sm">$29.000 CLP / mes</p>
+                </div>
+              </div>
+              <button
+                onClick={handlePaySubscription}
+                disabled={paying}
+                className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 disabled:opacity-60 flex items-center gap-2 transition-colors"
+              >
+                {paying ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    Generando link...
+                  </>
+                ) : (
+                  'Pagar Suscripción'
+                )}
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Error */}
         {error && (

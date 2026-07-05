@@ -34,25 +34,39 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
   const [printing, setPrinting] = useState(false);
   const [printed, setPrinted] = useState(false);
 
-  const handleEmit = async (e: React.FormEvent) => {
+  const handleEmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setEmittedDoc(null);
     setPrinted(false);
-    try {
-      // Boleta sin RUT → motor nativo usará "66666666-6" (Consumidor Final)
-      const { data } = await api.post(`/dte/emit/${orderId}`, {
+
+    // 🚀 HOTFIX FIRE-AND-FORGET: lanzamos la emisión SIN await para no bloquear
+    // el POS si el SII está lento o caído. El modal se cierra inmediatamente y
+    // el mesero puede seguir vendiendo. El resultado (éxito/error/timeout) se
+    // resuelve en segundo plano con toasts no bloqueantes.
+    api
+      .post(`/dte/emit/${orderId}`, {
         tipo: 39,
         clientEmail: email || undefined,
+      })
+      .then(({ data }) => {
+        // Éxito en background (no bloqueante): actualiza estado del padre
+        toast.success('Boleta emitida correctamente');
+        onEmitted?.(data);
+      })
+      .catch(() => {
+        // Cualquier fallo (timeout del SII incluido) → warning estandarizado
+        // y no bloqueante. La boleta queda PENDING/ERROR en backend para
+        // reintento posterior.
+        // Nota: react-hot-toast no expone toast.warning; usamos toast() con
+        // icono y duración para simular un warning.
+        toast('Boleta electrónica en proceso. Revisa el estado en un momento.', {
+          icon: '⚠️',
+          duration: 6000,
+        });
       });
-      toast.success('Boleta emitida correctamente');
-      setEmittedDoc(data);
-      onEmitted?.(data);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? err?.message ?? 'Error al emitir boleta');
-    } finally {
-      setLoading(false);
-    }
+
+    // Cierra el modal de inmediato: el mesero puede seguir operando.
+    handleClose();
   };
 
   const handlePrint = async () => {

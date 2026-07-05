@@ -66,6 +66,7 @@ export const TabArqueos = () => {
   const [userAmounts, setUserAmounts] = useState<Record<string, string>>({});
   const [comment, setComment] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [justification, setJustification] = useState('');
 
   // Modal apertura
   const [showOpenModal, setShowOpenModal] = useState(false);
@@ -162,6 +163,7 @@ export const TabArqueos = () => {
   const closedDeclared: number = !isActiveSelected ? (selectedSession?.closingCash ?? 0) : 0;
   const diferencia = isActiveSelected ? (totalUsuario - sistemaTotal) : (closedDeclared - sistemaTotal);
   const diffAbsLarge = Math.abs(diferencia) > DIFF_THRESHOLD && !isNaN(diferencia);
+  const needsJustification = diffAbsLarge && justification.trim().length < 5;
 
   // BUG-6: usar snapshot cuando no hay cuadre en vivo
   const liveExpectedCash = cuadre
@@ -216,6 +218,8 @@ export const TabArqueos = () => {
         closingCash: totalUsuario,
         notes: comment || undefined,
         closingByMethod: buildClosingByMethod(),
+        expectedCash: sistemaTotal,
+        justification: diffAbsLarge ? justification.trim() : undefined,
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['active-register'] });
@@ -248,6 +252,10 @@ export const TabArqueos = () => {
   });
 
   const handleConfirmClose = () => {
+    if (needsJustification) {
+      toast.error('La diferencia supera $10.000. Debes ingresar una justificación de al menos 5 caracteres.');
+      return;
+    }
     if (diffAbsLarge && !showCloseConfirm) {
       setShowCloseConfirm(true);
       return;
@@ -372,12 +380,24 @@ export const TabArqueos = () => {
                   const isOpen = s.status === 'OPEN';
                   const isDeleted = !!s.deletedAt;
                   const isSelected = s.id === effectiveSelectedId;
-                  // BUG-1: usar snapshotTotalSales para sesiones no seleccionadas
+                  // FIX (Arqueos): la diferencia debe provenir SIEMPRE del backend.
+                  // El campo `difference` se persiste al cerrar la sesión y ya considera
+                  // openingCash + cashSales + cash_movements (CASH_IN/CASH_OUT).
+                  // Evita el bug de recalcular (closingCash - snapshotTotalSales) que
+                  // ignora los movimientos manuales y produce un valor distinto.
+                  // Solo para la sesión OPEN seleccionada se calcula en vivo.
                   const sysAmt = isSelected && cuadre
                     ? sistemaTotal
                     : ((s.snapshotTotalSales ?? s.openingCash ?? 0) as number);
                   const userAmt: number | null = s.closingCash ?? null;
-                  const diff: number | null = userAmt != null ? userAmt - sysAmt : null;
+                  let diff: number | null;
+                  if (s.status === 'CLOSED') {
+                    diff = s.difference != null ? Number(s.difference) : null;
+                  } else if (isSelected && cuadre) {
+                    diff = userAmt != null ? userAmt - sistemaTotal : null;
+                  } else {
+                    diff = null;
+                  }
                   const lineClass = isDeleted ? 'line-through text-gray-400 opacity-60' : '';
                   const dur = calcDuration(s.openedAt, s.closedAt);
                   return (
@@ -652,6 +672,28 @@ export const TabArqueos = () => {
                     </div>
                   ))}
                 </div>
+                {diffAbsLarge && (
+                  <div className="mb-3">
+                    <label className="text-sm font-semibold text-red-600 block mb-1 flex items-center gap-1.5">
+                      <AlertTriangle size={14} />
+                      Justificación de la diferencia (Obligatorio) <span className="text-red-400">*</span>
+                    </label>
+                    <textarea
+                      value={justification}
+                      onChange={e => setJustification(e.target.value)}
+                      rows={3}
+                      placeholder="Explica el motivo del faltante/sobrante (mín. 5 caracteres). Ej: Pago en efectivo no registrado, vuelto mal entregado..."
+                      className={`w-full px-3 py-2 border rounded text-sm focus:ring-2 focus:border-orange-400 outline-none resize-none ${
+                        justification.trim().length >= 5
+                          ? 'border-gray-300 focus:ring-orange-400'
+                          : 'border-red-300 bg-red-50 focus:ring-red-400'
+                      }`}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      Diferencia de {fmt(Math.abs(diferencia))}. Quedará registrada en el cierre.
+                    </p>
+                  </div>
+                )}
                 <div className="mb-3">
                   <label className="text-sm text-gray-500 block mb-1">Comentario</label>
                   <textarea
@@ -690,7 +732,7 @@ export const TabArqueos = () => {
 
               <div className="px-5 py-4 flex-shrink-0">
                 <button
-                  disabled={closeMutation.isPending}
+                  disabled={closeMutation.isPending || needsJustification}
                   onClick={handleConfirmClose}
                   className={`w-full py-3 disabled:opacity-50 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2 ${
                     diffAbsLarge ? 'bg-red-500 hover:bg-red-600' : 'bg-orange-500 hover:bg-orange-600'
@@ -746,6 +788,17 @@ export const TabArqueos = () => {
                   <span className="text-white font-black text-xl">
                     {diferencia > 0 ? '+' : ''}{fmt(diferencia)}
                   </span>
+                </div>
+              )}
+              {selectedSession.status === 'CLOSED' && selectedSession.justification && (
+                <div className="px-5 py-3 bg-amber-50 border-t border-amber-200 flex-shrink-0">
+                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wide flex items-center gap-1.5 mb-1">
+                    <AlertTriangle size={13} />
+                    Justificación del cajero
+                  </p>
+                  <p className="text-sm text-amber-900 leading-relaxed whitespace-pre-wrap">
+                    {selectedSession.justification}
+                  </p>
                 </div>
               )}
             </>

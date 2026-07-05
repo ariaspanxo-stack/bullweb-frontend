@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Menu, Bell, MessageCircle, User, Settings, LogOut, ChevronRight, ShoppingBag, AlertCircle, CheckCircle, X, Package, Download } from 'lucide-react';
+import { Menu, Bell, MessageCircle, User, Settings, LogOut, ChevronRight, ShoppingBag, AlertCircle, CheckCircle, X, Package, Download, Headset } from 'lucide-react';
 import { useInstallPWA } from '@/components/pwa/InstallPWA';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
@@ -181,6 +181,18 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <MessageCircle className="h-4 w-4" />
             <span className="hidden sm:inline">Soporte</span>
           </button>
+
+          {/* Botón Soporte Remoto (descarga TeamViewer QuickSupport) */}
+          <a
+            href="https://download.teamviewer.com/download/TeamViewerQS.exe"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-gray-200"
+            title="Descargar TeamViewer QuickSupport"
+          >
+            <Headset className="h-4 w-4" />
+            <span className="hidden sm:inline">Soporte Remoto</span>
+          </a>
 
           {/* Notificaciones */}
           <div className="relative" ref={notifRef}>

@@ -396,6 +396,7 @@ class RestaurantService {
     customerId?: string | null;
     customerName?: string | null;
     customerPhone?: string | null;
+    deliveryAddress?: string | null;
   }): Promise<void> {
     try {
       await api.patch(`/pos/orders/${orderId}`, data);

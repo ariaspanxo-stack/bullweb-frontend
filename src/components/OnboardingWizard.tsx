@@ -365,6 +365,7 @@ export default function OnboardingWizard() {
   const [saving, setSaving]         = useState(false);
   const [finishing, setFinishing]   = useState(false);
   const [checked, setChecked]       = useState(false);
+  const [hasProducts, setHasProducts] = useState(false);  // Si hay productos, saltar paso 3
 
   // Consultar status al montar (solo si hay token)
   useEffect(() => {
@@ -372,10 +373,37 @@ export default function OnboardingWizard() {
     if (!token) { setChecked(true); return; }
 
     apiGet('/onboarding/status')
-      .then(data => {
+      .then(async data => {
         if (!data.completed) {
-          setStep(data.currentStep ?? 0);
+          // Determinar el paso inicial. Si el tenant ya tiene un nombre
+          // (fue ingresado durante el registro), se omiten los pasos
+          // 0 (Bienvenida) y 1 (Nombre del Restaurante) y se arranca
+          // directamente en el paso 2 (Mesas) para evitar duplicar la
+          // información que el usuario ya completó al registrarse.
+          let startStep = data.currentStep ?? 0;
+          try {
+            const profileRes: any = await apiGet('/tenant/profile');
+            const tenantName =
+              profileRes?.data?.name?.toString().trim() ||
+              profileRes?.name?.toString().trim() ||
+              '';
+            if (tenantName) {
+              startStep = Math.max(startStep, 2);
+            }
+          } catch { /* silencioso — si falla, se mantiene el flujo original */ }
+
+          setStep(startStep);
           setVisible(true);
+
+          // Detectar si el tenant ya tiene productos pre-cargados (el backend crea 3 demo).
+          // Si es así, el botón "Continuar" del paso 2 (Mesas) saltará directo al paso 4 (Listo),
+          // omitiendo el paso 3 (Primer Producto).
+          apiGet('/menu/products?limit=1')
+            .then(productsData => {
+              const list = Array.isArray(productsData) ? productsData : (productsData?.data ?? []);
+              setHasProducts(list.length > 0);
+            })
+            .catch(() => { /* silencioso — no bloquear el wizard */ });
         }
       })
       .catch(() => { /* silencioso — no bloquear UI */ })
@@ -438,7 +466,7 @@ export default function OnboardingWizard() {
           <StepNombreRestaurante onNext={handleProfileSave} saving={saving} />
         )}
         {step === 2 && (
-          <StepMesas onNext={() => goToStep(3)} />
+          <StepMesas onNext={() => goToStep(hasProducts ? 4 : 3)} />
         )}
         {step === 3 && (
           <StepPrimerProducto

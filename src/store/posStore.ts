@@ -14,6 +14,77 @@ export interface CartItem {
   subtotal: number;
 }
 
+/**
+ * Promoción activa tal como la retorna el backend (GET /api/pos/promotions/active).
+ * Contiene un array `productIds` con los IDs de productos a los que aplica.
+ */
+export interface ActivePromotion {
+  id: string;
+  productIds: string[];
+  type: 'PERCENTAGE' | 'FIXED_PRICE' | 'X_FOR_Y' | 'PACK_PRICE';
+  value: number;
+  buyQuantity: number;
+  getQuantity: number;
+}
+
+/**
+ * Calcula el subtotal de un item aplicando la MISMA lógica de promociones
+ * que usa el backend en `_createOrderTx` (pos.service.ts).
+ *
+ * Esto garantiza que el total mostrado en el POS coincida con el cobrado.
+ *
+ * NOTA: En este store del POS los `modifiers` son strings sin precio propio,
+ * por lo que `basePrice = product.price` (equivale a `modifierPriceTotal = 0`
+ * en el backend).
+ */
+function _calculateItemSubtotal(
+  product: Product,
+  quantity: number,
+  activePromotions: ActivePromotion[]
+): number {
+  const basePrice = product.price;
+  const promo = activePromotions.find((p) => p.productIds?.includes(product.id));
+
+  // Sin promo: precio base * cantidad
+  if (!promo) {
+    return basePrice * quantity;
+  }
+
+  if (promo.type === 'PERCENTAGE') {
+    // Descuento porcentual sobre el precio base
+    const discountFactor = promo.value / 100;
+    const finalUnitPrice = basePrice * (1 - discountFactor);
+    return finalUnitPrice * quantity;
+  }
+
+  if (promo.type === 'FIXED_PRICE') {
+    // Precio fijo promocional (ej: Pizza a $5.990)
+    const finalUnitPrice = promo.value; // + modifierPriceTotal (0 en POS store)
+    return finalUnitPrice * quantity;
+  }
+
+  if (promo.type === 'X_FOR_Y' && promo.buyQuantity > 0) {
+    // Lógica 2x1 (o 3x2, etc). Se pagan 'buyQuantity' y se llevan 'getQuantity' gratis.
+    const totalSets = Math.floor(quantity / (promo.buyQuantity + promo.getQuantity));
+    const paidItems = totalSets * promo.buyQuantity;
+    const remainingItems = quantity - totalSets * (promo.buyQuantity + promo.getQuantity);
+    const paidAmount = (paidItems + remainingItems) * basePrice;
+    return paidAmount;
+  }
+
+  if (promo.type === 'PACK_PRICE' && promo.buyQuantity > 0) {
+    // Precio por pack (ej: 2 Mojitos por $5.500)
+    const totalPacks = Math.floor(quantity / promo.buyQuantity);
+    const remainingItems = quantity % promo.buyQuantity;
+    const packAmount = totalPacks * promo.value;
+    const remainingAmount = remainingItems * basePrice;
+    return packAmount + remainingAmount;
+  }
+
+  // Fallback: precio base * cantidad
+  return basePrice * quantity;
+}
+
 interface PosState {
   // Tipo de orden
   orderType: 'DINE_IN' | 'TAKEAWAY' | 'DELIVERY';
@@ -30,12 +101,17 @@ interface PosState {
   removeFromCart: (itemId: string) => void;
   clearCart: () => void;
 
+  // Promociones activas (cargadas desde el backend al montar el POS)
+  activePromotions: ActivePromotion[];
+  setActivePromotions: (promos: ActivePromotion[]) => void;
+
   // Cálculos
   subtotal: number;
   tax: number;
   discount: number;
   total: number;
   calculateTotals: () => void;
+  recalcCartSubtotals: () => void;
 
   // Descuento
   discountType: 'PERCENTAGE' | 'FIXED' | null;
@@ -75,31 +151,31 @@ export const usePosStore = create<PosState>((set, get) => ({
     );
 
     if (existingItem) {
-      // Si existe, solo aumentar cantidad
+      // Si existe, solo aumentar cantidad y recalcular subtotal con promos
       set({
         cartItems: cartItems.map(item =>
           item.id === existingItem.id
-            ? { 
-                ...item, 
+            ? {
+                ...item,
                 quantity: item.quantity + quantity,
-                subtotal: item.product.price * (item.quantity + quantity)
+                subtotal: _calculateItemSubtotal(item.product, item.quantity + quantity, get().activePromotions)
               }
             : item
         )
       });
     } else {
-      // Si no existe, agregar nuevo item
+      // Si no existe, agregar nuevo item con subtotal calculado (con promos)
       const newItem: CartItem = {
         id: crypto.randomUUID(),
         product,
         quantity,
         modifiers,
         notes,
-        subtotal: product.price * quantity
+        subtotal: _calculateItemSubtotal(product, quantity, get().activePromotions)
       };
       set({ cartItems: [...cartItems, newItem] });
     }
-    
+
     get().calculateTotals();
   },
 
@@ -108,19 +184,20 @@ export const usePosStore = create<PosState>((set, get) => ({
       get().removeFromCart(itemId);
       return;
     }
-    
+
+    const activePromotions = get().activePromotions;
     set({
       cartItems: get().cartItems.map(item =>
         item.id === itemId
-          ? { 
-              ...item, 
-              quantity, 
-              subtotal: item.product.price * quantity 
+          ? {
+              ...item,
+              quantity,
+              subtotal: _calculateItemSubtotal(item.product, quantity, activePromotions)
             }
           : item
       )
     });
-    
+
     get().calculateTotals();
   },
 
@@ -143,11 +220,30 @@ export const usePosStore = create<PosState>((set, get) => ({
     });
   },
 
+  // Promociones activas (cargadas desde el backend al montar el POS)
+  activePromotions: [],
+  setActivePromotions: (promos) => {
+    set({ activePromotions: promos });
+    // Re-calcular los subtotales de todos los items del carrito con las nuevas promos
+    get().recalcCartSubtotals();
+  },
+
   // Cálculos
   subtotal: 0,
   tax: 0,
   discount: 0,
   total: 0,
+
+  recalcCartSubtotals: () => {
+    const activePromotions = get().activePromotions;
+    set({
+      cartItems: get().cartItems.map(item => ({
+        ...item,
+        subtotal: _calculateItemSubtotal(item.product, item.quantity, activePromotions)
+      }))
+    });
+    get().calculateTotals();
+  },
 
   calculateTotals: () => {
     const cartItems = get().cartItems;
@@ -166,12 +262,13 @@ export const usePosStore = create<PosState>((set, get) => ({
     // Asegurar que el descuento no sea mayor al subtotal
     discount = Math.min(discount, subtotal);
     
-    // Calcular impuesto (18% IGV en Perú)
-    const taxRate = 0.18;
-    const taxableAmount = subtotal - discount;
-    const tax = taxableAmount * taxRate;
-    
-    // Total
+    // FIX: Alinear con el backend — el backend NO calcula impuesto (tax = 0).
+    // Antes se aplicaba un 18% de IGV (Perú) que el backend no consideraba,
+    // causando discrepancia entre el total mostrado en el POS y el cobrado.
+    const tax = 0;
+
+    // Total: subtotal - descuento (sin impuesto). El deliveryFee se gestiona
+    // en el backend y no está presente en este store del POS.
     const total = subtotal - discount + tax;
 
     set({ subtotal, tax, discount, total });

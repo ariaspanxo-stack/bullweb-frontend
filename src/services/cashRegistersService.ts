@@ -161,7 +161,7 @@ export const cashRegistersService = {
     return data.data;
   },
 
-  async closeSession(registerId: string, payload: { closingCash: number; notes?: string; closingByMethod?: Record<string, number> }): Promise<{ session: CashSession; snapshot: CloseSessionSnapshot }> {
+  async closeSession(registerId: string, payload: { closingCash: number; notes?: string; closingByMethod?: Record<string, number>; expectedCash?: number; justification?: string }): Promise<{ session: CashSession; snapshot: CloseSessionSnapshot }> {
     const { data } = await api.post<ApiResponse>(`/cash-registers/${registerId}/close`, payload);
     return data.data;
   },

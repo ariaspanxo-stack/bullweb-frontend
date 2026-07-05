@@ -23,7 +23,6 @@ import {
   FileSpreadsheet, QrCode, X, User, ChevronUp, ChevronDown, AlertTriangle,
   KeyRound, Loader2, AlertCircle, Download, Printer, Bell, CalendarDays, FileText, BarChart3,
 } from 'lucide-react';
-import QRCode from 'qrcode';
 import toast from 'react-hot-toast';
 import { exportToExcel, fmtDateTime } from '@/utils/exportExcel';
 import { exportAttendanceDT } from '@/utils/exportAttendanceDT';
@@ -1890,13 +1889,23 @@ function EmployeeQrModal({ employee, onClose }: { employee: any; onClose(): void
   const BASE_URL = window.location.origin;
 
   useEffect(() => {
-    const url = `${BASE_URL}/checkin?emp=${employee.id}`;
-    QRCode.toDataURL(url, {
-      width: 280,
-      margin: 2,
-      color: { dark: '#111827', light: '#ffffff' },
-      errorCorrectionLevel: 'M',
-    }).then(setQrDataUrl).catch(() => {});
+    let cancelled = false;
+    // ▸ Import dinámico: 'qrcode' solo se carga al abrir el modal del QR.
+    (async () => {
+      try {
+        const QRCode = (await import('qrcode')).default;
+        if (cancelled) return;
+        const url = `${BASE_URL}/checkin?emp=${employee.id}`;
+        const dataUrl = await QRCode.toDataURL(url, {
+          width: 280,
+          margin: 2,
+          color: { dark: '#111827', light: '#ffffff' },
+          errorCorrectionLevel: 'M',
+        });
+        if (!cancelled) setQrDataUrl(dataUrl);
+      } catch { /* noop */ }
+    })();
+    return () => { cancelled = true; };
   }, [employee.id, BASE_URL]);
 
   const handleDownload = () => {

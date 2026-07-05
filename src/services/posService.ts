@@ -260,4 +260,5 @@ export const posService = {
       throw new Error(data.message || 'Error al imprimir pre-cuenta');
     }
   },
+
 };

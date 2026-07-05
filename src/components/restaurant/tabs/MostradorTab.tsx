@@ -26,6 +26,7 @@ export function MostradorTab() {
     handlePayOrderFromCard,
     handleUpdateMostradorStatus,
     handleCancelOrder,
+    loadOrders,
   } = useRestaurant();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
@@ -150,6 +151,7 @@ export function MostradorTab() {
               onCancel={handleCancelOrder}
               onUpdateStatus={(o, s) => handleUpdateMostradorStatus(o, s as any)}
               onCardClick={setSelectedOrder}
+              onRefresh={loadOrders}
             />
           ))}
         </div>

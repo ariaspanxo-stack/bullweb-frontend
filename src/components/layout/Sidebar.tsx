@@ -52,6 +52,7 @@ import {
   Wrench,
   Shield,
   ShoppingBag,
+  Percent,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin';
@@ -134,6 +135,7 @@ const menuSections: MenuSection[] = [
       { name: 'Fidelización', icon: Heart,             path: '/campaigns',        permission: 'marketing.view', badge: '$4.990' },
       { name: 'Carta QR',    icon: QrCode,            path: '/carta-qr',         permission: 'marketing.view' },
       { name: 'Cupones',     icon: Tag,               path: '/coupons',          permission: 'coupons.view'   },
+      { name: 'Promociones', icon: Percent,           path: '/promotions',       permission: 'products.view', badge: 'Nuevo' },
     ]
   },
   {
@@ -142,6 +144,13 @@ const menuSections: MenuSection[] = [
     items: [
       { name: 'Reportes',    icon: BarChart3,    path: '/reports',        permission: 'reports.view'  },
       { name: 'Boletas DTE', icon: ReceiptIcon,  path: '/dte/documentos', permission: 'billing.view'  },
+    ]
+  },
+  {
+    title: 'Plan',
+    colorClass: 'text-indigo-400',
+    items: [
+      { name: 'Suscripción', icon: CreditCard, path: '/subscription' },
     ]
   },
 ];

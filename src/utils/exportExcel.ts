@@ -1,8 +1,11 @@
 /**
  * BULLWEB — Excel Export Utility (SheetJS)
- * Uso: exportToExcel([{ sheetName, rows }], 'Reporte Ventas')
+ * Uso: await exportToExcel([{ sheetName, rows }], 'Reporte Ventas')
+ *
+ * NOTA: 'xlsx' se carga con import() dinámico para que NO entre al bundle
+ * principal. Solo se descarga cuando el usuario hace click en "Exportar".
  */
-import * as XLSX from 'xlsx';
+import type * as XLSXTypes from 'xlsx';
 
 export interface ExcelSheet {
   /** Nombre de la hoja */
@@ -18,7 +21,10 @@ export interface ExcelSheet {
  * @param sheets  Definición de hojas
  * @param fileName  Nombre sin extensión
  */
-export function exportToExcel(sheets: ExcelSheet[], fileName: string): void {
+export async function exportToExcel(sheets: ExcelSheet[], fileName: string): Promise<void> {
+  // ▸ Import dinámico: 'xlsx' (~400KB) solo se carga aquí, bajo demanda.
+  const XLSX: typeof XLSXTypes = await import('xlsx');
+
   const wb = XLSX.utils.book_new();
 
   for (const { sheetName, rows, colWidths } of sheets) {
@@ -53,13 +59,17 @@ export function exportToExcel(sheets: ExcelSheet[], fileName: string): void {
 /**
  * Shortcut para exportar una sola hoja.
  */
-export function exportSheet(
+export async function exportSheet(
   rows: Record<string, unknown>[],
   fileName: string,
   sheetName = 'Datos'
-): void {
-  exportToExcel([{ sheetName, rows }], fileName);
+): Promise<void> {
+  await exportToExcel([{ sheetName, rows }], fileName);
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers puros (NO dependen de 'xlsx') — pueden importarse sin cargar la lib.
+// ─────────────────────────────────────────────────────────────────────────────
 
 /** Formatea número como moneda CLP para las celdas Excel */
 export function clp(n: number | null | undefined): string {

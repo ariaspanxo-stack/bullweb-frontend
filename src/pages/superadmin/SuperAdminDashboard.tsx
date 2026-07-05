@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Building2, TrendingUp, Users, XCircle, Clock, CalendarPlus, AlertTriangle } from 'lucide-react';
+import { Building2, TrendingUp, Users, XCircle, Clock, CalendarPlus, AlertTriangle, Send, AlertOctagon } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import toast from 'react-hot-toast';
 import superadminService from '@/services/superadmin/superadminService';
 import { AlertsPanel } from '@/components/superadmin/AlertsPanel';
 
@@ -29,6 +31,7 @@ const SEMAFORO: Record<string, { label: string; dot: string }> = {
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
+  const [reactivating, setReactivating] = useState(false);
 
   const { data: metrics, isLoading } = useQuery({
     queryKey: ['superadmin', 'metrics'],
@@ -45,9 +48,22 @@ export default function SuperAdminDashboard() {
 
   const { data: tenantsResp } = useQuery({
     queryKey: ['superadmin', 'tenants'],
-    queryFn:  superadminService.listTenants,
+    queryFn:  () => superadminService.listTenants(),
   });
   const tenants: any[] = (tenantsResp as any)?.tenants ?? (Array.isArray(tenantsResp) ? tenantsResp : []);
+
+  // Envía la campaña de reactivación a los tenants pausados (SUSPENDED)
+  async function handleReactivate() {
+    setReactivating(true);
+    try {
+      const response = await superadminService.sendReactivationCampaign();
+      toast.success(`Correos enviados a ${response.dispatched} tenants.`);
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Error al enviar campaña de reactivación');
+    } finally {
+      setReactivating(false);
+    }
+  }
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
@@ -66,13 +82,37 @@ export default function SuperAdminDashboard() {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-          <MetricCard icon={Building2}    label="Total clientes" value={metrics?.totalTenants    ?? 0}   color="bg-indigo-600" />
-          <MetricCard icon={Clock}        label="En trial"       value={metrics?.trialTenants    ?? 0}   color="bg-amber-500" />
-          <MetricCard icon={Users}        label="Activos"        value={metrics?.activeTenants   ?? 0}   color="bg-emerald-600" />
-          <MetricCard icon={XCircle}      label="Suspendidos"    value={metrics?.suspendedTenants ?? 0}  color="bg-rose-600" />
-          <MetricCard icon={CalendarPlus} label="Nuevos hoy"     value={metrics?.newToday        ?? 0}   color="bg-sky-600" />
-          <MetricCard icon={TrendingUp}   label="MRR estimado"   value={metrics?.mrrFormatted    ?? '$0'} color="bg-teal-600" />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+          <MetricCard icon={Building2}     label="Total clientes"   value={metrics?.totalTenants    ?? 0}    color="bg-indigo-600" />
+          <MetricCard icon={Clock}         label="Pruebas Activas"  value={metrics?.trialActive     ?? 0}    color="bg-amber-500" />
+          <MetricCard icon={AlertOctagon}  label="Pruebas Vencidas" value={metrics?.trialExpired    ?? 0}    color="bg-red-600"
+            tooltip="Trials vencidos (incluye los que no tienen fecha de término)" />
+          <MetricCard icon={Users}         label="Activos"          value={metrics?.activeTenants   ?? 0}    color="bg-emerald-600" />
+
+          {/* Tarjeta Suspendidos con acción de reactivación */}
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 flex flex-col gap-3">
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-rose-600">
+                <XCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Suspendidos</p>
+                <p className="text-2xl font-bold text-white">{metrics?.suspendedTenants ?? 0}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleReactivate}
+              disabled={reactivating || (metrics?.suspendedTenants ?? 0) === 0}
+              className="mt-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold transition-colors"
+            >
+              <Send className="w-3.5 h-3.5" />
+              {reactivating ? 'Enviando...' : 'Reactivar Pausados'}
+            </button>
+          </div>
+
+          <MetricCard icon={CalendarPlus}  label="Nuevos hoy"       value={metrics?.newToday        ?? 0}    color="bg-sky-600" />
+          <MetricCard icon={TrendingUp}    label="MRR estimado"     value={metrics?.mrrFormatted    ?? '$0'} color="bg-teal-600" />
         </div>
       )}
 
@@ -271,4 +311,3 @@ export default function SuperAdminDashboard() {
     </div>
   );
 }
-

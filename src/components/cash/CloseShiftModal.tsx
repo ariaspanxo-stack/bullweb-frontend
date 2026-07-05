@@ -42,6 +42,7 @@ function isCash(methodName: string): boolean {
 export function CloseShiftModal({ register, session, onClosed, onCancel }: CloseShiftModalProps) {
   const [closingCash,      setClosingCash]      = useState('');
   const [notes,            setNotes]            = useState('');
+  const [justification,    setJustification]    = useState('');
   const [loading,          setLoading]          = useState(false);
   const [error,            setError]            = useState<string | null>(null);
   const [closeResult,      setCloseResult]      = useState<CloseSessionSnapshot | null>(null);
@@ -58,6 +59,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
   const closingAmount = parseFloat(closingCash);
   const expectedCash  = cuadre?.expectedCash ?? 0;
   const diff = !isNaN(closingAmount) ? closingAmount - expectedCash : null;
+  const needsJustification = diff !== null && Math.abs(diff) > 10_000;
 
   const shiftDuration = formatDistanceStrict(
     new Date(session.openedAt),
@@ -73,7 +75,12 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
       return;
     }
 
-    if (diff !== null && Math.abs(diff) > 10_000) {
+    if (needsJustification && justification.trim().length < 5) {
+      setError('La diferencia supera $10.000. Debes ingresar una justificación de al menos 5 caracteres.');
+      return;
+    }
+
+    if (needsJustification) {
       setShiftConfirmOpen(true);
       return;
     }
@@ -90,6 +97,8 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
       const result = await cashRegistersService.closeSession(register.id, {
         closingCash: closingAmount,
         notes:       notes || undefined,
+        expectedCash,
+        justification: needsJustification ? justification.trim() : undefined,
       });
       setCloseResult(result.snapshot);
     } catch (err: any) {
@@ -412,6 +421,32 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
               </div>
             )}
 
+            {/* Justificación obligatoria — Blindaje Nivel 1 */}
+            {needsJustification && (
+              <div>
+                <label className="block text-sm font-semibold text-red-600 mb-2 flex items-center gap-1.5">
+                  <AlertTriangle className="w-4 h-4" />
+                  Justificación de la diferencia (Obligatorio)
+                  <span className="text-red-400 ml-1">*</span>
+                </label>
+                <textarea
+                  value={justification}
+                  onChange={e => setJustification(e.target.value)}
+                  rows={3}
+                  placeholder="Explica el motivo del faltante/sobrante (mín. 5 caracteres). Ej: Pago en efectivo no registrado en sistema, vuelto mal entregado, error de arqueo..."
+                  className={`w-full px-4 py-3 border-2 rounded-2xl text-sm text-gray-700 resize-none focus:outline-none transition-colors ${
+                    justification.trim().length >= 5
+                      ? 'border-gray-200 focus:border-orange-400'
+                      : 'border-red-300 bg-red-50 focus:border-red-400'
+                  }`}
+                  required
+                />
+                <p className="text-xs text-gray-400 mt-1.5">
+                  La diferencia de {formatCLP(Math.abs(diff!))} debe ser justificada. Quedará registrada en el cierre.
+                </p>
+              </div>
+            )}
+
             {/* Notas */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -449,7 +484,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
           <button
             type="submit"
             form="close-shift-form"
-            disabled={loading || !closingCash}
+            disabled={loading || !closingCash || (needsJustification && justification.trim().length < 5)}
             className="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-2xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (

@@ -108,6 +108,7 @@ const ResetPasswordPage     = lazy(() => import('@/pages/auth/ResetPasswordPage'
 const RegisterTenant         = lazy(() => import('@/pages/auth/RegisterTenant'));
 const RestaurantProfilePage = lazy(() => import('@/pages/profile/RestaurantProfilePage').then(m => ({ default: m.RestaurantProfilePage })));
 const CouponsPage           = lazy(() => import('@/pages/coupons/CouponsPage').then(m => ({ default: m.CouponsPage })));
+const PromotionsPage        = lazy(() => import('@/pages/Promotions/PromotionsPage'));
 const OnboardingWizard       = lazy(() => import('@/components/OnboardingWizard'));
 const Suspended              = lazy(() => import('@/pages/Suspended'));
 
@@ -125,7 +126,7 @@ function LazyFallback() {
 
 // Subscription page — redirect directo a Flow (variable de entorno)
 function SubscriptionRedirect() {
-  useEffect(() => { window.location.replace(import.meta.env.VITE_FLOW_REDIRECT_URL || 'https://www.flow.cl/uri/m8wWtWVC9'); }, []);
+  useEffect(() => { window.location.replace(import.meta.env.VITE_FLOW_REDIRECT_URL || 'https://www.flow.cl/uri/jaNHWz61V'); }, []);
   return null;
 }
 
@@ -269,6 +270,7 @@ export default function App() {
               <Route path="apps" element={<PermissionGuard permission="apps.view"><AppsPage /></PermissionGuard>} />
               <Route path="dte/documentos" element={<PermissionGuard permission="billing.view"><DteDocumentsPage /></PermissionGuard>} />
               <Route path="coupons" element={<PermissionGuard permission="coupons.view"><CouponsPage /></PermissionGuard>} />
+              <Route path="promotions" element={<PermissionGuard permission="products.view"><PromotionsPage /></PermissionGuard>} />
 
             {/* Administración — usa el Layout principal con Sidebar.tsx */}
             <Route path="admin" element={<PermissionGuard permission={['employees.manage', 'ALL_PERMISSIONS']}><AdminLayout /></PermissionGuard>}>

@@ -26,6 +26,7 @@ export function DeliveryTab() {
     handlePayOrderFromCard,
     handleUpdateDeliveryStatus,
     handleCancelOrder,
+    loadOrders,
   } = useRestaurant();
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
@@ -143,6 +144,7 @@ export function DeliveryTab() {
               onCancel={handleCancelOrder}
               onUpdateStatus={(o, s) => handleUpdateDeliveryStatus(o, s as any)}
               onCardClick={setSelectedOrder}
+              onRefresh={loadOrders}
             />
           ))}
         </div>

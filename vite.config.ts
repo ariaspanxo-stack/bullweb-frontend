@@ -56,12 +56,31 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       sourcemap: false,
       charset: 'utf8',
+      // chunkSizeWarningLimit: 600, // opcional, si quieres subir el umbral
       rollupOptions: {
         output: {
+          // Separar librerías pesadas en chunks independientes.
+          // Cada una se cachea por separado y (combinado con imports dinámicos)
+          // solo se descarga cuando realmente se necesita.
           manualChunks: {
+            // React core + router (base de la app, cache estable)
             'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+
+            // Gráficos: son enormes y se usan solo en dashboards/reports.
+            // Separados para que no contaminen el bundle principal.
+            'recharts': ['recharts'],
             'chart-vendor': ['chart.js', 'react-chartjs-2'],
-            'utils': ['axios', 'xlsx', 'jspdf']
+
+            // Ofimática: pesados y de uso puntual (botones "Exportar").
+            // Combinados con imports dinámicos, se cargan bajo demanda.
+            'xlsx': ['xlsx'],
+            'exceljs': ['exceljs'],
+
+            // PDF
+            'pdf-vendor': ['jspdf', 'jspdf-autotable'],
+
+            // QR
+            'qrcode-vendor': ['qrcode', 'qrcode.react'],
           }
         }
       }

@@ -1,4 +1,10 @@
-import * as XLSX from 'xlsx';
+/**
+ * BULLWEB — Excel Export Utility alternativo (SheetJS)
+ *
+ * NOTA: 'xlsx' se carga con import() dinámico para que NO entre al bundle
+ * principal. Solo se descarga cuando el usuario hace click en "Exportar".
+ */
+import type * as XLSXTypes from 'xlsx';
 
 export interface ExcelColumn {
   header: string;
@@ -7,12 +13,15 @@ export interface ExcelColumn {
   format?: 'currency' | 'percent' | 'number' | 'text';
 }
 
-export function exportToExcel(
+export async function exportToExcel(
   data: Record<string, unknown>[],
   columns: ExcelColumn[],
   fileName: string,
   sheetName = 'Reporte'
-): void {
+): Promise<void> {
+  // ▸ Import dinámico: 'xlsx' (~400KB) solo se carga aquí, bajo demanda.
+  const XLSX: typeof XLSXTypes = await import('xlsx');
+
   const header = columns.map((c) => c.header);
   const rows = data.map((row) =>
     columns.map((col) => {
@@ -39,10 +48,12 @@ export function exportToExcel(
 /**
  * Exporta múltiples hojas en un solo archivo.
  */
-export function exportToExcelMultiSheet(
+export async function exportToExcelMultiSheet(
   sheets: { name: string; columns: ExcelColumn[]; data: Record<string, unknown>[] }[],
   fileName: string
-): void {
+): Promise<void> {
+  const XLSX: typeof XLSXTypes = await import('xlsx');
+
   const wb = XLSX.utils.book_new();
   sheets.forEach((sheet) => {
     const header = sheet.columns.map((c) => c.header);

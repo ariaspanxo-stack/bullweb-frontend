@@ -10,6 +10,8 @@ export interface QROrder {
   orderId:         string;
   orderNumber:     string;
   orderType:       'mostrador' | 'delivery';
+  /** Origen del pedido: 'qr' (Carta QR) o nombre de plataforma (ubereats, rappi, pedidosya). */
+  platform?:       string;
   customerName:    string;
   customerPhone:   string;
   customerAddress: string | null;
@@ -20,14 +22,20 @@ export interface QROrder {
   cashAmount:      number | null;
 }
 
-/** Lee el tenantId del usuario almacenado en localStorage (mismo origen que authService). */
-const getTenantId = (): string | undefined => {
+/** Lee el tenantId del usuario almacenado en localStorage (mismo origen que authService).
+ *  Robusto: busca en camelCase, snake_case y objetos anidados por si el backend cambia el formato. */
+const getTenantId = (): string | null => {
   try {
     const raw = localStorage.getItem('bullweb_user');
-    if (!raw) return undefined;
-    return (JSON.parse(raw) as { tenantId?: string }).tenantId;
+    if (!raw) return null;
+    const user = JSON.parse(raw) as {
+      tenantId?: string;
+      tenant_id?: string;
+      tenant?: { id?: string };
+    };
+    return user.tenantId || user.tenant_id || user.tenant?.id || null;
   } catch {
-    return undefined;
+    return null;
   }
 };
 
@@ -108,10 +116,27 @@ export function useQROrderAlerts() {
 
   const getToken = () => localStorage.getItem('bullweb_token') ?? '';
 
+  // Ref para acceder al estado actual dentro de callbacks sin re-crearlos.
+  const pendingOrdersRef = useRef<QROrder[]>([]);
+  useEffect(() => {
+    pendingOrdersRef.current = pendingOrders;
+  }, [pendingOrders]);
+
+  // Devuelve la base de la ruta segun el origen del pedido.
+  // QR usa /api/qr-orders, las integraciones usan /api/integrations/orders.
+  const buildBasePath = (orderId: string): string => {
+    const order = pendingOrdersRef.current.find(o => o.orderId === orderId);
+    const platform = order?.platform;
+    if (platform && platform !== 'qr') {
+      return '/api/integrations/orders';
+    }
+    return '/api/qr-orders';
+  };
+
   const acceptOrder = useCallback(async (orderId: string) => {
     removeOrder(orderId);
     try {
-      await fetch(`/api/qr-orders/${orderId}/accept`, {
+      await fetch(`${buildBasePath(orderId)}/${orderId}/accept`, {
         method:  'PATCH',
         headers: { Authorization: `Bearer ${getToken()}` },
       });
@@ -121,7 +146,7 @@ export function useQROrderAlerts() {
   const cancelOrder = useCallback(async (orderId: string, reason?: string) => {
     removeOrder(orderId);
     try {
-      await fetch(`/api/qr-orders/${orderId}/cancel`, {
+      await fetch(`${buildBasePath(orderId)}/${orderId}/cancel`, {
         method:  'PATCH',
         headers: {
           Authorization:  `Bearer ${getToken()}`,

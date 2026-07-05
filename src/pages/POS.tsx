@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Search, 
@@ -17,37 +17,40 @@ import {
 import tablesService from '@/services/tablesService';
 import { menuService } from '@/services/menuService';
 import { posService } from '@/services/posService';
+import { usePosStore } from '@/store/posStore';
 import { toast } from 'react-hot-toast';
 import Spinner from '@/components/ui/Spinner';
 import api from '@/services/api';
 
 type POSMode = 'mesas' | 'mostrador' | 'delivery';
 
-interface CartItem {
-  id: string;
-  productId: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
-
 export default function POS() {
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<POSMode>('mesas');
   const [selectedTable, setSelectedTable] = useState<any>(null);
   const [searchProduct, setSearchProduct] = useState('');
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
-  
-  // Estados para configuraci�n de mesa
+
+  // Estados para configuración de mesa
   const [guestCount, setGuestCount] = useState<number>(0);
   const [selectedWaiter, setSelectedWaiter] = useState<string>('');
+
+  // ── Store global del POS (reemplaza al antiguo carrito local useState) ──
+  // El store centraliza carrito, promociones y cálculo de totales.
+  const {
+    cartItems,
+    addToCart: storeAddToCart,
+    updateQuantity: storeUpdateQuantity,
+    removeFromCart: storeRemoveFromCart,
+    clearCart: storeClearCart,
+    total,
+  } = usePosStore();
 
   // Queries
   const { data: tablesData, isLoading: loadingTables } = useQuery({
     queryKey: ['tables'],
-    queryFn: () => tablesService.getTables(),
+    queryFn: () => tablesService.getAll(),
   });
 
   const { data: products = [], isLoading: loadingProducts } = useQuery({
@@ -55,9 +58,9 @@ export default function POS() {
     queryFn: () => menuService.getProducts(),
   });
 
-  const { data: activeOrders = [] } = useQuery({
+  const { data: activeOrders } = useQuery({
     queryKey: ['orders', 'active'],
-    queryFn: () => posService.getOrders({ status: 'pending' }),
+    queryFn: () => posService.getOrders({ status: 'PENDING' }),
     enabled: mode !== 'mesas',
   });
 
@@ -70,11 +73,34 @@ export default function POS() {
     },
   });
 
-  // Mutation para ocupar mesa
+  // ── Promociones activas: cargar al montar el POS e inyectarlas en el store global ──
+  // El backend filtra por hora/día actuales (zona Chile) según el tenant del usuario.
+  const { setActivePromotions } = usePosStore();
+  const { data: activePromotionsData } = useQuery({
+    queryKey: ['promotions', 'active'],
+    queryFn: async () => {
+      const response = await api.get('/pos/promotions/active');
+      return response.data.data ?? [];
+    },
+    refetchInterval: 5 * 60 * 1000, // refrescar cada 5 min (por si cambia la vigencia horaria)
+    staleTime: 60 * 1000,
+  });
+
+  // Inyectar las promociones activas en el store global y recalcular el carrito
+  useEffect(() => {
+    if (activePromotionsData && Array.isArray(activePromotionsData)) {
+      setActivePromotions(activePromotionsData);
+    }
+  }, [activePromotionsData, setActivePromotions]);
+
+  // Mutation para ocupar mesa — abre la mesa y asigna el garzón seleccionado.
+  // Se usan los métodos reales del tablesService: open() + assignWaiter().
   const occupyTableMutation = useMutation({
     mutationFn: async ({ tableId, guestCount, waiterId }: any) => {
-      await tablesService.occupyTable(tableId, guestCount);
-      // Aqu� se podr�a asignar el garz�n si la API lo soporta
+      await tablesService.open(tableId, guestCount);
+      if (waiterId) {
+        await tablesService.assignWaiter(tableId, waiterId);
+      }
       return { tableId, guestCount, waiterId };
     },
     onSuccess: () => {
@@ -100,50 +126,39 @@ export default function POS() {
     }
   });
 
-  const tables = tablesData?.tables || [];
-  const sections = tablesData?.sections || [];
+  // getAll() retorna Table[] directamente (no { tables, sections }).
+  // Las secciones se gestionan vía endpoint separado si se requieren.
+  const tables = Array.isArray(tablesData) ? tablesData : [];
+  const sections: any[] = [];
 
-  // Funciones del carrito
+  // getOrders() retorna { orders, meta }, no un array directo.
+  // Extraemos el array para poder usar .length y .map en el template.
+  const ordersArray = activeOrders?.orders ?? [];
+
+  // Wrappers del carrito sobre el store global (usePosStore).
+  // Mantienen la misma firma que usaba la UI para no romper los onClick.
   const addToCart = (product: any) => {
-    const existingItem = cart.find(item => item.productId === product.id);
-    if (existingItem) {
-      setCart(cart.map(item =>
-        item.productId === product.id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ));
-    } else {
-      setCart([...cart, {
-        id: Math.random().toString(),
-        productId: product.id,
-        name: product.name,
-        price: product.price,
-        quantity: 1,
-      }]);
-    }
+    storeAddToCart(product, 1);
     toast.success(`${product.name} agregado`);
   };
 
   const updateQuantity = (itemId: string, delta: number) => {
-    setCart(cart.map(item => {
-      if (item.id === itemId) {
-        const newQty = item.quantity + delta;
-        return newQty > 0 ? { ...item, quantity: newQty } : item;
-      }
-      return item;
-    }).filter(item => item.quantity > 0));
+    const item = cartItems.find((i) => i.id === itemId);
+    if (!item) return;
+    storeUpdateQuantity(itemId, item.quantity + delta);
   };
 
   const removeFromCart = (itemId: string) => {
-    setCart(cart.filter(item => item.id !== itemId));
+    storeRemoveFromCart(itemId);
     toast.success('Item eliminado');
   };
 
   const clearCart = () => {
-    setCart([]);
+    // Limpiar el carrito del store y resetear la UI local asociada
+    storeClearCart();
     setSelectedTable(null);
     setCustomerName('');
-    setGuestCount(2);
+    setGuestCount(0);
     setSelectedWaiter('');
   };
 
@@ -182,7 +197,7 @@ export default function POS() {
   };
 
   const handleCheckout = async () => {
-    if (cart.length === 0) {
+    if (cartItems.length === 0) {
       toast.error('El carrito está vacío');
       return;
     }
@@ -202,18 +217,38 @@ export default function POS() {
         type: mode === 'mesas' ? 'DINE_IN' : mode === 'mostrador' ? 'TAKEAWAY' : 'DELIVERY',
         tableId: mode === 'mesas' ? selectedTable.id : undefined,
         customerName: mode !== 'mesas' ? customerName : undefined,
-        items: cart.map(item => ({
-          productId: item.productId,
+        // Estructura requerida por el backend: { productId, quantity }
+        items: cartItems.map(item => ({
+          productId: item.product.id,
           quantity: item.quantity,
         })),
       };
 
       await createOrderMutation.mutateAsync(orderData);
     } catch (error) {
+      // El toast de error se maneja en onError del mutation
     }
   };
 
-  const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  // Cierra la mesa actual: limpia el carrito del store, resetea la UI y
+  // libera la mesa en el backend (tablesService.close).
+  const handleCloseTable = async () => {
+    const tableId = selectedTable?.id;
+    clearCart();
+    if (tableId) {
+      try {
+        await tablesService.close(tableId);
+        queryClient.invalidateQueries({ queryKey: ['tables'] });
+        toast.success('Mesa cerrada');
+      } catch (error) {
+        toast.error('Error al cerrar la mesa');
+      }
+    } else {
+      toast.success('Mesa cerrada');
+    }
+  };
+
+  // total proviene del store (usePosStore) — incluye promociones y descuentos
 
   // Filtrar productos
   const filteredProducts = products.filter((p: any) =>
@@ -374,17 +409,17 @@ export default function POS() {
                   Pedidos {mode === 'mostrador' ? 'Para Llevar' : 'Delivery'}
                 </h2>
                 <p className="text-zinc-400">
-                  {activeOrders.length} pedido(s) activo(s)
+                  {ordersArray.length} pedido(s) activo(s)
                 </p>
               </div>
 
               <div className="space-y-4">
-                {activeOrders.length === 0 ? (
+                {ordersArray.length === 0 ? (
                   <div className="text-center py-12 text-zinc-500 bg-zinc-900/30 rounded-2xl border border-zinc-800">
                     No hay pedidos activos
                   </div>
                 ) : (
-                  activeOrders.map((order: any) => (
+                  ordersArray.map((order: any) => (
                     <div 
                       key={order.id} 
                       className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 hover:bg-zinc-900/70 transition-all"
@@ -580,7 +615,7 @@ export default function POS() {
 
               {/* Resumen del pedido con scroll interno y botones sticky */}
               <div className="border-t border-zinc-800 bg-zinc-900/80">
-                {cart.length === 0 ? (
+                {cartItems.length === 0 ? (
                   <div className="text-center text-zinc-500 py-8 px-6 bg-zinc-800/30 mx-6 my-6 rounded-xl">
                     Carrito vac�o
                   </div>
@@ -589,14 +624,14 @@ export default function POS() {
                     {/* Lista de items con scroll interno */}
                     <div className="px-6 pt-6 pb-4 max-h-64 overflow-y-auto">
                       <div className="space-y-3">
-                        {cart.map(item => (
+                        {cartItems.map(item => (
                           <div key={item.id} className="flex items-center gap-3 bg-zinc-800/50 rounded-lg p-3 border border-zinc-700">
                             <div className="flex-1 min-w-0">
                               <div className="text-sm font-semibold text-zinc-100 truncate">
-                                {item.name}
+                                {item.product.name}
                               </div>
                               <div className="text-xs text-zinc-400">
-                                ${item.price.toLocaleString()} c/u
+                                ${item.product.price.toLocaleString()} c/u
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -637,7 +672,7 @@ export default function POS() {
                           </span>
                         </div>
                         <div className="text-xs text-zinc-500">
-                          {cart.reduce((sum, item) => sum + item.quantity, 0)} item(s)
+                          {cartItems.reduce((sum, item) => sum + item.quantity, 0)} item(s)
                         </div>
                       </div>
 
@@ -666,6 +701,7 @@ export default function POS() {
                               Cancelar
                             </button>
                             <button
+                              onClick={handleCloseTable}
                               className="py-2 px-4 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-lg 
                                        hover:from-emerald-500 hover:to-emerald-400 transition-all 
                                        flex items-center justify-center gap-2 font-semibold shadow-lg shadow-emerald-500/30 text-sm"

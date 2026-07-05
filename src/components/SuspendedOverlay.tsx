@@ -90,7 +90,7 @@ export default function SuspendedOverlay() {
 
           <div className="flex flex-col gap-3">
             <a
-              href="https://www.flow.cl/uri/m8wWtWVC9"
+              href="https://www.flow.cl/uri/jaNHWz61V"
               target="_blank"
               rel="noopener noreferrer"
               className="block w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-xl transition-colors"

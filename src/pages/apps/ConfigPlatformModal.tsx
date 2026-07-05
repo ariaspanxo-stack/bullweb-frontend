@@ -76,17 +76,43 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
     onSuccess: () => {
       setStep(2);
     },
-    onError: () => toast.error('Error al guardar configuración'),
+    onError: (err: any) => {
+      console.error('[saveConfig] Error guardando credenciales:', err);
+      const backendMsg = err?.data?.error || err?.message;
+      const status = err?.status;
+      const friendly =
+        status === 403 ? 'Permisos insuficientes para configurar integraciones. Contacta al administrador.' :
+        status === 401 ? 'Tu sesión expiró. Vuelve a iniciar sesión.' :
+        backendMsg || 'Error al guardar configuración';
+      toast.error(friendly);
+    },
   });
 
   const testMutation = useMutation({
     mutationFn: () => integrationsService.testConnection(platform),
     onSuccess: (data) => {
-      setTestResult(data);
-      if (data.ok) setStep(3);
+      // El servicio `integrationsService.testConnection` SIEMPRE devuelve
+      // { ok: boolean, message: string }, pero validamos igual por si la
+      // promesa resuelve con un valor inesperado.
+      const result =
+        data && typeof data === 'object' && 'ok' in data
+          ? (data as { ok: boolean; message: string })
+          : {
+              ok:      Boolean((data as any)?.data?.ok),
+              message: (data as any)?.data?.message ?? 'Respuesta inesperada',
+            };
+      setTestResult(result);
+      if (result.ok) setStep(3);
     },
-    onError: () => {
-      setTestResult({ ok: false, message: 'Error de conexión' });
+    onError: (err: any) => {
+      console.error('[testConnection] Error validando credenciales:', err);
+      const backendMsg = err?.data?.error || err?.message;
+      const status = err?.status;
+      const message =
+        status === 403 ? 'Permisos insuficientes. Se requiere rol de administrador (apps.view).' :
+        status === 401 ? 'Tu sesión expiró. Vuelve a iniciar sesión.' :
+        backendMsg || 'Error de conexión con el servidor';
+      setTestResult({ ok: false, message });
     },
   });
 
@@ -263,7 +289,16 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
                     toast.success(`${PLATFORM_LABELS[platform]} activado`);
                     onSaved();
                     onClose();
-                  }).catch(() => toast.error('Error al activar'));
+                  }).catch((err: any) => {
+                    console.error('[togglePlatform] Error activando:', err);
+                    const status = err?.status;
+                    const msg = err?.data?.error || err?.message;
+                    toast.error(
+                      status === 403 ? 'Permisos insuficientes. Contacta al administrador.' :
+                      status === 401 ? 'Tu sesión expiró. Vuelve a iniciar sesión.' :
+                      msg || 'Error al activar'
+                    );
+                  });
                 }}
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg py-2.5 font-bold transition-colors"
               >

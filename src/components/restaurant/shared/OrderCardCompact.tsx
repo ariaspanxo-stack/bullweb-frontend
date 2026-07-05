@@ -7,11 +7,12 @@ import { useState, useRef, useEffect } from 'react';
 import {
   ChefHat, CheckCircle, Package, DollarSign,
   MoreHorizontal, X,
-  Truck,
+  Truck, Pencil,
 } from 'lucide-react';
 import { fmt, ElapsedTime } from './helpers';
 import { formatSaleNumber } from '../../../utils/formatSaleNumber';
 import { posService } from '../../../services/posService';
+import { EditCustomerModal } from './EditCustomerModal';
 import type { Sale } from '../../../types/restaurant.types';
 import { usePermission } from '../../../hooks/usePermission';
 
@@ -40,6 +41,7 @@ export interface OrderCardCompactProps {
   onCancel:       (order: Sale) => void;
   onUpdateStatus: (order: Sale, status: string) => void;
   onCardClick?:   (order: Sale) => void;
+  onRefresh?:     () => void;
 }
 
 // ─── Resumen inline de ítems ───────────────────────────────────
@@ -62,9 +64,10 @@ function ItemsSummaryInline({ items }: { items: any[] }) {
 
 // ─── Componente principal ──────────────────────────────────────
 export function OrderCardCompact({
-  order, variant, onEdit, onPay, onCancel, onUpdateStatus, onCardClick,
+  order, variant, onEdit, onPay, onCancel, onUpdateStatus, onCardClick, onRefresh,
 }: OrderCardCompactProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Cerrar dropdown al hacer click fuera
@@ -130,6 +133,7 @@ export function OrderCardCompact({
   })();
 
   return (
+    <>
     <div
       className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 border-l-4 overflow-visible cursor-pointer ${leftColor}`}
       onClick={() => onCardClick?.(order)}
@@ -195,6 +199,17 @@ export function OrderCardCompact({
             </button>
           )}
 
+          {/* Botón Editar cliente — MUY visible, siempre presente */}
+          <button
+            onClick={e => { e.stopPropagation(); setShowEditModal(true); }}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-blue-500 hover:bg-blue-600 text-white transition-colors flex-shrink-0 shadow-sm"
+            aria-label="Editar cliente"
+            title="Editar cliente"
+          >
+            <Pencil size={18} />
+            <span>Editar</span>
+          </button>
+
           {/* Menú ··· — solo visible si puede cancelar */}
           {canCancel && (
             <div className="relative flex-shrink-0" ref={menuRef}>
@@ -223,5 +238,19 @@ export function OrderCardCompact({
         </div>
       </div>
     </div>
+
+      {/* ── Modal editar cliente ── */}
+      {showEditModal && (
+        <EditCustomerModal
+          order={order}
+          variant={variant}
+          onClose={() => setShowEditModal(false)}
+          onSaved={() => {
+            // Refrescar la lista de órdenes desde el backend
+            onRefresh?.();
+          }}
+        />
+      )}
+    </>
   );
 }

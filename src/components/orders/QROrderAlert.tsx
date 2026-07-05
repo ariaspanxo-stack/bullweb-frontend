@@ -95,7 +95,11 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-white font-bold text-lg">Nuevo pedido</h2>
+                <h2 className="text-white font-bold text-lg">
+                  {order.platform && order.platform !== 'qr'
+                    ? `Pedido ${order.platform.charAt(0).toUpperCase() + order.platform.slice(1)}`
+                    : 'Nuevo pedido'}
+                </h2>
                 <span
                   className="text-xs font-bold px-2 py-0.5 rounded-full"
                   style={{ background: isDelivery ? '#1d4ed8' : '#92400e', color: 'white' }}

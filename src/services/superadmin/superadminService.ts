@@ -28,6 +28,7 @@ export interface Tenant {
   created_at: string;
   is_active: boolean;
   isTest?: boolean;
+  isArchived?: boolean;
   lastLogin?: string | null;
   subscriptions?: Subscription | null;
   _count: { users: number };
@@ -53,7 +54,9 @@ export interface SuperAdminMetrics {
   totalTenants: number;
   activeTenants: number;
   suspendedTenants: number;
-  trialTenants: number;
+  trialTenants: number;     // legacy: activos + vencidos (compat)
+  trialActive?: number;     // trials vigentes (no vencidos)
+  trialExpired?: number;    // trials vencidos (incluye sin fecha)
   newToday: number;
   mrr: number;
   mrrFormatted: string;
@@ -159,8 +162,22 @@ export interface PlanConfig {
   createdAt: string;
 }
 
+/** Respuesta del endpoint POST /superadmin/tenants/reactivate-campaign */
+export interface ReactivationCampaignResult {
+  success: boolean;
+  dispatched: number;
+  message?: string;
+  details?: Array<{ tenantId: string; tenantName: string; email: string }>;
+  triggeredBy?: string;
+}
+
 const superadminService = {
   getMetrics:    () => saFetch<SuperAdminMetrics>('/superadmin/metrics'),
+
+  // Campaña de reactivación para tenants pausados (SUSPENDED)
+  sendReactivationCampaign: () =>
+    saFetch<ReactivationCampaignResult>('/superadmin/tenants/reactivate-campaign', { method: 'POST' }),
+
   listTenants:   (params?: { page?: number; limit?: number; search?: string; archived?: boolean }) => {
     const qs = new URLSearchParams();
     if (params?.page)     qs.set('page',     String(params.page));

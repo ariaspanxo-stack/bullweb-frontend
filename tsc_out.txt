@@ -1,0 +1,340 @@
+src/App.tsx(17,7): error TS6133: 'Dashboard' is declared but its value is never read.
+src/App.tsx(28,7): error TS6133: 'RoleMatrix' is declared but its value is never read.
+src/App.tsx(37,106): error TS2339: Property 'Settings' does not exist on type 'typeof import("C:/Users/Francisco/OneDrive/Escritorio/Bullweb3.0/frontend/src/pages/Admin/Settings")'.
+src/App.tsx(102,50): error TS1261: Already included file name 'C:/Users/Francisco/OneDrive/Escritorio/Bullweb3.0/frontend/src/pages/Apps/AppsPage.tsx' differs from file name 'C:/Users/Francisco/OneDrive/Escritorio/Bullweb3.0/frontend/src/pages/apps/AppsPage.tsx' only in casing.
+  The file is in the program because:
+    Imported via '@/pages/Apps/AppsPage' from file 'C:/Users/Francisco/OneDrive/Escritorio/Bullweb3.0/frontend/src/App.tsx'
+    Matched by include pattern 'src' in 'tsconfig.app.json'
+src/App.tsx(137,10): error TS6133: 'PlaceholderPage' is declared but its value is never read.
+src/components/attendance/CalendarioMensual.tsx(111,34): error TS2339: Property 'resumen' does not exist on type '{ dias: CalendarioDia[]; stats: { presentes: number; ausentes: number; tardanzas: number; justificados: number; }; }'.
+src/components/attendance/JustificativosTab.tsx(5,48): error TS6133: 'Upload' is declared but its value is never read.
+src/components/attendance/JustificativosTab.tsx(6,3): error TS6133: 'ChevronDown' is declared but its value is never read.
+src/components/customers/CustomerFormSimple.tsx(90,16): error TS18048: 'formData.email' is possibly 'undefined'.
+src/components/customers/CustomerFormSimple.tsx(91,16): error TS18048: 'formData.phone' is possibly 'undefined'.
+src/components/customers/CustomerFormSimple.tsx(92,14): error TS18048: 'formData.rut' is possibly 'undefined'.
+src/components/customers/CustomerFormSimple.tsx(93,18): error TS18048: 'formData.address' is possibly 'undefined'.
+src/components/customers/CustomerFormSimple.tsx(94,15): error TS18048: 'formData.city' is possibly 'undefined'.
+src/components/customers/CustomerFormSimple.tsx(95,16): error TS18048: 'formData.notes' is possibly 'undefined'.
+src/components/customers/CustomersTable.tsx(3,1): error TS6133: 'Badge' is declared but its value is never read.
+src/components/customers/TopCustomers.tsx(7,47): error TS6133: 'error' is declared but its value is never read.
+src/components/kitchen/OrderCard.tsx(86,9): error TS6133: 'formatTime' is declared but its value is never read.
+src/components/kitchen/OrderCard.tsx(185,15): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ PENDING: string; PREPARING: string; READY: string; }'.
+src/components/kitchen/OrderCard.tsx(231,26): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ PENDING: "warning"; PREPARING: "info"; READY: "success"; }'.
+src/components/kitchen/OrderCard.tsx(234,18): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ PENDING: string; PREPARING: string; READY: string; }'.
+src/components/layout/Sidebar.tsx(17,3): error TS6133: 'Megaphone' is declared but its value is never read.
+src/components/layout/Sidebar.tsx(51,3): error TS6133: 'Truck' is declared but its value is never read.
+src/components/layout/Sidebar.tsx(262,10): error TS6133: 'avatarGradient' is declared but its value is never read.
+src/components/pos/CheckoutModal.tsx(3,71): error TS6133: 'FileText' is declared but its value is never read.
+src/components/pos/CheckoutModal.tsx(12,1): error TS6133: 'toast' is declared but its value is never read.
+src/components/pos/CheckoutModal.tsx(57,25): error TS2339: Property 'success' does not exist on type 'PaymentMethod[]'.
+src/components/pos/CheckoutModal.tsx(57,50): error TS2339: Property 'data' does not exist on type 'PaymentMethod[]'.
+src/components/pos/CheckoutModal.tsx(58,30): error TS2339: Property 'data' does not exist on type 'PaymentMethod[]'.
+src/components/pos/CheckoutModal.tsx(66,9): error TS6133: 'calculateTip' is declared but its value is never read.
+src/components/pos/CheckoutModal.tsx(328,35): error TS7006: Parameter 'method' implicitly has an 'any' type.
+src/components/pos/EmitBoletaButton.tsx(31,19): error TS6133: 'setLoading' is declared but its value is never read.
+src/components/pos/LoyaltyPanel.tsx(23,25): error TS2339: Property 'data' does not exist on type '{}'.
+src/components/pos/ModifierModal.tsx(28,13): error TS2339: Property 'modifierGroups' does not exist on type 'Product'.
+src/components/pos/ModifierModal.tsx(28,34): error TS7006: Parameter 'pm' implicitly has an 'any' type.
+src/components/pos/ModifierModal.tsx(168,19): error TS6133: 'groupSelections' is declared but its value is never read.
+src/components/pos/TableSelector.tsx(37,34): error TS2339: Property 'getTables' does not exist on type 'TablesService'.
+src/components/pos/TableSelector.tsx(45,40): error TS7006: Parameter 'table' implicitly has an 'any' type.
+src/components/pos/TableSelector.tsx(109,27): error TS7006: Parameter 'section' implicitly has an 'any' type.
+src/components/pos/TableSelector.tsx(142,33): error TS7006: Parameter 'table' implicitly has an 'any' type.
+src/components/print/PrintControlModal.tsx(46,3): error TS6133: 'tax' is declared but its value is never read.
+src/components/print/TicketPreview.tsx(130,21): error TS2345: Argument of type '"dashes" | "stars" | "equals" | "scissors" | undefined' is not assignable to parameter of type '"dashes" | "stars" | "equals" | "scissors"'.
+  Type 'undefined' is not assignable to type '"dashes" | "stars" | "equals" | "scissors"'.
+src/components/print/TicketPreview.tsx(256,8): error TS18048: 'order.tax' is possibly 'undefined'.
+src/components/print/TicketPreview.tsx(259,30): error TS2345: Argument of type 'number | undefined' is not assignable to parameter of type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+src/components/products/CategorySidebar.tsx(19,11): error TS6196: 'Category' is declared but never used.
+src/components/products/ProductModal.tsx(27,7): error TS6133: 'CATEGORIES' is declared but its value is never read.
+src/components/recipes/RecipesListTab.tsx(278,10): error TS2740: Type '{ currentPage: number; totalPages: number; itemsPerPage: number; totalItems: number; onPageChange: (page: number) => void; onNextPage: () => void; onPreviousPage: () => void; onItemsPerPageChange: (items: number) => void; }' is missing the following properties from type 'PaginationProps': startIndex, endIndex, onFirstPage, onLastPage, and 2 more.
+src/components/reports/SalesChart.tsx(77,12): error TS2604: JSX element type 'DataComponent' does not have any construct or call signatures.
+src/components/reports/tabs/StockTab.tsx(5,14): error TS6133: 'formatCurrency' is declared but its value is never read.
+src/components/reports/tabs/VentasTab.tsx(3,18): error TS6133: 'Bar' is declared but its value is never read.
+src/components/reports/tabs/VentasTab.tsx(22,41): error TS6133: 'totalDiscount' is declared but its value is never read.
+src/components/reports/tabs/VentasTab.tsx(23,53): error TS6133: 'prevTotalDiscount' is declared but its value is never read.
+src/components/reports/tabs/VentasTab.tsx(26,5): error TS6133: 'waitersForFilter' is declared but its value is never read.
+src/components/reports/TopProductsChart.tsx(38,24): error TS6133: 'entry' is declared but its value is never read.
+src/components/restaurant/shared/DeliveryOrderModal.tsx(57,5): error TS6133: 'handleRefresh' is declared but its value is never read.
+src/components/restaurant/shared/DeliveryOrderModal.tsx(300,12): error TS6133: 'handleEdit' is declared but its value is never read.
+src/components/restaurant/shared/OrderCardCompact.tsx(14,1): error TS6133: 'posService' is declared but its value is never read.
+src/components/restaurant/shared/OrderCardCompact.tsx(67,19): error TS6133: 'onEdit' is declared but its value is never read.
+src/components/Sales/QuickActionBar.tsx(16,3): error TS6133: 'onPay' is declared but its value is never read.
+src/components/Sales/QuickActionBar.tsx(20,3): error TS6133: 'onConfirm' is declared but its value is never read.
+src/components/Sales/SaleDetailPanel.tsx(60,9): error TS6133: 'handlePay' is declared but its value is never read.
+src/components/Sales/SaleDetailPanel.tsx(92,9): error TS6133: 'handleConfirm' is declared but its value is never read.
+src/components/Sales/SalesMasterDetail.tsx(1,1): error TS6192: All imports in import declaration are unused.
+src/components/Sales/SalesMasterDetail.tsx(22,3): error TS6133: 'loading' is declared but its value is never read.
+src/components/superadmin/AlertsPanel.tsx(152,29): error TS6133: 'compact' is declared but its value is never read.
+src/components/SuspendedOverlay.tsx(32,15): error TS2339: Property 'status' does not exist on type '{ data: any; }'.
+src/components/TableRequestAlert.tsx(1,10): error TS6133: 'Bell' is declared but its value is never read.
+src/components/tables/SectionFormModal.tsx(52,58): error TS2339: Property 'createSection' does not exist on type 'TablesService'.
+src/components/tables/SectionSelector.tsx(29,34): error TS2339: Property 'getSections' does not exist on type 'TablesService'.
+src/components/tables/SectionSelector.tsx(73,22): error TS7006: Parameter 'section' implicitly has an 'any' type.
+src/components/tables/TableDetailModal.tsx(8,26): error TS6133: 'formatDateTime' is declared but its value is never read.
+src/components/tables/TableDetailModal.tsx(9,24): error TS6133: 'User' is declared but its value is never read.
+src/components/tables/TableDetailModal.tsx(60,34): error TS2339: Property 'getTable' does not exist on type 'TablesService'.
+src/components/tables/TableDetailModal.tsx(67,21): error TS2551: Property 'updateTableStatus' does not exist on type 'TablesService'. Did you mean 'updateStatus'?
+src/components/tables/TableDetailModal.tsx(80,52): error TS2339: Property 'releaseTable' does not exist on type 'TablesService'.
+src/components/tables/TableDetailModal.tsx(110,52): error TS2339: Property 'deleteTable' does not exist on type 'TablesService'.
+src/components/tables/TableDetailModal.tsx(206,21): error TS2339: Property 'assignedWaiter' does not exist on type 'Table'.
+src/components/tables/TableDetailModal.tsx(211,31): error TS2339: Property 'assignedWaiter' does not exist on type 'Table'.
+src/components/tables/TableDetailModal.tsx(215,81): error TS2339: Property 'assignedWaiter' does not exist on type 'Table'.
+src/components/tables/TableDetailModal.tsx(257,20): error TS2304: Cannot find name 'XCircle'.
+src/components/tables/TableFormModal.tsx(51,34): error TS2339: Property 'getSections' does not exist on type 'TablesService'.
+src/components/tables/TableFormModal.tsx(75,13): error TS2345: Argument of type '{ number: string; capacity: number; sectionId: string; shape: string; positionX: number; positionY: number; }' is not assignable to parameter of type '{ number: string; capacity: number; sectionId: string; shape: "ROUND" | "SQUARE" | "RECTANGULAR"; positionX: number; positionY: number; } | { number?: string | undefined; capacity?: number | undefined; sectionId?: string | undefined; shape?: "ROUND" | ... 2 more ... | undefined; positionX?: number | undefined; posit...'.
+  Types of property 'shape' are incompatible.
+    Type 'string' is not assignable to type '"ROUND" | "SQUARE" | "RECTANGULAR" | undefined'.
+src/components/tables/TableFormModal.tsx(99,25): error TS2339: Property 'updateTable' does not exist on type 'TablesService'.
+src/components/tables/TableFormModal.tsx(100,25): error TS2339: Property 'createTable' does not exist on type 'TablesService'.
+src/components/tables/TableFormModal.tsx(174,30): error TS7006: Parameter 'section' implicitly has an 'any' type.
+src/components/tables/TableMap.tsx(42,34): error TS2339: Property 'getTables' does not exist on type 'TablesService'.
+src/components/tables/TableMap.tsx(49,24): error TS7006: Parameter 'table' implicitly has an 'any' type.
+src/components/tables/TableMap.tsx(106,21): error TS7006: Parameter 'table' implicitly has an 'any' type.
+src/components/tables/TableMap.tsx(127,17): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ AVAILABLE: string; OCCUPIED: string; RESERVED: string; CLEANING: string; }'.
+src/components/tables/TableMap.tsx(143,18): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ AVAILABLE: string; OCCUPIED: string; RESERVED: string; CLEANING: string; }'.
+src/components/tables/TableStats.tsx(13,34): error TS2339: Property 'getTables' does not exist on type 'TablesService'.
+src/components/tables/TableStats.tsx(22,30): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/components/tables/TableStats.tsx(23,29): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/components/tables/TableStats.tsx(24,29): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/components/tables/TableStats.tsx(25,29): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/components/tables/TableStats.tsx(34,40): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/components/tables/TableStats.tsx(34,45): error TS7006: Parameter 'table' implicitly has an 'any' type.
+src/components/tables/TableStats.tsx(36,13): error TS7006: Parameter 't' implicitly has an 'any' type.
+src/components/tables/TableStats.tsx(37,14): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/components/tables/TableStats.tsx(37,19): error TS7006: Parameter 'table' implicitly has an 'any' type.
+src/components/ui/ConfirmModal.tsx(1,25): error TS6133: 'Info' is declared but its value is never read.
+src/components/ui/Spinner.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/contexts/ReportsContext.tsx(3,16): error TS1484: 'ReactNode' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/contexts/ReportsContext.tsx(8,1): error TS6192: All imports in import declaration are unused.
+src/contexts/RestaurantContext.tsx(18,1): error TS6192: All imports in import declaration are unused.
+src/contexts/RestaurantContext.tsx(33,1): error TS6133: 'posService' is declared but its value is never read.
+src/contexts/RestaurantContext.tsx(548,9): error TS2322: Type 'Sale | null' is not assignable to type 'Sale | undefined'.
+  Type 'null' is not assignable to type 'Sale | undefined'.
+src/features/mesero/components/MeseroOrderPanel.tsx(249,7): error TS2322: Type '{ isOpen: boolean; onClose: () => void; hasItems: boolean; onRequestBill: () => void; onSplitBill: () => void; onTransfer: () => void; onCharge: () => void; canCharge: boolean; canSplit: boolean; canTransfer: boolean; }' is not assignable to type 'IntrinsicAttributes & MeseroActionSheetProps'.
+  Property 'onRequestBill' does not exist on type 'IntrinsicAttributes & MeseroActionSheetProps'.
+src/features/mesero/components/MeseroOrderView.tsx(60,64): error TS6133: 'onRequestBill' is declared but its value is never read.
+src/pages/Admin/AdminDashboard.tsx(10,26): error TS6133: 'MonitorSmartphone' is declared but its value is never read.
+src/pages/Admin/Analytics.tsx(169,17): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'ExcelSheet'.
+src/pages/Admin/Analytics.tsx(169,151): error TS2339: Property 'avgTicket' does not exist on type 'BizTrendPoint'.
+src/pages/Admin/Analytics.tsx(170,17): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'ExcelSheet'.
+src/pages/Admin/Analytics.tsx(171,17): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'ExcelSheet'.
+src/pages/Admin/Analytics.tsx(171,87): error TS2339: Property 'method' does not exist on type 'BizPaymentMethod'.
+src/pages/Admin/Analytics.tsx(172,17): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'ExcelSheet'.
+src/pages/Admin/Analytics.tsx(173,17): error TS2353: Object literal may only specify known properties, and 'name' does not exist in type 'ExcelSheet'.
+src/pages/Admin/PrintersPage.tsx(1,31): error TS6133: 'useRef' is declared but its value is never read.
+src/pages/Admin/PrintersPage.tsx(46,7): error TS6133: 'PROTOCOLS' is declared but its value is never read.
+src/pages/Admin/PrintersPage.tsx(47,7): error TS6133: 'PAPER_WIDTHS' is declared but its value is never read.
+src/pages/Admin/PrintersPage.tsx(48,7): error TS6133: 'CONNECTION_TYPES' is declared but its value is never read.
+src/pages/Admin/PrintersPage.tsx(49,7): error TS6133: 'BAUD_RATES' is declared but its value is never read.
+src/pages/Admin/PrintersPage.tsx(51,7): error TS6133: 'QR_TYPES' is declared but its value is never read.
+src/pages/Admin/PrintersPage.tsx(1296,10): error TS6133: 'testDuration' is declared but its value is never read.
+src/pages/Admin/PrintersPage.tsx(1401,49): error TS2339: Property 'data' does not exist on type '{ job_id?: string | undefined; id?: string | undefined; }'.
+src/pages/Admin/RBACPage.tsx(4,16): error TS6133: 'Plus' is declared but its value is never read.
+src/pages/Admin/RBACPage.tsx(4,22): error TS6133: 'Pencil' is declared but its value is never read.
+src/pages/Admin/RBACPage.tsx(4,30): error TS6133: 'Trash2' is declared but its value is never read.
+src/pages/Admin/RBACPage.tsx(5,35): error TS6133: 'Copy' is declared but its value is never read.
+src/pages/Admin/RBACPage.tsx(6,60): error TS6133: 'Loader2' is declared but its value is never read.
+src/pages/Admin/RBACPage.tsx(10,1): error TS6133: 'employeesService' is declared but its value is never read.
+src/pages/Admin/RBACPage.tsx(220,10): error TS6133: 'hasPerm' is declared but its value is never read.
+src/pages/Admin/RBACPage.tsx(223,10): error TS6133: 'getAllSupervisorPerms' is declared but its value is never read.
+src/pages/Admin/RBACPage.tsx(396,25): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(iterable?: Iterable<string> | null | undefined): Set<string>', gave the following error.
+    Argument of type '{ roleId: string; name: string; permissions: string[]; }' is not assignable to parameter of type 'Iterable<string>'.
+      Property '[Symbol.iterator]' is missing in type '{ roleId: string; name: string; permissions: string[]; }' but required in type 'Iterable<string>'.
+  Overload 2 of 2, '(values?: readonly string[] | null | undefined): Set<string>', gave the following error.
+    Argument of type '{ roleId: string; name: string; permissions: string[]; }' is not assignable to parameter of type 'readonly string[]'.
+      Type '{ roleId: string; name: string; permissions: string[]; }' is missing the following properties from type 'readonly string[]': length, concat, join, slice, and 20 more.
+src/pages/Admin/RBACPage.tsx(397,25): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(iterable?: Iterable<string> | null | undefined): Set<string>', gave the following error.
+    Argument of type '{ roleId: string; name: string; permissions: string[]; }' is not assignable to parameter of type 'Iterable<string>'.
+      Property '[Symbol.iterator]' is missing in type '{ roleId: string; name: string; permissions: string[]; }' but required in type 'Iterable<string>'.
+  Overload 2 of 2, '(values?: readonly string[] | null | undefined): Set<string>', gave the following error.
+    Argument of type '{ roleId: string; name: string; permissions: string[]; }' is not assignable to parameter of type 'readonly string[]'.
+      Type '{ roleId: string; name: string; permissions: string[]; }' is missing the following properties from type 'readonly string[]': length, concat, join, slice, and 20 more.
+src/pages/Admin/RBACPage.tsx(586,10): error TS6133: 'cloningId' is declared but its value is never read.
+src/pages/Admin/RBACPage.tsx(715,9): error TS6133: 'handleDelete' is declared but its value is never read.
+src/pages/Admin/RBACPage.tsx(729,9): error TS6133: 'handleClone' is declared but its value is never read.
+src/pages/Admin/RBACPage.tsx(804,32): error TS6133: 'roleId' is declared but its value is never read.
+src/pages/Admin/Settings.tsx(3,68): error TS6133: 'DollarSign' is declared but its value is never read.
+src/pages/Admin/UserDetail.tsx(11,24): error TS6133: 'LockOpen' is declared but its value is never read.
+src/pages/Admin/UserDetail.tsx(11,34): error TS6133: 'ShieldOff' is declared but its value is never read.
+src/pages/Admin/UserDetail.tsx(494,37): error TS2339: Property 'map' does not exist on type 'never[] | { roleId: string; name: string; permissions: string[]; }'.
+  Property 'map' does not exist on type '{ roleId: string; name: string; permissions: string[]; }'.
+src/pages/Apps/AppsPage.tsx(11,37): error TS1261: Already included file name 'C:/Users/Francisco/OneDrive/Escritorio/Bullweb3.0/frontend/src/pages/Apps/ConfigPlatformModal.tsx' differs from file name 'C:/Users/Francisco/OneDrive/Escritorio/Bullweb3.0/frontend/src/pages/apps/ConfigPlatformModal.tsx' only in casing.
+  The file is in the program because:
+    Imported via './ConfigPlatformModal' from file 'C:/Users/Francisco/OneDrive/Escritorio/Bullweb3.0/frontend/src/pages/Apps/AppsPage.tsx'
+    Matched by include pattern 'src' in 'tsconfig.app.json'
+src/pages/auth/Login.tsx(80,25): error TS2339: Property 'token' does not exist on type 'LoginResponse | TwoFactorRequired'.
+  Property 'token' does not exist on type 'TwoFactorRequired'.
+src/pages/auth/Login.tsx(80,39): error TS2339: Property 'user' does not exist on type 'LoginResponse | TwoFactorRequired'.
+  Property 'user' does not exist on type 'TwoFactorRequired'.
+src/pages/auth/Login.tsx(83,43): error TS2339: Property 'user' does not exist on type 'LoginResponse | TwoFactorRequired'.
+  Property 'user' does not exist on type 'TwoFactorRequired'.
+src/pages/Campaigns/AutomationsTab.tsx(388,9): error TS6133: 'handleTest' is declared but its value is never read.
+src/pages/Campaigns/CampaignsFilters.tsx(2,84): error TS2307: Cannot find module '@ /types/campaigns.types' or its corresponding type declarations.
+src/pages/Campaigns/CampaignsTable.tsx(48,7): error TS6133: 'typeLabels' is declared but its value is never read.
+src/pages/CartaDigital.tsx(1,53): error TS6133: 'useRef' is declared but its value is never read.
+src/pages/CartaDigital.tsx(301,10): error TS6133: 'TypeBtn' is declared but its value is never read.
+src/pages/CartaDigital.tsx(305,3): error TS6133: 'hoverColor' is declared but its value is never read.
+src/pages/CartaDigital.tsx(729,11): error TS6133: 'colorActiveMap' is declared but its value is never read.
+src/pages/CartaQRPage.tsx(15,16): error TS6133: 'CheckCircle' is declared but its value is never read.
+src/pages/CartaQRPage.tsx(91,10): error TS6133: 'slugEditMode' is declared but its value is never read.
+src/pages/CartaQRPage.tsx(92,10): error TS6133: 'savingSlug' is declared but its value is never read.
+src/pages/CartaQRPage.tsx(202,9): error TS6133: 'handleSaveSlug' is declared but its value is never read.
+src/pages/Cash/CashPage.tsx(37,40): error TS2339: Property 'sessions' does not exist on type 'ApiResponse<any>'.
+src/pages/CashRegisters.tsx(74,47): error TS2339: Property 'registers' does not exist on type 'ApiResponse<any>'.
+src/pages/CashRegisters.tsx(75,45): error TS2339: Property 'sessions' does not exist on type 'ApiResponse<any>'.
+src/pages/Customers.tsx(229,9): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/pages/Customers/components/CustomerDetailModal.tsx(16,10): error TS6133: 'loadingOrders' is declared but its value is never read.
+src/pages/Customers/components/EditCustomerModal.tsx(28,16): error TS2345: Argument of type 'string | null | undefined' is not assignable to parameter of type 'SetStateAction<string>'.
+  Type 'undefined' is not assignable to type 'SetStateAction<string>'.
+src/pages/Delivery.tsx(366,57): error TS2304: Cannot find name 'getContextualLabel'.
+src/pages/Delivery.tsx(367,80): error TS2304: Cannot find name 'getContextualTime'.
+src/pages/Delivery.tsx(368,42): error TS2304: Cannot find name 'getContextualTime'.
+src/pages/dte/DteDocumentsPage.tsx(3,3): error TS6133: 'FileText' is declared but its value is never read.
+src/pages/Employees.tsx(24,22): error TS6133: 'AlertCircle' is declared but its value is never read.
+src/pages/Employees.tsx(145,37): error TS2339: Property 'employees' does not exist on type 'ApiResponse<any> | { employees: any; meta: any; }'.
+  Property 'employees' does not exist on type 'ApiResponse<any>'.
+src/pages/Employees.tsx(146,39): error TS2339: Property 'roles' does not exist on type 'ApiResponse<any>'.
+src/pages/Employees.tsx(216,44): error TS6133: 'attLoading' is declared but its value is never read.
+src/pages/Employees.tsx(243,9): error TS6133: 'attMeta' is declared but its value is never read.
+src/pages/Employees.tsx(286,15): error TS6133: 'ms' is declared but its value is never read.
+src/pages/KDS/KDS.tsx(8,3): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/KDS/KDS.tsx(97,10): error TS6133: 'isFullscreen' is declared but its value is never read.
+src/pages/mesero/MeseroPage.tsx(34,5): error TS6133: 'newItemsTotal' is declared but its value is never read.
+src/pages/POS.tsx(63,43): error TS2322: Type 'string' is not assignable to type 'string[]'.
+src/pages/Printers.tsx(5,1): error TS6133: 'ConfirmDialog' is declared but its value is never read.
+src/pages/Printers.tsx(298,35): error TS6133: 'dialogProps' is declared but its value is never read.
+src/pages/Products/Products.tsx(68,32): error TS6133: 'setIngredientCategories' is declared but its value is never read.
+src/pages/Products/Products.tsx(111,25): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<ProductCategory[]>'.
+src/pages/Products/Products.tsx(112,23): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<any[]>'.
+src/pages/Products/Products.tsx(118,27): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<ProductCategory[]>'.
+src/pages/Products/Products.tsx(165,23): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'SetStateAction<any[]>'.
+src/pages/Products/Products.tsx(269,31): error TS2339: Property 'deleteOption' does not exist on type '{ getAll: () => Promise<unknown>; getById: (id: string) => Promise<unknown>; create: (data: { name: string; type: "SINGLE" | "MULTIPLE"; price?: number | undefined; active?: boolean | undefined; }) => Promise<...>; update: (id: string, data: { ...; }) => Promise<...>; delete: (id: string) => Promise<...>; getAllGrou...'.
+src/pages/Products/Products.tsx(283,31): error TS2339: Property 'deleteGroup' does not exist on type '{ getAll: () => Promise<unknown>; getById: (id: string) => Promise<unknown>; create: (data: { name: string; type: "SINGLE" | "MULTIPLE"; price?: number | undefined; active?: boolean | undefined; }) => Promise<...>; update: (id: string, data: { ...; }) => Promise<...>; delete: (id: string) => Promise<...>; getAllGrou...'.
+src/pages/Products/Products.tsx(320,24): error TS2345: Argument of type '(prev: Ingredient[]) => unknown[]' is not assignable to parameter of type 'SetStateAction<Ingredient[]>'.
+  Type '(prev: Ingredient[]) => unknown[]' is not assignable to type '(prevState: Ingredient[]) => Ingredient[]'.
+    Type 'unknown[]' is not assignable to type 'Ingredient[]'.
+      Type 'unknown' is not assignable to type 'Ingredient'.
+src/pages/Products/Products.tsx(326,24): error TS2345: Argument of type '(prev: Ingredient[]) => unknown[]' is not assignable to parameter of type 'SetStateAction<Ingredient[]>'.
+  Type '(prev: Ingredient[]) => unknown[]' is not assignable to type '(prevState: Ingredient[]) => Ingredient[]'.
+    Type 'unknown[]' is not assignable to type 'Ingredient[]'.
+      Type 'unknown' is not assignable to type 'Ingredient'.
+src/pages/Products/Products.tsx(368,20): error TS2345: Argument of type '(prev: Recipe[]) => unknown[]' is not assignable to parameter of type 'SetStateAction<Recipe[]>'.
+  Type '(prev: Recipe[]) => unknown[]' is not assignable to type '(prevState: Recipe[]) => Recipe[]'.
+    Type 'unknown[]' is not assignable to type 'Recipe[]'.
+      Type 'unknown' is not assignable to type 'Recipe'.
+src/pages/Products/Products.tsx(374,13): error TS18046: 'updated' is of type 'unknown'.
+src/pages/Products/Products.tsx(377,55): error TS18046: 'updated' is of type 'unknown'.
+src/pages/Products/Products.tsx(383,20): error TS2345: Argument of type '(prev: Recipe[]) => unknown[]' is not assignable to parameter of type 'SetStateAction<Recipe[]>'.
+  Type '(prev: Recipe[]) => unknown[]' is not assignable to type '(prevState: Recipe[]) => Recipe[]'.
+    Type 'unknown[]' is not assignable to type 'Recipe[]'.
+      Type 'unknown' is not assignable to type 'Recipe'.
+src/pages/Products/Products.tsx(387,13): error TS18046: 'created' is of type 'unknown'.
+src/pages/Products/Products.tsx(390,55): error TS18046: 'created' is of type 'unknown'.
+src/pages/Products/Products.tsx(439,45): error TS2339: Property 'updateGroup' does not exist on type '{ getAll: () => Promise<unknown>; getById: (id: string) => Promise<unknown>; create: (data: { name: string; type: "SINGLE" | "MULTIPLE"; price?: number | undefined; active?: boolean | undefined; }) => Promise<...>; update: (id: string, data: { ...; }) => Promise<...>; delete: (id: string) => Promise<...>; getAllGrou...'.
+src/pages/Products/Products.tsx(445,45): error TS2339: Property 'createGroup' does not exist on type '{ getAll: () => Promise<unknown>; getById: (id: string) => Promise<unknown>; create: (data: { name: string; type: "SINGLE" | "MULTIPLE"; price?: number | undefined; active?: boolean | undefined; }) => Promise<...>; update: (id: string, data: { ...; }) => Promise<...>; delete: (id: string) => Promise<...>; getAllGrou...'.
+src/pages/Products/Products.tsx(490,45): error TS2339: Property 'updateOption' does not exist on type '{ getAll: () => Promise<unknown>; getById: (id: string) => Promise<unknown>; create: (data: { name: string; type: "SINGLE" | "MULTIPLE"; price?: number | undefined; active?: boolean | undefined; }) => Promise<...>; update: (id: string, data: { ...; }) => Promise<...>; delete: (id: string) => Promise<...>; getAllGrou...'.
+src/pages/Products/Products.tsx(507,45): error TS2339: Property 'createOption' does not exist on type '{ getAll: () => Promise<unknown>; getById: (id: string) => Promise<unknown>; create: (data: { name: string; type: "SINGLE" | "MULTIPLE"; price?: number | undefined; active?: boolean | undefined; }) => Promise<...>; update: (id: string, data: { ...; }) => Promise<...>; delete: (id: string) => Promise<...>; getAllGrou...'.
+src/pages/Products/Products.tsx(582,23): error TS2345: Argument of type '(prev: ProductCategory[]) => unknown[]' is not assignable to parameter of type 'SetStateAction<ProductCategory[]>'.
+  Type '(prev: ProductCategory[]) => unknown[]' is not assignable to type '(prevState: ProductCategory[]) => ProductCategory[]'.
+    Type 'unknown[]' is not assignable to type 'ProductCategory[]'.
+      Type 'unknown' is not assignable to type 'ProductCategory'.
+src/pages/Products/Products.tsx(589,63): error TS18046: 'created' is of type 'unknown'.
+src/pages/Products/Products.tsx(591,25): error TS2345: Argument of type '(prev: ProductCategory[]) => unknown[]' is not assignable to parameter of type 'SetStateAction<ProductCategory[]>'.
+  Type '(prev: ProductCategory[]) => unknown[]' is not assignable to type '(prevState: ProductCategory[]) => ProductCategory[]'.
+    Type 'unknown[]' is not assignable to type 'ProductCategory[]'.
+      Type 'unknown' is not assignable to type 'ProductCategory'.
+src/pages/Products/Products.tsx(594,25): error TS2345: Argument of type '(prev: ProductCategory[]) => unknown[]' is not assignable to parameter of type 'SetStateAction<ProductCategory[]>'.
+  Type '(prev: ProductCategory[]) => unknown[]' is not assignable to type '(prevState: ProductCategory[]) => ProductCategory[]'.
+    Type 'unknown[]' is not assignable to type 'ProductCategory[]'.
+      Type 'unknown' is not assignable to type 'ProductCategory'.
+src/pages/Products/Products.tsx(594,61): error TS18046: 'created' is of type 'unknown'.
+src/pages/Products/Products.tsx(638,21): error TS2345: Argument of type '(prev: ProductCategory[]) => unknown[]' is not assignable to parameter of type 'SetStateAction<ProductCategory[]>'.
+  Type '(prev: ProductCategory[]) => unknown[]' is not assignable to type '(prevState: ProductCategory[]) => ProductCategory[]'.
+    Type 'unknown[]' is not assignable to type 'ProductCategory[]'.
+      Type 'unknown' is not assignable to type 'ProductCategory'.
+src/pages/Products/Products.tsx(704,21): error TS2345: Argument of type '(prev: Product[]) => unknown[]' is not assignable to parameter of type 'SetStateAction<Product[]>'.
+  Type '(prev: Product[]) => unknown[]' is not assignable to type '(prevState: Product[]) => Product[]'.
+    Type 'unknown[]' is not assignable to type 'Product[]'.
+      Type 'unknown' is not assignable to type 'Product'.
+src/pages/Products/Products.tsx(710,21): error TS2345: Argument of type '(prev: Product[]) => unknown[]' is not assignable to parameter of type 'SetStateAction<Product[]>'.
+  Type '(prev: Product[]) => unknown[]' is not assignable to type '(prevState: Product[]) => Product[]'.
+    Type 'unknown[]' is not assignable to type 'Product[]'.
+      Type 'unknown' is not assignable to type 'Product'.
+src/pages/Products/Products.tsx(817,13): error TS2322: Type '(category: ProductCategory) => Promise<void>' is not assignable to type '(category: Category) => void'.
+  Types of parameters 'category' and 'category' are incompatible.
+    Type 'Category' is missing the following properties from type 'ProductCategory': order, active
+src/pages/Profile.tsx(1,20): error TS6133: 'useEffect' is declared but its value is never read.
+src/pages/Restaurant/components/AddItemsModal.tsx(78,9): error TS6133: 'tax' is declared but its value is never read.
+src/pages/Restaurant/components/EditOrderModal.tsx(96,9): error TS6133: 'newTax' is declared but its value is never read.
+src/pages/Restaurant/components/NewDeliveryModal.tsx(18,3): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/Restaurant/components/NewMostradorModal.tsx(12,3): error TS6133: 'Trash2' is declared but its value is never read.
+src/pages/Restaurant/components/NewMostradorModal.tsx(172,9): error TS6133: 'handleToggleInline' is declared but its value is never read.
+src/pages/Restaurant/components/NewMostradorModal.tsx(182,9): error TS6133: 'handleToggleModifier' is declared but its value is never read.
+src/pages/Restaurant/components/PaymentModal.tsx(2,142): error TS6133: 'Printer' is declared but its value is never read.
+src/pages/Restaurant/components/PaymentModal.tsx(2,151): error TS6133: 'FileText' is declared but its value is never read.
+src/pages/Restaurant/components/PaymentModal.tsx(7,1): error TS6133: 'toast' is declared but its value is never read.
+src/pages/Restaurant/components/PaymentModal.tsx(167,3): error TS6133: 'tax' is declared but its value is never read.
+src/pages/Restaurant/components/PaymentModal.tsx(295,9): error TS6133: 'effectiveSubtotal' is declared but its value is never read.
+src/pages/Restaurant/config/statusConfig.ts(1,15): error TS2305: Module '"../types"' has no exported member 'StatusConfig'.
+src/pages/Sales/SalesStats.tsx(28,85): error TS6133: 'isPeriodDaily' is declared but its value is never read.
+src/pages/Sales/SalesStats.tsx(55,9): error TS6133: 'formatDateRange' is declared but its value is never read.
+src/pages/Sales/SalesTable.tsx(46,3): error TS6133: 'totalCount' is declared but its value is never read.
+src/pages/Sales/SalesTable.tsx(199,34): error TS2322: Type 'string' is not assignable to type 'SaleStatus'.
+src/pages/Sales/tabs/TabArqueos.tsx(108,30): error TS2339: Property 'sessions' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabArqueos.tsx(124,44): error TS2339: Property 'sessions' does not exist on type 'ApiResponse<any> | { sessions: any[]; }'.
+  Property 'sessions' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabArqueos.tsx(152,35): error TS2339: Property 'byMethod' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabArqueos.tsx(153,49): error TS2339: Property 'openingCash' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabArqueos.tsx(154,49): error TS2339: Property 'totalSales' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabArqueos.tsx(155,46): error TS2339: Property 'totalCashIn' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabArqueos.tsx(156,47): error TS2339: Property 'totalCashOut' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabArqueos.tsx(158,47): error TS2339: Property 'expectedCash' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabArqueos.tsx(159,36): error TS2339: Property 'movements' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabArqueos.tsx(160,38): error TS2339: Property 'cancellations' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabArqueos.tsx(269,18): error TS2339: Property 'closingByMethod' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabArqueos.tsx(581,90): error TS2339: Property 'openedAt' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabArqueos.tsx(752,73): error TS2339: Property 'closingByMethod' does not exist on type 'ApiResponse<any>'.
+src/pages/Sales/tabs/TabMovimientos.tsx(48,33): error TS2339: Property 'sessions' does not exist on type 'ApiResponse<any>'.
+src/pages/Subscription/Subscription.tsx(67,9): error TS6133: 'tenantId' is declared but its value is never read.
+src/pages/superadmin/SuperAdminPayments.tsx(314,38): error TS2339: Property 'recentMonthLabel' does not exist on type 'PaymentSummary'.
+src/pages/superadmin/SuperAdminTenantDetail.tsx(8,32): error TS6133: 'ShoppingBag' is declared but its value is never read.
+src/pages/superadmin/SuperAdminTenantDetail.tsx(8,57): error TS6133: 'Calendar' is declared but its value is never read.
+src/pages/superadmin/SuperAdminTenantDetail.tsx(101,19): error TS2783: 'amount' is specified more than once, so this usage will be overwritten.
+src/pages/superadmin/SuperAdminTenants.tsx(3,16): error TS6133: 'useNavigate' is declared but its value is never read.
+src/services/adminService.ts(1715,81): error TS2554: Expected 1-2 arguments, but got 3.
+src/services/adminService.ts(1721,84): error TS2554: Expected 1-2 arguments, but got 3.
+src/services/attendanceService.ts(89,89): error TS2554: Expected 1-2 arguments, but got 3.
+src/services/attendanceService.ts(92,12): error TS7006: Parameter 'evt' implicitly has an 'any' type.
+src/services/cashRegistersService.ts(130,5): error TS2740: Type 'ApiResponse<any>' is missing the following properties from type 'CuadreResponse': registerId, registerName, sessionId, sessionStatus, and 8 more.
+src/services/menuService.ts(86,21): error TS2339: Property 'imageUrl' does not exist on type 'Partial<Product>'.
+src/services/menuService.ts(86,59): error TS2339: Property 'imageUrl' does not exist on type 'Partial<Product>'.
+src/services/menuService.ts(88,21): error TS2339: Property 'barcode' does not exist on type 'Partial<Product>'.
+src/services/menuService.ts(88,60): error TS2339: Property 'barcode' does not exist on type 'Partial<Product>'.
+src/services/menuService.ts(89,21): error TS2339: Property 'trackInventory' does not exist on type 'Partial<Product>'.
+src/services/menuService.ts(89,88): error TS2339: Property 'trackInventory' does not exist on type 'Partial<Product>'.
+src/services/menuService.ts(90,21): error TS2339: Property 'modifiers' does not exist on type 'Partial<Product>'.
+src/services/menuService.ts(90,64): error TS2339: Property 'modifiers' does not exist on type 'Partial<Product>'.
+src/services/reportsService.ts(2,1): error TS6133: 'ApiResponse' is declared but its value is never read.
+src/services/reportsService.ts(243,7): error TS2554: Expected 1-2 arguments, but got 3.
+src/services/reportsService.ts(264,7): error TS2554: Expected 1-2 arguments, but got 3.
+src/services/restaurantService.ts(495,7): error TS2741: Property 'activeSales' is missing in type '{ totalTables: number; occupiedTables: number; availableTables: number; totalRevenue: number; }' but required in type 'RestaurantStats'.
+src/store/authStore.ts(131,21): error TS2740: Type 'User' is missing the following properties from type 'User': phone, active, roleId, createdAt, and 2 more.
+src/store/authStore.ts(145,17): error TS2740: Type 'User' is missing the following properties from type 'User': phone, active, roleId, createdAt, and 2 more.
+src/sw.ts(93,6): error TS2339: Property 'addEventListener' does not exist on type 'ServiceWorkerGlobalScope'.
+src/sw.ts(93,43): error TS2304: Cannot find name 'ExtendableEvent'.
+src/types/product.types.ts(171,16): error TS1284: An 'export default' must reference a value when 'verbatimModuleSyntax' is enabled, but 'Product' only refers to a type.
+src/utils/dashboardData.ts(94,9): error TS6133: 'total' is declared but its value is never read.
+src/utils/dashboardData.ts(135,36): error TS6133: 'period' is declared but its value is never read.
+src/utils/exportAttendanceDT.ts(87,11): error TS6133: 'day' is declared but its value is never read.
+src/utils/exportAttendanceDT.ts(276,9): error TS6133: 'COL_COUNT' is declared but its value is never read.
+src/utils/orderMapper.ts(159,5): error TS2322: Type '{ id: string; amount: number; employeeId: string; employeeName: string; createdAt: Date; }[]' is not assignable to type 'Tip[]'.
+  Object literal may only specify known properties, and 'employeeId' does not exist in type 'Tip'.
+src/utils/payments.ts(1,15): error TS2305: Module '"../pages/Restaurant/types"' has no exported member 'Payment'.
+src/utils/payments.ts(1,24): error TS2305: Module '"../pages/Restaurant/types"' has no exported member 'PaymentMethod'.
+src/utils/payments.ts(1,39): error TS2305: Module '"../pages/Restaurant/types"' has no exported member 'PaymentStatus'.
+src/utils/recipeCalculator.ts(1,15): error TS6196: 'Recipe' is declared but never used.

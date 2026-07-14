@@ -192,7 +192,8 @@ export default function POS() {
         guestCount,
         waiterId: selectedWaiter
       });
-    } catch (error) {
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error?.message || 'Error al iniciar la orden');
     }
   };
 

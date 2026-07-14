@@ -21,6 +21,7 @@ const Inventory       = lazy(() => import('@/pages/Inventory'));
 const Customers       = lazy(() => import('@/pages/Customers'));
 const Campaigns       = lazy(() => import('@/pages/Campaigns'));
 const Delivery        = lazy(() => import('@/pages/Delivery'));
+const DeliveryMappings = lazy(() => import('@/pages/DeliveryMappings'));
 const Reports         = lazy(() => import('@/pages/Reports'));
 const Sales           = lazy(() => import('@/pages/Sales/Sales').then(m => ({ default: m.Sales })));
 
@@ -254,6 +255,7 @@ export default function App() {
               <Route path="campaigns"      element={<PermissionGuard permission="marketing.view"><Campaigns /></PermissionGuard>} />
               <Route path="carta-qr"       element={<PermissionGuard permission="marketing.view"><CartaQRPage /></PermissionGuard>} />
               <Route path="delivery"       element={<PermissionGuard permission="delivery.view"><Delivery /></PermissionGuard>} />
+              <Route path="delivery/mappings" element={<PermissionGuard permission="delivery.view"><DeliveryMappings /></PermissionGuard>} />
               <Route path="employees"      element={<PermissionGuard permission="employees.view"><Employees /></PermissionGuard>} />
               
               {/* Reportes */}

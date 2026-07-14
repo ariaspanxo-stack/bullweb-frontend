@@ -417,13 +417,16 @@ class RestaurantService {
    * `payment.method` debe ser el UUID del payment_method (obtenido desde
    * paymentMethodsService donde PaymentMethod.id = UUID de la BD).
    */
-  async addPayment(saleId: string, payment: Payment, tip = 0): Promise<void> {
+  async addPayment(saleId: string, payment: Payment, tip = 0, couponId?: string): Promise<void> {
     try {
-      const body = {
+      const body: Record<string, any> = {
         paymentMethodId: payment.method,   // ya es el UUID real de la BD
         amount: Math.round(payment.amount),
         tip: Math.round(tip),
       };
+      // couponId opcional: el backend lo valida e incrementa atómicamente
+      // dentro de la transacción del pago (registerPayment).
+      if (couponId) body.couponId = couponId;
 
       console.log(`[RS] 💳 addPayment ${saleId}:`, body);
       await api.post(`/pos/orders/${saleId}/payment`, body);

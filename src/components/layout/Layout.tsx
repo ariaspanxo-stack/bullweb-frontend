@@ -11,6 +11,7 @@ import { useQROrderAlerts } from '@/hooks/useQROrderAlerts';
 import { useTableRequestAlerts } from '@/hooks/useTableRequestAlerts';
 import TableRequestAlert from '@/components/TableRequestAlert';
 import SuspendedOverlay from '@/components/SuspendedOverlay';
+import PaymentRequiredOverlay from '@/components/PaymentRequiredOverlay';
 import CrispChat from '@/components/CrispChat';
 import { toast } from 'react-hot-toast';
 import api from '@/services/api';
@@ -135,6 +136,9 @@ export default function Layout() {
       <CrispChat userName={user?.name} userEmail={user?.email} />
       {/* Overlay de cuenta suspendida/cancelada */}
       <SuspendedOverlay />
+
+      {/* Overlay de pago requerido (402 — suscripción/trial vencido) */}
+      <PaymentRequiredOverlay />
       {/* Banner de impersonación SuperAdmin */}
       <ImpersonateBanner />
       {/* Banner global de mantenimiento */}

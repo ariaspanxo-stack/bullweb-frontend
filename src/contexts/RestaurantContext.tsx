@@ -151,9 +151,9 @@ interface RestaurantContextValue {
   handleAddNote:              (itemId: string, note: string) => void;
   handleUpdateModifiers:      (itemId: string, modifiers: any[], unitPrice: number) => void;
   handleCheckout:             (customerId?: string, customerName?: string, discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }) => void;
-  handleConfirmPayment:       (payments: Payment[], tip: number, discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }) => Promise<void>;
+  handleConfirmPayment:       (payments: Payment[], tip: number, discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }, couponId?: string) => Promise<void>;
   handlePayOrderFromCard:     (order: Sale) => void;
-  handleConfirmOrderPayment:  (payments: Payment[], tip: number, discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }) => Promise<void>;
+  handleConfirmOrderPayment:  (payments: Payment[], tip: number, discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }, couponId?: string) => Promise<void>;
   handleSendToKitchen:        (customerId?: string, customerName?: string, customerPhone?: string, orderNote?: string) => Promise<void>;
   handleCreateMostradorOrder: (cart: CartItem[], customerName: string, deliveryPhone: string, pickupTime?: string, paymentMethod?: string, customerId?: string) => Promise<void>;
   handleCreateDeliveryOrder:  (cart: CartItem[], customerName: string, customerPhone: string, customerAddress: string, deliveryCity: string, deliveryNotes: string, deliveryCost: number, paymentMethod?: string, customerId?: string) => Promise<void>;
@@ -166,6 +166,19 @@ interface RestaurantContextValue {
   dismissBillRequest:         (orderId: string) => void;
   dismissAllBillRequests:     () => void;
   resetOrderState:            () => void;
+
+  // ── Drafts de carrito persistentes (bug: el carrito se borraba al cerrar el modal) ──
+  // El carrito de Mostrador/Delivery vive en el contexto para sobrevivir al cierre del modal.
+  mostradorCart:     CartItem[];
+  setMostradorCart:  (c: CartItem[]) => void;
+  mostradorDraft:    { customerName: string; deliveryPhone: string };
+  setMostradorDraft: (d: { customerName: string; deliveryPhone: string }) => void;
+  clearMostradorDraft: () => void;
+  deliveryCart:      CartItem[];
+  setDeliveryCart:   (c: CartItem[]) => void;
+  deliveryDraft:     { customerName: string; customerPhone: string; customerAddress: string; deliveryCity: string; deliveryNotes: string; deliveryCost: string };
+  setDeliveryDraft:  (d: { customerName: string; customerPhone: string; customerAddress: string; deliveryCity: string; deliveryNotes: string; deliveryCost: string }) => void;
+  clearDeliveryDraft:  () => void;
 }
 
 // ─── Contexto ─────────────────────────────────────────────────
@@ -255,6 +268,14 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   const [billRequests,  setBillRequests]  = useState<BillRequest[]>([]);
   const [showBillPanel, setShowBillPanel] = useState(false);
   const [newBillAlert,  setNewBillAlert]  = useState(false);
+
+  // ── Drafts persistentes de Mostrador/Delivery ──
+  // Bug: el carrito se borraba al cerrar el modal porque vivía en useState local.
+  // Ahora vive en el contexto para sobrevivir al montaje/desmontaje del modal.
+  const [mostradorCart,  setMostradorCart]  = useState<CartItem[]>([]);
+  const [mostradorDraft, setMostradorDraft] = useState<{ customerName: string; deliveryPhone: string }>({ customerName: '', deliveryPhone: '' });
+  const [deliveryCart,   setDeliveryCart]   = useState<CartItem[]>([]);
+  const [deliveryDraft,  setDeliveryDraft]  = useState<{ customerName: string; customerPhone: string; customerAddress: string; deliveryCity: string; deliveryNotes: string; deliveryCost: string }>({ customerName: '', customerPhone: '', customerAddress: '', deliveryCity: '', deliveryNotes: '', deliveryCost: '2000' });
 
   // ── Derivados ─────────────────────────────────────────────
   const sections = useMemo(() => {
@@ -509,6 +530,18 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
     setPendingDiscount(undefined);
   };
 
+  // ── Limpiar drafts de Mostrador/Delivery ──
+  // Vacía items + datos del cliente para empezar un pedido nuevo SIN cerrar el modal.
+  const clearMostradorDraft = () => {
+    setMostradorCart([]);
+    setMostradorDraft({ customerName: '', deliveryPhone: '' });
+  };
+
+  const clearDeliveryDraft = () => {
+    setDeliveryCart([]);
+    setDeliveryDraft({ customerName: '', customerPhone: '', customerAddress: '', deliveryCity: '', deliveryNotes: '', deliveryCost: '2000' });
+  };
+
   const handleRefresh = async () => {
     await loadInitialData();
   };
@@ -545,7 +578,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
 
       if (!existingOrder) {
         toast.info(`Cargando orden de Mesa ${table.number}...`);
-        existingOrder = await restaurantService.getActiveOrderByTable(table.id);
+        existingOrder = (await restaurantService.getActiveOrderByTable(table.id)) ?? undefined;
         if (existingOrder) {
           setDineInOrders(prev => {
             const exists = prev.find(x => x.id === existingOrder!.id);
@@ -594,6 +627,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
 
     setActiveOrderId(null);
     setSelectedTable(table);
+    setExistingItems([]);
     setCart([]);
     setShowCart(true);
   };
@@ -684,6 +718,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
     payments: Payment[],
     tip: number,
     discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number },
+    couponId?: string,
   ) => {
     try {
       let orderId = activeOrderId;
@@ -722,7 +757,15 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
 
       let tipAsignado = false;
       for (const payment of payments) {
-        await restaurantService.addPayment(orderId, payment, !tipAsignado ? tip : 0);
+        // couponId se envía solo en el último pago para que el backend lo valide
+        // e incremente dentro de la misma transacción del pago.
+        const isLastPayment = payments.indexOf(payment) === payments.length - 1;
+        await restaurantService.addPayment(
+          orderId,
+          payment,
+          !tipAsignado ? tip : 0,
+          isLastPayment ? couponId : undefined,
+        );
         tipAsignado = true;
       }
 
@@ -741,6 +784,15 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
 
   const handlePayOrderFromCard = (order: Sale) => {
     setOrderForPayment(order);
+    // Propagar el descuento que ya tiene la orden para que el modal lo muestre
+    setPendingDiscount(
+      order.discount
+        ? {
+            type: order.discountType === '%' ? 'PERCENTAGE' : 'FIXED',
+            value: order.discount,
+          }
+        : undefined,
+    );
     setShowPaymentModal(true);
   };
 
@@ -748,6 +800,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
     payments: Payment[],
     _tip: number,
     discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number },
+    couponId?: string,
   ) => {
     if (!orderForPayment) return;
     try {
@@ -757,7 +810,15 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
 
       let tipAsignado2 = false;
       for (const payment of payments) {
-        await restaurantService.addPayment(orderForPayment.id, payment, !tipAsignado2 ? _tip : 0);
+        // couponId se envía solo en el último pago para que el backend lo valide
+        // e incremente dentro de la misma transacción del pago.
+        const isLastPayment = payments.indexOf(payment) === payments.length - 1;
+        await restaurantService.addPayment(
+          orderForPayment.id,
+          payment,
+          !tipAsignado2 ? _tip : 0,
+          isLastPayment ? couponId : undefined,
+        );
         tipAsignado2 = true;
       }
 
@@ -931,11 +992,15 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   };
 
   const handleCloseCart = () => {
+    // FIX: solo cerrar la UI; NO resetear cart/existingItems aquí.
+    // El reseteo se hace únicamente cuando la venta se concreta:
+    //   - handleConfirmPayment      → resetOrderState()
+    //   - handleConfirmOrderPayment → resetOrderState()
+    //   - handleSendToKitchen       → setCart([])
+    // Así, cerrar el modal con la X conserva los items para reabrirlos.
     setShowCart(false);
     setSelectedTable(null);
     setActiveOrderId(null);
-    setCart([]);
-    setExistingItems([]);
   };
 
   const handleRemoveExistingItem = async (itemId: string, reason: string) => {
@@ -1066,6 +1131,13 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
       dismissBillRequest,
       dismissAllBillRequests,
       resetOrderState,
+      // Drafts persistentes (bug: carrito borrado al cerrar modal)
+      mostradorCart,  setMostradorCart,
+      mostradorDraft, setMostradorDraft,
+      clearMostradorDraft,
+      deliveryCart,   setDeliveryCart,
+      deliveryDraft,  setDeliveryDraft,
+      clearDeliveryDraft,
     }}>
       {children}
     </RestaurantCtx.Provider>

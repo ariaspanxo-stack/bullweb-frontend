@@ -31,7 +31,7 @@ interface PaymentModalProps {
   initialDiscount?: { type: 'PERCENTAGE' | 'FIXED'; value: number };
   orderId?: string;
   onClose: () => void;
-  onConfirm: (payments: Payment[], tip: number, discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }) => Promise<void>;
+  onConfirm: (payments: Payment[], tip: number, discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }, couponId?: string) => Promise<void>;
 }
 
 type Medium = string;
@@ -346,17 +346,11 @@ export const PaymentModal = ({
       const discountPayload = discountEnabled && discountAmount > 0
         ? { type: discountType, value: parseFloat(discountValue) || 0 }
         : undefined;
-      await onConfirm(payments, Math.round(tipTotal), discountPayload);
+      // El cupón ahora se valida e incrementa atómicamente en el backend (registerPayment)
+      // dentro de la misma transacción del pago. Ya no se necesita una llamada manual.
+      await onConfirm(payments, Math.round(tipTotal), discountPayload, appliedCouponId ?? undefined);
       setPaymentCompleted(true);
-      // CRÍTICO 1: incrementar uso del cupón al confirmar el pago
-      if (appliedCouponId) {
-        try {
-          await api.post(`/coupons/${appliedCouponId}/use`);
-        } catch {
-          // no bloquear el flujo de pago si esto falla
-        }
-        setAppliedCouponId(null);
-      }
+      setAppliedCouponId(null);
     } catch (e: any) {
       setError(e.message || 'Error al procesar el pago');
     } finally {

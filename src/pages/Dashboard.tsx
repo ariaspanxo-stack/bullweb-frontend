@@ -24,6 +24,7 @@ import {
 import { reportsService } from '@/services/reportsService';
 import { subDays, startOfDay, endOfDay } from 'date-fns';
 import { PrintStatusWidget } from '@/components/dashboard/PrintStatusWidget';
+import { SalesHeatmap } from '@/components/dashboard/SalesHeatmap';
 
 type TimeRange = 'today' | 'week' | 'month';
 
@@ -423,64 +424,9 @@ export const Dashboard = () => {
           </div>
 
           {/* ========================================================== */}
-          {/* TAREA 2: Ventas por Hora — BarChart Premium                */}
+          {/* TAREA 2: Ventas por Hora — HEATMAP (reemplaza BarChart)    */}
           {/* ========================================================== */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-6">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <BarChart3 size={20} className="text-blue-600" />
-                <h2 className="text-xl font-bold text-slate-800">Ventas por Hora</h2>
-              </div>
-              <Clock size={20} className="text-slate-400" />
-            </div>
-
-            {isLoading ? (
-              <div className="flex items-center justify-center h-64">
-                <Loader2 className="animate-spin text-slate-300" size={32} />
-              </div>
-            ) : salesByHour.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
-                <Clock size={40} className="mx-auto mb-2 opacity-30" />
-                <p>Sin datos de horas en este período</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart
-                  data={hourlyChartData}
-                  margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
-                >
-                  <defs>
-                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#fbbf24" />
-                      <stop offset="100%" stopColor="#f59e0b" />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                  <XAxis
-                    dataKey="label"
-                    tick={{ fontSize: 11, fill: '#6b7280' }}
-                    tickLine={false}
-                    axisLine={false}
-                    interval="preserveStartEnd"
-                  />
-                  <YAxis
-                    tickFormatter={(v) => formatCurrency(Number(v))}
-                    tick={{ fontSize: 10, fill: '#6b7280' }}
-                    tickLine={false}
-                    axisLine={false}
-                    width={80}
-                  />
-                  <RechartsTooltip content={<HourTooltip />} cursor={{ fill: 'rgba(245, 158, 11, 0.08)' }} />
-                  <Bar
-                    dataKey="sales"
-                    fill="url(#barGradient)"
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={36}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </div>
+          <SalesHeatmap salesByHour={salesByHour} isLoading={isLoading} />
         </div>
 
         {/* ============================================================ */}

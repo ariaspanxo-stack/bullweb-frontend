@@ -119,8 +119,14 @@ const { dteIsConfigured, lastPaidOrderId } = useRestaurant();
     try {
       await onProcessPayment(selectedMethodId, finalTotal, tip > 0 ? tip : undefined);
       setPaymentCompleted(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing payment:', error);
+      toast.error(
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
+        'Error al procesar el pago. Verifica stock e inténtalo nuevamente.'
+      );
     } finally {
       setIsProcessing(false);
     }

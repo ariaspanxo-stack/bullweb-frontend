@@ -315,8 +315,17 @@ export default function Delivery() {
                       <td className="px-4 py-3">
                         <div className="font-medium text-gray-900">{formatSaleNumber(d.orders?.orderNumber)}</div>
                         <div className="text-xs text-gray-400">
+                          {/*
+                            FIX BUG VISUAL: order.total del backend YA incluye el deliveryFee
+                            (pos.service.ts: total = subtotal + deliveryFeeAmt).
+                            Antes se mostraba "$total +$envío" lo que sugería sumar el envío
+                            nuevamente encima del total (doblando el cobro en la lectura).
+                            Ahora se muestra solo el total final con una aclaración pequeña.
+                          */}
                           {d.orders?.total ? `$${d.orders.total.toLocaleString('es')}` : ''}
-                          {d.orders?.deliveryFee ? ` +$${d.orders.deliveryFee.toLocaleString('es')} envío` : ''}
+                          {d.orders?.deliveryFee
+                            ? ` · (incluye $${d.orders.deliveryFee.toLocaleString('es')} envío)`
+                            : ''}
                         </div>
                       </td>
 

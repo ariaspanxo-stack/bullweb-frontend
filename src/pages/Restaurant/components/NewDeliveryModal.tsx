@@ -20,7 +20,8 @@ import {
   UserPlus,
   ArrowLeft,
   ArrowRight,
-  Printer
+  Printer,
+  Trash2
 } from 'lucide-react';
 import { PrintControlModal } from '../../../components/print/PrintControlModal';
 import type { PrintControlItem } from '../../../components/print/PrintControlModal';
@@ -32,6 +33,7 @@ import type {
 } from '../../../types/restaurant.types';
 import customersService from '../../../services/customersService';
 import toast from 'react-hot-toast';
+import { useRestaurant } from '../../../contexts/RestaurantContext';
 
 interface NewDeliveryModalProps {
   products: Product[];
@@ -48,20 +50,35 @@ export const NewDeliveryModal = ({
   onConfirm,
   onClose
 }: NewDeliveryModalProps) => {
-  // ========== ESTADO ==========
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [customerAddress, setCustomerAddress] = useState('');
-  const [deliveryCity, setDeliveryCity] = useState('');
+  // ========== ESTADO (drafts persistentes en el contexto) ==========
+  // FIX: el carrito y los datos del cliente viven en el contexto para sobrevivir
+  // al cierre del modal (antes se perdían porque eran useState local).
+  const {
+    deliveryCart: cart, setDeliveryCart: setCart,
+    deliveryDraft, setDeliveryDraft,
+    clearDeliveryDraft,
+  } = useRestaurant();
+  const customerName = deliveryDraft.customerName;
+  const customerPhone = deliveryDraft.customerPhone;
+  const customerAddress = deliveryDraft.customerAddress;
+  const deliveryCity = deliveryDraft.deliveryCity;
+  const deliveryNotes = deliveryDraft.deliveryNotes;
+  const deliveryCost = deliveryDraft.deliveryCost;
+  const setCustomerName = (v: string) => setDeliveryDraft({ ...deliveryDraft, customerName: v });
+  const setCustomerPhone = (v: string) => setDeliveryDraft({ ...deliveryDraft, customerPhone: v });
+  const setCustomerAddress = (v: string) => setDeliveryDraft({ ...deliveryDraft, customerAddress: v });
+  const setDeliveryCity = (v: string) => setDeliveryDraft({ ...deliveryDraft, deliveryCity: v });
+  const setDeliveryNotes = (v: string) => setDeliveryDraft({ ...deliveryDraft, deliveryNotes: v });
+  const setDeliveryCost = (v: string) => setDeliveryDraft({ ...deliveryDraft, deliveryCost: v });
+
   const [saveToCustomers, setSaveToCustomers] = useState(true);
-  const [deliveryNotes, setDeliveryNotes] = useState('');
-  const [deliveryCost, setDeliveryCost] = useState('2000');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
-  const [step, setStep] = useState<'client' | 'order'>('client');
+  const [step, setStep] = useState<'client' | 'order'>(() =>
+    (deliveryDraft.customerName.trim().length > 0 || cart.length > 0) ? 'order' : 'client'
+  );
   const searchInputRef = useRef<HTMLInputElement>(null);
   // Print control
   const [showPrintControl, setShowPrintControl] = useState(false);
@@ -304,11 +321,7 @@ export const NewDeliveryModal = ({
   };
 
   const handleClose = () => {
-    const hayDatos = customerName.trim() || customerPhone.trim() || customerAddress.trim() || deliveryCity.trim() || cart.length > 0;
-    if (hayDatos) {
-      const confirmar = window.confirm('¿Seguro que quieres salir? Se perderán los datos ingresados.');
-      if (!confirmar) return;
-    }
+    // FIX: los datos ahora persisten en el contexto, no se pierden al cerrar.
     onClose();
   };
 
@@ -353,6 +366,21 @@ export const NewDeliveryModal = ({
               <div className="w-3 h-px bg-white/40" />
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step === 'order' ? 'bg-white text-purple-600' : 'bg-white/25 text-white/70'}`}>2</div>
             </div>
+            {cart.length > 0 && (
+              <button
+                onClick={() => {
+                  if (window.confirm('¿Limpiar el carrito y los datos del cliente para empezar un pedido nuevo?')) {
+                    clearDeliveryDraft();
+                    setStep('client');
+                    setErrors([]);
+                  }
+                }}
+                title="Limpiar carrito y empezar nueva orden"
+                className="w-9 h-9 bg-white/20 hover:bg-red-500/80 rounded-lg flex items-center justify-center transition-colors"
+              >
+                <Trash2 size={17} />
+              </button>
+            )}
             <button
               onClick={handleClose}
               className="w-9 h-9 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
@@ -693,7 +721,7 @@ export const NewDeliveryModal = ({
                         value={(item as any).notes || ''}
                         onChange={(e) => {
                           const notes = e.target.value;
-                          setCart(prev => prev.map(i =>
+                          setCart(cart.map(i =>
                             i.id === item.id ? { ...i, notes: notes || undefined } as any : i
                           ));
                         }}

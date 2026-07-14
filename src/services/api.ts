@@ -560,12 +560,15 @@ async function fetchWithRefresh(fetchFn: () => Promise<Response>): Promise<Respo
   }
 
   // ── 402: suscripción vencida ───────────────────────────────────────────────
+  // En lugar de redirigir bruscamente, disparamos un evento global que escucha
+  // el componente PaymentRequiredOverlay para mostrar un modal elegante.
+  if (res.status === 402 && typeof window !== 'undefined' && !window.location.pathname.startsWith('/subscription')) {
+    window.dispatchEvent(new CustomEvent('billing:payment_required'));
+    return res;
+  }
+
   // Si no es 401, o ya estamos en el proceso de refresh, devolver tal cual
   if (res.status !== 401 || _isRefreshing) {
-    // Redirigir a página de suscripción si el servidor responde 402
-    if (res.status === 402 && typeof window !== 'undefined' && !window.location.pathname.startsWith('/subscription')) {
-      window.location.href = '/subscription';
-    }
     return res;
   }
 

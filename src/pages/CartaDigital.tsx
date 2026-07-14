@@ -1192,9 +1192,22 @@ export default function CartaDigital() {
   const [activeTag,     setActiveTag]     = useState<string | null>(null);
   const [modalQty,     setModalQty]     = useState(1);
 
-  // ── Cart state ────────────────────────────────────────────────
-  const [cart,     setCart]     = useState<CartItem[]>([]);
+  // ── Cart state (persistido en localStorage por restaurante + mesa) ──
+  const cartKey = `bullweb:cart:${tenantSlug ?? 'default'}:${mesaNumber ?? 'generico'}`;
+  const [cart,     setCart]     = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(cartKey);
+      return saved ? (JSON.parse(saved) as CartItem[]) : [];
+    } catch { return []; }
+  });
   const [showCart, setShowCart] = useState(false);
+
+  // Persistir carrito en localStorage ante cada cambio (supervivencia a refresh/cierre)
+  useEffect(() => {
+    try {
+      localStorage.setItem(cartKey, JSON.stringify(cart));
+    } catch { /* ignore quota errors */ }
+  }, [cart, cartKey]);
 
   const addToCart = useCallback((product: Product) => {
     setCart(prev => {
@@ -1643,7 +1656,10 @@ export default function CartaDigital() {
           paymentMethods={cartaSettings?.paymentMethods ?? FALLBACK_PAYMENT_METHODS}
           onClose={() => setShowCart(false)}
           onUpdate={updateCartItem}
-          onOrderSuccess={() => setCart([])}
+          onOrderSuccess={() => {
+            setCart([]);
+            try { localStorage.removeItem(cartKey); } catch { /* ignore */ }
+          }}
         />
       )}
 

@@ -167,12 +167,16 @@ export function OrderCardCompact({
 
         {/* ── Fila 3: total · acción · cobrar · ··· ── */}
         <div className="flex items-center gap-1.5 pt-1 border-t border-gray-50 min-w-0">
-          {/* Total */}
+          {/*
+            Total — order.total proviene del backend y YA incluye el deliveryFee
+            (ver pos.service.ts: total = subtotal + deliveryFeeAmt).
+            NO se debe volver a sumar el envío aquí; solo se aclara que está incluido.
+          */}
           <span className="font-black text-gray-800 text-sm flex-1 min-w-0 truncate">
-            ${fmt(order.total || 0)}
+            Total ${fmt(order.total || 0)}
             {variant === 'delivery' && deliveryFee && deliveryFee > 0 && (
               <span className="text-[10px] text-gray-400 font-normal ml-1">
-                +${fmt(deliveryFee)} env.
+                (incluye ${fmt(deliveryFee)} envío)
               </span>
             )}
           </span>

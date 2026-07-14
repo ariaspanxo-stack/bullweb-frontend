@@ -33,6 +33,7 @@ import type {
 import type { ProductModifier } from '../../../types/sales.types';
 import customersService from '../../../services/customersService';
 import toast from 'react-hot-toast';
+import { useRestaurant } from '../../../contexts/RestaurantContext';
 
 interface NewMostradorModalProps {
   products: Product[];
@@ -49,17 +50,28 @@ export const NewMostradorModal = ({
   onConfirm,
   onClose
 }: NewMostradorModalProps) => {
-  // ========== ESTADO ==========
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [customerName, setCustomerName] = useState('');
-  const [deliveryPhone, setDeliveryPhone] = useState('');
+  // ========== ESTADO (drafts persistentes en el contexto) ==========
+  // FIX: el carrito y los datos del cliente viven en el contexto para sobrevivir
+  // al cierre del modal (antes se perdían porque eran useState local).
+  const {
+    mostradorCart: cart, setMostradorCart: setCart,
+    mostradorDraft, setMostradorDraft,
+    clearMostradorDraft,
+  } = useRestaurant();
+  const customerName = mostradorDraft.customerName;
+  const deliveryPhone = mostradorDraft.deliveryPhone;
+  const setCustomerName = (v: string) => setMostradorDraft({ ...mostradorDraft, customerName: v });
+  const setDeliveryPhone = (v: string) => setMostradorDraft({ ...mostradorDraft, deliveryPhone: v });
+
   const [saveToCustomers, setSaveToCustomers] = useState(true);
   // pickupTime removed
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [step, setStep] = useState<'client' | 'order'>('client');
+  const [step, setStep] = useState<'client' | 'order'>(() =>
+    (mostradorDraft.customerName.trim().length > 0 || cart.length > 0) ? 'order' : 'client'
+  );
   const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({});
   // Panel inline de comentario
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -173,14 +185,14 @@ export const NewMostradorModal = ({
 
   // Auto-guardar nota directamente al carrito
   const handleUpdateNotes = (itemId: string, notes: string) => {
-    setCart(prev => prev.map(i =>
+    setCart(cart.map(i =>
       i.id === itemId ? { ...i, notes: notes || undefined } : i
     ));
   };
 
   // Toggle modificador con auto-guardado (afecta precio)
   const handleToggleModifier = (itemId: string, mod: ProductModifier) => {
-    setCart(prev => prev.map(item => {
+    setCart(cart.map(item => {
       if (item.id !== itemId) return item;
       const prod = products.find(p => p.id === item.productId);
       const cur = (item.modifiers as ProductModifier[]) || [];
@@ -304,11 +316,7 @@ export const NewMostradorModal = ({
   };
 
   const handleClose = () => {
-    const hayDatos = customerName.trim() || deliveryPhone.trim() || cart.length > 0;
-    if (hayDatos) {
-      const confirmar = window.confirm('¿Seguro que quieres salir? Se perderán los datos ingresados.');
-      if (!confirmar) return;
-    }
+    // FIX: los datos ahora persisten en el contexto, no se pierden al cerrar.
     onClose();
   };
 
@@ -353,6 +361,21 @@ export const NewMostradorModal = ({
               <div className="w-3 h-px bg-white/40" />
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step === 'order' ? 'bg-white text-blue-600' : 'bg-white/25 text-white/70'}`}>2</div>
             </div>
+            {cart.length > 0 && (
+              <button
+                onClick={() => {
+                  if (window.confirm('¿Limpiar el carrito y los datos del cliente para empezar un pedido nuevo?')) {
+                    clearMostradorDraft();
+                    setStep('client');
+                    setError('');
+                  }
+                }}
+                title="Limpiar carrito y empezar nueva orden"
+                className="w-9 h-9 bg-white/20 hover:bg-red-500/80 rounded-lg flex items-center justify-center transition-colors"
+              >
+                <Trash2 size={17} />
+              </button>
+            )}
             <button
               onClick={handleClose}
               className="w-9 h-9 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"

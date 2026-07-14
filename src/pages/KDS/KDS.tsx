@@ -103,6 +103,11 @@ export default function KDS() {
   const [reconnecting, setReconnecting] = useState(false);
   const [confirmedCount, setConfirmedCount] = useState(0);
 
+  // LOCK UI anti-doble-click (Quick Win UX): bloquea el botón del item que se
+  // está actualizando hasta que la API responde. Evita peticiones duplicadas y
+  // reduce la ventana de race condition entre dos cocineros sobre el mismo item.
+  const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
+
   const socketRef = useRef<Socket | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   // Refs para evitar closures obsoletas dentro del socket (montado una sola vez)
@@ -291,35 +296,41 @@ export default function KDS() {
     }
   };
 
-  // Mutations
+  // Mutations — Lock UI anti-doble-click por item
   const preparingMutation = useMutation({
     mutationFn: async (itemId: string) => {
+      setUpdatingItemId(itemId);
       const response = await api.put(`/kds/item/${itemId}/preparing`);
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kds'] });
     },
+    onSettled: () => setUpdatingItemId(null),
   });
 
   const readyMutation = useMutation({
     mutationFn: async (itemId: string) => {
+      setUpdatingItemId(itemId);
       const response = await api.put(`/kds/item/${itemId}/ready`);
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kds'] });
     },
+    onSettled: () => setUpdatingItemId(null),
   });
 
   const recallMutation = useMutation({
     mutationFn: async (itemId: string) => {
+      setUpdatingItemId(itemId);
       const response = await api.put(`/kds/item/${itemId}/recall`);
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kds'] });
     },
+    onSettled: () => setUpdatingItemId(null),
   });
 
   const URGENCY_ORDER = { critical: 0, urgent: 1, warning: 2, normal: 3 } as const;
@@ -520,32 +531,44 @@ export default function KDS() {
                           {item.status === 'PENDING' && (
                             <button
                               onClick={() => preparingMutation.mutate(item.id)}
-                              disabled={preparingMutation.isPending}
-                              className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-1.5 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 text-sm"
+                              disabled={updatingItemId === item.id || preparingMutation.isPending}
+                              className={`flex-1 font-bold py-1.5 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 text-sm ${
+                                updatingItemId === item.id
+                                  ? 'bg-zinc-600 text-zinc-300 cursor-wait'
+                                  : 'bg-yellow-500 hover:bg-yellow-600 text-black'
+                              }`}
                             >
                               <Play className="w-3 h-3" />
-                              Iniciar
+                              {updatingItemId === item.id ? '...' : 'Iniciar'}
                             </button>
                           )}
 
                           {item.status === 'PREPARING' && (
                             <button
                               onClick={() => readyMutation.mutate(item.id)}
-                              disabled={readyMutation.isPending}
-                              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-1.5 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 text-sm"
+                              disabled={updatingItemId === item.id || readyMutation.isPending}
+                              className={`flex-1 font-bold py-1.5 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 text-sm ${
+                                updatingItemId === item.id
+                                  ? 'bg-zinc-600 text-zinc-300 cursor-wait'
+                                  : 'bg-green-500 hover:bg-green-600 text-white'
+                              }`}
                             >
                               <CheckCircle className="w-3 h-3" />
-                              Listo
+                              {updatingItemId === item.id ? '...' : 'Listo'}
                             </button>
                           )}
 
                           {item.status === 'READY' && (
                             <button
                               onClick={() => recallMutation.mutate(item.id)}
-                              disabled={recallMutation.isPending}
-                              className="flex-1 bg-zinc-700 hover:bg-zinc-600 text-white font-bold py-1.5 px-3 rounded-lg transition-colors text-xs"
+                              disabled={updatingItemId === item.id || recallMutation.isPending}
+                              className={`flex-1 font-bold py-1.5 px-3 rounded-lg transition-colors text-xs ${
+                                updatingItemId === item.id
+                                  ? 'bg-zinc-600 text-zinc-300 cursor-wait'
+                                  : 'bg-zinc-700 hover:bg-zinc-600 text-white'
+                              }`}
                             >
-                              Recuperar
+                              {updatingItemId === item.id ? '...' : 'Recuperar'}
                             </button>
                           )}
                         </div>

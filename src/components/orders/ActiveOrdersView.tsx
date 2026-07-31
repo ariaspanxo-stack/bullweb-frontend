@@ -4,6 +4,7 @@ import { posService } from '@/services/posService';
 import { CheckCircle } from 'lucide-react';
 import { isToday as isTodayFns, isYesterday, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatCurrency } from '@/lib/utils';
 
 interface ActiveOrder {
   id: string;
@@ -173,7 +174,7 @@ function ActiveOrderCard({ order, lateThresholdMinutes = 20 }: { order: ActiveOr
       {/* Total */}
       <div className="flex items-center justify-between border-t border-gray-200 pt-2">
         <span className="text-base font-bold text-gray-900">
-          ${order.total?.toLocaleString('es-CL')}
+          {formatCurrency(order.total)}
         </span>
         {isLate && (
           <span className="text-xs text-red-500 font-semibold">Demorado</span>

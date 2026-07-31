@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { formatSaleNumber } from '@/utils/formatSaleNumber';
+import { formatCurrency } from '@/lib/utils';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePermission } from '@/hooks/usePermission';
 import {
@@ -322,9 +323,9 @@ export default function Delivery() {
                             nuevamente encima del total (doblando el cobro en la lectura).
                             Ahora se muestra solo el total final con una aclaración pequeña.
                           */}
-                          {d.orders?.total ? `$${d.orders.total.toLocaleString('es')}` : ''}
+                          {d.orders?.total ? formatCurrency(Number(d.orders.total)) : ''}
                           {d.orders?.deliveryFee
-                            ? ` · (incluye $${d.orders.deliveryFee.toLocaleString('es')} envío)`
+                            ? ` · (incluye ${formatCurrency(Number(d.orders.deliveryFee))} envío)`
                             : ''}
                         </div>
                       </td>

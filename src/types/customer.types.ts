@@ -1,6 +1,17 @@
 // Tipo de tag de cliente (coherente con backend segment)
 export type CustomerTag = 'new' | 'frequent' | 'vip' | 'inactive';
 
+// Nivel de fidelización (loyalty_tiers en backend)
+export interface Tier {
+  id: string;
+  name: string;
+  color?: string | null;
+  benefitText?: string | null;
+  minSpent?: number | string;
+  order?: number;
+  isActive?: boolean;
+}
+
 // Tipo canonical unificado — usado en TODOS los componentes de clientes
 export interface Customer {
   id: string;
@@ -27,6 +38,13 @@ export interface Customer {
   }>;
   loyaltyPoints?: number;
   points?: number;
+  // Nivel de fidelización actual
+  currentTierId?: string | null;
+  tier?: Tier | null;
+  tierAtRisk?: boolean | null;
+  tierDowngradedAt?: string | null;
+  // Segmento calculado por el backend (VIP/FREQUENT/REGULAR/NEW/INACTIVE/AT_RISK)
+  segment?: string | null;
   createdAt: string;
   updatedAt?: string | null;
   tenantId?: string | null;

@@ -7,7 +7,7 @@ import { formatSaleNumber } from '../../utils/formatSaleNumber';
 interface CustomerDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
-  customerId: string;
+  customerId?: string;
 }
 
 const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
@@ -94,6 +94,35 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
             <X className="w-6 h-6" />
           </button>
         </div>
+
+        {/* Banner de nivel de fidelización + riesgo */}
+        {detailedStats?.customer?.loyalty_tiers && (
+          <div className="px-6 py-3 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span
+                  className="px-2 py-1 rounded text-xs font-bold text-white"
+                  style={{ backgroundColor: detailedStats.customer.loyalty_tiers.color ?? '#71717a' }}
+                >
+                  {detailedStats.customer.loyalty_tiers.name}
+                </span>
+                {detailedStats.customer.loyalty_tiers.benefitText && (
+                  <span className="text-xs text-gray-600">{detailedStats.customer.loyalty_tiers.benefitText}</span>
+                )}
+              </div>
+              {detailedStats?.customer?.tierAtRisk && (
+                <span className="px-2 py-1 rounded text-xs font-bold bg-red-100 text-red-700 border border-red-300">
+                  ⚠ En riesgo de bajar de nivel
+                </span>
+              )}
+            </div>
+            {detailedStats?.tierProgress?.nextTierName && (
+              <p className="text-xs text-gray-500 mt-1">
+                Te faltan <strong className="text-gray-800">{formatCurrency(detailedStats.tierProgress.amountToNextTier)}</strong> para llegar a <strong className="text-gray-800">{detailedStats.tierProgress.nextTierName}</strong>
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Stats rápidos */}
         {detailedStats && (

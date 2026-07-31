@@ -25,6 +25,7 @@ import toast from 'react-hot-toast';
 import { usePermission } from '../../../hooks/usePermission';
 import tablesService from '../../../services/tablesService';
 import { useRemovalReason } from '../../../hooks/useRemovalReason';
+import { formatCurrency } from '../../../lib/utils';
 
 interface OrderModalProps {
   table: Table;
@@ -168,10 +169,26 @@ export const OrderModal = ({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'f' && !e.ctrlKey && !e.metaKey) {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
+      if ((e.key !== 'f' && e.key !== 'F') || e.ctrlKey || e.metaKey || e.altKey) return;
+
+      const el = document.activeElement as HTMLElement | null;
+
+      // Si el foco ya está en el buscador, dejar que el usuario escriba la 'f' normalmente
+      if (el === searchInputRef.current) return;
+
+      const tag = el?.tagName;
+      const isEditable =
+        tag === 'INPUT' ||
+        tag === 'TEXTAREA' ||
+        tag === 'SELECT' ||
+        el?.isContentEditable;
+
+      // Si el foco está en cualquier otro input editable, no interceptar la tecla
+      if (isEditable) return;
+
+      // Si no está en ningún input, interceptar la 'f' y enfocar el buscador
+      e.preventDefault();
+      searchInputRef.current?.focus();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -400,7 +417,7 @@ export const OrderModal = ({
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         <span className="font-bold text-orange-500 text-sm">
-                          ${product.price.toLocaleString()}
+                          {formatCurrency(product.price)}
                         </span>
                         <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center shadow-sm">
                           <Plus size={15} className="text-white" />
@@ -555,7 +572,7 @@ export const OrderModal = ({
                               )}
                             </div>
                             <span className={`text-[14px] font-bold whitespace-nowrap flex-shrink-0 ${item.isCancelled ? 'text-slate-400 line-through' : 'text-gray-500'}`}>
-                              ${(item.total ?? 0).toLocaleString()}
+                              {formatCurrency(item.total ?? 0)}
                             </span>
                             {onRemoveExistingItem && !item.isCancelled && (
                               <button
@@ -632,7 +649,7 @@ export const OrderModal = ({
                           {/* Precio + eliminar */}
                           <div className="flex items-center gap-1.5 flex-shrink-0">
                             <span className="text-[14px] font-bold text-gray-900 whitespace-nowrap">
-                              ${item.subtotal.toLocaleString()}
+                              {formatCurrency(item.subtotal)}
                             </span>
                             <button
                               onClick={() => { onRemoveItem(item.id); setExpandedItemId(id => id === item.id ? null : id); }}
@@ -678,17 +695,17 @@ export const OrderModal = ({
                 <div className="space-y-0.5 pb-1">
                   <div className="flex justify-between text-sm text-gray-500">
                     <span>Subtotal</span>
-                    <span className="font-medium">${subtotal.toLocaleString()}</span>
+                    <span className="font-medium">{formatCurrency(subtotal)}</span>
                   </div>
                   {discountApplied && discountAmount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Descuento{discountType === '%' ? ` (${discountValue}%)` : ''}</span>
-                      <span className="font-medium">-${discountAmount.toLocaleString()}</span>
+                      <span className="font-medium">-{formatCurrency(discountAmount)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-base font-bold text-gray-900 pt-1 border-t border-gray-100">
                     <span>Total</span>
-                    <span className="text-orange-500">${total.toLocaleString()}</span>
+                    <span className="text-orange-500">{formatCurrency(total)}</span>
                   </div>
                 </div>
 
@@ -754,7 +771,7 @@ export const OrderModal = ({
                 >
                   <Tag size={15} />
                   {discountApplied && discountAmount > 0
-                    ? `Descuento${discountType === '%' ? ` ${discountValue}%` : ''} (-$${discountAmount.toLocaleString()})`
+                    ? `Descuento${discountType === '%' ? ` ${discountValue}%` : ''} (-${formatCurrency(discountAmount)})`
                     : 'Descuento'}
                 </button>
 
@@ -810,7 +827,7 @@ export const OrderModal = ({
                   className="w-full py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-green-700 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? <Loader2 size={18} className="animate-spin" /> : <CreditCard size={18} />}
-                  {existingOrderId ? `Cobrar $${total.toLocaleString()}` : `Pagar Directo $${total.toLocaleString()}`}
+                  {existingOrderId ? `Cobrar ${formatCurrency(total)}` : `Pagar Directo ${formatCurrency(total)}`}
                 </button>
 
                 {/* Enviar a cocina */}

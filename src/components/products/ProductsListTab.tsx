@@ -61,7 +61,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
   // Estadísticas
   const stats = {
     total: products.length,
-    active: products.filter(p => p.active && p.available).length,
+    active: products.filter(p => p.available).length,
     popular: products.filter(p => p.popular).length,
     lowStock: products.filter(p => 
       p.hasStock && 
@@ -91,7 +91,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
 
     // Quick filter
     if (quickFilter === 'active') {
-      filtered = filtered.filter(product => product.active && product.available);
+      filtered = filtered.filter(product => product.available);
     } else if (quickFilter === 'popular') {
       filtered = filtered.filter(product => product.popular === true);
     } else if (quickFilter === 'lowstock') {

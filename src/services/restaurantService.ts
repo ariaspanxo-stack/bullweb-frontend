@@ -64,6 +64,8 @@ function mapOrder(raw: any): Sale {
     customerAddress: raw.deliveryAddress || raw.customerAddress || undefined,
     customerPhone: raw.customerPhone || undefined,
     deliveryFee: Number(raw.deliveryFee) || 0,
+    paymentMethodId: raw.paymentMethodId || undefined,
+    paymentMethod: raw.payment_methods || raw.paymentMethod || undefined,
     items,
     payments: raw.payments || [],
     tips: raw.tips || [],
@@ -214,8 +216,10 @@ class RestaurantService {
       };
       const backendType = typeMap[saleData.type] || 'TAKEAWAY';
 
+      const idempotencyKey = crypto.randomUUID();
       const payload: any = {
         type: backendType,
+        idempotencyKey,
         items: saleData.items.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
@@ -253,6 +257,7 @@ class RestaurantService {
         payload.deliveryAddress = d.customerAddress;       // backend field name
         payload.deliveryFee     = d.deliveryFee ?? 0;      // siempre enviar, aunque sea 0
         if (d.customerId)       payload.customerId = d.customerId;
+        if (d.paymentMethodId)  payload.paymentMethodId = d.paymentMethodId;
       }
 
       console.log('[RS] 📤 POST /pos/orders:', JSON.stringify(payload, null, 2));
@@ -267,6 +272,35 @@ class RestaurantService {
 
       return mapOrder(raw);
     } catch (error: any) {
+      // ── Modo Offline (Fase 2) ──
+      // Si es error de red (sin respuesta del servidor), el Service Worker ya
+      // encoló el POST en la cola de Background Sync. Retornamos un mock para
+      // que la UI no se caiga y el carrito se limpie normalmente.
+      const isNetworkError =
+        error.code === 'ERR_NETWORK' ||
+        error.code === 'ECONNABORTED' ||
+        !error.response;
+      if (isNetworkError) {
+        console.warn('[RS] ⚠️ Sin conexión: pedido encolado en Background Sync.');
+        return {
+          id: 'offline-' + Date.now(),
+          offline: true,
+          status: 'PENDING',
+          type: (saleData.type || '').toUpperCase(),
+          items: (saleData.items || []).map((i: any) => ({
+            productId: i.productId,
+            productName: i.productName || 'Producto',
+            quantity: i.quantity,
+            unitPrice: i.unitPrice ?? 0,
+            total: (i.unitPrice ?? 0) * (i.quantity ?? 1),
+            subtotal: (i.unitPrice ?? 0) * (i.quantity ?? 1),
+          })),
+          subtotal: 0,
+          total: 0,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as any;
+      }
       console.error('[RS] ❌ createSale:', error.response?.data || error);
       throw error;
     }
@@ -495,7 +529,7 @@ class RestaurantService {
       };
     } catch (error) {
       console.error('[RS] ❌ getStats:', error);
-      return { totalTables: 0, occupiedTables: 0, availableTables: 0, totalRevenue: 0 };
+      return { totalTables: 0, occupiedTables: 0, availableTables: 0, totalRevenue: 0 } as RestaurantStats;
     }
   }
 

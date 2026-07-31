@@ -32,6 +32,7 @@ import type {
   ProductModifier
 } from '../../../types/restaurant.types';
 import customersService from '../../../services/customersService';
+import { paymentMethodsService } from '../../../services/paymentMethodsService';
 import toast from 'react-hot-toast';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 
@@ -70,6 +71,10 @@ export const NewDeliveryModal = ({
   const setDeliveryCity = (v: string) => setDeliveryDraft({ ...deliveryDraft, deliveryCity: v });
   const setDeliveryNotes = (v: string) => setDeliveryDraft({ ...deliveryDraft, deliveryNotes: v });
   const setDeliveryCost = (v: string) => setDeliveryDraft({ ...deliveryDraft, deliveryCost: v });
+
+  // Medios de pago (cargados desde el backend)
+  const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
+  const [paymentMethodId, setPaymentMethodId] = useState<string | undefined>();
 
   const [saveToCustomers, setSaveToCustomers] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -141,6 +146,27 @@ export const NewDeliveryModal = ({
   // Focus automático
   useEffect(() => {
     searchInputRef.current?.focus();
+  }, []);
+
+  // Cargar métodos de pago activos al montar el componente
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const methods = await paymentMethodsService.fetchAll();
+        const active = (methods ?? []).filter((m: any) => m.active);
+        if (cancelled) return;
+        setPaymentMethods(active);
+        // Pre-seleccionar el primero si hay alguno
+        if (active.length > 0 && !paymentMethodId) {
+          setPaymentMethodId(active[0].id);
+        }
+      } catch (e) {
+        console.error('[NewDeliveryModal] fetchAll paymentMethods error:', e);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ========== FUNCIONES DE CARRITO ==========
@@ -278,7 +304,7 @@ export const NewDeliveryModal = ({
         deliveryCity.trim(),
         deliveryNotes.trim(),
         deliveryFeeValue,
-        'cash',
+        paymentMethodId,
         customerId
       );
     } catch (error: any) {
@@ -310,7 +336,7 @@ export const NewDeliveryModal = ({
         deliveryCity.trim(),
         deliveryNotes.trim(),
         deliveryFeeValue,
-        'cash',
+        paymentMethodId,
         customerId
       );
     } catch (error: any) {
@@ -678,7 +704,7 @@ export const NewDeliveryModal = ({
           )}
 
           {/* ====== CARRITO ====== */}
-          <div className="bg-gray-50">
+          <div className={`bg-gray-50 ${cart.length === 0 ? 'pb-2' : ''}`}>
             {cart.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
                 <Truck size={32} className="mx-auto text-gray-400 mb-2" />
@@ -731,6 +757,37 @@ export const NewDeliveryModal = ({
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* ====== MEDIO DE PAGO (paso 2) ====== */}
+          <div className="bg-white border-t border-gray-100 px-4 py-4">
+            <p className="flex items-center gap-1.5 text-xs font-bold text-indigo-400 uppercase tracking-wider pb-2 mb-3 border-b border-indigo-100">
+              <CreditCard size={12} />Medio de pago
+            </p>
+            {paymentMethods.length === 0 ? (
+              <p className="text-xs text-gray-400">No hay medios de pago configurados.</p>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {paymentMethods.map((m) => {
+                  const selected = paymentMethodId === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setPaymentMethodId(m.id)}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
+                        selected
+                          ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                          : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-indigo-300'
+                      }`}
+                    >
+                      <CreditCard size={11} className="inline mr-1 -mt-0.5" />
+                      {m.name}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>

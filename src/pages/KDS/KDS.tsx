@@ -37,9 +37,9 @@ function getUrgency(
   priority = 0,
   _urgent = false,
 ): { level: UrgencyLevel; minutes: number; isManual: boolean } {
-  const minutes = Math.floor(
+  const minutes = Math.min(180, Math.floor(
     (Date.now() - new Date(createdAt).getTime()) / 60_000
-  );
+  ));
   const isManual = priority === 1 || _urgent;
   if (isManual || minutes >= 25) return { level: 'critical', minutes, isManual };
   if (minutes >= 15)             return { level: 'urgent',   minutes, isManual };
@@ -220,6 +220,11 @@ export default function KDS() {
     // Orden actualizada
     socket.on('order.updated', (order: any) => {
       setOrders(prev => prev.map(o => (o.id === order.id ? order : o)));
+    });
+
+    // Orden pagada (PAID) — eliminar la tarjeta del KDS
+    socket.on('order.paid', (data: { orderId: string }) => {
+      setOrders(prev => prev.filter(o => o.id !== data.orderId));
     });
 
     // Orden lista (remover de pantalla) — BUG 4: shape ya es objeto directo tras fix backend

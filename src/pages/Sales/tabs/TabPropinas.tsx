@@ -108,16 +108,41 @@ export const TabPropinas = ({ filters }: Props) => {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadTips(day, month, year, period); }, []);
-
-  // Sincronizar fechas si el padre cambia (tab Ventas)
+  // ÚNICO effect responsable de cargar datos: al montar y ante cambios del
+  // rango global. Sincroniza TODOS los estados locales (period, día, rango)
+  // con los filtros globales para evitar desincronización de fechas en la UI.
   useEffect(() => {
-    if (filters.startDate) {
-      setDay(filters.startDate.getDate());
-      setMonth(filters.startDate.getMonth() + 1);
-      setYear(filters.startDate.getFullYear());
+    if (!filters.startDate) {
+      loadTips(today.getDate(), today.getMonth() + 1, today.getFullYear(), 'diario');
+      return;
     }
-  }, [filters.startDate]);
+
+    const sDate = filters.startDate;
+    const eDate = filters.endDate || sDate;
+    const isSameDay = sDate.toDateString() === eDate.toDateString();
+
+    if (isSameDay) {
+      setPeriod('diario');
+      setDay(sDate.getDate());
+      setMonth(sDate.getMonth() + 1);
+      setYear(sDate.getFullYear());
+      loadTips(sDate.getDate(), sDate.getMonth() + 1, sDate.getFullYear(), 'diario');
+    } else {
+      setPeriod('rango');
+      setRangeFrom(sDate.toISOString().split('T')[0]);
+      setRangeTo(eDate.toISOString().split('T')[0]);
+      const pad = (n: number) => String(n).padStart(2, '0');
+      setRangeFromTime(`${pad(sDate.getHours())}:${pad(sDate.getMinutes())}`);
+      setRangeToTime(`${pad(eDate.getHours())}:${pad(eDate.getMinutes())}`);
+
+      setLoading(true);
+      salesService.getSales({ startDate: sDate, endDate: eDate })
+        .then(data => setSales(data))
+        .catch(() => setSales([]))
+        .finally(() => setLoading(false));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.startDate, filters.endDate]);
 
   const handleSearch = () => {
     if (period === 'rango') {
@@ -231,7 +256,7 @@ export const TabPropinas = ({ filters }: Props) => {
     <div className="space-y-4">
 
       {/* PANEL DE FILTROS */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
 
         {/* FILA 1 — FECHA / TIEMPO */}
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 flex-wrap">
@@ -520,7 +545,7 @@ export const TabPropinas = ({ filters }: Props) => {
       )}
 
       {/* TABLA / CARDS */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
         {loading ? (
           <div className="py-16 flex flex-col items-center gap-3 text-gray-400">
             <RefreshCw className="animate-spin w-6 h-6" />

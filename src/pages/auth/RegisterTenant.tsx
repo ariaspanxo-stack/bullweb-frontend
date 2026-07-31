@@ -64,9 +64,12 @@ export default function RegisterTenant() {
     setIsLoading(true);
     setApiError('');
     try {
-      const res = await api.post('/auth/register-tenant', {
-        ...data,
-        email: data.email.toLowerCase().trim(),
+      const res = await api.post('/onboarding/register', {
+        restaurantName: data.restaurantName,
+        adminName:      data.ownerName,
+        adminEmail:     data.email,
+        adminPhone:     data.phone,
+        password:       data.password,
       });
       const { token, user, credentials: creds } = res.data.data ?? res.data ?? res;
       // Guardar en el store y en localStorage (mismo patrón que Login)

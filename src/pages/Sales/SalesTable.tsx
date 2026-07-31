@@ -62,6 +62,17 @@ export const SalesTable = ({
     }).format(new Date(date));
   };
 
+  const formatDateTime = (date: Date) => {
+    return new Intl.DateTimeFormat('es-CL', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date(date));
+  };
+
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('es-CL', {
       day: '2-digit',
@@ -116,7 +127,10 @@ export const SalesTable = ({
                 Tipo de Venta
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Hora
+                Fecha y Hora de Inicio
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Fecha y Hora de Cierre
               </th>
               <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Garzón
@@ -135,7 +149,7 @@ export const SalesTable = ({
           <tbody className="divide-y divide-gray-200">
             {sales.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={9} className="px-4 py-8 text-center text-gray-500">
                   No hay ventas para mostrar
                 </td>
               </tr>
@@ -172,9 +186,12 @@ export const SalesTable = ({
                     )}
                   </td>
 
-                  {/* HORA */}
+                  {/* FECHA Y HORA */}
                   <td className="px-4 py-3 text-sm text-gray-600">
-                    {formatTime(sale.startTime)}
+                    {formatDateTime(sale.createdAt)}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    {formatDateTime(sale.updatedAt)}
                   </td>
 
                   {/* GARZÓN */}

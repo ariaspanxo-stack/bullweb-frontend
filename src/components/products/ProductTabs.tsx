@@ -24,6 +24,13 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({
   modifierCount,
   stationCount = 0,
 }) => {
+  // ═══════════════════════════════════════════════════════════════
+  // SOFT-HIDE: Módulo de Modificadores desactivado temporalmente.
+  // El negocio decidió no usar modificadores por ahora.
+  // Para reactivar: cambiar a `true` y la pestaña volverá a aparecer.
+  // ═══════════════════════════════════════════════════════════════
+  const MODIFIERS_ENABLED = false;
+
   const tabs = [
     {
       id: 'productos' as TabType,
@@ -49,12 +56,18 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({
       icon: ClipboardList,
       count: recipeCount,
     },
-    {
-      id: 'modificadores' as TabType,
-      label: 'Modificadores',
-      icon: Settings,
-      count: modifierCount,
-    },
+    // SOFT-HIDE: pestaña Modificadores oculta (MODIFIERS_ENABLED=false).
+    // El código se conserva intacto para reactivarlo fácilmente.
+    ...(MODIFIERS_ENABLED
+      ? [
+          {
+            id: 'modificadores' as TabType,
+            label: 'Modificadores',
+            icon: Settings,
+            count: modifierCount,
+          },
+        ]
+      : []),
     {
       id: 'estaciones' as TabType,
       label: 'Estaciones',

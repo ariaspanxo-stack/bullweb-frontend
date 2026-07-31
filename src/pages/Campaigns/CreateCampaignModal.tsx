@@ -11,11 +11,11 @@ interface CreateCampaignModalProps {
 const STEPS = ['Información', 'Destinatarios', 'Contenido', 'Envío'] as const;
 type Step = 0 | 1 | 2 | 3;
 
-const TYPE_OPTIONS: { value: CampaignType; label: string; icon: string }[] = [
+const TYPE_OPTIONS: { value: CampaignType; label: string; icon: string; comingSoon?: boolean }[] = [
   { value: 'EMAIL',    label: 'Email',     icon: '📧' },
-  { value: 'SMS',      label: 'SMS',       icon: '💬' },
-  { value: 'PUSH',     label: 'Push',      icon: '🔔' },
-  { value: 'WHATSAPP', label: 'WhatsApp',  icon: '💚' },
+  { value: 'SMS',      label: 'SMS',       icon: '💬', comingSoon: true },
+  { value: 'PUSH',     label: 'Push',      icon: '🔔', comingSoon: true },
+  { value: 'WHATSAPP', label: 'WhatsApp',  icon: '💚', comingSoon: true },
 ];
 
 const SEGMENT_OPTIONS = [
@@ -183,14 +183,24 @@ export function CreateCampaignModal({ onClose, onSuccess }: CreateCampaignModalP
                       key={opt.value}
                       type="button"
                       onClick={() => update({ type: opt.value })}
+                      disabled={opt.comingSoon}
                       className={`flex flex-col items-center py-3 px-2 rounded-xl border-2 text-xs font-medium transition-all ${
-                        formData.type === opt.value
+                        opt.comingSoon
+                          ? 'opacity-50 cursor-not-allowed border-gray-200 text-gray-400'
+                          : formData.type === opt.value
                           ? 'border-orange-500 bg-orange-50 text-orange-700'
                           : 'border-gray-200 hover:border-gray-300 text-gray-600'
                       }`}
                     >
-                      <span className="text-2xl mb-1">{opt.icon}</span>
-                      {opt.label}
+                      <span className={`text-2xl mb-1 ${opt.comingSoon ? 'grayscale opacity-60' : ''}`}>{opt.icon}</span>
+                      {opt.comingSoon ? (
+                        <s className="line-through">{opt.label}</s>
+                      ) : (
+                        opt.label
+                      )}
+                      {opt.comingSoon && (
+                        <span className="text-[10px] text-gray-400 mt-0.5">(Próximamente)</span>
+                      )}
                     </button>
                   ))}
                 </div>

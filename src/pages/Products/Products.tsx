@@ -189,7 +189,9 @@ const Products = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab') as TabType;
-    const validTabs = ['productos', 'categorias', 'ingredientes', 'fichas', 'modificadores', 'estaciones', 'reportes'];
+    // SOFT-HIDE: 'modificadores' removido de validTabs para que no se pueda
+    // activar vía URL (?tab=modificadores). El código del tab se conserva.
+    const validTabs = ['productos', 'categorias', 'ingredientes', 'fichas', 'estaciones', 'reportes'];
     if (tabParam && validTabs.includes(tabParam)) {
       setActiveTab(tabParam);
       loadTabData(tabParam);

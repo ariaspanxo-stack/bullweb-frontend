@@ -211,6 +211,65 @@ class CustomersService {
     const response = await api.get<Blob>('/customers/export', { responseType: 'blob' });
     return response.data;
   }
+
+  // ── NIVELES DE FIDELIZACIÓN (LOYALTY TIERS) ─────────────────────────────────
+  async getTiers(): Promise<any[]> {
+    const response = await api.get<any>('/customers/tiers');
+    return response.data?.data ?? [];
+  }
+
+  async createTier(data: {
+    name: string;
+    minSpent: number;
+    benefitText?: string;
+    color?: string;
+    order?: number;
+    isActive?: boolean;
+  }): Promise<any> {
+    const response = await api.post<any>('/customers/tiers', data);
+    return response.data?.data ?? response.data;
+  }
+
+  async updateTier(id: string, data: Partial<{
+    name: string;
+    minSpent: number;
+    benefitText: string;
+    color: string;
+    order: number;
+    isActive: boolean;
+  }>): Promise<any> {
+    const response = await api.put<any>(`/customers/tiers/${id}`, data);
+    return response.data?.data ?? response.data;
+  }
+
+  async deleteTier(id: string): Promise<void> {
+    await api.delete(`/customers/tiers/${id}`);
+  }
+
+  async getTierConfig(): Promise<{ tierInactivityDays: number; tierRiskDays: number }> {
+    const response = await api.get<any>('/customers/tier-config');
+    return response.data?.data ?? response.data;
+  }
+
+  async updateTierConfig(data: {
+    tierInactivityDays?: number;
+    tierRiskDays?: number;
+  }): Promise<any> {
+    const response = await api.patch<any>('/customers/tier-config', data);
+    return response.data?.data ?? response.data;
+  }
+
+  /** Recalcular niveles de fidelización de TODOS los clientes */
+  async recalculateTiers(): Promise<{ total: number; updated: number }> {
+    const response = await api.post<any>('/customers/recalculate-tiers');
+    return response.data?.data ?? response.data;
+  }
+
+  /** Recalcular segmentos de TODOS los clientes */
+  async recalculateSegments(): Promise<{ total: number; updated: number; bySegment?: Record<string, number> }> {
+    const response = await api.post<any>('/customers/recalculate-segments');
+    return response.data?.data ?? response.data;
+  }
 }
 
 export default new CustomersService();

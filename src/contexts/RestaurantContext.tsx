@@ -514,6 +514,18 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ── Modo Offline (Fase 2): escuchar sincronización de pedidos encolados ──
+  useEffect(() => {
+    const handler = (event: MessageEvent) => {
+      if (event.data?.type === 'ORDER_SYNCED') {
+        toast.success('Pedido encolado enviado a la cocina correctamente.');
+        loadOrders();
+      }
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   // ═══════════════════════════════════════════════════════════
   // HANDLERS
   // ═══════════════════════════════════════════════════════════
@@ -747,6 +759,12 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
           notes: `Mesa ${selectedTable.number} - ${numberOfPeople} personas`,
         };
         const sale = await restaurantService.createSale(saleData);
+        if ((sale as any).offline) {
+          toast.warning('Sin conexión: Pedido encolado. Se enviará al recuperar internet.');
+          resetOrderState();
+          setShowPaymentModal(false);
+          return;
+        }
         orderId = sale.id;
         setPendingOrderCustomerId(undefined);
       }
@@ -881,6 +899,13 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
           notes: orderNote || `Mesa ${selectedTable.number} - ${numberOfPeople} personas`,
         };
         const sale = await restaurantService.createSale(saleData);
+        if ((sale as any).offline) {
+          toast.warning('Sin conexión: Pedido encolado. Se enviará al recuperar internet.');
+          resetOrderState();
+          setShowCart(false);
+          await refreshAfterPayment();
+          return;
+        }
         setActiveOrderId(sale.id);
       }
 
@@ -933,7 +958,13 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
         notes: pickupTime ? `Retiro: ${pickupTime}` : '',
       };
 
-      await restaurantService.createSale(saleData);
+      const sale = await restaurantService.createSale(saleData);
+      if ((sale as any).offline) {
+        toast.warning('Sin conexión: Pedido encolado. Se enviará al recuperar internet.');
+        setShowMostradorModal(false);
+        await loadOrders();
+        return;
+      }
       setShowMostradorModal(false);
       await loadOrders();
       toast.success('Orden para llevar creada exitosamente');
@@ -950,7 +981,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
     deliveryCity:    string,
     deliveryNotes:   string,
     deliveryCost:    number,
-    _paymentMethod?: string,
+    paymentMethodId?: string,
     customerId?:     string,
   ) => {
     try {
@@ -971,6 +1002,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
         customerAddress: [customerAddress, deliveryCity].filter(s => s?.trim()).join(', '),
         customerId:      customerId || undefined,
         deliveryFee:     deliveryCost,
+        paymentMethodId: paymentMethodId || undefined,
         items:           cartItems.map(item => ({
           productId:      item.productId,
           quantity:       item.quantity,
@@ -982,7 +1014,13 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
         notes: deliveryNotes || undefined,
       };
 
-      await restaurantService.createSale(saleData);
+      const sale = await restaurantService.createSale(saleData);
+      if ((sale as any).offline) {
+        toast.warning('Sin conexión: Pedido encolado. Se enviará al recuperar internet.');
+        setShowDeliveryModal(false);
+        await loadOrders();
+        return;
+      }
       setShowDeliveryModal(false);
       await loadOrders();
       toast.success('Orden delivery creada exitosamente');

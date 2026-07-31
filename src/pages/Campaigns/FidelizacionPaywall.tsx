@@ -1,6 +1,5 @@
-﻿// TODO: Reemplazar CONTACT_WHATSAPP con el número real de BullWeb Chile
-// Formato: 56 + número sin 0 inicial (ej: 56912345678)
-const CONTACT_WHATSAPP = '56956739153';
+﻿// Formato: 56 + número sin 0 inicial (ej: 56912345678)
+const CONTACT_WHATSAPP = import.meta.env.VITE_CONTACT_WHATSAPP || '56937458347';
 
 interface Props {
   onActivated?: () => void;

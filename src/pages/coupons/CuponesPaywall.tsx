@@ -1,4 +1,4 @@
-const CONTACT_WHATSAPP = '56956739153';
+const CONTACT_WHATSAPP = import.meta.env.VITE_CONTACT_WHATSAPP || '56937458347';
 const WA_MSG = encodeURIComponent(
   'Hola BullWeb quiero activar el módulo de Cupones $2.990/mes'
 );

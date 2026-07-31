@@ -2,14 +2,25 @@
 import type { Sale, SalesFilters, SalesStats } from '../types/sales.types';
 import { mapOrderToSale, mapSaleStatusToBackend, mapSaleTypeToBackend } from '../utils/orderMapper';
 
+const formatLocalDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 // Fix #6 — solo campos permitidos en PATCH
 interface UpdateSaleDto {
-  notes?:      string;
-  persons?:    number;
-  tableId?:    string | null;
-  customerId?: string | null;
-  orderType?:  string;
-  waiterId?:   string | null;
+  notes?:           string | null;
+  persons?:         number;
+  numberOfPeople?:  number | null;
+  tableId?:         string | null;
+  customerId?:      string | null;
+  orderType?:       string;
+  waiterId?:        string | null;
+  tip?:             number | null;
+  total?:           number | null;
+  paymentMethodId?: string | null;
 }
 
 class SalesService {
@@ -18,8 +29,8 @@ class SalesService {
   async getSales(filters: Partial<SalesFilters>): Promise<Sale[]> {
     try {
       const backendFilters: any = {};
-      if (filters.startDate) backendFilters.dateFrom = filters.startDate.toISOString();
-      if (filters.endDate)   backendFilters.dateTo   = filters.endDate.toISOString();
+      if (filters.startDate) backendFilters.dateFrom = formatLocalDate(filters.startDate);
+      if (filters.endDate)   backendFilters.dateTo   = formatLocalDate(filters.endDate);
       if (filters.status)    backendFilters.status    = mapSaleStatusToBackend(filters.status);
       if (filters.type)      backendFilters.type      = mapSaleTypeToBackend(filters.type);
       if (filters.paymentMethod) backendFilters.paymentMethodName = filters.paymentMethod;
@@ -69,12 +80,16 @@ class SalesService {
   async updateSale(id: string, data: UpdateSaleDto): Promise<Sale> {
     try {
       const payload: Record<string, unknown> = {};
-      if (data.notes      !== undefined) payload.notes      = data.notes;
-      if (data.persons    !== undefined) payload.persons    = data.persons;
-      if (data.tableId    !== undefined) payload.tableId    = data.tableId;
-      if (data.customerId !== undefined) payload.customerId = data.customerId;
-      if (data.orderType  !== undefined) payload.orderType  = data.orderType;
-      if (data.waiterId   !== undefined) payload.waiterId   = data.waiterId;
+      if (data.notes           !== undefined) payload.notes           = data.notes;
+      if (data.persons         !== undefined) payload.persons         = data.persons;
+      if (data.numberOfPeople  !== undefined) payload.numberOfPeople  = data.numberOfPeople;
+      if (data.tableId         !== undefined) payload.tableId         = data.tableId;
+      if (data.customerId      !== undefined) payload.customerId      = data.customerId;
+      if (data.orderType       !== undefined) payload.orderType       = data.orderType;
+      if (data.waiterId        !== undefined) payload.waiterId        = data.waiterId;
+      if (data.tip             !== undefined) payload.tip             = data.tip;
+      if (data.total           !== undefined) payload.total           = data.total;
+      if (data.paymentMethodId !== undefined) payload.paymentMethodId = data.paymentMethodId;
       const response = await api.patch(`${this.baseUrl}/${id}`, payload);
       return mapOrderToSale(response.data.data || response.data);
     } catch (error: any) {

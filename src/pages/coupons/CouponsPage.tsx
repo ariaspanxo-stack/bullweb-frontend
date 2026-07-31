@@ -6,7 +6,6 @@ import toast from 'react-hot-toast';
 import {
   Tag, Plus, Pencil, Trash2, CheckCircle, XCircle, AlertTriangle, Search, ChevronLeft, ChevronRight,
 } from 'lucide-react';
-import { CuponesPaywall } from './CuponesPaywall';
 import { usePermission } from '@/hooks/usePermission';
 import { useAuthStore } from '@/store/authStore';
 
@@ -245,11 +244,10 @@ export function CouponsPage() {
   // FUNCIONAL 7: min=hoy para el date picker
   const todayLocal = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
 
-  // ── Módulo no activado: mostrar paywall ──────────────────────────────────
-  if (!modules.cupones) return <CuponesPaywall />;
+  // ── Paywall eliminado: acceso libre para todos los tenants ────────────────
+  // (Módulo Cupones liberado)
 
   // ─────────────────────────────────────────────────────────────────────────────
-
   return (
     <div className="space-y-0">
 

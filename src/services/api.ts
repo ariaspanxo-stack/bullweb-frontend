@@ -536,53 +536,81 @@ function getAuthHeaders(): HeadersInit {
   return headers;
 }
 
-// ── Fetch con reintentar si 401 ───────────────────────────────────────────────
-async function fetchWithRefresh(fetchFn: () => Promise<Response>): Promise<Response> {
-  const res = await fetchFn();
+// ── Fetch con timeout de 10s y reintento si 401 ──────────────────────────────
+// fetch() nativo no tiene timeout por defecto. Sin esto, una petición colgada
+// (servidor caído a mitad de respuesta, proxy en buffer, etc.) deja la app
+// pegada en "Cargando..." para siempre. AbortController garantiza que toda
+// petición falla en a lo más 10s.
+const DEFAULT_TIMEOUT_MS = 10_000;
 
-  // ── Tenant suspendido / cancelado ──────────────────────────────────────────
-  if (res.status === 403) {
-    // Necesitamos leer el body para ver el code, pero no consumirlo para que
-    // handleResponse pueda leerlo también. Usamos clone().
-    const bodyClone = res.clone();
-    try {
-      const body = await bodyClone.json();
-      const code = body?.code ?? body?.error;
-      if (code === 'TENANT_SUSPENDED' || code === 'TENANT_CANCELLED') {
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('tenant:suspended', {
-            detail: { code, message: body?.message ?? '' }
-          }));
-        }
-        return res;
-      }
-    } catch { /* body no es JSON, dejar pasar */ }
-  }
+async function fetchWithRefresh(
+  fetchFn: (init?: RequestInit) => Promise<Response>,
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+  const runWithSignal = () => fetchFn({ signal: controller.signal });
 
-  // ── 402: suscripción vencida ───────────────────────────────────────────────
-  // En lugar de redirigir bruscamente, disparamos un evento global que escucha
-  // el componente PaymentRequiredOverlay para mostrar un modal elegante.
-  if (res.status === 402 && typeof window !== 'undefined' && !window.location.pathname.startsWith('/subscription')) {
-    window.dispatchEvent(new CustomEvent('billing:payment_required'));
-    return res;
-  }
-
-  // Si no es 401, o ya estamos en el proceso de refresh, devolver tal cual
-  if (res.status !== 401 || _isRefreshing) {
-    return res;
-  }
-
-  _isRefreshing = true;
   try {
-    const newToken = await _tryRefreshToken();
-    if (!newToken) {
-      _forceLogout();
-      return res; // Devuelve el 401 para que el caller lo procese
+    const res = await runWithSignal();
+
+    // ── Tenant suspendido / cancelado ──────────────────────────────────────────
+    if (res.status === 403) {
+      // Necesitamos leer el body para ver el code, pero no consumirlo para que
+      // handleResponse pueda leerlo también. Usamos clone().
+      const bodyClone = res.clone();
+      try {
+        const body = await bodyClone.json();
+        const code = body?.code ?? body?.error;
+        if (code === 'TENANT_SUSPENDED' || code === 'TENANT_CANCELLED') {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('tenant:suspended', {
+              detail: { code, message: body?.message ?? '' }
+            }));
+          }
+          return res;
+        }
+      } catch { /* body no es JSON, dejar pasar */ }
     }
-    // Reintentar la petición original con el token renovado
-    return fetchFn();
+
+    // ── 402: suscripción vencida ───────────────────────────────────────────────
+    // En lugar de redirigir bruscamente, disparamos un evento global que escucha
+    // el componente PaymentRequiredOverlay para mostrar un modal elegante.
+    if (res.status === 402 && typeof window !== 'undefined' && !window.location.pathname.startsWith('/subscription')) {
+      window.dispatchEvent(new CustomEvent('billing:payment_required'));
+      return res;
+    }
+
+    // Si no es 401, o ya estamos en el proceso de refresh, devolver tal cual
+    if (res.status !== 401 || _isRefreshing) {
+      return res;
+    }
+
+    _isRefreshing = true;
+    try {
+      const newToken = await _tryRefreshToken();
+      if (!newToken) {
+        _forceLogout();
+        return res; // Devuelve el 401 para que el caller lo procese
+      }
+      // Reintentar la petición original con el token renovado
+      return await runWithSignal();
+    } finally {
+      _isRefreshing = false;
+    }
+  } catch (error: any) {
+    // Aborto por timeout → propagar como error de red claro y reconocible.
+    // Esto evita que loadUser() (y otros callers) se queden esperando indefinidamente.
+    if (error?.name === 'AbortError') {
+      const timeoutErr = new Error(
+        `Request timeout: el servidor tardó más de ${DEFAULT_TIMEOUT_MS / 1000}s en responder`,
+      ) as any;
+      timeoutErr.name = 'NetworkTimeout';
+      timeoutErr.isTimeout = true;
+      throw timeoutErr;
+    }
+    throw error;
   } finally {
-    _isRefreshing = false;
+    clearTimeout(timeoutId);
   }
 }
 

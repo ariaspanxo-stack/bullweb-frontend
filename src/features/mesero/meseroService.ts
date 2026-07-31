@@ -85,7 +85,7 @@ export const meseroService = {
   }): Promise<any> => {
     const d = await waiterFetch('/waiter/orders', {
       method: 'POST',
-      body:   JSON.stringify({ type: 'DINE_IN', ...payload }),
+      body:   JSON.stringify({ type: 'DINE_IN', idempotencyKey: crypto.randomUUID(), ...payload }),
     });
     return d?.data !== undefined ? d.data : d;
   },

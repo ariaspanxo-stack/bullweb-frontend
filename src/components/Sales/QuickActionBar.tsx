@@ -33,7 +33,7 @@ export function QuickActionBar({
 
   // Lógica de visibilidad de acciones según estado
   const canCancel = sale.status !== 'cancelled' && sale.status !== 'CANCELLED';
-  const canEdit   = ['open', 'PENDING', 'PREPARING'].includes(sale.status as string);
+  const canEdit = ['open', 'PENDING', 'PREPARING'].includes(sale.status as string);
   const canPrint  = true;
 
   return (

@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Product, Table } from '@/types';
 
 // ============================================================================
@@ -128,7 +129,9 @@ interface PosState {
 // STORE POS
 // ============================================================================
 
-export const usePosStore = create<PosState>((set, get) => ({
+export const usePosStore = create<PosState>()(
+  persist(
+    (set, get) => ({
   // Tipo de orden
   orderType: 'DINE_IN',
   setOrderType: (type) => set({ orderType: type }),
@@ -298,4 +301,21 @@ export const usePosStore = create<PosState>((set, get) => ({
   // Orden actual
   currentOrder: null,
   setCurrentOrder: (order) => set({ currentOrder: order })
-}));
+    }),
+    {
+      name: 'bullweb-pos-cart',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        cartItems: state.cartItems,
+        selectedTable: state.selectedTable,
+        orderType: state.orderType,
+        discountType: state.discountType,
+        discountValue: state.discountValue,
+      }),
+      onRehydrateStorage: () => (state) => {
+        // Recalcular totales derivados después de restaurar desde localStorage
+        state?.calculateTotals();
+      },
+    }
+  )
+);

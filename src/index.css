@@ -361,3 +361,19 @@
 .animate-ring {
   animation: ring 1s ease-in-out;
 }
+
+/* ── Force light inputs: modal Clientes (tema oscuro no pisa estilos) ── */
+.force-light-inputs input,
+.force-light-inputs select,
+.force-light-inputs textarea {
+  background-color: #374151 !important;
+  color: #FFFFFF !important;
+  border-color: #4B5563 !important;
+}
+.force-light-inputs input::placeholder,
+.force-light-inputs textarea::placeholder {
+  color: #9CA3AF !important;
+}
+.force-light-inputs label {
+  color: #E5E7EB !important;
+}

@@ -39,9 +39,9 @@ export default function Orders() {
 
       {/* KPIs del día */}
       <OrdersStats
-        revenueToday={statsData?.revenueToday}
-        paidToday={statsData?.paidToday}
-        avgTicketToday={statsData?.avgTicketToday}
+        activeTodayRevenue={statsData?.activeTodayRevenue}
+        activeTodayCount={statsData?.activeTodayCount}
+        activeTodayAvg={statsData?.activeTodayAvg}
         activeOrders={statsData?.activeOrders}
       />
 

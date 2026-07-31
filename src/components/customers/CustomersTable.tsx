@@ -55,18 +55,34 @@ export default function CustomersTable({
                     </span>
                   </div>
                   <div>
-                    <span className="font-medium text-gray-900">{customer.name}</span>
-                    {customer.segment && (
-                      <span className={`ml-2 px-1.5 py-0.5 rounded text-xs font-medium ${
-                        customer.segment === 'VIP'      ? 'bg-yellow-100 text-yellow-700' :
-                        customer.segment === 'FREQUENT' ? 'bg-green-100 text-green-700'  :
-                        customer.segment === 'REGULAR'  ? 'bg-blue-100 text-blue-700'    :
-                        customer.segment === 'INACTIVE' ? 'bg-red-100 text-red-600'      :
-                        'bg-gray-100 text-gray-600'
-                      }`}>
-                        {customer.segment === 'VIP' ? '⭐ VIP' : customer.segment}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-medium text-gray-900">{customer.name}</span>
+                      {customer.loyalty_tiers && (
+                        <span
+                          className="px-1.5 py-0.5 rounded text-xs font-bold text-white"
+                          style={{ backgroundColor: customer.loyalty_tiers.color ?? '#71717a' }}
+                          title={customer.loyalty_tiers.benefitText ?? undefined}
+                        >
+                          {customer.loyalty_tiers.name}
+                        </span>
+                      )}
+                      {customer.tierAtRisk && (
+                        <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-red-100 text-red-700 border border-red-300">
+                          ⚠ En Riesgo de Bajar
+                        </span>
+                      )}
+                      {customer.segment && (
+                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
+                          customer.segment === 'VIP'      ? 'bg-yellow-100 text-yellow-700' :
+                          customer.segment === 'FREQUENT' ? 'bg-green-100 text-green-700'  :
+                          customer.segment === 'REGULAR'  ? 'bg-blue-100 text-blue-700'    :
+                          customer.segment === 'INACTIVE' ? 'bg-red-100 text-red-600'      :
+                          'bg-gray-100 text-gray-600'
+                        }`}>
+                          {customer.segment === 'VIP' ? '⭐ VIP' : customer.segment}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </td>

@@ -2,7 +2,7 @@
 import { useParams, useSearchParams } from 'react-router-dom';
 import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail } from 'lucide-react';
 
-const fmtCLP = (n: number) => `$${n.toLocaleString('es-CL')}`;
+const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
 
 interface Product {
   id: string;
@@ -653,7 +653,9 @@ function CartSheet({
           customerCity:    orderType === 'delivery' ? form.city.trim() || null : null,
           deliveryFee:     0,
           notes:           form.comment.trim() || null,
-          paymentMethod:   paymentMethod ?? paymentMethods[0]?.id ?? 'efectivo',
+          paymentMethod:   paymentMethods.find(m => m.id === paymentMethod)?.name
+                             ?? paymentMethods[0]?.name
+                             ?? 'efectivo',
           cashAmount:      paymentMethod === 'efectivo' && cashAmount
                              ? parseInt(cashAmount)
                              : null,

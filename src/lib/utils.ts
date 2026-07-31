@@ -41,26 +41,11 @@ const CLP_MAX = 10_000_000_000;
  * formatCurrency(NaN)           // "$0"
  */
 export function formatCurrency(amount: number | null | undefined): string {
-  // Validar entrada: null, undefined, NaN -> $0
-  if (amount == null || isNaN(amount)) {
-    return '$0';
-  }
-
-  // Aplicar rango: min 0, max 10,000,000,000
-  let validAmount = Math.round(amount); // CLP no usa decimales
-  if (validAmount < CLP_MIN) {
-    validAmount = CLP_MIN;
-  } else if (validAmount > CLP_MAX) {
-    validAmount = CLP_MAX;
-  }
-
-  // Formatear usando Intl.NumberFormat con locale es-CL y currency CLP
-  return new Intl.NumberFormat('es-CL', {
-    style: 'currency',
-    currency: 'CLP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(validAmount);
+  if (amount == null || isNaN(amount)) return '$0';
+  let validAmount = Math.round(amount);
+  if (validAmount < 0) validAmount = 0;
+  const formatted = validAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  return `$${formatted}`;
 }
 
 /**

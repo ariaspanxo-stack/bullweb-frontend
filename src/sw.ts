@@ -1,8 +1,9 @@
 import { cleanupOutdatedCaches, precacheAndRoute, createHandlerBoundToURL } from 'workbox-precaching';
 import { clientsClaim, skipWaiting } from 'workbox-core';
 import { NavigationRoute, registerRoute } from 'workbox-routing';
-import { NetworkFirst, StaleWhileRevalidate } from 'workbox-strategies';
+import { NetworkFirst, NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
+import { BackgroundSyncPlugin } from 'workbox-background-sync';
 
 declare let self: ServiceWorkerGlobalScope;
 
@@ -77,6 +78,15 @@ registerRoute(
   'GET'
 );
 
+// API: Órdenes y Reportes — SIEMPRE red, NUNCA caché (datos sensibles a rango de fechas)
+registerRoute(
+  ({ url }) =>
+    url.pathname.startsWith('/api/pos/orders') ||
+    url.pathname.startsWith('/api/reports'),
+  new NetworkOnly(),
+  'GET'
+);
+
 // API: NetworkFirst con TTL corto (regla general — va DESPUÉS de las específicas)
 registerRoute(
   /^https:\/\/app\.bullwebchile\.com\/api\/.*/i,
@@ -87,6 +97,28 @@ registerRoute(
   }),
   'GET'
 );
+
+// ── Background Sync: encolar POST de pedidos del POS cuando no hay red ──
+// (Fase 2 — Modo Offline)
+const bgSyncPlugin = new BackgroundSyncPlugin('posOrdersQueue', {
+  maxRetentionTime: 24 * 60, // 24 horas en minutos
+});
+
+registerRoute(
+  ({ url, request }) =>
+    url.pathname.startsWith('/api/pos/orders') && request.method === 'POST',
+  new NetworkOnly({ plugins: [bgSyncPlugin] }),
+  'POST'
+);
+
+// Notificar al frontend cuando un pedido encolado se sincronice
+self.addEventListener('message', (event: any) => {
+  if (event.data?.type === 'ORDER_SYNCED') {
+    (self as any).clients.matchAll().then((clients: any[]) =>
+      clients.forEach((c) => c.postMessage({ type: 'ORDER_SYNCED' }))
+    );
+  }
+});
 
 // Al activar: borrar cachés viejas. skipWaiting + clientsClaim ya garantizan
 // que el nuevo SW toma control inmediatamente sin necesidad de forzar reload.

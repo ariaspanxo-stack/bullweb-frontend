@@ -2,11 +2,15 @@ import { DollarSign, Receipt, TrendingUp, Clock } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 
 interface OrdersStatsProps {
-  revenueToday?: number;
-  paidToday?: number;
+  // KPIs de operativa ACTUAL (ventas abiertas hoy)
+  activeTodayRevenue?: number;
+  activeTodayCount?: number;
+  activeTodayAvg?: number;
   avgTicketToday?: number;
   activeOrders?: number;
-  // compatibilidad con props anteriores
+  // compat hacia atrás (legacy)
+  revenueToday?: number;
+  paidToday?: number;
   totalSales?: number;
   totalOrders?: number;
   averageTicket?: number;
@@ -14,10 +18,14 @@ interface OrdersStatsProps {
 }
 
 export default function OrdersStats({
-  revenueToday,
-  paidToday,
+  activeTodayRevenue,
+  activeTodayCount,
+  activeTodayAvg,
   avgTicketToday,
   activeOrders,
+  // legacy fallback
+  revenueToday,
+  paidToday,
   totalSales,
   totalOrders,
   averageTicket,
@@ -25,28 +33,28 @@ export default function OrdersStats({
 }: OrdersStatsProps) {
   const stats = [
     {
-      label: 'Ventas del Día',
-      value: formatCurrency(revenueToday ?? totalSales ?? 0),
+      label: 'Ventas abiertas hoy',
+      value: formatCurrency(activeTodayRevenue ?? revenueToday ?? totalSales ?? 0),
       icon: DollarSign,
       color: 'text-green-600',
       bg: 'bg-green-100',
     },
     {
-      label: 'Pagadas Hoy',
-      value: (paidToday ?? totalOrders ?? 0).toString(),
+      label: 'Pedidos abiertos hoy',
+      value: (activeTodayCount ?? paidToday ?? totalOrders ?? 0).toString(),
       icon: Receipt,
       color: 'text-blue-600',
       bg: 'bg-blue-100',
     },
     {
       label: 'Ticket Promedio',
-      value: formatCurrency(avgTicketToday ?? averageTicket ?? 0),
+      value: formatCurrency(activeTodayAvg ?? avgTicketToday ?? averageTicket ?? 0),
       icon: TrendingUp,
       color: 'text-purple-600',
       bg: 'bg-purple-100',
     },
     {
-      label: 'Activas Ahora',
+      label: 'Activas hoy',
       value: (activeOrders ?? pendingOrders ?? 0).toString(),
       icon: Clock,
       color: 'text-orange-600',

@@ -21,6 +21,7 @@ import { usePosStore } from '@/store/posStore';
 import { toast } from 'react-hot-toast';
 import Spinner from '@/components/ui/Spinner';
 import api from '@/services/api';
+import { formatCurrency } from '@/lib/utils';
 
 type POSMode = 'mesas' | 'mostrador' | 'delivery';
 
@@ -30,6 +31,7 @@ export default function POS() {
   const [selectedTable, setSelectedTable] = useState<any>(null);
   const [searchProduct, setSearchProduct] = useState('');
   const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
 
   // Estados para configuración de mesa
@@ -218,6 +220,7 @@ export default function POS() {
         type: mode === 'mesas' ? 'DINE_IN' : mode === 'mostrador' ? 'TAKEAWAY' : 'DELIVERY',
         tableId: mode === 'mesas' ? selectedTable.id : undefined,
         customerName: mode !== 'mesas' ? customerName : undefined,
+        customerPhone: mode !== 'mesas' && customerPhone.trim() ? customerPhone.trim() : undefined,
         // Estructura requerida por el backend: { productId, quantity }
         items: cartItems.map(item => ({
           productId: item.product.id,
@@ -472,15 +475,26 @@ export default function POS() {
 
             {/* Campo nombre cliente: solo en mostrador/delivery */}
             {mode !== 'mesas' && (
-              <input
-                type="text"
-                placeholder="Nombre del cliente..."
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg 
-                         text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 
-                         focus:ring-blue-500 mb-4 transition-all"
-              />
+              <>
+                <input
+                  type="text"
+                  placeholder="Nombre del cliente..."
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg 
+                           text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 
+                           focus:ring-blue-500 mb-3 transition-all"
+                />
+                <input
+                  type="tel"
+                  placeholder="Teléfono (opcional) — acumula puntos 🎁"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 rounded-lg 
+                           text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 
+                           focus:ring-blue-500 mb-4 transition-all"
+                />
+              </>
             )}
 
             {/* Buscador de productos: solo cuando no es mesa disponible */}
@@ -606,7 +620,7 @@ export default function POS() {
                           {product.name}
                         </div>
                         <div className="text-blue-400 font-bold text-lg">
-                          ${product.price?.toLocaleString() || '0'}
+${formatCurrency(product.price ?? 0)}
                         </div>
                       </button>
                     ))
@@ -632,7 +646,7 @@ export default function POS() {
                                 {item.product.name}
                               </div>
                               <div className="text-xs text-zinc-400">
-                                ${item.product.price.toLocaleString()} c/u
+${formatCurrency(item.product.price)} c/u
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -669,7 +683,7 @@ export default function POS() {
                         <div className="flex justify-between text-lg font-bold mb-2">
                           <span className="text-zinc-100">TOTAL</span>
                           <span className="text-blue-400 text-2xl">
-                            ${total.toLocaleString()}
+${formatCurrency(total)}
                           </span>
                         </div>
                         <div className="text-xs text-zinc-500">

@@ -88,10 +88,20 @@ export function useQROrderAlerts() {
     });
 
     socket.on('new_qr_order', (order: QROrder) => {
+      // Normalizar tipos numéricos al recibir el payload del WebSocket
+      const normalized: QROrder = {
+        ...order,
+        total:      Number(order.total)      || 0,
+        cashAmount: order.cashAmount != null ? Number(order.cashAmount) : null,
+        items:      (order.items ?? []).map(i => ({
+          ...i,
+          price: Number(i.price) || 0,
+        })),
+      };
+
       setPendingOrders(prev => {
-        // Evitar duplicados
-        if (prev.some(o => o.orderId === order.orderId)) return prev;
-        return [...prev, order];
+        if (prev.some(o => o.orderId === normalized.orderId)) return prev;
+        return [...prev, normalized];
       });
       const vol = parseFloat(localStorage.getItem('qr_alert_volume') ?? '0.8');
       playOrderAlert(vol);
@@ -136,9 +146,29 @@ export function useQROrderAlerts() {
   const acceptOrder = useCallback(async (orderId: string) => {
     removeOrder(orderId);
     try {
+      const order = pendingOrdersRef.current.find(o => o.orderId === orderId);
+      // Sanitizar campos numéricos: el backend puede guardar strings con ceros
+      // extra (ej. "4.6000") si llegan como string. Envolver con Number() garantiza
+      // que total, cashAmount y precios de items viajen como número real.
+      const payload = order
+        ? {
+            total:      Number(order.total)      || 0,
+            cashAmount: order.cashAmount != null ? Number(order.cashAmount) : null,
+            items:      (order.items ?? []).map(i => ({
+              ...i,
+              price:    Number(i.price) || 0,
+              quantity: Number(i.quantity) || 0,
+            })),
+          }
+        : {};
+
       await fetch(`${buildBasePath(orderId)}/${orderId}/accept`, {
         method:  'PATCH',
-        headers: { Authorization: `Bearer ${getToken()}` },
+        headers: {
+          Authorization:  `Bearer ${getToken()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
       });
     } catch { /* silencioso */ }
   }, [removeOrder]);

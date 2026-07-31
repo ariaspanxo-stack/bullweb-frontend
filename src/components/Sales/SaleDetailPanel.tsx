@@ -6,8 +6,7 @@ import { QuickActionBar } from './QuickActionBar';
 import { StatusBadge } from './StatusBadge';
 import { PaymentBreakdown } from './PaymentBreakdown';
 import { SmartSuggestions } from './SmartSuggestions';
-import { User, MapPin, FileText, Users, Calendar, X, CheckCircle, XCircle, CreditCard, Clock, AlertCircle, Tag, Gift, ChefHat, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { User, MapPin, FileText, Users, Calendar, X, CheckCircle, XCircle, CreditCard, Clock, AlertCircle, Tag, Gift, ChefHat } from 'lucide-react';
 import toast from 'react-hot-toast';
 import salesService from '@/services/salesService';
 import { ReprintModal } from '@/components/print/ReprintModal';
@@ -18,8 +17,6 @@ interface SaleDetailPanelProps {
 }
 
 export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
-  const navigate = useNavigate();
-
   // Estado modales inline
   const [showPayModal, setShowPayModal] = useState(false);
   const [payAmount, setPayAmount] = useState('');
@@ -31,12 +28,6 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
   const [cancelReason, setCancelReason] = useState('');
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showReprintModal, setShowReprintModal] = useState(false);
-
-  // Estado modal edición
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editNotes, setEditNotes] = useState('');
-  const [editPersons, setEditPersons] = useState(1);
-  const [editSaving, setEditSaving] = useState(false);
 
   const formatDateTime = (date: Date) => {
     return new Intl.DateTimeFormat('es-CL', {
@@ -122,31 +113,6 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
     setShowReprintModal(true);
   };
 
-  const handleEdit = () => {
-    if (!sale) return;
-    setEditNotes((sale as any).notes ?? '');
-    setEditPersons(sale.numberOfPeople || 1);
-    setShowEditModal(true);
-  };
-
-  const handleSaveEdit = async () => {
-    if (!sale) return;
-    setEditSaving(true);
-    try {
-      await salesService.updateSale(sale.id, {
-        notes:   editNotes || undefined,
-        persons: editPersons,
-      });
-      toast.success('Venta actualizada');
-      setShowEditModal(false);
-      onRefresh?.();
-    } catch {
-      toast.error('Error al guardar');
-    } finally {
-      setEditSaving(false);
-    }
-  };
-
   const handleCancel = async () => {
     if (!sale) return;
     setCancelReason('');
@@ -217,7 +183,6 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
       <QuickActionBar
         sale={sale}
         onPrint={handlePrint}
-        onEdit={handleEdit}
         onCancel={canCancel ? handleCancel : undefined}
       />
 
@@ -683,97 +648,6 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
               className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-bold disabled:opacity-50"
             >
               {cancelLoading ? 'Eliminando...' : 'Eliminar Venta'}
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* ── MODAL EDITAR ─────────────────────────────────── */}
-    {showEditModal && sale && (
-      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h3 className="text-lg font-bold text-gray-900">
-              Editar Venta {formatSaleNumber(sale.saleNumber)}
-            </h3>
-            <button onClick={() => setShowEditModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
-          </div>
-
-          {/* Nota de la orden */}
-          <div className="mb-5">
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-1.5">
-              Nota de la orden
-            </label>
-            <textarea
-              value={editNotes}
-              onChange={e => setEditNotes(e.target.value)}
-              rows={3}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-orange-400 focus:ring-1 focus:ring-orange-400 resize-none"
-              placeholder="Alergias, preferencias..."
-            />
-          </div>
-
-          {/* Número de personas */}
-          <div className="mb-5">
-            <label className="block text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-              Personas
-            </label>
-            <div className="flex items-center gap-0 border border-gray-200 rounded-xl overflow-hidden w-fit">
-              <button
-                onClick={() => setEditPersons(p => Math.max(1, p - 1))}
-                disabled={editPersons <= 1}
-                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 flex items-center justify-center text-gray-700 font-bold text-lg transition-colors"
-              >
-                −
-              </button>
-              <span className="w-12 text-center text-lg font-bold text-gray-900 select-none">
-                {editPersons}
-              </span>
-              <button
-                onClick={() => setEditPersons(p => p + 1)}
-                className="w-10 h-10 bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-700 font-bold text-lg transition-colors"
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          {/* Ir al POS si tiene mesa */}
-          {(sale.tableId || sale.tableNumber) && (
-            <button
-              onClick={() => {
-                setShowEditModal(false);
-                navigate('/restaurant', {
-                  state: {
-                    openTableId: sale.tableId,
-                    openTableNumber: sale.tableNumber,
-                    fromSales: true,
-                  }
-                });
-              }}
-              className="w-full mb-4 py-2 border border-orange-300 text-orange-600 rounded-xl text-sm font-medium hover:bg-orange-50 flex items-center justify-center gap-2"
-            >
-              Ir al POS para editar ítems
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowEditModal(false)}
-              className="flex-1 py-2.5 border border-gray-200 rounded-xl text-gray-600 text-sm font-medium hover:bg-gray-50"
-            >
-              Cancelar
-            </button>
-            <button
-              onClick={handleSaveEdit}
-              disabled={editSaving}
-              className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-semibold disabled:opacity-60 transition"
-            >
-              {editSaving ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
         </div>

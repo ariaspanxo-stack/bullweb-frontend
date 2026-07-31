@@ -26,8 +26,66 @@ export function formatPhone(phone?: string | null): string {
   return phone;
 }
 
-// BUG 13: generateDummyCustomers() eliminada (datos ficticios que no se usaban)
-// Si necesitas seed, usa el backend POST /api/customers o el panel de administración.
+  // ========== SEGMENTOS ==========
+
+  /**
+   * Configuración de color para el segmento del cliente (calculado por el backend).
+   * VIP: morado, FREQUENT: verde, REGULAR: azul, NEW: gris, AT_RISK: rojo, INACTIVE: naranjo.
+   */
+  export function getSegmentConfig(
+    segment?: string | null
+  ): { label: string; color: string } | null {
+    if (!segment) return null;
+    const configs: Record<string, { label: string; color: string }> = {
+      VIP:      { label: 'VIP',       color: 'bg-purple-500/10 text-purple-400 border-purple-500/30' },
+      FREQUENT: { label: 'Frecuente', color: 'bg-green-500/10 text-green-400 border-green-500/30' },
+      REGULAR:  { label: 'Regular',   color: 'bg-blue-500/10 text-blue-400 border-blue-500/30' },
+      NEW:      { label: 'Nuevo',     color: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/30' },
+      AT_RISK:  { label: 'En Riesgo', color: 'bg-red-500/10 text-red-400 border-red-500/30' },
+      INACTIVE: { label: 'Inactivo',  color: 'bg-orange-500/10 text-orange-400 border-orange-500/30' },
+    };
+    return configs[segment] ?? null;
+  }
+
+  // ========== WHATSAPP ==========
+
+  /**
+   * Construye la URL de WhatsApp para un cliente chileno.
+   * El teléfono se normaliza a dígitos (se quitan espacios/guiones) y se antepone 56 si falta.
+   * Devuelve null si el cliente no tiene teléfono.
+   */
+  export function buildWhatsAppUrl(
+    phone?: string | null,
+    name?: string | null
+  ): string | null {
+    if (!phone) return null;
+    let digits = phone.replace(/\D/g, '');
+    if (!digits) return null;
+    if (!digits.startsWith('56')) digits = '56' + digits;
+    const text = `Hola ${encodeURIComponent(name ?? '')}`.replace(/%20$/, '');
+    return `https://wa.me/${digits}?text=${text}`;
+  }
+
+  // ========== FECHAS ==========
+
+  /**
+   * Formatea una fecha a dd-mm-yyyy. Devuelve fallback si es null/undefined.
+   */
+  export function formatDate(
+    date?: string | Date | null,
+    fallback = 'Nunca'
+  ): string {
+    if (!date) return fallback;
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return fallback;
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  }
+
+  // BUG 13: generateDummyCustomers() eliminada (datos ficticios que no se usaban)
+  // Si necesitas seed, usa el backend POST /api/customers o el panel de administración.
 
 /** @deprecated solo se mantiene para no romper imports externos */
 export function generateDummyCustomers(): never[] {

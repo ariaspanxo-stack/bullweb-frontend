@@ -4,17 +4,19 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useRef, useEffect } from 'react';
-import {
-  ChefHat, CheckCircle, Package, DollarSign,
-  MoreHorizontal, X,
-  Truck, Pencil,
-} from 'lucide-react';
+  import {
+    ChefHat, CheckCircle, Package, DollarSign,
+    MoreHorizontal, X,
+    Truck, Pencil,
+    Phone, MessageSquare,
+  } from 'lucide-react';
 import { fmt, ElapsedTime } from './helpers';
 import { formatSaleNumber } from '../../../utils/formatSaleNumber';
 import { posService } from '../../../services/posService';
 import { EditCustomerModal } from './EditCustomerModal';
 import type { Sale } from '../../../types/restaurant.types';
 import { usePermission } from '../../../hooks/usePermission';
+import toast from 'react-hot-toast';
 
 // ─── Borde izquierdo por estado ────────────────────────────────
 const BORDER: Record<string, string> = {
@@ -68,6 +70,7 @@ export function OrderCardCompact({
 }: OrderCardCompactProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Cerrar dropdown al hacer click fuera
@@ -142,14 +145,14 @@ export function OrderCardCompact({
 
         {/* ── Fila 1: #número · cliente · tiempo · badge ── */}
         <div className="flex items-center gap-2 min-w-0">
-          <span className="font-black text-gray-900 text-sm leading-none flex-shrink-0">
+          <span className="font-black text-gray-900 text-lg leading-none flex-shrink-0">
             {formatSaleNumber(order.orderNumber || order.id.slice(-6).toUpperCase())}
           </span>
-          <span className="text-sm font-semibold text-gray-700 truncate flex-1 min-w-0">
+          <span className="text-lg font-semibold text-gray-700 truncate flex-1 min-w-0">
             {order.customerName || 'Cliente'}
           </span>
           <ElapsedTime createdAt={createdAt} />
-          <span className={`flex-shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${badge.bg} ${badge.text}`}>
+          <span className={`flex-shrink-0 px-1.5 py-0.5 rounded-full text-sm font-bold whitespace-nowrap ${badge.bg} ${badge.text}`}>
             {badge.label}
           </span>
         </div>
@@ -159,6 +162,18 @@ export function OrderCardCompact({
           <div className="flex items-center gap-1 min-w-0">
             <Truck size={10} className="text-purple-400 flex-shrink-0" />
             <p className="text-[11px] text-gray-500 truncate">{deliveryAddress}</p>
+          </div>
+        )}
+        {variant === 'delivery' && (order as any).customerPhone && (
+          <div className="flex items-center gap-1 min-w-0">
+            <Phone size={10} className="text-gray-400 flex-shrink-0" />
+            <p className="text-[11px] text-gray-500 truncate">{(order as any).customerPhone}</p>
+          </div>
+        )}
+        {variant === 'delivery' && order.notes && (
+          <div className="flex items-center gap-1 min-w-0">
+            <MessageSquare size={10} className="text-gray-400 flex-shrink-0" />
+            <p className="text-[11px] text-gray-400 truncate italic">{order.notes}</p>
           </div>
         )}
 
@@ -173,13 +188,22 @@ export function OrderCardCompact({
             NO se debe volver a sumar el envío aquí; solo se aclara que está incluido.
           */}
           <span className="font-black text-gray-800 text-sm flex-1 min-w-0 truncate">
-            Total ${fmt(order.total || 0)}
-            {variant === 'delivery' && deliveryFee && deliveryFee > 0 && (
+            Total ${fmt(Number(order.total) || 0)}
+            {variant === 'delivery' && deliveryFee && Number(deliveryFee) > 0 && (
               <span className="text-[10px] text-gray-400 font-normal ml-1">
-                (incluye ${fmt(deliveryFee)} envío)
+                (incluye ${fmt(Number(deliveryFee))} envío)
               </span>
             )}
           </span>
+
+          {/* Chip de medio de pago — resiliente a ambos modelos:
+              · Pedidos manuales: paymentMethodId (FK) + paymentMethod.name (objeto)
+              · Pedidos QR: paymentMethod (string plano, ej. "Efectivo") */}
+          {((order as any).paymentMethodId || (order as any).paymentMethod) && (
+            <span className="text-sm font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full flex-shrink-0">
+              {(order as any).paymentMethod?.name ?? (order as any).paymentMethod ?? 'Pago asignado'}
+            </span>
+          )}
 
           {/* Botón acción principal */}
           {mainAction && (
@@ -192,15 +216,55 @@ export function OrderCardCompact({
             </button>
           )}
 
-          {/* Botón Cobrar — siempre visible */}
+          {/* Botón Cobrar / Cerrar Pedido — directo si delivery con medio de pago asignado */}
           {canCobrar && (
-            <button
-              onClick={e => { e.stopPropagation(); onPay(order); }}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors flex-shrink-0"
-            >
-              <DollarSign size={12} />
-              <span>Cobrar</span>
-            </button>
+            variant === 'delivery' && (order as any).paymentMethodId ? (
+              <button
+                disabled={isClosing}
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  setIsClosing(true);
+                  try {
+                    const totalNum = Number(order.total) || 0;
+
+                    // Si la orden ya está pagada o el total es 0, cerrar directamente sin procesar pago
+                    if (order.status === 'PAID' || totalNum <= 0) {
+                      await posService.closeOrder(order.id);
+                    } else {
+                      // Si hay monto que cobrar, procesar el pago
+                      await posService.processPayment(order.id, {
+                        paymentMethodId: String((order as any).paymentMethodId),
+                        amount: totalNum,
+                        tip: 0,
+                      });
+                    }
+
+                    toast.success('Pedido cerrado y pagado correctamente.');
+                    onRefresh?.();
+                  } catch (err: any) {
+                    console.error('[Cerrar Delivery] Error DETALLADO:', err);
+                    const errorData = err?.response?.data || err?.data || err;
+                    const backendMsg = errorData?.error || errorData?.message || err?.message;
+                    console.error('[Cerrar Delivery] Mensaje Backend:', backendMsg);
+                    toast.error(backendMsg || 'Error al cerrar el pedido.');
+                  } finally {
+                    setIsClosing(false);
+                  }
+                }}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors flex-shrink-0 disabled:opacity-60"
+              >
+                <CheckCircle size={12} />
+                <span>{isClosing ? 'Cerrando...' : 'Cerrar Pedido'}</span>
+              </button>
+            ) : (
+              <button
+                onClick={e => { e.stopPropagation(); onPay(order); }}
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors flex-shrink-0"
+              >
+                <DollarSign size={12} />
+                <span>Cobrar</span>
+              </button>
+            )
           )}
 
           {/* Botón Editar cliente — MUY visible, siempre presente */}

@@ -169,6 +169,7 @@ export interface CreateDeliverySaleDTO {
   customerPhone: string;
   customerAddress: string;
   deliveryFee?: number;
+  paymentMethodId?: string;
   items: CreateDineInSaleDTO['items'];
   notes?: string;
 }

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/lib/queryClient';
 import { Toaster } from 'react-hot-toast';
@@ -119,7 +119,9 @@ function LazyFallback() {
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="text-center">
         <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-sm text-gray-500">Cargando...</p>
+        {/* Texto unificado con FullPageSpinner para distinguirlo de otros
+            spinners internos y facilitar el diagnóstico de "Cargando..." infinito. */}
+        <p className="text-sm text-gray-500">Cargando aplicación...</p>
       </div>
     </div>
   );
@@ -167,23 +169,26 @@ function NotFound() {
 // COMPONENTE APP
 // ============================================================================
 
-export default function App() {
-  const { isLoading, loadUser } = useAuthStore();
+// Contenido interno — debe estar dentro de <BrowserRouter> para poder usar useLocation
+function AppContent() {
+  const { isLoading } = useAuthStore();
+  const location = useLocation();
 
-  // Cargar usuario al iniciar la app si hay token guardado
-  useEffect(() => {
-    loadUser();
-  }, [loadUser]);
+  // Rutas públicas que deben renderizar inmediatamente, sin esperar la verificación de auth.
+  // IMPORTANTE: '/' se valida con igualdad exacta, porque startsWith('/') sería true para TODAS las rutas.
+  const isPublicRoute =
+    ['/register', '/registro', '/login', '/forgot-password', '/reset-password'].some((p) =>
+      location.pathname.startsWith(p),
+    ) || location.pathname === '/';
 
-  // Mostrar spinner mientras se verifica la autenticación inicial
-  if (isLoading) {
+  // Bloquear SOLO las rutas protegidas mientras se verifica la autenticación inicial.
+  // Las rutas públicas (registro, login, etc.) cargan instantáneamente.
+  if (isLoading && !isPublicRoute) {
     return <FullPageSpinner label="Cargando aplicación..." />;
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Suspense fallback={<LazyFallback />}>
+    <Suspense fallback={<LazyFallback />}>
           <Routes>
             {/* Rutas públicas */}
             <Route path="/"        element={<LandingPage />} />
@@ -372,7 +377,22 @@ export default function App() {
 
           {/* Notificación de actualización PWA */}
           <PwaUpdateNotification />
-        </Suspense>
+    </Suspense>
+  );
+}
+
+export default function App() {
+  const { loadUser } = useAuthStore();
+
+  // Cargar usuario al iniciar la app si hay token guardado
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AppContent />
       </BrowserRouter>
     </QueryClientProvider>
   );

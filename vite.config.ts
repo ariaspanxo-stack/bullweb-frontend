@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
 
-// https://vite.dev/config/  // cache-bust: 2026-05-06-force
+// https://vite.dev/config/  // cache-bust: 2026-07-26-delivery-gigante
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   

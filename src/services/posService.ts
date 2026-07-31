@@ -64,12 +64,13 @@ export const posService = {
    * Crear nueva orden
    */
   async createOrder(data: CreateOrderDTO): Promise<Order> {
-    const { data: response } = await api.post<ApiResponse<Order>>('/pos/orders', data);
-    
+    const payload = { ...data, idempotencyKey: crypto.randomUUID() };
+    const { data: response } = await api.post<ApiResponse<Order>>('/pos/orders', payload);
+
     if (!response.success || !response.data) {
       throw new Error(response.message || 'Error al crear la orden');
     }
-    
+
     return response.data;
   },
 
@@ -86,11 +87,11 @@ export const posService = {
    */
   async getOrder(orderId: string): Promise<Order> {
     const { data } = await api.get<ApiResponse<Order>>(`/pos/orders/${orderId}`);
-    
+
     if (!data.success || !data.data) {
       throw new Error(data.message || 'Error al obtener la orden');
     }
-    
+
     return data.data;
   },
 
@@ -102,11 +103,11 @@ export const posService = {
       `/pos/orders/${orderId}/items`,
       { items }
     );
-    
+
     if (!data.success || !data.data) {
       throw new Error(data.message || 'Error al agregar items');
     }
-    
+
     return data.data;
   },
 
@@ -117,11 +118,11 @@ export const posService = {
     const { data } = await api.delete<ApiResponse<Order>>(
       `/pos/orders/${orderId}/items/${itemId}`
     );
-    
+
     if (!data.success || !data.data) {
       throw new Error(data.message || 'Error al quitar el item');
     }
-    
+
     return data.data;
   },
 
@@ -133,11 +134,11 @@ export const posService = {
       `/pos/orders/${orderId}/discount`,
       discount
     );
-    
+
     if (!data.success || !data.data) {
       throw new Error(data.message || 'Error al aplicar descuento');
     }
-    
+
     return data.data;
   },
 
@@ -149,25 +150,15 @@ export const posService = {
       `/pos/orders/${orderId}/payment`,
       payment
     );
-    
-    if (!data.success) {
-      throw new Error(data.message || 'Error al procesar el pago');
-    }
-    
-    return data.data;
+    return data;
   },
 
   /**
    * Cerrar orden
    */
   async closeOrder(orderId: string): Promise<Order> {
-    const { data } = await api.post<ApiResponse<Order>>(`/pos/orders/${orderId}/close`);
-    
-    if (!data.success || !data.data) {
-      throw new Error(data.message || 'Error al cerrar la orden');
-    }
-    
-    return data.data;
+    const { data } = await api.post<Order>(`/pos/orders/${orderId}/close`);
+    return data;
   },
 
   /**
@@ -185,7 +176,7 @@ export const posService = {
     perPage?: number;
   }): Promise<{ orders: Order[]; meta: any }> {
     const queryParams = new URLSearchParams();
-    
+
     Object.keys(params).forEach(key => {
       const value = params[key as keyof typeof params];
       if (Array.isArray(value)) {
@@ -198,11 +189,11 @@ export const posService = {
     const { data } = await api.get<ApiResponse<{ orders: Order[]; meta: any }>>(
       `/pos/orders?${queryParams.toString()}`
     );
-    
+
     if (!data.success || !data.data) {
       throw new Error(data.message || 'Error al obtener órdenes');
     }
-    
+
     return data.data;
   },
 
@@ -210,14 +201,18 @@ export const posService = {
    * Obtener estadísticas reales del día desde el backend
    */
   async getOrdersStats(): Promise<{
-    pending: number;
-    preparing: number;
-    ready: number;
-    delivered: number;
+    pending?: number;
+    preparing?: number;
+    ready?: number;
+    delivered?: number;
     activeOrders: number;
+    activeTodayCount: number;
+    activeTodayRevenue: number;
+    activeTodayAvg: number;
+    // legacy (compat hacia atrás)
     paidToday: number;
     revenueToday: number;
-    avgTicketToday: number;
+    avgTicketToday?: number;
   }> {
     const { data } = await api.get<any>('/pos/orders/stats');
     return data;
@@ -230,7 +225,7 @@ export const posService = {
     const { data } = await api.delete<ApiResponse>(`/pos/orders/${orderId}`, {
       data: { reason: reason ?? 'Cancelada por operador' },
     });
-    
+
     if (!data.success) {
       throw new Error(data.message || 'Error al cancelar la orden');
     }
@@ -249,11 +244,6 @@ export const posService = {
   /**
    * Imprimir pre-cuenta (sin cerrar la orden) a la impresora de caja
    */
-  async transferOrder(data: { fromTableId: string; toTableId: string; transferType: string }): Promise<any> {
-    const res = await api.post(`/pos/orders/transfer`, data);
-    return res.data;
-  },
-
   async printPrecuenta(orderId: string): Promise<void> {
     const { data } = await api.post<ApiResponse>(`/pos/orders/${orderId}/print-precuenta`);
     if (!data.success) {
@@ -261,4 +251,19 @@ export const posService = {
     }
   },
 
+  /**
+   * Transferir orden o items entre mesas
+   */
+  async transferOrder(data: { fromTableId: string; toTableId: string; transferType: string }): Promise<any> {
+    const res = await api.post(`/pos/orders/transfer`, data);
+    return res.data;
+  },
+
+  /**
+   * Editar venta cerrada (PAID) — propina, total y medio de pago.
+   */
+  async editSale(orderId: string, data: { tip?: number; total?: number; paymentMethodId?: string }): Promise<any> {
+    const { data: res } = await api.patch(`/pos/orders/${orderId}/edit-sale`, data);
+    return res;
+  },
 };

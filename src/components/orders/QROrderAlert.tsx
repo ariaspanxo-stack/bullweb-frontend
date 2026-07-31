@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Phone, MapPin, ShoppingBag, Clock } from 'lucide-react';
 import type { QROrder } from '@/hooks/useQROrderAlerts';
+import { formatCurrency } from '@/lib/utils';
 
 const COUNTDOWN_SEC = 120;
 
@@ -17,9 +18,8 @@ const REJECT_REASONS = [
   'Otro',
 ];
 
-function fmtCLP(n: number) {
-  return n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
-}
+// Alias local del formateador blindado (formato manual, independiente del locale de Windows)
+const fmtCLP = (n: number) => formatCurrency(n);
 
 interface Props {
   order:    QROrder;

@@ -825,10 +825,14 @@ const Products = () => {
             <p className="text-gray-500">El módulo de recetas e ingredientes está en mejora continua.</p>
           </div>
         ) : activeTab === 'fichas' ? (
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-gray-50 rounded-xl">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">🚧 Próximamente 🚧</h3>
-            <p className="text-gray-500">Las fichas técnicas estarán disponibles muy pronto.</p>
-          </div>
+          <RecipesListTab
+            recipes={recipes}
+            products={products}
+            ingredients={ingredients}
+            onAddRecipe={handleAddRecipe}
+            onEditRecipe={handleEditRecipe}
+            onDeleteRecipe={handleDeleteRecipe}
+          />
         ) : activeTab === 'modificadores' ? (
           <ModifiersListTab
             modifierGroups={modifierGroups}

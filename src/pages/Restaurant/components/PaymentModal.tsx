@@ -495,7 +495,7 @@ export const PaymentModal = ({
                 )}
                 <div className="flex justify-between items-baseline pt-1.5 border-t border-gray-300">
                   <span className="text-sm font-black text-gray-600 uppercase tracking-wider">Total</span>
-                  <span className="text-2xl font-black text-slate-900">${fmt(finalTotal)}</span>
+                  <span className="text-2xl font-black text-orange-600">${fmt(finalTotal)}</span>
                 </div>
               </div>
             </div>
@@ -746,8 +746,8 @@ export const PaymentModal = ({
                   onClick={handleConfirm}
                   disabled={loading || payTotal < finalTotal - 0.5}
                   className="w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2
-                    bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700
-                    text-white shadow-lg shadow-emerald-200 transition-all active:scale-[0.99]
+                    bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-orange-200
+                    text-white shadow-lg shadow-orange-200 transition-all active:scale-[0.99]
                     disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                 >
                   {loading ? (

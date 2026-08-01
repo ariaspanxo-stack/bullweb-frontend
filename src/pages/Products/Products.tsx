@@ -825,20 +825,10 @@ const Products = () => {
             <p className="text-gray-500">El módulo de recetas e ingredientes está en mejora continua.</p>
           </div>
         ) : activeTab === 'fichas' ? (
-          loadingTab === 'fichas' ? (
-            <TabLoadingSpinner />
-          ) : recipePermError ? (
-            <PermissionErrorView message='Tu rol necesita el permiso "inventory.recipes". Ve a Configuración → Roles para activarlo.' />
-          ) : (
-            <RecipesListTab
-              recipes={recipes}
-              products={products}
-              ingredients={ingredients}
-              onAddRecipe={handleAddRecipe}
-              onEditRecipe={handleEditRecipe}
-              onDeleteRecipe={handleDeleteRecipe}
-            />
-          )
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-gray-50 rounded-xl">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">🚧 Próximamente 🚧</h3>
+            <p className="text-gray-500">Las fichas técnicas estarán disponibles muy pronto.</p>
+          </div>
         ) : activeTab === 'modificadores' ? (
           <ModifiersListTab
             modifierGroups={modifierGroups}
@@ -853,12 +843,10 @@ const Products = () => {
         ) : activeTab === 'estaciones' ? (
           <StationsTab onStationsChange={() => loadTabData('estaciones', true)} />
         ) : (
-          <DashboardTab
-            products={products}
-            ingredients={ingredients}
-            recipes={recipes}
-            categories={categoriesWithCounts}
-          />
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-gray-50 rounded-xl">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">🚧 Próximamente 🚧</h3>
+            <p className="text-gray-500">El dashboard de reportes estará disponible muy pronto.</p>
+          </div>
         )}
       </div>
 

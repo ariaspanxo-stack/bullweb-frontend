@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CreditCard, Banknote, Smartphone, DollarSign, Percent, Hash, FileText } from 'lucide-react';
+import { CreditCard, Banknote, Smartphone, DollarSign, Percent, Hash } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
@@ -61,14 +61,6 @@ const { dteIsConfigured, lastPaidOrderId } = useRestaurant();
     },
     enabled: isOpen
   });
-
-  // Calcular propina
-  const calculateTip = () => {
-    if (tipType === 'PERCENTAGE') {
-      return (total * tipPercentage) / 100;
-    }
-    return parseFloat(tipFixed) || 0;
-  };
 
   // Total final con propina
   const finalTotal = total + tip;
@@ -160,8 +152,8 @@ const { dteIsConfigured, lastPaidOrderId } = useRestaurant();
     return (
       <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={32} className="text-green-600" />
+          <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle size={32} className="text-orange-600" />
           </div>
           <h3 className="text-xl font-bold text-gray-800 mb-2">¡Pago Exitoso!</h3>
           <p className="text-sm text-gray-500 mb-6">La orden ha sido cobrada correctamente</p>
@@ -206,13 +198,13 @@ isConfigured={dteIsConfigured}
           )}
           
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">IGV (18%):</span>
+            <span className="text-gray-600">IVA (19%):</span>
             <span className="font-medium text-gray-900">{formatCurrency(tax)}</span>
           </div>
           
           <div className="flex justify-between text-lg font-bold border-t border-gray-300 pt-2 mt-2">
             <span className="text-gray-900">Total:</span>
-            <span className="text-blue-600">{formatCurrency(total)}</span>
+            <span className="text-orange-600">{formatCurrency(total)}</span>
           </div>
         </div>
 
@@ -230,7 +222,7 @@ isConfigured={dteIsConfigured}
                 onClick={() => applyQuickTip(percentage)}
                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                   tipType === 'PERCENTAGE' && tipPercentage === percentage
-                    ? 'bg-blue-600 text-white shadow-sm'
+                    ? 'bg-orange-600 text-white shadow-sm'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -245,7 +237,7 @@ isConfigured={dteIsConfigured}
               onClick={() => handleTipTypeChange('PERCENTAGE')}
               className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all ${
                 tipType === 'PERCENTAGE'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-orange-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -256,7 +248,7 @@ isConfigured={dteIsConfigured}
               onClick={() => handleTipTypeChange('FIXED')}
               className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all ${
                 tipType === 'FIXED'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-orange-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -275,24 +267,24 @@ isConfigured={dteIsConfigured}
                 min="0"
                 max="100"
                 step="1"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 placeholder="0"
               />
               <span className="text-gray-600 font-medium">%</span>
-              <span className="text-lg font-bold text-blue-600 min-w-[100px] text-right">
+              <span className="text-lg font-bold text-orange-600 min-w-[100px] text-right">
                 {formatCurrency(tip)}
               </span>
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="text-gray-600 font-medium">S/.</span>
+              <span className="text-gray-600 font-medium">$</span>
               <input
                 type="number"
                 value={tipFixed}
                 onChange={(e) => handleTipFixedChange(e.target.value)}
                 min="0"
                 step="0.01"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                 placeholder="0.00"
               />
             </div>
@@ -300,18 +292,16 @@ isConfigured={dteIsConfigured}
         </div>
 
         {/* Total final */}
-        {tip > 0 && (
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-semibold text-blue-900">
-                Total a Pagar (con propina):
-              </span>
-              <span className="text-2xl font-bold text-blue-600">
-                {formatCurrency(finalTotal)}
-              </span>
-            </div>
+        <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-semibold text-orange-900">
+              Total a Pagar (con propina):
+            </span>
+            <span className="text-3xl font-extrabold text-orange-600">
+              {formatCurrency(finalTotal)}
+            </span>
           </div>
-        )}
+        </div>
 
         {/* Métodos de pago */}
         <div>
@@ -344,13 +334,13 @@ isConfigured={dteIsConfigured}
                       !method.isActive
                         ? 'opacity-50 cursor-not-allowed bg-gray-100 border-gray-200'
                         : isSelected
-                        ? 'border-blue-500 bg-blue-50 shadow-sm'
-                        : 'border-gray-200 hover:border-blue-300 bg-white'
+                        ? 'border-orange-500 bg-orange-50 shadow-sm'
+                        : 'border-gray-200 hover:border-orange-300 bg-white'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        isSelected ? 'bg-blue-600' : 'bg-gray-100'
+                        isSelected ? 'bg-orange-600' : 'bg-gray-100'
                       }`}>
                         <Icon className={`w-5 h-5 ${
                           isSelected ? 'text-white' : 'text-gray-600'
@@ -358,7 +348,7 @@ isConfigured={dteIsConfigured}
                       </div>
                       <div className="flex-1">
                         <p className={`font-semibold ${
-                          isSelected ? 'text-blue-900' : 'text-gray-900'
+                          isSelected ? 'text-orange-900' : 'text-gray-900'
                         }`}>
                           {method.name}
                         </p>

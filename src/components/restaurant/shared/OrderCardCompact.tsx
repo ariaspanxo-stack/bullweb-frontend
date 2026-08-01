@@ -8,7 +8,7 @@ import { useState, useRef, useEffect } from 'react';
     ChefHat, CheckCircle, Package, DollarSign,
     MoreHorizontal, X,
     Truck, Pencil,
-    Phone, MessageSquare,
+    MapPin, Phone, MessageSquare,
   } from 'lucide-react';
 import { fmt, ElapsedTime } from './helpers';
 import { formatSaleNumber } from '../../../utils/formatSaleNumber';
@@ -28,10 +28,10 @@ const BORDER: Record<string, string> = {
 
 // ─── Badge por estado ──────────────────────────────────────────
 const BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  PENDING:   { bg: 'bg-amber-500',  text: 'text-white', label: 'Pendiente' },
-  PREPARING: { bg: 'bg-blue-500',   text: 'text-white', label: 'En Prep.' },
-  READY:     { bg: 'bg-green-500',  text: 'text-white', label: 'Listo' },
-  CANCELLED: { bg: 'bg-gray-400',   text: 'text-white', label: 'Cancelado' },
+  PENDING:   { bg: 'bg-amber-100', text: 'text-amber-800', label: 'Pendiente' },
+  PREPARING: { bg: 'bg-blue-100',  text: 'text-blue-800',  label: 'En Prep.' },
+  READY:     { bg: 'bg-green-100', text: 'text-green-800', label: 'Listo' },
+  CANCELLED: { bg: 'bg-gray-100',  text: 'text-gray-800',  label: 'Cancelado' },
 };
 
 // ─── Props ─────────────────────────────────────────────────────
@@ -55,12 +55,17 @@ function ItemsSummaryInline({ items }: { items: any[] }) {
   }
   const visible = active.slice(0, 2);
   const hidden  = active.length - 2;
-  const parts   = visible.map((i: any) => `${i.quantity}× ${i.productName}`);
   return (
-    <p className="text-xs text-gray-600 truncate leading-tight">
-      {parts.join(' · ')}
-      {hidden > 0 && <span className="text-gray-400"> y {hidden} más</span>}
-    </p>
+    <div className="flex flex-col gap-0.5 min-w-0">
+      {visible.map((i: any, idx: number) => (
+        <p key={idx} className="text-sm text-gray-800 font-medium truncate leading-tight">
+          <span className="font-bold">{i.quantity}×</span> {i.productName}
+        </p>
+      ))}
+      {hidden > 0 && (
+        <p className="text-xs text-gray-400 leading-tight">y {hidden} más</p>
+      )}
+    </div>
   );
 }
 
@@ -111,24 +116,24 @@ export function OrderCardCompact({
       if (!canCreateOrder) return null;
       return {
         label:     'En Preparación',
-        icon:      <ChefHat size={12} />,
-        className: 'bg-amber-500 hover:bg-amber-600 text-white',
+        icon:      <ChefHat size={14} />,
+        className: 'px-4 py-2 bg-amber-400 hover:bg-amber-500 text-amber-900',
         onClick:   () => onUpdateStatus(order, 'PREPARING'),
       };
     }
     if (order.status === 'PREPARING') {
       return {
         label:     variant === 'delivery' ? 'Enviado' : 'Listo',
-        icon:      variant === 'delivery' ? <Truck size={12} /> : <CheckCircle size={12} />,
-        className: 'bg-sky-500 hover:bg-sky-600 text-white',
+        icon:      variant === 'delivery' ? <Truck size={14} /> : <CheckCircle size={14} />,
+        className: 'px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white',
         onClick:   () => onUpdateStatus(order, 'READY'),
       };
     }
     if (order.status === 'READY') {
       return {
         label:     'Entregado',
-        icon:      <Package size={12} />,
-        className: 'bg-emerald-500 hover:bg-emerald-600 text-white',
+        icon:      <Package size={14} />,
+        className: 'px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white',
         onClick:   () => onPay(order),
       };
     }
@@ -145,57 +150,55 @@ export function OrderCardCompact({
 
         {/* ── Fila 1: #número · cliente · tiempo · badge ── */}
         <div className="flex items-center gap-2 min-w-0">
-          <span className="font-black text-gray-900 text-lg leading-none flex-shrink-0">
+          <span className="text-lg font-bold text-gray-900 leading-none flex-shrink-0">
             {formatSaleNumber(order.orderNumber || order.id.slice(-6).toUpperCase())}
           </span>
-          <span className="text-lg font-semibold text-gray-700 truncate flex-1 min-w-0">
+          <span className="text-lg font-bold text-gray-900 truncate flex-1 min-w-0">
             {order.customerName || 'Cliente'}
           </span>
           <ElapsedTime createdAt={createdAt} />
-          <span className={`flex-shrink-0 px-1.5 py-0.5 rounded-full text-sm font-bold whitespace-nowrap ${badge.bg} ${badge.text}`}>
+          <span className={`flex-shrink-0 text-xs font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap ${badge.bg} ${badge.text}`}>
             {badge.label}
           </span>
         </div>
 
-        {/* ── Dirección delivery (solo variant=delivery) ── */}
-        {variant === 'delivery' && deliveryAddress && (
-          <div className="flex items-center gap-1 min-w-0">
-            <Truck size={10} className="text-purple-400 flex-shrink-0" />
-            <p className="text-[11px] text-gray-500 truncate">{deliveryAddress}</p>
-          </div>
-        )}
-        {variant === 'delivery' && (order as any).customerPhone && (
-          <div className="flex items-center gap-1 min-w-0">
-            <Phone size={10} className="text-gray-400 flex-shrink-0" />
-            <p className="text-[11px] text-gray-500 truncate">{(order as any).customerPhone}</p>
-          </div>
-        )}
-        {variant === 'delivery' && order.notes && (
-          <div className="flex items-center gap-1 min-w-0">
-            <MessageSquare size={10} className="text-gray-400 flex-shrink-0" />
-            <p className="text-[11px] text-gray-400 truncate italic">{order.notes}</p>
-          </div>
-        )}
-
-        {/* ── Fila 2: resumen ítems ── */}
-        <ItemsSummaryInline items={order.items as any || []} />
-
-        {/* ── Fila 3: total · acción · cobrar · ··· ── */}
-        <div className="flex items-center gap-1.5 pt-1 border-t border-gray-50 min-w-0">
-          {/*
-            Total — order.total proviene del backend y YA incluye el deliveryFee
-            (ver pos.service.ts: total = subtotal + deliveryFeeAmt).
-            NO se debe volver a sumar el envío aquí; solo se aclara que está incluido.
-          */}
-          <span className="font-black text-gray-800 text-sm flex-1 min-w-0 truncate">
-            Total ${fmt(Number(order.total) || 0)}
-            {variant === 'delivery' && deliveryFee && Number(deliveryFee) > 0 && (
-              <span className="text-[10px] text-gray-400 font-normal ml-1">
-                (incluye ${fmt(Number(deliveryFee))} envío)
-              </span>
+        {/* ── Datos del Cliente: Dirección y Teléfono (solo variant=delivery) ── */}
+        {variant === 'delivery' && (deliveryAddress || (order as any).customerPhone || order.notes) && (
+          <div className="border border-gray-200 bg-white rounded-lg p-2 flex flex-col gap-1.5">
+            {deliveryAddress && (
+              <div className="flex items-start gap-1.5 min-w-0">
+                <MapPin size={12} className="text-purple-500 flex-shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="font-bold text-gray-800 text-xs uppercase tracking-wide">Dirección</p>
+                  <p className="text-sm text-gray-600 font-medium truncate">{deliveryAddress}</p>
+                </div>
+              </div>
             )}
-          </span>
+            {(order as any).customerPhone && (
+              <div className="flex items-start gap-1.5 min-w-0">
+                <Phone size={12} className="text-gray-500 flex-shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="font-bold text-gray-800 text-xs uppercase tracking-wide">Teléfono</p>
+                  <p className="text-sm text-gray-600 font-medium truncate">{(order as any).customerPhone}</p>
+                </div>
+              </div>
+            )}
+            {order.notes && (
+              <div className="flex items-start gap-1.5 min-w-0">
+                <MessageSquare size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-gray-400 truncate italic">{order.notes}</p>
+              </div>
+            )}
+          </div>
+        )}
 
+        {/* ── Lista de Productos ── */}
+        <div className="border-t border-dashed border-gray-200 mt-2 pt-2">
+          <ItemsSummaryInline items={order.items as any || []} />
+        </div>
+
+        {/* ── Acciones ── */}
+        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
           {/* Chip de medio de pago — resiliente a ambos modelos:
               · Pedidos manuales: paymentMethodId (FK) + paymentMethod.name (objeto)
               · Pedidos QR: paymentMethod (string plano, ej. "Efectivo") */}
@@ -251,7 +254,7 @@ export function OrderCardCompact({
                     setIsClosing(false);
                   }
                 }}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors flex-shrink-0 disabled:opacity-60"
+                className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors flex-shrink-0 disabled:opacity-60"
               >
                 <CheckCircle size={12} />
                 <span>{isClosing ? 'Cerrando...' : 'Cerrar Pedido'}</span>
@@ -303,6 +306,26 @@ export function OrderCardCompact({
               )}
             </div>
           )}
+        </div>
+
+        {/* ── Total — contenedor propio al final de la tarjeta ── */}
+        {/*
+          order.total proviene del backend y YA incluye el deliveryFee
+          (ver pos.service.ts: total = subtotal + deliveryFeeAmt).
+          NO se debe volver a sumar el envío aquí; solo se aclara que está incluido.
+        */}
+        <div className="flex justify-between items-center mt-3 pt-3 border-t-2 border-gray-800 gap-2">
+          <span className="text-sm font-bold text-gray-500 uppercase flex-shrink-0">Total</span>
+          <div className="text-right min-w-0">
+            <span className="text-2xl font-extrabold text-gray-900 block leading-tight">
+              ${fmt(Number(order.total) || 0)}
+            </span>
+            {variant === 'delivery' && deliveryFee && Number(deliveryFee) > 0 && (
+              <span className="text-[10px] text-gray-400 font-normal block">
+                (incluye ${fmt(Number(deliveryFee))} envío)
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

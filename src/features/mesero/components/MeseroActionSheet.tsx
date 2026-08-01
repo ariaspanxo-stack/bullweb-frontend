@@ -116,7 +116,7 @@ export function MeseroActionSheet({
               disabled={action.disabled}
               className={`w-full flex items-center gap-4 px-4 py-4 rounded-2xl
                 transition-colors text-left
-                ${action.disabled ? 'opacity-40 cursor-not-allowed bg-gray-50' : action.bg}`}
+                ${action.disabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : action.bg}`}
             >
               <div className={`p-2.5 rounded-xl flex-shrink-0 ${action.iconBg}`}>
                 <action.icon className={`w-5 h-5 ${action.iconColor}`} />

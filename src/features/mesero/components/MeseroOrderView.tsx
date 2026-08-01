@@ -349,7 +349,7 @@ export function MeseroOrderView({
                       onAddProduct(product, [], '');
                     }
                   }}
-                  className="w-full flex items-center gap-3 p-2.5 bg-white border
+                  className="w-full flex items-center gap-3 p-3 bg-white border-b
                              border-gray-100 rounded-2xl transition-all text-left
                              active:scale-[0.98] hover:border-orange-200 hover:bg-orange-50"
                 >

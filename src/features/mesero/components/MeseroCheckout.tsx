@@ -22,6 +22,10 @@ function formatCLP(n: number): string {
   return `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
 }
 
+// IVA Chile (19%)
+const TAX_RATE  = 0.19;
+const TAX_LABEL = 'IVA (19%)';
+
 // ── Tipos ─────────────────────────────────────────────────────
 interface OrderItem {
   id:       string;
@@ -56,9 +60,15 @@ export function MeseroCheckout({
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [discountPct,   setDiscountPct]   = useState(0);
 
-  const finalTotal = discountPct > 0
+  const discountedTotal = discountPct > 0
     ? Math.round(total * (1 - discountPct / 100))
     : total;
+
+  // Cálculo de IVA (19%)
+  const neto   = Math.round(discountedTotal / (1 + TAX_RATE));
+  const ivaAmt = discountedTotal - neto;
+
+  const finalTotal = discountedTotal;
 
   // ── Solicitar cuenta (sin permiso de cobro) ───────────────
   const requestBillMutation = useMutation({
@@ -164,7 +174,7 @@ export function MeseroCheckout({
             <button
               onClick={() => requestBillMutation.mutate()}
               disabled={requestBillMutation.isPending}
-              className="w-full max-w-xs bg-blue-600 hover:bg-blue-500
+              className="w-full max-w-xs bg-orange-600 hover:bg-orange-500
                          text-white py-4 rounded-2xl font-semibold
                          active:scale-[0.98] transition-all disabled:opacity-50"
             >
@@ -242,19 +252,31 @@ export function MeseroCheckout({
               )}
             </div>
 
+            {/* Desglose con IVA */}
+            <div className="px-5 py-4 border-b border-gray-800 space-y-1">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Neto</span>
+                <span className="text-gray-300">{formatCLP(neto)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">{TAX_LABEL}</span>
+                <span className="text-gray-300">{formatCLP(ivaAmt)}</span>
+              </div>
+              {discountPct > 0 && (
+                <div className="text-gray-500 text-xs pt-1 text-right">
+                  {formatCLP(total)} − {discountPct}% = {formatCLP(discountedTotal)}
+                </div>
+              )}
+            </div>
+
             {/* Total */}
             <div className="px-5 py-4 border-b border-gray-800">
               <div className="flex justify-between items-center">
                 <span className="text-gray-300 text-lg">Total a cobrar</span>
-                <span className="text-white text-2xl font-bold">
+                <span className="text-3xl font-extrabold text-orange-600">
                   {formatCLP(finalTotal)}
                 </span>
               </div>
-              {discountPct > 0 && (
-                <div className="text-gray-500 text-xs mt-1 text-right">
-                  {formatCLP(total)} − {discountPct}% = {formatCLP(finalTotal)}
-                </div>
-              )}
             </div>
 
             {/* Acciones */}

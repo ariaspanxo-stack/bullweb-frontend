@@ -506,7 +506,7 @@ export default function KDS() {
                         <div className="flex items-start justify-between mb-1">
                           <div className="flex-1 min-w-0">
                             <div className="text-base font-bold">
-                              {item.quantity}x {item.product?.name || item.name || 'Producto'}
+                              {item.quantity}x {item.products?.name || item.name || 'Producto'}
                             </div>
 
                             {item.modifiers && Array.isArray(item.modifiers) && item.modifiers.length > 0 && (

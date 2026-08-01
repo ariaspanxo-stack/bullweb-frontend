@@ -820,18 +820,10 @@ const Products = () => {
             onBulkAvailability={handleCategoryBulkAvailability}
           />
         ) : activeTab === 'ingredientes' ? (
-          loadingTab === 'ingredientes' ? (
-            <TabLoadingSpinner />
-          ) : (
-            <IngredientsListTab
-              ingredients={ingredients}
-              categories={ingredientCategories}
-              onAddIngredient={handleAddIngredient}
-              onEditIngredient={handleEditIngredient}
-              onDeleteIngredient={handleDeleteIngredient}
-              permissionError={ingredientPermError}
-            />
-          )
+          <div className="flex flex-col items-center justify-center h-full p-8 text-center bg-gray-50 rounded-xl">
+            <h3 className="text-xl font-bold text-gray-800 mb-2">🚧 Próximamente 🚧</h3>
+            <p className="text-gray-500">El módulo de recetas e ingredientes está en mejora continua.</p>
+          </div>
         ) : activeTab === 'fichas' ? (
           loadingTab === 'fichas' ? (
             <TabLoadingSpinner />

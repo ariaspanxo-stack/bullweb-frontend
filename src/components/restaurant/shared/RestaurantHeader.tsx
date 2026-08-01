@@ -52,15 +52,15 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
       )}
       <div className="px-4 py-2 flex items-center justify-between gap-3">
         {/* Tab bar */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg w-fit">
+        <div className="inline-flex items-center gap-1 bg-gray-100 p-1 rounded-xl w-fit">
           {/* ── Mesas ── solo si tiene pos.mesas */}
           {canTab('mesas') && (
             <button
               onClick={() => handleTabChange('mesas')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-md font-semibold text-sm transition-all duration-200 cursor-pointer ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer ${
                 activeTab === 'mesas'
-                  ? 'bg-white shadow-sm text-slate-900'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-white shadow-sm text-gray-900'
+                  : 'text-gray-500 hover:text-gray-900'
               }`}
             >
               <LayoutGrid size={18} />
@@ -79,10 +79,10 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
           {canTab('mostrador') && (
             <button
               onClick={() => handleTabChange('mostrador')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-md font-semibold text-sm transition-all duration-200 cursor-pointer ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer ${
                 activeTab === 'mostrador'
-                  ? 'bg-white shadow-sm text-slate-900'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-white shadow-sm text-gray-900'
+                  : 'text-gray-500 hover:text-gray-900'
               }`}
             >
               <ShoppingBag size={18} />
@@ -108,10 +108,10 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
           {canTab('delivery') && (
             <button
               onClick={() => handleTabChange('delivery')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-md font-semibold text-sm transition-all duration-200 cursor-pointer ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer ${
                 activeTab === 'delivery'
-                  ? 'bg-white shadow-sm text-slate-900'
-                  : 'text-slate-500 hover:text-slate-900'
+                  ? 'bg-white shadow-sm text-gray-900'
+                  : 'text-gray-500 hover:text-gray-900'
               }`}
             >
               <Truck size={18} />

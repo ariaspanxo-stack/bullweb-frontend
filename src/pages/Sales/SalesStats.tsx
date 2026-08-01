@@ -22,7 +22,7 @@ function barColor(method: string): string {
   if (n.includes('transfer'))                          return 'bg-purple-500';
   if (n.includes('yape') || n.includes('plin'))        return 'bg-pink-500';
   if (n === 'unpaid' || n === 'sin pagar')              return 'bg-gray-400';
-  return 'bg-indigo-500';
+  return 'bg-orange-500';
 }
 
 export const SalesStats = ({ stats, startDate, endDate, recordCount, previousStats, isPeriodDaily, onNavigateToTab }: Props) => {
@@ -36,14 +36,7 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
     stats.averagePerSale >= 2000 ? 'text-amber-500' :
     'text-red-500';
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 2
-    }).format(value);
-  };
+  const formatCurrency = (value: number) => '$' + Math.round(Math.abs(value)).toLocaleString('es-CL');
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('es-CL', {
@@ -134,7 +127,7 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
       <div className="border-t pt-4">
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium text-sm"
+          className="flex items-center gap-2 text-orange-600 hover:text-orange-700 font-medium text-sm"
         >
           MÁS INFO {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </button>
@@ -198,7 +191,7 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
             {onNavigateToTab && (
               <button
                 onClick={() => onNavigateToTab('ventas')}
-                className="flex items-center gap-1 px-3 py-2 text-xs text-blue-600 hover:text-blue-800 transition-colors ml-auto"
+                className="flex items-center gap-1 px-3 py-2 text-xs text-orange-600 hover:text-orange-800 transition-colors ml-auto"
               >
                 Ver detalle <ArrowRight className="w-3 h-3" />
               </button>

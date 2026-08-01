@@ -27,13 +27,7 @@ interface CloseShiftModalProps {
   onCancel: () => void;
 }
 
-function formatCLP(n: number): string {
-  return new Intl.NumberFormat('es-CL', {
-    style:                 'currency',
-    currency:              'CLP',
-    maximumFractionDigits: 0,
-  }).format(n);
-}
+const formatCLP = (n: number) => '$' + Math.round(Math.abs(n)).toLocaleString('es-CL');
 
 function isCash(methodName: string): boolean {
   return /efectivo|cash|contado/i.test(methodName);
@@ -146,12 +140,12 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
             {/* KPIs del cierre */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-indigo-50 rounded-2xl p-4 text-center">
-                  <p className="text-lg font-black text-indigo-700">{formatCLP(closeResult.totalSales)}</p>
+                <div className="bg-orange-50 rounded-2xl p-4 text-center">
+                  <p className="text-lg font-black text-orange-700">{formatCLP(closeResult.totalSales)}</p>
                   <p className="text-xs text-gray-400 mt-0.5">Total ventas</p>
                 </div>
-                <div className="bg-purple-50 rounded-2xl p-4 text-center">
-                  <p className="text-lg font-black text-purple-700">{closeResult.totalOrders}</p>
+                <div className="bg-emerald-50 rounded-2xl p-4 text-center">
+                  <p className="text-lg font-black text-emerald-700">{closeResult.totalOrders}</p>
                   <p className="text-xs text-gray-400 mt-0.5">Pedidos</p>
                 </div>
               </div>
@@ -203,7 +197,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
                     }
                     <span className={`text-sm font-black ${
                       closeResult.difference === 0             ? 'text-green-600'
-                      : closeResult.difference > 0             ? 'text-blue-600'
+                      : closeResult.difference > 0             ? 'text-emerald-600'
                       : Math.abs(closeResult.difference) <= 1000 ? 'text-amber-600'
                       :                                            'text-red-600'
                     }`}>
@@ -485,7 +479,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
             type="submit"
             form="close-shift-form"
             disabled={loading || !closingCash || (needsJustification && justification.trim().length < 5)}
-            className="flex-1 py-3 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-2xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>

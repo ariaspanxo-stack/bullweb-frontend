@@ -23,16 +23,16 @@ export default function RecipesList({ onEdit, onDelete, onCreate }: RecipesListP
   return (
     <div className="space-y-4">
       {/* Productos sin receta */}
-      {recipes?.productsWithoutRecipe?.length > 0 && (
+      {(recipes?.productsWithoutRecipe || []).length > 0 && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <ChefHat className="w-5 h-5 text-yellow-600 mt-0.5" />
             <div className="flex-1">
               <h3 className="font-semibold text-yellow-900 mb-2">
-                Productos sin receta ({recipes.productsWithoutRecipe.length})
+                Productos sin receta ({(recipes.productsWithoutRecipe || []).length})
               </h3>
               <div className="flex flex-wrap gap-2">
-                {recipes.productsWithoutRecipe.map((product: any) => (
+                {(recipes.productsWithoutRecipe || []).map((product: any) => (
                   <button
                     key={product.id}
                     onClick={() => onCreate()}
@@ -61,7 +61,7 @@ export default function RecipesList({ onEdit, onDelete, onCreate }: RecipesListP
             </tr>
           </thead>
           <tbody className="divide-y">
-            {recipes?.recipes?.map((recipe: any) => {
+            {(recipes?.recipes || []).map((recipe: any) => {
               const product = recipe.products ?? recipe.product;
               const productPrice = product?.price ?? 0;
               const margin = productPrice - (recipe.totalCost || 0);
@@ -73,7 +73,7 @@ export default function RecipesList({ onEdit, onDelete, onCreate }: RecipesListP
                 <tr key={recipe.id} className="hover:bg-gray-50">
                   <td className="px-4 py-3 font-medium text-gray-900">{product?.name}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">
-                    {(recipe.recipe_items ?? recipe.items)?.length || 0} ingredientes
+                    {((recipe.recipe_items ?? recipe.items) || []).length} ingredientes
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900">
                     {formatCurrency(recipe.totalCost || 0)}
@@ -106,7 +106,7 @@ export default function RecipesList({ onEdit, onDelete, onCreate }: RecipesListP
           </tbody>
         </table>
 
-        {recipes?.recipes?.length === 0 && (
+        {(recipes?.recipes || []).length === 0 && (
           <div className="text-center py-12 text-gray-500">
             No hay recetas creadas
           </div>

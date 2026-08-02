@@ -27,9 +27,11 @@ export const RecipesListTab: React.FC<RecipesListTabProps> = ({
 
   // Estadísticas globales
   const stats = useMemo(() => {
-    const total = recipes.length;
-    const margins = recipes.map((r) => {
-      const product = products.find((p) => p.id === r.productId);
+    const safeRecipes = recipes || [];
+    const safeProducts = products || [];
+    const total = safeRecipes.length;
+    const margins = safeRecipes.map((r) => {
+      const product = safeProducts.find((p) => p.id === r.productId);
       return product ? calculateRealMargin(product?.price || 0, r.totalCost || 0) : null;
     }).filter((m): m is number => m !== null);
     const avgMargin = margins.length ? margins.reduce((a, b) => a + b, 0) / margins.length : 0;
@@ -39,7 +41,7 @@ export const RecipesListTab: React.FC<RecipesListTabProps> = ({
 
   // Filtrado
   const filteredRecipes = useMemo(() => {
-    let filtered = [...recipes];
+    let filtered = [...(recipes || [])];
 
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
@@ -67,13 +69,13 @@ export const RecipesListTab: React.FC<RecipesListTabProps> = ({
 
   // Obtener nombre producto
   const getProductName = (productId: string) => {
-    const product = products.find((p) => p.id === productId);
+    const product = (products || []).find((p) => p.id === productId);
     return product ? product.name : 'Producto desconocido';
   };
 
   // Obtener producto
   const getProduct = (productId: string) => {
-    return products.find((p) => p.id === productId);
+    return (products || []).find((p) => p.id === productId);
   };
 
   return (
@@ -207,7 +209,7 @@ export const RecipesListTab: React.FC<RecipesListTabProps> = ({
                   <div className="bg-gray-50 rounded-lg p-3">
                     <p className="text-xs text-gray-700 mb-1">Ingredientes</p>
                     <p className="text-lg font-bold text-gray-900">
-                      {recipe.ingredients.length}
+                      {(recipe.ingredients || []).length}
                     </p>
                   </div>
 

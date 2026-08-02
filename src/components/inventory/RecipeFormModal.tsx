@@ -66,8 +66,9 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
     return items.reduce((sum, item) => {
       const ingredient = ingredients?.find((ing: any) => ing.id === item.ingredientId);
       // C-3: API devuelve unitCost, soportar ambos nombres por compatibilidad
-      const unitCost = ingredient?.unitCost ?? ingredient?.cost ?? 0;
-      return sum + unitCost * item.quantity;
+      const unitCost = Number(ingredient?.unitCost ?? ingredient?.cost ?? 0);
+      const qty = Number(item.quantity ?? 0);
+      return sum + unitCost * qty;
     }, 0);
   };
 
@@ -165,7 +166,7 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Costo Total de Receta:</span>
             <span className="text-2xl font-bold text-primary-600">
-              {formatCurrency(totalCost)}
+              {formatCurrency(totalCost || 0)}
             </span>
           </div>
         </div>

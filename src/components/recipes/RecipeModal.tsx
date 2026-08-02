@@ -364,7 +364,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-800 mb-1">Costo Total</p>
                   <p className="text-3xl font-bold text-blue-900">
-                    {formatCurrency(calculations.totalCost)}
+                    {formatCurrency(calculations.totalCost || 0)}
                   </p>
                   <p className="text-xs text-blue-700 mt-1">
                     Por porción: ${(calculations.costPerServing || 0).toFixed(0)}
@@ -441,7 +441,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                               : 'text-red-600'
                           }`}
                         >
-                          {calculations.realMargin.toFixed(1)}%
+                          {(calculations.realMargin || 0).toFixed(1)}%
                         </span>
                       </div>
                     </div>
@@ -457,19 +457,19 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                     <div className="flex justify-between">
                       <span>Margen 40%:</span>
                       <span className="font-mono">
-                        ${calculations.suggestedPrice40.toFixed(0)}
+                        ${(calculations.suggestedPrice40 || 0).toFixed(0)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Margen 50%:</span>
                       <span className="font-mono">
-                        ${calculations.suggestedPrice50.toFixed(0)}
+                        ${(calculations.suggestedPrice50 || 0).toFixed(0)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Margen 67%:</span>
                       <span className="font-mono font-bold">
-                        ${calculations.suggestedPrice67.toFixed(0)}
+                        ${(calculations.suggestedPrice67 || 0).toFixed(0)}
                       </span>
                     </div>
                   </div>

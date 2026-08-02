@@ -333,31 +333,6 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
               </div>
             </div>
 
-            {/* Fechas */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Fechas</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>Última Compra</label>
-                  <input
-                    type="date"
-                    value={formData.lastPurchaseDate}
-                    onChange={(e) => handleChange('lastPurchaseDate', e.target.value)}
-                    className={`${inputBaseClass} border-slate-200`}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Fecha Vencimiento</label>
-                  <input
-                    type="date"
-                    value={formData.expirationDate}
-                    onChange={(e) => handleChange('expirationDate', e.target.value)}
-                    className={`${inputBaseClass} border-slate-200`}
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Panel de Alerta de Stock */}
             <div
               className={`rounded-lg p-4 border ${

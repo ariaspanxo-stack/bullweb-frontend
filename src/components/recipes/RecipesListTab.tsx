@@ -62,7 +62,22 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad a descontar</label>
-          <input type="number" min="0.01" step="0.01" value={qty} onChange={e => setQty(Number(e.target.value))} className="w-full border rounded-lg p-2" />
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min="0.001"
+              step="0.001"
+              value={qty}
+              onChange={e => setQty(Number(e.target.value))}
+              className="w-full border rounded-lg p-2"
+            />
+            {selectedIngredient && (
+              <span className="min-w-[40px] text-center text-sm font-medium text-gray-600 bg-gray-100 border border-gray-200 rounded-lg px-2 py-2 whitespace-nowrap">
+                {ingredients.find(i => i.id === selectedIngredient)?.unit || ''}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-gray-500 mt-1">Si es kg, usa decimales (ej: 0.05 para 50g)</p>
         </div>
         <button onClick={handleLink} disabled={loading} className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium disabled:opacity-50">
           {loading ? 'Guardando...' : 'Vincular'}

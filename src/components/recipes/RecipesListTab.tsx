@@ -30,7 +30,7 @@ export const RecipesListTab: React.FC<RecipesListTabProps> = ({
     const total = recipes.length;
     const margins = recipes.map((r) => {
       const product = products.find((p) => p.id === r.productId);
-      return product ? calculateRealMargin(product.price, r.totalCost) : null;
+      return product ? calculateRealMargin(product?.price || 0, r.totalCost || 0) : null;
     }).filter((m): m is number => m !== null);
     const avgMargin = margins.length ? margins.reduce((a, b) => a + b, 0) / margins.length : 0;
     const lowMargin = margins.filter((m) => m < 30).length;
@@ -109,7 +109,7 @@ export const RecipesListTab: React.FC<RecipesListTabProps> = ({
           <TrendingUp className={`w-8 h-8 flex-shrink-0 ${stats.avgMargin >= 40 ? 'text-green-500' : stats.avgMargin >= 20 ? 'text-yellow-500' : 'text-red-500'}`} />
           <div>
             <p className={`text-xs font-medium ${stats.avgMargin >= 40 ? 'text-green-600' : stats.avgMargin >= 20 ? 'text-yellow-600' : 'text-red-600'}`}>Margen promedio</p>
-            <p className={`text-2xl font-bold ${stats.avgMargin >= 40 ? 'text-green-900' : stats.avgMargin >= 20 ? 'text-yellow-900' : 'text-red-900'}`}>{stats.total ? stats.avgMargin.toFixed(1) : '—'}%</p>
+            <p className={`text-2xl font-bold ${stats.avgMargin >= 40 ? 'text-green-900' : stats.avgMargin >= 20 ? 'text-yellow-900' : 'text-red-900'}`}>{stats.total ? (stats.avgMargin || 0).toFixed(1) : '—'}%</p>
           </div>
         </div>
         <div className={`border rounded-xl p-4 flex items-center gap-3 ${stats.lowMargin === 0 ? 'bg-gray-50 border-gray-200' : 'bg-orange-50 border-orange-200'}`}>
@@ -155,10 +155,10 @@ export const RecipesListTab: React.FC<RecipesListTabProps> = ({
           {currentItems.map((recipe) => {
             const product = getProduct(recipe.productId);
             const comparison = product
-              ? compareCosts(product.cost || 0, recipe.totalCost)
+              ? compareCosts(product.cost || 0, recipe.totalCost || 0)
               : null;
             const realMargin = product
-              ? calculateRealMargin(product.price, recipe.totalCost)
+              ? calculateRealMargin(product?.price || 0, recipe.totalCost || 0)
               : 0;
 
             return (
@@ -199,7 +199,7 @@ export const RecipesListTab: React.FC<RecipesListTabProps> = ({
                   <div className="bg-blue-50 rounded-lg p-3">
                     <p className="text-xs text-blue-700 mb-1">Costo Total</p>
                     <p className="text-lg font-bold text-blue-900">
-                      {formatCurrency(recipe.totalCost)}
+                      {formatCurrency(recipe.totalCost || 0)}
                     </p>
                   </div>
 
@@ -247,7 +247,7 @@ export const RecipesListTab: React.FC<RecipesListTabProps> = ({
                           : 'text-red-900'
                       }`}
                     >
-                      {realMargin.toFixed(1)}%
+                      {(realMargin || 0).toFixed(1)}%
                     </p>
                   </div>
                 </div>

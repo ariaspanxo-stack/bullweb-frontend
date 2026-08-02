@@ -64,7 +64,7 @@ export default function RecipesList({ onEdit, onDelete, onCreate }: RecipesListP
             {recipes?.recipes?.map((recipe: any) => {
               const product = recipe.products ?? recipe.product;
               const productPrice = product?.price ?? 0;
-              const margin = productPrice - recipe.totalCost;
+              const margin = productPrice - (recipe.totalCost || 0);
               const marginPercent = productPrice > 0
                 ? ((margin / productPrice) * 100).toFixed(1)
                 : null;
@@ -76,7 +76,7 @@ export default function RecipesList({ onEdit, onDelete, onCreate }: RecipesListP
                     {(recipe.recipe_items ?? recipe.items)?.length || 0} ingredientes
                   </td>
                   <td className="px-4 py-3 font-medium text-gray-900">
-                    {formatCurrency(recipe.totalCost)}
+                    {formatCurrency(recipe.totalCost || 0)}
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-600">
                     {formatCurrency(productPrice)}

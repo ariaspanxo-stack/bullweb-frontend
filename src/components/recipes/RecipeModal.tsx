@@ -90,11 +90,11 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
     const selectedProduct = products.find((p) => p.id === formData.productId);
 
     const comparison = selectedProduct
-      ? compareCosts(selectedProduct.cost || 0, totalCost)
+      ? compareCosts(selectedProduct?.cost || 0, totalCost)
       : null;
 
     const realMargin = selectedProduct
-      ? calculateRealMargin(selectedProduct.price, totalCost)
+      ? calculateRealMargin(selectedProduct?.price || 0, totalCost)
       : 0;
 
     const suggestedPrice40 = calculateSuggestedPrice(totalCost, 40);
@@ -367,7 +367,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                     {formatCurrency(calculations.totalCost)}
                   </p>
                   <p className="text-xs text-blue-700 mt-1">
-                    Por porción: ${calculations.costPerServing.toFixed(0)}
+                    Por porción: ${(calculations.costPerServing || 0).toFixed(0)}
                   </p>
                 </div>
 
@@ -427,7 +427,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                       <div className="flex justify-between text-sm">
                         <span>Costo real:</span>
                         <span className="font-mono">
-                          ${calculations.totalCost.toFixed(0)}
+                          ${(calculations.totalCost || 0).toFixed(0)}
                         </span>
                       </div>
                       <div className="flex justify-between pt-2 border-t">

@@ -125,7 +125,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
       newErrors.name = 'El nombre es requerido';
     }
 
-    if (formData.ingredients.length === 0) {
+    if ((formData.ingredients || []).length === 0) {
       newErrors.ingredients = 'Agrega al menos un ingrediente';
     }
 
@@ -154,7 +154,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
       // ingredients -> items, servings -> yield
       const payload = {
         ...formData,
-        items: formData.ingredients.map((ing) => ({
+        items: (formData.ingredients || []).map((ing) => ({
           ingredientId: ing.ingredientId,
           quantity: ing.quantity,
         })),
@@ -223,7 +223,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                       }`}
                     >
                       <option value="">Selecciona un producto</option>
-                      {products.map((product) => (
+                      {(products || []).map((product) => (
                         <option key={product.id} value={product.id}>
                           {product.name} - {formatCurrency(product.price)}
                         </option>
@@ -319,10 +319,10 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                     <h3 className="text-lg font-semibold text-gray-900">
                       Ingredientes <span className="text-red-500">*</span>
                     </h3>
-                    {formData.ingredients.length > 0 && (
+                    {(formData.ingredients || []).length > 0 && (
                       <span className="text-sm text-gray-600">
-                        {formData.ingredients.length} ingrediente
-                        {formData.ingredients.length !== 1 ? 's' : ''}
+                        {(formData.ingredients || []).length} ingrediente
+                        {(formData.ingredients || []).length !== 1 ? 's' : ''}
                       </span>
                     )}
                   </div>

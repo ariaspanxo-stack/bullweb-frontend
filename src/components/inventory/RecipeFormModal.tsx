@@ -63,7 +63,7 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
   };
 
   const calculateTotalCost = () => {
-    return items.reduce((sum, item) => {
+    return (items || []).reduce((sum, item) => {
       const ingredient = ingredients?.find((ing: any) => ing.id === item.ingredientId);
       // C-3: API devuelve unitCost, soportar ambos nombres por compatibilidad
       const unitCost = Number(ingredient?.unitCost ?? ingredient?.cost ?? 0);
@@ -77,11 +77,11 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
       toast.error('Selecciona un producto');
       return;
     }
-    if (items.length === 0) {
+    if ((items || []).length === 0) {
       toast.error('Agrega al menos un ingrediente');
       return;
     }
-    if (items.some(item => !item.ingredientId || item.quantity <= 0)) {
+    if ((items || []).some(item => !item.ingredientId || item.quantity <= 0)) {
       toast.error('Completa todos los ingredientes');
       return;
     }
@@ -128,7 +128,7 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
           </div>
 
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {items.map((item, index) => (
+            {(items || []).map((item, index) => (
               <div key={index} className="flex items-center gap-2">
                 <select
                   value={item.ingredientId}

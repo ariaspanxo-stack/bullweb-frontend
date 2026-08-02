@@ -150,7 +150,19 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
     if (!validateForm() || isSubmitting) return;
     setIsSubmitting(true);
     try {
-      await onSave(formData);
+      // Mapear claves del formulario a las que espera el backend:
+      // ingredients -> items, servings -> yield
+      const payload = {
+        ...formData,
+        items: formData.ingredients.map((ing) => ({
+          ingredientId: ing.ingredientId,
+          quantity: ing.quantity,
+        })),
+        yield: formData.servings,
+      };
+      // Eliminar las claves antiguas que el backend no reconoce
+      const { ingredients: _ingredients, servings: _servings, ...rest } = payload;
+      await onSave(rest as unknown as RecipeFormData);
     } catch {
       // Error ya manejado por el padre con toast
     } finally {

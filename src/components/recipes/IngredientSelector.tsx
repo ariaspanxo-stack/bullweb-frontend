@@ -209,7 +209,7 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                     <div className="flex items-center justify-between pt-2 border-t border-gray-200">
                       <span className="text-xs text-gray-600">Costo:</span>
                       <span className="text-sm font-bold text-gray-900">
-                        ${(recipeIng.cost || 0).toFixed(2)}
+                        {formatCurrency(recipeIng.cost || 0)}
                       </span>
                     </div>
                   </div>

@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { inventoryService } from '@/services/inventoryService';
 import { Edit, Trash2, AlertTriangle } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 
 interface IngredientsTableProps {
   searchQuery: string;
@@ -81,7 +81,7 @@ export default function IngredientsTable({
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-600">{ingredient.minStock}</td>
                 <td className="px-4 py-3 text-sm text-gray-900">
-                  $ {(ingredient.unitCost ?? ingredient.cost)?.toFixed(2) || '-'}
+                  {formatCurrency(ingredient.unitCost ?? ingredient.cost ?? 0)}
                 </td>
                 <td className="px-4 py-3">
                   {isLowStock ? (

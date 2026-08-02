@@ -66,7 +66,7 @@ export default function RecipesList({ onEdit, onDelete, onCreate }: RecipesListP
               const productPrice = product?.price ?? 0;
               const margin = productPrice - (recipe.totalCost || 0);
               const marginPercent = productPrice > 0
-                ? ((margin / productPrice) * 100).toFixed(1)
+                ? (((margin / productPrice) * 100) || 0).toFixed(1)
                 : null;
               
               return (

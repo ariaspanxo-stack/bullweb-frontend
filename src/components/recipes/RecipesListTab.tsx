@@ -264,7 +264,7 @@ export const RecipesListTab: React.FC<RecipesListTabProps> = ({
                     ⚠️ El costo real es{' '}
                     {comparison.status === 'higher' ? 'mayor' : 'menor'} que el estimado
                     por {formatCurrency(Math.abs(comparison.difference))} (
-                    {Math.abs(comparison.differencePercent).toFixed(1)}%)
+                    {(Math.abs(comparison.differencePercent) || 0).toFixed(1)}%)
                   </div>
                 )}
               </div>

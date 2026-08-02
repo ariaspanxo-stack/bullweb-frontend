@@ -69,6 +69,7 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
     reset,
   } = useForm<IngredientForm>({
@@ -114,6 +115,13 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
       toast.error(e?.message || (isEdit ? 'Error al actualizar ingrediente' : 'Error al crear ingrediente'));
     },
   });
+
+  // Label dinámico del costo según la unidad seleccionada
+  const selectedUnit = watch('unit');
+  const costLabel =
+    selectedUnit === 'g'
+      ? 'Precio por kg ($)'
+      : `Precio por ${selectedUnit || 'unidad'} ($$$)`;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Editar Ingrediente' : 'Nuevo Ingrediente'}>
@@ -236,7 +244,7 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
             {/* Costo por Unidad */}
             <div className="col-span-2">
               <label className={labelClass}>
-                Costo por Unidad ($) <span className="text-red-500">*</span>
+                {costLabel} <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"

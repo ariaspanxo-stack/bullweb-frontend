@@ -14,7 +14,7 @@ interface KioskEmployee {
   avatarColor:       string | null;
   roleName:          string | null;
   shift:             string | null;
-  hasAttendancePin:  boolean;
+  hasPin:            boolean;
 }
 
 interface KioskTenant {
@@ -178,7 +178,7 @@ const { slug } = useParams<{ slug: string }>();
 
   // --- Seleccionar empleado --------------------------------------------------
   const handleSelectEmployee = (emp: KioskEmployee) => {
-    if (!emp.hasAttendancePin) {
+    if (!emp.hasPin) {
       setResultMsg('Sin PIN configurado\nContacta al administrador');
       setResultType('fail');
       setStep('fail');
@@ -227,7 +227,7 @@ const { slug } = useParams<{ slug: string }>();
         success: boolean;
         data: { type: string; employeeName: string; timestamp: string; message: string };
       }>(`/kiosk/${tenantId}/checkin`, {
-        employeeId: selected.id, attendancePin: pin, type: typeValue,
+        employeeId: selected.id, pin: pin, type: typeValue,
       });
       const { employeeName, timestamp, message } = res.data.data;
       const time = new Date(timestamp).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
@@ -453,7 +453,7 @@ const { slug } = useParams<{ slug: string }>();
                 onClick={() => handleSelectEmployee(emp)}
                 className={`group border rounded-2xl p-5 flex flex-col items-center text-center gap-3
                            transition-all duration-150 active:scale-95
-                           ${emp.hasAttendancePin
+                           ${emp.hasPin
                              ? 'bg-gray-900 hover:bg-gray-800 border-gray-800 hover:border-indigo-500/50 hover:shadow-lg hover:shadow-indigo-500/10'
                              : 'bg-gray-900/50 border-gray-800/50 opacity-60 cursor-default'
                            }`}
@@ -473,7 +473,7 @@ const { slug } = useParams<{ slug: string }>();
                   {emp.shift && (
                     <p className="text-indigo-400/70 text-xs mt-1 truncate">{emp.shift}</p>
                   )}
-                  {!emp.hasAttendancePin && (
+                  {!emp.hasPin && (
                     <p className="text-yellow-600 text-xs mt-1">Sin PIN</p>
                   )}
                 </div>

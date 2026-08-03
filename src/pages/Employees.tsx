@@ -1370,9 +1370,9 @@ function EmployeeModal({
                         ? new Date(employee.fecha_inicio).toISOString().slice(0, 10) : '',
     fecha_termino:    employee?.fecha_termino
                         ? new Date(employee.fecha_termino).toISOString().slice(0, 10) : '',
-    shift:            (employee?.shift && !['morning','afternoon','night'].includes(employee.shift)) ? 'custom' : (employee?.shift ?? 'morning'),
-    shiftStart:       (employee?.shift && !['morning','afternoon','night'].includes(employee.shift)) ? (employee.shift.split('–')[0] ?? '') : '',
-    shiftEnd:         (employee?.shift && !['morning','afternoon','night'].includes(employee.shift)) ? (employee.shift.split('–')[1] ?? '') : '',
+    shift:            'custom',
+    shiftStart:       (employee?.shift && !['morning','afternoon','night'].includes(employee.shift)) ? (employee.shift.split('–')[0] ?? '') : (employee?.shiftStart ?? ''),
+    shiftEnd:         (employee?.shift && !['morning','afternoon','night'].includes(employee.shift)) ? (employee.shift.split('–')[1] ?? '') : (employee?.shiftEnd ?? ''),
     // ── Acceso al Sistema
     password:         '',
     roleId:           employee?.roleId            ?? '',
@@ -1694,27 +1694,10 @@ function EmployeeModal({
                       Turno
                       <span className="ml-1 text-xs text-gray-400 font-normal">(vinculado al QR de asistencia)</span>
                     </label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[
-                        { value: 'morning',   label: 'Mañana',       hours: '06:00–14:00', icon: '🌅' },
-                        { value: 'afternoon', label: 'Tarde',         hours: '14:00–22:00', icon: '☀️' },
-                        { value: 'night',     label: 'Noche',         hours: '22:00–06:00', icon: '🌙' },
-                        { value: 'custom',    label: 'Personalizado', hours: 'hh:mm–hh:mm', icon: '✏️' },
-                      ].map(t => (
-                        <button key={t.value} type="button"
-                          onClick={() => setForm(f => ({ ...f, shift: t.value }))}
-                          className={`flex flex-col items-center gap-1 py-3 rounded-xl border-2 text-sm transition-colors ${
-                            form.shift === t.value
-                              ? 'bg-indigo-50 border-indigo-400 text-indigo-700'
-                              : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-                          }`}
-                        >
-                          <span className="text-lg">{t.icon}</span>
-                          <span className="font-medium text-xs">{t.label}</span>
-                          <span className="text-xs text-gray-400 font-normal">{t.hours}</span>
-                        </button>
-                      ))}
-                    </div>
+                    <select value={form.shift} onChange={set('shift')}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                      <option value="custom">Personalizado</option>
+                    </select>
                     {form.shift === 'custom' && (
                       <div className="mt-3 grid grid-cols-2 gap-3 p-3 bg-indigo-50 rounded-xl border border-indigo-200">
                         <div>

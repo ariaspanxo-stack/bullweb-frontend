@@ -1370,7 +1370,9 @@ function EmployeeModal({
                         ? new Date(employee.fecha_inicio).toISOString().slice(0, 10) : '',
     fecha_termino:    employee?.fecha_termino
                         ? new Date(employee.fecha_termino).toISOString().slice(0, 10) : '',
-    shift:            'custom',
+    shift:            employee?.shift
+                        ? (['morning','afternoon','night'].includes(employee.shift) ? employee.shift : 'custom')
+                        : 'morning',
     shiftStart:       (employee?.shift && !['morning','afternoon','night'].includes(employee.shift)) ? (employee.shift.split('–')[0] ?? '') : (employee?.shiftStart ?? ''),
     shiftEnd:         (employee?.shift && !['morning','afternoon','night'].includes(employee.shift)) ? (employee.shift.split('–')[1] ?? '') : (employee?.shiftEnd ?? ''),
     // ── Acceso al Sistema
@@ -1696,6 +1698,9 @@ function EmployeeModal({
                     </label>
                     <select value={form.shift} onChange={set('shift')}
                       className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                      <option value="morning">🌅 Mañana</option>
+                      <option value="afternoon">☀️ Tarde</option>
+                      <option value="night">🌙 Noche</option>
                       <option value="custom">Personalizado</option>
                     </select>
                     {form.shift === 'custom' && (

@@ -656,7 +656,7 @@ const CreateUserModal = ({
 
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Correo personal (notificaciones) *</label>
             <input
               type="email"
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -664,6 +664,7 @@ const CreateUserModal = ({
               value={form.email}
               onChange={set('email')}
             />
+            <p className="text-xs text-gray-400 mt-1">No sirve para iniciar sesión</p>
           </div>
 
           {/* Contraseña */}
@@ -804,7 +805,7 @@ const UserCreatedModal = ({
   };
 
   const copyAll = () => {
-    const text = `Email BullWeb: ${user.loginEmail}\nEmail alternativo: ${user.email}\nContraseña: ${user.password}`;
+    const text = `Correo de acceso: ${user.loginEmail}\nCorreo de notificaciones: ${user.email}\nContraseña: ${user.password}`;
     navigator.clipboard.writeText(text).then(() => {
       setCopied('all');
       setTimeout(() => setCopied(null), 2000);
@@ -829,11 +830,11 @@ const UserCreatedModal = ({
 
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Datos de Acceso</p>
 
-          {/* Email BullWeb — login principal */}
+          {/* Correo de acceso — login principal */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
             <div className="flex items-center gap-1.5 mb-2">
               <span className="text-base">🔑</span>
-              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Email BullWeb (login principal)</p>
+              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Correo de acceso</p>
             </div>
             <div className="flex items-center gap-2">
               <code className="flex-1 font-mono text-sm text-blue-900 bg-white border border-blue-100 rounded-lg px-3 py-2 break-all">
@@ -849,11 +850,11 @@ const UserCreatedModal = ({
             </div>
           </div>
 
-          {/* Email alternativo */}
+          {/* Correo de notificaciones */}
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
             <div className="flex items-center gap-1.5 mb-2">
               <Mail size={13} className="text-gray-500" />
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Email alternativo</p>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Correo de notificaciones</p>
             </div>
             <div className="flex items-center gap-2">
               <code className="flex-1 font-mono text-sm text-gray-700 bg-white border border-gray-200 rounded-lg px-3 py-2 break-all">
@@ -882,7 +883,7 @@ const UserCreatedModal = ({
           <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
             <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" />
             <p className="text-xs text-amber-800">
-              <span className="font-semibold">Guarda el Email BullWeb</span> — es el email oficial de ingreso al sistema. El email alternativo también puede usarse para iniciar sesión.
+              <span className="font-semibold">Guarda el Correo de acceso</span> — es el correo oficial de ingreso al sistema. El correo de notificaciones NO sirve para iniciar sesión.
             </p>
           </div>
         </div>

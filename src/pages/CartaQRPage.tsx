@@ -77,7 +77,7 @@ export default function CartaQRPage() {
   const [selectedTable, setSelectedTable] = useState('');
   const [tables,        setTables]        = useState<any[]>([]);
   const [loadingTables, setLoadingTables] = useState(true);
-  const [businessHours,   setBusinessHours]   = useState(DEFAULT_HOURS);
+  const [businessHours,   setBusinessHours]   = useState<Record<string, any> | null>(null);
   const [savingHours,     setSavingHours]     = useState(false);
   const [hoursSaved,      setHoursSaved]      = useState(false);
 
@@ -307,9 +307,13 @@ export default function CartaQRPage() {
     if (!resolvedSlug) return;
     api.get(`/public/hours?slug=${resolvedSlug}`)
       .then(res => {
-        if (res.data.data?.hours) setBusinessHours(res.data.data.hours);
+        if (res.data.data?.hours) {
+          setBusinessHours(res.data.data.hours);
+        } else {
+          setBusinessHours(DEFAULT_HOURS);
+        }
       })
-      .catch(() => { /* usar defaults */ });
+      .catch(() => { setBusinessHours(DEFAULT_HOURS); });
   }, [resolvedSlug]);
 
   // Generar QR al montar y al cambiar colores/mesa
@@ -1065,71 +1069,79 @@ export default function CartaQRPage() {
             Configura los horarios de atención. El cliente verá un banner en la carta cuando el local esté cerrado.
           </p>
 
-          {DAYS.map(day => {
-            const hours = businessHours[day.key as keyof typeof businessHours];
-            return (
-              <div key={day.key}
-                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-semibold text-gray-800 text-sm">{day.label}</span>
-                  <button
-                    onClick={() => {
-                      const next = { ...hours, enabled: !hours.enabled };
-                      setBusinessHours(prev => ({ ...prev, [day.key]: next }));
-                    }}
-                    className={`relative inline-flex w-12 h-6 rounded-full transition-colors ${hours.enabled ? 'bg-orange-500' : 'bg-gray-200'}`}
+          {businessHours === null ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
+            </div>
+          ) : (
+            <>
+              {DAYS.map(day => {
+                const hours = businessHours[day.key as keyof typeof businessHours];
+                return (
+                  <div key={day.key}
+                    className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4"
                   >
-                    <span
-                      className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${hours.enabled ? 'translate-x-7' : 'translate-x-1'}`}
-                    />
-                  </button>
-                </div>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-semibold text-gray-800 text-sm">{day.label}</span>
+                      <button
+                        onClick={() => {
+                          const next = { ...hours, enabled: !hours.enabled };
+                          setBusinessHours(prev => ({ ...prev, [day.key]: next }));
+                        }}
+                        className={`relative inline-flex w-12 h-6 rounded-full transition-colors ${hours.enabled ? 'bg-orange-500' : 'bg-gray-200'}`}
+                      >
+                        <span
+                          className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${hours.enabled ? 'translate-x-7' : 'translate-x-1'}`}
+                        />
+                      </button>
+                    </div>
 
-                {hours.enabled ? (
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1">
-                      <label className="text-xs text-gray-400 mb-1 block">Apertura</label>
-                      <input
-                        type="time"
-                        value={hours.open}
-                        onChange={e => { const v = e.target.value; setBusinessHours(p => ({ ...p, [day.key]: { ...hours, open: v } })); }}
-                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                      />
-                    </div>
-                    <span className="text-gray-400 pt-5">→</span>
-                    <div className="flex-1">
-                      <label className="text-xs text-gray-400 mb-1 block">Cierre</label>
-                      <input
-                        type="time"
-                        value={hours.close}
-                        onChange={e => { const v = e.target.value; setBusinessHours(p => ({ ...p, [day.key]: { ...hours, close: v } })); }}
-                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                      />
-                    </div>
+                    {hours.enabled ? (
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <label className="text-xs text-gray-400 mb-1 block">Apertura</label>
+                          <input
+                            type="time"
+                            value={hours.open}
+                            onChange={e => { const v = e.target.value; setBusinessHours(p => ({ ...p, [day.key]: { ...hours, open: v } })); }}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                          />
+                        </div>
+                        <span className="text-gray-400 pt-5">→</span>
+                        <div className="flex-1">
+                          <label className="text-xs text-gray-400 mb-1 block">Cierre</label>
+                          <input
+                            type="time"
+                            value={hours.close}
+                            onChange={e => { const v = e.target.value; setBusinessHours(p => ({ ...p, [day.key]: { ...hours, close: v } })); }}
+                            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-400">🔴 Cerrado este día</p>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-xs text-gray-400">🔴 Cerrado este día</p>
-                )}
-              </div>
-            );
-          })}
+                );
+              })}
 
-          <button
-            onClick={handleSaveHours}
-            disabled={savingHours}
-            className="w-full py-4 bg-orange-500 hover:bg-orange-400 text-white font-bold
-                       rounded-2xl flex items-center justify-center gap-2
-                       disabled:opacity-50 transition-colors mt-2"
-          >
-            {savingHours ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
-            ) : hoursSaved ? (
-              <><Check className="w-4 h-4" /> ¡Guardado!</>
-            ) : (
-              <><Save className="w-4 h-4" /> Guardar horarios</>
-            )}
-          </button>
+              <button
+                onClick={handleSaveHours}
+                disabled={savingHours}
+                className="w-full py-4 bg-orange-500 hover:bg-orange-400 text-white font-bold
+                           rounded-2xl flex items-center justify-center gap-2
+                           disabled:opacity-50 transition-colors mt-2"
+              >
+                {savingHours ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+                ) : hoursSaved ? (
+                  <><Check className="w-4 h-4" /> ¡Guardado!</>
+                ) : (
+                  <><Save className="w-4 h-4" /> Guardar horarios</>
+                )}
+              </button>
+            </>
+          )}
         </div>
       )}
 

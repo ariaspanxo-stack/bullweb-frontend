@@ -44,6 +44,7 @@ function _calculateItemSubtotal(
   activePromotions: ActivePromotion[]
 ): number {
   const basePrice = product.price;
+  console.log('[DEBUG PROMO] Evaluando product.id:', product.id, '| Array activePromotions:', JSON.stringify(activePromotions));
   const promo = activePromotions.find((p) => p.productIds?.includes(product.id));
 
   // Sin promo: precio base * cantidad

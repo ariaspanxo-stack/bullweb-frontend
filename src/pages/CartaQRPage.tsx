@@ -3,7 +3,7 @@
 // Tabs: Código QR / Vista previa / Instrucciones / Horarios
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import QRCode from 'qrcode';
 import api from '../services/api';
 import { useAuthStore } from '../store/authStore';
@@ -302,9 +302,15 @@ export default function CartaQRPage() {
       .finally(() => setLoadingTables(false));
   }, []);
 
+  // Guardia anti race condition: evita segundo disparo del useEffect que
+  // pisaba la data real con DEFAULT_HOURS al cambiar resolvedSlug.
+  const hasFetchedHours = useRef(false);
+
   // Cargar horarios existentes al montar
   useEffect(() => {
+    if (hasFetchedHours.current) return;
     if (!resolvedSlug) return;
+    hasFetchedHours.current = true;
     api.get(`/public/hours?slug=${resolvedSlug}`)
       .then(res => {
         if (res.data.data?.hours) {
@@ -519,8 +525,9 @@ export default function CartaQRPage() {
       await api.patch('/menu/restaurant-hours', { businessHours });
       setHoursSaved(true);
       setTimeout(() => setHoursSaved(false), 2500);
-    } catch {
-      // silencioso — el usuario puede reintentar
+    } catch (error) {
+      console.error('Error guardando horarios:', error);
+      alert('Error al guardar los horarios');
     } finally {
       setSavingHours(false);
     }

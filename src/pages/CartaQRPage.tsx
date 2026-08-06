@@ -313,7 +313,9 @@ export default function CartaQRPage() {
           setBusinessHours(DEFAULT_HOURS);
         }
       })
-      .catch(() => { setBusinessHours(DEFAULT_HOURS); });
+      .catch((err) => {
+        setBusinessHours(DEFAULT_HOURS);
+      });
   }, []);
 
   // Generar QR al montar y al cambiar colores/mesa

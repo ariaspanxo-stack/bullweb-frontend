@@ -306,7 +306,7 @@ export default function CartaQRPage() {
   useEffect(() => {
     api.get('/menu/restaurant-hours')
       .then(res => {
-        const hours = res.data?.data?.businessHours;
+        const hours = res.data?.businessHours;
         if (hours && typeof hours === 'object') {
           setBusinessHours(hours);
         } else {

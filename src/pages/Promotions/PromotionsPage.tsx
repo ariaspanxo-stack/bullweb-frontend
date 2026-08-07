@@ -421,7 +421,7 @@ export default function PromotionsPage() {
                   >
                     <option value="PERCENTAGE">Porcentaje (%)</option>
                     <option value="FIXED_PRICE">Precio fijo ($)</option>
-                    <option value="X_FOR_Y">Lleva N / Paga M</option>
+                    <option value="X_FOR_Y">Paga N, Regala M</option>
                     <option value="PACK_PRICE">Pack (Ej: 2 por $5.000)</option>
                   </select>
                 </div>
@@ -460,7 +460,7 @@ export default function PromotionsPage() {
               {form.type === 'X_FOR_Y' && (
                 <div className="grid grid-cols-2 gap-3 bg-purple-50 -mx-1 px-4 py-3 rounded-xl">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">Cantidad a comprar</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Cantidad a pagar</label>
                     <input
                       type="number"
                       min="1"
@@ -471,7 +471,7 @@ export default function PromotionsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 mb-1">Cantidad gratis</label>
+                    <label className="block text-xs font-semibold text-gray-500 mb-1">Cantidad de regalo</label>
                     <input
                       type="number"
                       min="1"

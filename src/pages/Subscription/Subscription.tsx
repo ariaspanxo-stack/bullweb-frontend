@@ -115,7 +115,7 @@ export default function Subscription() {
     try {
       setError(null);
       setPaying(true);
-      const response = await api.post<{ flowUrl: string }>('/api/payments/flow/create');
+      const response = await api.post<{ flowUrl: string }>('/payments/flow/create');
       window.location.href = response.data.flowUrl;
     } catch (err: any) {
       setError(err.message ?? 'Error al generar el link de pago. Intenta nuevamente.');

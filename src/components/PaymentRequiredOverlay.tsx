@@ -13,7 +13,7 @@ import { useAuthStore } from '@/store/authStore';
  * - Escucha el evento global 'billing:payment_required' (disparado por api.ts).
  * - El SuperAdmin nunca ve este overlay.
  * - Botón "Pagar $29.000 / mes" replica el flujo de Subscription.tsx:
- *     POST /api/payments/flow/create → redirect a flowUrl.
+ *     POST /payments/flow/create → redirect a flowUrl.
  * - Polling cada 30s a /auth/me/status para ocultar el modal si el estado
  *   vuelve a 200 (pago confirmado vía webhook).
  */
@@ -54,7 +54,7 @@ export default function PaymentRequiredOverlay() {
     try {
       setError(null);
       setPaying(true);
-      const response = await api.post<{ flowUrl: string }>('/api/payments/flow/create');
+      const response = await api.post<{ flowUrl: string }>('/payments/flow/create');
       window.location.href = response.data.flowUrl;
     } catch (err: any) {
       setError(err?.message ?? 'Error al generar el link de pago. Intenta nuevamente.');

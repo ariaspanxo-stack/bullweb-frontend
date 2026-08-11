@@ -961,10 +961,12 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
       const sale = await restaurantService.createSale(saleData);
       if ((sale as any).offline) {
         toast.warning('Sin conexión: Pedido encolado. Se enviará al recuperar internet.');
+        clearMostradorDraft();
         setShowMostradorModal(false);
         await loadOrders();
         return;
       }
+      clearMostradorDraft();
       setShowMostradorModal(false);
       await loadOrders();
       toast.success('Orden para llevar creada exitosamente');

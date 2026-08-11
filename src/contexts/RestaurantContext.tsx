@@ -1017,10 +1017,12 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
       const sale = await restaurantService.createSale(saleData);
       if ((sale as any).offline) {
         toast.warning('Sin conexión: Pedido encolado. Se enviará al recuperar internet.');
+        clearDeliveryDraft();
         setShowDeliveryModal(false);
         await loadOrders();
         return;
       }
+      clearDeliveryDraft();
       setShowDeliveryModal(false);
       await loadOrders();
       toast.success('Orden delivery creada exitosamente');

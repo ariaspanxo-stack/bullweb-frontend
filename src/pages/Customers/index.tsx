@@ -439,9 +439,29 @@ export default function Customers() {
                 </tr>
               ) : filteredCustomers.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-6 py-12 text-center text-zinc-500">
-                    <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p>{searchQuery ? 'No se encontraron clientes' : 'No hay clientes registrados'}</p>
+                  <td colSpan={10} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
+                      <div className="w-20 h-20 rounded-full bg-zinc-800/60 flex items-center justify-center mb-4">
+                        <Users className="w-10 h-10 text-zinc-500" />
+                      </div>
+                      <p className="text-lg font-semibold text-zinc-300 mb-1">
+                        {searchQuery ? 'No se encontraron clientes' : 'Aún no hay registros'}
+                      </p>
+                      <p className="text-sm text-zinc-500 mb-6">
+                        {searchQuery
+                          ? 'Intenta con otro nombre, teléfono o email.'
+                          : 'Crea tu primer cliente y comienza a construir tu base de fidelización.'}
+                      </p>
+                      {!searchQuery && canCreate && (
+                        <button
+                          onClick={() => setShowAddModal(true)}
+                          className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                        >
+                          <Plus className="w-5 h-5" />
+                          Crear Primer Cliente
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ) : (

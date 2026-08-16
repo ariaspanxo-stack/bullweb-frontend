@@ -166,20 +166,20 @@ export function MeseroOrderView({
                           <div className="flex items-center gap-1.5 flex-shrink-0">
                             <button
                               onClick={() => onUpdateQty(i, item.quantity - 1)}
-                              className="w-7 h-7 rounded-full bg-white border border-gray-200
+                              className="w-9 h-9 min-h-[36px] min-w-[36px] rounded-full bg-white border border-gray-200
                                          flex items-center justify-center active:scale-90"
                             >
-                              <Minus className="w-3 h-3 text-gray-600" />
+                              <Minus className="w-4 h-4 text-gray-600" />
                             </button>
-                            <span className="w-5 text-center font-bold text-gray-800 text-sm">
+                            <span className="w-6 text-center font-bold text-gray-800 text-sm">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => onUpdateQty(i, item.quantity + 1)}
-                              className="w-7 h-7 rounded-full bg-orange-500 flex items-center
+                              className="w-9 h-9 min-h-[36px] min-w-[36px] rounded-full bg-orange-500 flex items-center
                                          justify-center active:scale-90"
                             >
-                              <Plus className="w-3 h-3 text-white" />
+                              <Plus className="w-4 h-4 text-white" />
                             </button>
                           </div>
 
@@ -251,7 +251,7 @@ export function MeseroOrderView({
             <button
               onClick={onSendKitchen}
               disabled={submitting}
-              className="flex-1 py-2.5 bg-green-500 hover:bg-green-400 text-white font-semibold
+              className="flex-1 min-h-[44px] min-w-[44px] px-4 py-2.5 bg-green-500 hover:bg-green-400 text-white font-semibold
                          rounded-2xl flex items-center justify-center gap-2
                          disabled:opacity-50 active:scale-[0.98] transition-all text-sm"
             >
@@ -267,7 +267,7 @@ export function MeseroOrderView({
           {activeOrder && (
             <button
               onClick={() => setShowActionSheet(true)}
-              className="flex-1 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700
+              className="flex-1 min-h-[44px] min-w-[44px] px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700
                          font-semibold rounded-2xl flex items-center justify-center
                          gap-2 active:scale-[0.98] transition-all text-sm"
             >
@@ -312,7 +312,7 @@ export function MeseroOrderView({
             <button
               key={cat.id}
               onClick={() => onSelectCategory(cat.id)}
-              className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors
+              className={`flex-shrink-0 min-h-[36px] px-4 py-1.5 rounded-full text-sm font-medium transition-colors
                 ${selectedCategory === cat.id
                   ? 'bg-orange-500 text-white'
                   : 'bg-gray-100 text-gray-600'
@@ -407,7 +407,7 @@ export function MeseroOrderView({
             <h2 className="text-xl font-black text-gray-800 leading-tight">
               Mesa {table.number}
             </h2>
-            <p className="text-xs text-gray-400">
+            <p className="text-sm md:text-xs text-gray-400">
               {table.section?.name}{table.section?.name ? ' · ' : ''}
               {table.status === 'OCCUPIED' ? '🔴 Ocupada' : '🟢 Libre'}
               {waiterName && (
@@ -426,7 +426,7 @@ export function MeseroOrderView({
             </span>
           )}
 
-          <button onClick={onClose} className="p-2 rounded-full hover:bg-gray-100 ml-2">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] p-2 rounded-full hover:bg-gray-100 ml-2 flex items-center justify-center">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
@@ -435,7 +435,7 @@ export function MeseroOrderView({
         <div className="flex-shrink-0 flex md:hidden border-b border-gray-100">
           <button
             onClick={() => setActiveTab('order')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold
+            className={`flex-1 min-h-[44px] flex items-center justify-center gap-2 py-2.5 text-sm font-semibold
                         transition-colors border-b-2
               ${activeTab === 'order'
                 ? 'border-orange-500 text-orange-500'
@@ -453,7 +453,7 @@ export function MeseroOrderView({
           </button>
           <button
             onClick={() => setActiveTab('menu')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold
+            className={`flex-1 min-h-[44px] flex items-center justify-center gap-2 py-2.5 text-sm font-semibold
                         transition-colors border-b-2
               ${activeTab === 'menu'
                 ? 'border-orange-500 text-orange-500'

@@ -135,7 +135,7 @@ const menuSections: MenuSection[] = [
       // { name: 'Apps',         icon: Smartphone,        path: '/apps',             permission: 'apps.view'      },
       { name: 'App Mesero',      icon: MonitorSmartphone, path: '/admin/mesero-app', permission: 'apps.view', badge: 'Nuevo' },
       { name: 'Mapeo Delivery',  icon: Truck,             path: '/delivery/mappings', permission: 'delivery.view' },
-      { name: 'Fidelización', icon: Heart,             path: '/campaigns',        permission: 'marketing.view', badge: '$4.990' },
+      { name: 'Fidelización', icon: Heart,             path: '/campaigns',        permission: 'marketing.view' },
       { name: 'Carta QR',    icon: QrCode,            path: '/carta-qr',         permission: 'marketing.view' },
       { name: 'Cupones',     icon: Tag,               path: '/coupons',          permission: 'coupons.view'   },
       { name: 'Promociones', icon: Percent,           path: '/promotions',       permission: 'products.view', badge: 'Nuevo' },

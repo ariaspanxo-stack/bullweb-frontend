@@ -301,6 +301,10 @@ export default function Inventory() {
             showLowStock={showLowStock}
             onEdit={handleEditIngredient}
             onDelete={handleDeleteIngredient}
+            onCreate={() => {
+              setEditingIngredient(null);
+              setIsIngredientModalOpen(true);
+            }}
           />
         </div>
       )}

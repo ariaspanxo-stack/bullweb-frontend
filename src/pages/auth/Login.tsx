@@ -200,7 +200,7 @@ export default function Login() {
                 <img
                   src="/logo-bullweb.png"
                   alt="BullWeb Chile"
-                  className="w-24 h-24 object-contain mx-auto"
+                  className="h-20 w-auto object-contain mx-auto drop-shadow-md"
                 />
               </div>
 

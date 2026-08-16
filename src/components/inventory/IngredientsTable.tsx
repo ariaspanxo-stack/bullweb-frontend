@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { inventoryService } from '@/services/inventoryService';
-import { Edit, Trash2, AlertTriangle } from 'lucide-react';
+import { Edit, Trash2, AlertTriangle, PackageOpen, Plus } from 'lucide-react';
 import Badge from '@/components/ui/Badge';
 import { cn, formatCurrency } from '@/lib/utils';
 
@@ -9,13 +9,15 @@ interface IngredientsTableProps {
   showLowStock: boolean;
   onEdit: (ingredient: any) => void;
   onDelete: (ingredient: any) => void;
+  onCreate?: () => void;
 }
 
 export default function IngredientsTable({
   searchQuery,
   showLowStock,
   onEdit,
-  onDelete
+  onDelete,
+  onCreate
 }: IngredientsTableProps) {
   const { data: ingredients, isLoading } = useQuery({
     queryKey: ['ingredients', searchQuery, showLowStock],
@@ -115,8 +117,27 @@ export default function IngredientsTable({
       </table>
 
       {ingredients?.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          No se encontraron ingredientes
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+          <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+            <PackageOpen className="w-10 h-10 text-gray-400" />
+          </div>
+          <p className="text-lg font-semibold text-gray-800 mb-1">
+            {searchQuery || showLowStock ? 'No se encontraron ingredientes' : 'Aún no hay registros'}
+          </p>
+          <p className="text-sm text-gray-500 mb-6 max-w-xs">
+            {searchQuery || showLowStock
+              ? 'Intenta con otra búsqueda o quita el filtro de stock bajo.'
+              : 'Crea tu primer ingrediente para comenzar a controlar el stock de tu cocina.'}
+          </p>
+          {!searchQuery && !showLowStock && onCreate && (
+            <button
+              onClick={onCreate}
+              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+            >
+              <Plus className="w-5 h-5" />
+              Crear Primer Ingrediente
+            </button>
+          )}
         </div>
       )}
     </div>

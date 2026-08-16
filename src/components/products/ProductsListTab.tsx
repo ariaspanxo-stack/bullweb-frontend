@@ -450,17 +450,19 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
           // Empty state
           <div className="flex items-center justify-center h-64">
             <div className="text-center max-w-md">
-              <Package size={64} className="mx-auto mb-4 text-gray-400" />
+              <div className="w-20 h-20 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-4">
+                <Package size={40} className="text-orange-300" />
+              </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {products.length === 0 ? '¡Comienza tu catálogo!' : 'No se encontraron productos'}
+                {products.length === 0 ? 'Aún no hay registros' : 'No se encontraron productos'}
               </h3>
               <p className="text-gray-600 mb-6">
-                {products.length === 0 
+                {products.length === 0
                   ? 'Crea tu primer producto en 3 pasos: nombre, precio y categoría.'
                   : 'Intenta cambiar los filtros o búsqueda.'}
               </p>
               {products.length === 0 && canManage && (
-                <button 
+                <button
                   onClick={onAddProduct}
                   className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
                 >

@@ -330,9 +330,9 @@ export const PaymentModal = ({
   // callbacks estables para no recrear RowInput en cada render
   const handleConfirm = async () => {
     setError('');
+    // Cobro insuficiente: doble confirmación antes de permitir el cierre
     if (payTotal < finalTotal - 0.5) {
-      setError(`Faltan $${fmt(finalTotal - payTotal)} para completar el cobro`);
-      return;
+      if (!window.confirm('Falta saldo por pagar. ¿Estás seguro de que deseas cerrar la mesa?')) return;
     }
     const payments: Payment[] = payRows
       .filter(r => parseFloat(r.amount) > 0)
@@ -744,11 +744,15 @@ export const PaymentModal = ({
                 )}
                 <button
                   onClick={handleConfirm}
-                  disabled={loading || payTotal < finalTotal - 0.5}
-                  className="w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2
-                    bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-orange-200
-                    text-white shadow-lg shadow-orange-200 transition-all active:scale-[0.99]
-                    disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                  disabled={loading}
+                  className={`w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2
+                    shadow-lg transition-all active:scale-[0.99]
+                    ${
+                      payTotal < finalTotal - 0.5
+                        ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-200'
+                        : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-orange-200'
+                    }
+                    disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none`}
                 >
                   {loading ? (
                     <>

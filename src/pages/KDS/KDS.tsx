@@ -1,32 +1,31 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import io, { Socket } from 'socket.io-client';
-import { 
-  Maximize, 
-  Volume2, 
-  VolumeX, 
+import {
+  Maximize,
+  Volume2,
+  VolumeX,
   Clock,
   AlertCircle,
   CheckCircle,
-  Flame,
-  Snowflake,
-  Coffee,
-  Cake,
   Play,
 } from 'lucide-react';
 import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { useSuspendedGuard } from '@/hooks/useSuspendedGuard';
 
-type Station = 'cold' | 'hot' | 'bar' | 'desserts' | 'all' | 'unassigned';
+type Station = string;
 
-const STATIONS = [
-  { id: 'all',        name: 'Todas',        icon: null,      color: 'from-zinc-600 to-zinc-500',    emoji: '🍽️'  },
-  { id: 'hot',        name: 'Caliente',     icon: Flame,     color: 'from-orange-600 to-orange-500', emoji: null  },
-  { id: 'cold',       name: 'Fría',         icon: Snowflake, color: 'from-blue-600 to-blue-500',    emoji: null  },
-  { id: 'bar',        name: 'Bar',          icon: Coffee,    color: 'from-purple-600 to-purple-500', emoji: null  },
-  { id: 'desserts',   name: 'Postres',      icon: Cake,      color: 'from-pink-600 to-pink-500',    emoji: null  },
-  { id: 'unassigned', name: 'Sin asignar',  icon: null,      color: 'from-gray-500 to-gray-400',    emoji: '❓'  },
+// Paleta de colores cíclica para las estaciones dinámicas del tenant
+const STATION_COLORS = [
+  'from-orange-600 to-orange-500',
+  'from-blue-600 to-blue-500',
+  'from-purple-600 to-purple-500',
+  'from-pink-600 to-pink-500',
+  'from-emerald-600 to-emerald-500',
+  'from-cyan-600 to-cyan-500',
+  'from-amber-600 to-amber-500',
+  'from-indigo-600 to-indigo-500',
 ];
 
 // ── Urgencia ────────────────────────────────────────────────────────────────────────
@@ -92,7 +91,7 @@ function ItemTiming({ item, now, station = 'all' }: { item: any; now: number; st
 
 export default function KDS() {
   const queryClient = useQueryClient();
-  const [selectedStation, setSelectedStation] = useState<Station>('hot');
+  const [selectedStation, setSelectedStation] = useState<Station>('all');
   const [orders, setOrders] = useState<any[]>([]);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(
@@ -117,6 +116,39 @@ export default function KDS() {
   const userRef = useRef(user);
   useEffect(() => { userRef.current = user; }, [user]);
   const isSuspended = useSuspendedGuard();
+
+  // Estaciones dinámicas del tenant — consultadas al montar (refactor estaciones dinámicas)
+  const { data: tenantStations = [] } = useQuery<any[]>({
+    queryKey: ['kds-stations'],
+    queryFn: async () => {
+      const res = await api.get('/kitchen/stations');
+      return res.data?.data ?? res.data ?? [];
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: isSuspended ? false : 60_000,
+  });
+
+  // Tabs: "Todas" + estaciones reales del tenant (id/name) + "Sin asignar"
+  const stations = useMemo(() => ([
+    { id: 'all',        name: 'Todas',       icon: null, color: 'from-zinc-600 to-zinc-500', emoji: '🍽️' },
+    ...tenantStations
+      .filter((s: any) => s && s.id && s.active !== false)
+      .map((s: any, i: number) => ({
+        id: String(s.id),
+        name: s.name || 'Estación',
+        icon: null,
+        color: STATION_COLORS[i % STATION_COLORS.length],
+        emoji: null,
+      })),
+    { id: 'unassigned', name: 'Sin asignar', icon: null, color: 'from-gray-500 to-gray-400', emoji: '❓' },
+  ]), [tenantStations]);
+
+  // Si la estación seleccionada fue eliminada del tenant, volver a "Todas"
+  useEffect(() => {
+    if (!stations.some(s => s.id === selectedStation)) {
+      setSelectedStation('all');
+    }
+  }, [stations, selectedStation]);
 
   // Query inicial de órdenes
   const { data: initialOrders = [], isFetching } = useQuery<any[]>({
@@ -348,7 +380,7 @@ export default function KDS() {
     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
   });
 
-  const currentStation = STATIONS.find(s => s.id === selectedStation);
+  const currentStation = stations.find(s => s.id === selectedStation);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -369,7 +401,7 @@ export default function KDS() {
         <div className="flex items-center justify-between max-w-[2000px] mx-auto">
           {/* Estaciones */}
           <div className="flex gap-2">
-            {STATIONS.map(station => {
+            {stations.map(station => {
               const Icon = station.icon;
               const isActive = selectedStation === station.id;
               const count = isActive ? orders.length : 0;
@@ -383,7 +415,7 @@ export default function KDS() {
                       : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
                   }`}
                 >
-                  {Icon ? <Icon className="w-5 h-5" /> : <span>{station.emoji}</span>}
+                  {Icon ? <Icon className="w-5 h-5" /> : station.emoji ? <span>{station.emoji}</span> : null}
                   {station.name}
                   {count > 0 && (
                     <span className="ml-1 bg-white/20 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">

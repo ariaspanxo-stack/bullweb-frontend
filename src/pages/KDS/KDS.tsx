@@ -118,10 +118,12 @@ export default function KDS() {
   const isSuspended = useSuspendedGuard();
 
   // Estaciones dinámicas del tenant — consultadas al montar (refactor estaciones dinámicas)
+  // FIX 63: usa el mismo endpoint que la página de Productos (/stations) para
+  // garantizar que los UUIDs de las tabs coincidan exactamente con la DB.
   const { data: tenantStations = [] } = useQuery<any[]>({
     queryKey: ['kds-stations'],
     queryFn: async () => {
-      const res = await api.get('/kitchen/stations');
+      const res = await api.get('/stations');
       return res.data?.data ?? res.data ?? [];
     },
     staleTime: 5 * 60 * 1000,
@@ -159,19 +161,10 @@ export default function KDS() {
         return response.data;
       }
       if (selectedStation === 'unassigned') {
-        // Traer todas y filtrar client-side por items sin kdsStation
-        try {
-          const response = await api.get('/kds/orders');
-          const allOrders: any[] = response.data || [];
-          return allOrders.map((o: any) => ({
-            ...o,
-            items: (o.items || []).filter(
-              (i: any) => !i.kdsStation || i.kdsStation === ''
-            ),
-          })).filter((o: any) => o.items.length > 0);
-        } catch {
-          return [];
-        }
+        // FIX 63: el backend se encarga del filtrado (products.stationId y
+        // order_items.stationId nulos/vacíos). Sin filtro client-side roto.
+        const response = await api.get('/kds/station/unassigned');
+        return response.data;
       }
       const response = await api.get(`/kds/station/${selectedStation}`);
       return response.data;

@@ -118,12 +118,12 @@ export default function KDS() {
   const isSuspended = useSuspendedGuard();
 
   // Estaciones dinámicas del tenant — consultadas al montar (refactor estaciones dinámicas)
-  // FIX 63: usa el mismo endpoint que la página de Productos (/stations) para
-  // garantizar que los UUIDs de las tabs coincidan exactamente con la DB.
+  // FIX 64: usa el endpoint /kitchen/stations para garantizar que los UUIDs
+  // de las tabs coincidan exactamente con la DB.
   const { data: tenantStations = [] } = useQuery<any[]>({
     queryKey: ['kds-stations'],
     queryFn: async () => {
-      const res = await api.get('/stations');
+      const res = await api.get('/kitchen/stations');
       return res.data?.data ?? res.data ?? [];
     },
     staleTime: 5 * 60 * 1000,

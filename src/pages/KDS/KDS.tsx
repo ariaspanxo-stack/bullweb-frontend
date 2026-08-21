@@ -497,7 +497,13 @@ export default function KDS() {
                   <div className={`px-4 py-3 flex items-center justify-between ${style.header}`}>
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="font-black text-white truncate text-xl">
-                        {order.tables ? `Mesa ${order.tables.number}` : `#${order.number || order.id.slice(0, 6)}`}
+                        {order.tables || order.tableNumber
+                          ? `Mesa ${order.tableNumber ?? order.tables?.number}`
+                          : order.customerName || order.customer?.name || order.customers?.name
+                          ? String(order.customerName ?? order.customer?.name ?? order.customers?.name)
+                              .toLowerCase()
+                              .replace(/^\w/, (c: string) => c.toUpperCase())
+                          : `#${order.number || order.id.slice(0, 6)}`}
                       </span>
                       {order.type !== 'DINE_IN' && (
                         <span className="text-xs bg-white/10 text-white/70 px-2 py-0.5 rounded-full shrink-0">

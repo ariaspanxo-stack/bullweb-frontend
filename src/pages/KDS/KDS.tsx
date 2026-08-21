@@ -489,12 +489,14 @@ export default function KDS() {
               return (
                 <div
                   key={order.id}
-                  className={`border-2 rounded-2xl bg-zinc-900 flex flex-col overflow-hidden transition-all duration-500 ${style.border}`}
+                  className={`border-2 rounded-2xl flex flex-col overflow-hidden transition-all duration-500 ${
+                    urgency.level === 'critical' ? 'bg-red-900/30' : 'bg-zinc-900'
+                  } ${style.border}`}
                 >
                   {/* Header */}
                   <div className={`px-4 py-3 flex items-center justify-between ${style.header}`}>
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-black text-white truncate">
+                      <span className="font-black text-white truncate text-xl">
                         {order.tables ? `Mesa ${order.tables.number}` : `#${order.number || order.id.slice(0, 6)}`}
                       </span>
                       {order.type !== 'DINE_IN' && (
@@ -530,7 +532,7 @@ export default function KDS() {
                       >
                         <div className="flex items-start justify-between mb-1">
                           <div className="flex-1 min-w-0">
-                            <div className="text-base font-bold">
+                            <div className="text-lg font-bold">
                               {item.quantity}x {item.products?.name || item.name || 'Producto'}
                             </div>
 
@@ -562,13 +564,13 @@ export default function KDS() {
                             <button
                               onClick={() => preparingMutation.mutate(item.id)}
                               disabled={updatingItemId === item.id || preparingMutation.isPending}
-                              className={`flex-1 font-bold py-1.5 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 text-sm ${
+                              className={`w-full font-bold py-3 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-2 text-base ${
                                 updatingItemId === item.id
                                   ? 'bg-zinc-600 text-zinc-300 cursor-wait'
-                                  : 'bg-yellow-500 hover:bg-yellow-600 text-black'
+                                  : 'bg-blue-600 hover:bg-blue-700 text-white'
                               }`}
                             >
-                              <Play className="w-3 h-3" />
+                              <Play className="w-5 h-5" />
                               {updatingItemId === item.id ? '...' : 'Iniciar'}
                             </button>
                           )}
@@ -577,13 +579,13 @@ export default function KDS() {
                             <button
                               onClick={() => readyMutation.mutate(item.id)}
                               disabled={updatingItemId === item.id || readyMutation.isPending}
-                              className={`flex-1 font-bold py-1.5 px-3 rounded-lg transition-colors flex items-center justify-center gap-1 text-sm ${
+                              className={`w-full font-bold py-3 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-2 text-base ${
                                 updatingItemId === item.id
                                   ? 'bg-zinc-600 text-zinc-300 cursor-wait'
-                                  : 'bg-green-500 hover:bg-green-600 text-white'
+                                  : 'bg-green-600 hover:bg-green-700 text-white'
                               }`}
                             >
-                              <CheckCircle className="w-3 h-3" />
+                              <CheckCircle className="w-5 h-5" />
                               {updatingItemId === item.id ? '...' : 'Listo'}
                             </button>
                           )}
@@ -592,7 +594,7 @@ export default function KDS() {
                             <button
                               onClick={() => recallMutation.mutate(item.id)}
                               disabled={updatingItemId === item.id || recallMutation.isPending}
-                              className={`flex-1 font-bold py-1.5 px-3 rounded-lg transition-colors text-xs ${
+                              className={`w-full font-bold py-3 px-3 min-h-[44px] rounded-lg transition-colors text-sm ${
                                 updatingItemId === item.id
                                   ? 'bg-zinc-600 text-zinc-300 cursor-wait'
                                   : 'bg-zinc-700 hover:bg-zinc-600 text-white'

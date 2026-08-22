@@ -7,6 +7,8 @@ import {
   VolumeX,
   Clock,
   AlertCircle,
+  AlertTriangle,
+  StickyNote,
   CheckCircle,
   Play,
 } from 'lucide-react';
@@ -543,17 +545,22 @@ export default function KDS() {
                             </div>
 
                             {item.modifiers && Array.isArray(item.modifiers) && item.modifiers.length > 0 && (
-                              <div className="text-xs text-zinc-400 mt-0.5">
+                              <div className="bg-amber-500/20 border border-amber-400 rounded-md px-2 py-1 mt-1 inline-block">
                                 {item.modifiers.map((m: any, i: number) => (
-                                  <div key={i}>• {typeof m === 'string' ? m : m.name}</div>
+                                  <div key={i} className="text-amber-300 font-bold text-base flex items-center gap-1">
+                                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                                    <span>{typeof m === 'string' ? m : m.name}</span>
+                                  </div>
                                 ))}
                               </div>
                             )}
 
                             {item.notes && (
-                              <div className="text-xs text-yellow-400 mt-1 flex items-start gap-1">
-                                <AlertCircle className="w-3 h-3 flex-shrink-0 mt-0.5" />
-                                <span>{item.notes}</span>
+                              <div className="bg-amber-500/20 border border-amber-400 rounded-md px-2 py-1 mt-1 inline-block">
+                                <div className="text-amber-300 font-bold text-base flex items-center gap-1">
+                                  <StickyNote className="w-4 h-4 flex-shrink-0" />
+                                  <span>{item.notes}</span>
+                                </div>
                               </div>
                             )}
 

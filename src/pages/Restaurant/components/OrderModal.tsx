@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   X, Search, Plus, Minus, ShoppingCart, CreditCard, FileText,
   Clock, Star, Users, MessageSquare, UserPlus, Loader2, Tag, Pencil,
-  Printer, ChefHat, ClipboardList,
+  Printer, ChefHat, ClipboardList, CheckCircle,
 } from 'lucide-react';
 import { ModifiersModal } from './ModifiersModal';
 import type {
@@ -80,7 +80,9 @@ export const OrderModal = ({
   const [saveToCustomers, setSaveToCustomers]       = useState(true);
   const [pendingProduct, setPendingProduct]         = useState<Product | null>(null);
   const [showModifiersModal, setShowModifiersModal] = useState(false);
-  const [orderNote, setOrderNote]                   = useState('');
+  const [orderNote, setOrderNote]                 = useState('');
+  const [existingStatus, setExistingStatus]       = useState<string | null>(null);
+  const [updatingStatus, setUpdatingStatus]       = useState(false);
   const [showTransferModal, setShowTransferModal]   = useState(false);
   const [isTransferring, setIsTransferring]         = useState(false);
   const [mobileTab, setMobileTab]                   = useState<'menu' | 'order'>('menu');
@@ -145,6 +147,7 @@ export const OrderModal = ({
         if (sale?.customerName) setClientName(sale.customerName);
         if (sale?.customerId)   setSelectedCustomerId(sale.customerId);
         if (sale?.customerPhone) setClientPhone(sale.customerPhone);
+        if (sale?.status)       setExistingStatus(sale.status);
         const disc = Number((sale as any)?.discount ?? 0);
         if (disc > 0) {
           setDiscountApplied(true);
@@ -154,6 +157,26 @@ export const OrderModal = ({
       }).catch(e => console.warn('[OrderModal] error cargando orden', e));
     }
   }, [existingOrderId]);
+
+  // ── Avanzar estado del pedido (PENDING → PREPARING → READY) ──
+  // Usa el mismo servicio que OrderCardCompact (restaurantService.updateSaleStatus)
+  const handleUpdateStatus = async (newStatus: 'PREPARING' | 'READY') => {
+    if (!existingOrderId || updatingStatus) return;
+    setUpdatingStatus(true);
+    try {
+      await restaurantService.updateSaleStatus(existingOrderId, newStatus);
+      setExistingStatus(newStatus);
+      toast.success(newStatus === 'PREPARING' ? 'Pedido en preparación' : 'Pedido listo');
+      // Refrescar mesas y ventas para que la UI refleje el nuevo estado
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+    } catch (err: any) {
+      const backendMsg = err?.response?.data?.error || err?.response?.data?.message || err?.message;
+      toast.error(backendMsg || 'Error al actualizar el estado del pedido');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
 
   const handleProductClick = (product: Product) => {
     if (product.modifiers && product.modifiers.length > 0) {
@@ -774,8 +797,30 @@ export const OrderModal = ({
                     ? `Descuento${discountType === '%' ? ` ${discountValue}%` : ''} (-${formatCurrency(discountAmount)})`
                     : 'Descuento'}
                 </button>
+{/* ── Avance de estado del pedido (sin depender del KDS) ── */}
+{existingOrderId && existingStatus === 'PENDING' && (
+  <button
+    onClick={() => handleUpdateStatus('PREPARING')}
+    disabled={updatingStatus}
+    className="w-full min-h-[44px] py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+  >
+    {updatingStatus ? <Loader2 size={16} className="animate-spin" /> : <ChefHat size={16} />}
+    En Preparación
+  </button>
+)}
+{existingOrderId && existingStatus === 'PREPARING' && (
+  <button
+    onClick={() => handleUpdateStatus('READY')}
+    disabled={updatingStatus}
+    className="w-full min-h-[44px] py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+  >
+    {updatingStatus ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+    Listo
+  </button>
+)}
 
-                {/* Pre-cuenta */}
+{/* Pre-cuenta */}
+
                 <button
                   onClick={handlePrintPreBill}
                   disabled={!existingOrderId || (existingItems.length === 0 && cart.length === 0)}

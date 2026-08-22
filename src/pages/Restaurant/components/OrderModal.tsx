@@ -158,15 +158,15 @@ export const OrderModal = ({
     }
   }, [existingOrderId]);
 
-  // ── Avanzar estado del pedido (PENDING → PREPARING → READY) ──
+  // ── Avanzar estado del pedido (PENDING → PREPARING → DELIVERED) ──
   // Usa el mismo servicio que OrderCardCompact (restaurantService.updateSaleStatus)
-  const handleUpdateStatus = async (newStatus: 'PREPARING' | 'READY') => {
+  const handleUpdateStatus = async (newStatus: 'PREPARING' | 'DELIVERED') => {
     if (!existingOrderId || updatingStatus) return;
     setUpdatingStatus(true);
     try {
       await restaurantService.updateSaleStatus(existingOrderId, newStatus);
       setExistingStatus(newStatus);
-      toast.success(newStatus === 'PREPARING' ? 'Pedido en preparación' : 'Pedido listo');
+      toast.success(newStatus === 'PREPARING' ? 'Pedido en preparación' : 'Pedido entregado');
       // Refrescar mesas y ventas para que la UI refleje el nuevo estado
       queryClient.invalidateQueries({ queryKey: ['tables'] });
       queryClient.invalidateQueries({ queryKey: ['sales'] });
@@ -810,12 +810,12 @@ export const OrderModal = ({
 )}
 {existingOrderId && existingStatus === 'PREPARING' && (
   <button
-    onClick={() => handleUpdateStatus('READY')}
+    onClick={() => handleUpdateStatus('DELIVERED')}
     disabled={updatingStatus}
     className="w-full min-h-[44px] py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
   >
     {updatingStatus ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
-    Listo
+    Entregado
   </button>
 )}
 

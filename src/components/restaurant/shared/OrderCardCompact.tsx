@@ -126,7 +126,7 @@ export function OrderCardCompact({
         label:     variant === 'delivery' ? 'Enviado' : 'Listo',
         icon:      variant === 'delivery' ? <Truck size={14} /> : <CheckCircle size={14} />,
         className: 'px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white',
-        onClick:   () => onUpdateStatus(order, 'DELIVERED'),
+        onClick:   () => onUpdateStatus(order, 'READY'),
       };
     }
     if (order.status === 'READY') {

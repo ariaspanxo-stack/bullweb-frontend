@@ -341,7 +341,7 @@ export default function POS() {
 
               {/* Selector de sección */}
               {sections.length > 0 && (
-                <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
+                <div className="flex flex-nowrap gap-3 mb-6 overflow-x-auto pb-2">
                   <button
                     onClick={() => setSelectedSection(null)}
                     className={`px-6 py-2 rounded-lg font-semibold transition-all whitespace-nowrap

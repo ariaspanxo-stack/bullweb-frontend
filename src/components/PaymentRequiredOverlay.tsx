@@ -14,8 +14,8 @@ import { useAuthStore } from '@/store/authStore';
  * - El SuperAdmin nunca ve este overlay.
  * - Botón "Pagar $29.000 / mes" replica el flujo de Subscription.tsx:
  *     POST /payments/flow/create → redirect a flowUrl.
- * - Polling cada 30s a /auth/me/status para ocultar el modal si el estado
- *   vuelve a 200 (pago confirmado vía webhook).
+ * - Polling cada 30s a /billing/status para ocultar el modal si el estado
+ *   del tenant vuelve a ACTIVE/TRIAL (pago confirmado vía webhook).
  */
 export default function PaymentRequiredOverlay() {
   const { isSuperAdmin } = useAuthStore();
@@ -31,13 +31,18 @@ export default function PaymentRequiredOverlay() {
   }, []);
 
   // ── Polling cada 30s para detectar reactivación ─────────────────────────────
-  // Nota: api.get resuelve { data } en éxito y lanza en error (402/403).
-  // Por eso, si la promesa se resuelve, el usuario está activo de nuevo.
+  // Nota: /billing/status responde 200 con el estado real en el body.
+  // Solo consideramos reactivado si el campo status es ACTIVE o TRIAL.
   const checkStatus = useCallback(async () => {
     try {
-      await api.get('/auth/me/status');
-      setOpen(false);
-      setError(null);
+      const res = await api.get<{ status: string }>('/billing/status');
+      if (res.data?.status === 'ACTIVE' || res.data?.status === 'TRIAL') {
+        setOpen(false);
+        setError(null);
+        window.location.reload();
+      } else {
+        setError('El pago aún no se confirma. Intenta en unos minutos.');
+      }
     } catch {
       // Si sigue vencido, el backend devolverá 402 y no hacemos nada.
     }

@@ -26,11 +26,14 @@ export default function SuspendedOverlay() {
   }, []);
 
   // ── Polling cada 30s para detectar reactivación ─────────────────────────
+  // Nota: /billing/status responde 200 con el estado real en el body.
+  // Solo consideramos reactivado si el campo status es ACTIVE o TRIAL.
   const checkStatus = useCallback(async () => {
     try {
-      const res = await api.get('/auth/me/status');
-      if (res.status === 200) {
+      const res = await api.get<{ status: string }>('/billing/status');
+      if (res.data?.status === 'ACTIVE' || res.data?.status === 'TRIAL') {
         setSuspended(false);
+        window.location.reload();
       }
     } catch {
       // si sigue suspendido, el backend devolverá 403 y no hacemos nada

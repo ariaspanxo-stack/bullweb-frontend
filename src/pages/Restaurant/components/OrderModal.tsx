@@ -354,12 +354,12 @@ export const OrderModal = ({
           <div className="flex flex-1 overflow-hidden">
 
             {/* ── IZQUIERDA 55% — Productos ── */}
-            <div className={`flex flex-col border-r border-gray-100 overflow-hidden ${
+            <div className={`flex flex-col min-w-0 border-r border-gray-100 overflow-y-hidden ${
               mobileTab === 'order' ? 'hidden lg:flex' : 'flex'
             } w-full lg:w-[55%]`}>
 
               {/* Búsqueda + categorías */}
-              <div className="flex-shrink-0 p-3 bg-white border-b border-gray-100">
+              <div className="flex-shrink-0 min-w-0 p-3 bg-white border-b border-gray-100">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
                   <input
@@ -384,7 +384,7 @@ export const OrderModal = ({
                   )}
                 </div>
                 {/* Categorías */}
-                <div className="flex gap-1.5 mt-2 overflow-x-auto pb-1 scrollbar-none">
+                <div className="flex gap-1.5 mt-2 overflow-x-auto pb-2">
                   <button
                     onClick={() => setSelectedCategory('')}
                     className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${

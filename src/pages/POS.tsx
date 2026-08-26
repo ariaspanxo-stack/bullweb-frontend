@@ -328,7 +328,7 @@ export default function POS() {
       {/* Layout Principal: Zona B + Zona C */}
       <div className="flex flex-1 overflow-hidden">
         {/* ZONA B: Lienzo Dinámico (70%) */}
-        <div className="flex-1 overflow-auto bg-zinc-950/50">
+        <div className="flex-1 min-w-0 overflow-auto bg-zinc-950/50">
           {mode === 'mesas' ? (
             /* Plano de Mesas */
             <div className="p-6">

@@ -609,7 +609,9 @@ function CartSheet({
   const [submitting,    setSubmitting]    = useState(false);
   const [orderNumber,   setOrderNumber]   = useState<string | null>(null);
   const [submitError,   setSubmitError]   = useState<string | null>(null);
-  const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', comment: '' });
+  const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', comment: '', email: '' });
+  // Hotfix #88: opt-in de marketing — DESMARCADO por defecto
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [cashAmount,    setCashAmount]    = useState('');
@@ -651,6 +653,8 @@ function CartSheet({
           customerPhone:   form.phone.trim(),
           customerAddress: orderType === 'delivery' ? form.address.trim() : null,
           customerCity:    orderType === 'delivery' ? form.city.trim() || null : null,
+          customerEmail:   form.email.trim() || null,
+          marketingOptIn:  marketingOptIn,
           deliveryFee:     0,
           notes:           form.comment.trim() || null,
           paymentMethod:   paymentMethods.find(m => m.id === paymentMethod)?.name
@@ -995,6 +999,47 @@ function CartSheet({
               />
             </div>
           )}
+
+          {/* EMAIL — Hotfix #88: opcional */}
+          <div>
+            <label className="block text-sm font-medium text-gray-200 mb-1.5">
+              Email <span className="text-gray-500 font-normal">(opcional)</span>
+            </label>
+            <input
+              type="email" value={form.email} onChange={setField('email')}
+              placeholder="tu@email.com" autoComplete="email"
+              className={inputCls('email')}
+              style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff', backgroundColor: '#1f2937' }}
+            />
+          </div>
+
+          {/* OPT-IN MARKETING — Hotfix #88: desmarcado por defecto */}
+          <button
+            type="button"
+            onClick={() => setMarketingOptIn(v => !v)}
+            className="w-full flex items-center gap-3 p-4 border-2 rounded-xl transition-all duration-200 active:scale-[0.98] text-left"
+            style={{
+              borderColor: marketingOptIn ? themeColor : 'rgba(255,255,255,0.1)',
+              backgroundColor: marketingOptIn ? `${themeColor}15` : 'rgba(255,255,255,0.04)',
+            }}
+          >
+            <div
+              className="w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all"
+              style={{
+                backgroundColor: marketingOptIn ? themeColor : 'transparent',
+                borderColor: marketingOptIn ? themeColor : 'rgba(255,255,255,0.25)',
+              }}
+            >
+              {marketingOptIn && (
+                <svg width="12" height="12" viewBox="0 0 10 10" fill="none">
+                  <path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                </svg>
+              )}
+            </div>
+            <span className={`text-sm font-medium ${marketingOptIn ? 'text-white' : 'text-gray-300'}`}>
+              Quiero recibir ofertas y promociones por email
+            </span>
+          </button>
 
           {/* COMENTARIO */}
           <div>

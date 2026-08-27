@@ -187,7 +187,7 @@ class CustomersService {
   }
 
   /** Busca o crea cliente (POS/Delivery) */
-  async findOrCreate(data: { name: string; phone?: string; email?: string }): Promise<Customer> {
+  async findOrCreate(data: { name: string; phone?: string; email?: string; marketingOptIn?: boolean }): Promise<Customer> {
     const response = await api.post<any>('/customers/find-or-create', data);
     const raw = response.data?.data ?? response.data;
     return normalizeCustomer(raw);

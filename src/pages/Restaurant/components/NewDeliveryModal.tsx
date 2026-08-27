@@ -15,6 +15,7 @@ import {
   Phone,
   MapPin,
   AlertCircle,
+  Mail,
   Clock,
   Star,
   UserPlus,
@@ -65,12 +66,16 @@ export const NewDeliveryModal = ({
   const deliveryCity = deliveryDraft.deliveryCity;
   const deliveryNotes = deliveryDraft.deliveryNotes;
   const deliveryCost = deliveryDraft.deliveryCost;
+  const customerEmail = deliveryDraft.customerEmail;
   const setCustomerName = (v: string) => setDeliveryDraft({ ...deliveryDraft, customerName: v });
   const setCustomerPhone = (v: string) => setDeliveryDraft({ ...deliveryDraft, customerPhone: v });
   const setCustomerAddress = (v: string) => setDeliveryDraft({ ...deliveryDraft, customerAddress: v });
   const setDeliveryCity = (v: string) => setDeliveryDraft({ ...deliveryDraft, deliveryCity: v });
   const setDeliveryNotes = (v: string) => setDeliveryDraft({ ...deliveryDraft, deliveryNotes: v });
   const setDeliveryCost = (v: string) => setDeliveryDraft({ ...deliveryDraft, deliveryCost: v });
+  const setCustomerEmail = (v: string) => setDeliveryDraft({ ...deliveryDraft, customerEmail: v });
+  // Hotfix #88: opt-in de marketing — DESMARCADO por defecto, nunca persiste en el draft
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
   // Medios de pago (cargados desde el backend)
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
@@ -290,6 +295,8 @@ export const NewDeliveryModal = ({
           const customer = await customersService.findOrCreate({
             name: customerName.trim(),
             phone: customerPhone.trim() || undefined,
+            email: customerEmail.trim() || undefined,
+            marketingOptIn,
           });
           customerId = customer.id;
           toast.success(`✓ ${customerName.trim()} vinculado a la orden`);
@@ -297,9 +304,9 @@ export const NewDeliveryModal = ({
       }
       // DESPUÉS: crear la orden con el customerId
       await onConfirm(
-        cart, 
-        customerName.trim(), 
-        customerPhone.trim(), 
+        cart,
+        customerName.trim(),
+        customerPhone.trim(),
         customerAddress.trim(),
         deliveryCity.trim(),
         deliveryNotes.trim(),
@@ -323,6 +330,8 @@ export const NewDeliveryModal = ({
           const customer = await customersService.findOrCreate({
             name: customerName.trim(),
             phone: customerPhone.trim() || undefined,
+            email: customerEmail.trim() || undefined,
+            marketingOptIn,
           });
           customerId = customer.id;
           toast.success(`✓ ${customerName.trim()} vinculado a la orden`);
@@ -549,7 +558,42 @@ export const NewDeliveryModal = ({
                   className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-100 transition-all"
                 />
               </div>
+              {/* ── Hotfix #88: Email opcional ── */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  <Mail size={12} />Email
+                  <span className="text-gray-300 normal-case font-normal ml-1">— opcional</span>
+                </label>
+                <input
+                  type="email"
+                  placeholder="cliente@email.com"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-100 transition-all"
+                />
+              </div>
             </div>
+            {/* ── Hotfix #88: Opt-in de marketing (desmarcado por defecto) ── */}
+            <button
+              type="button"
+              onClick={() => setMarketingOptIn(v => !v)}
+              className={`flex items-center gap-2 w-full px-4 py-3 rounded-xl border-2 transition-all ${
+                marketingOptIn
+                  ? 'border-purple-400 bg-purple-50'
+                  : 'border-dashed border-gray-300 bg-white'
+              }`}
+            >
+              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                marketingOptIn ? 'bg-purple-500 border-purple-500' : 'border-gray-300 bg-white'
+              }`}>
+                {marketingOptIn && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+              </div>
+              <span className={`text-xs font-bold ${
+                marketingOptIn ? 'text-purple-700' : 'text-gray-500'
+              }`}>
+                Quiero recibir ofertas y promociones por email
+              </span>
+            </button>
             {/* ── Toggle guardar cliente ── */}
             {customerName.trim() && (
               <button

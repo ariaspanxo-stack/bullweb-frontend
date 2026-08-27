@@ -176,8 +176,8 @@ interface RestaurantContextValue {
   clearMostradorDraft: () => void;
   deliveryCart:      CartItem[];
   setDeliveryCart:   (c: CartItem[]) => void;
-  deliveryDraft:     { customerName: string; customerPhone: string; customerAddress: string; deliveryCity: string; deliveryNotes: string; deliveryCost: string };
-  setDeliveryDraft:  (d: { customerName: string; customerPhone: string; customerAddress: string; deliveryCity: string; deliveryNotes: string; deliveryCost: string }) => void;
+  deliveryDraft:     { customerName: string; customerPhone: string; customerAddress: string; deliveryCity: string; deliveryNotes: string; deliveryCost: string; customerEmail: string };
+  setDeliveryDraft:  (d: { customerName: string; customerPhone: string; customerAddress: string; deliveryCity: string; deliveryNotes: string; deliveryCost: string; customerEmail: string }) => void;
   clearDeliveryDraft:  () => void;
 }
 
@@ -275,7 +275,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   const [mostradorCart,  setMostradorCart]  = useState<CartItem[]>([]);
   const [mostradorDraft, setMostradorDraft] = useState<{ customerName: string; deliveryPhone: string }>({ customerName: '', deliveryPhone: '' });
   const [deliveryCart,   setDeliveryCart]   = useState<CartItem[]>([]);
-  const [deliveryDraft,  setDeliveryDraft]  = useState<{ customerName: string; customerPhone: string; customerAddress: string; deliveryCity: string; deliveryNotes: string; deliveryCost: string }>({ customerName: '', customerPhone: '', customerAddress: '', deliveryCity: '', deliveryNotes: '', deliveryCost: '2000' });
+  const [deliveryDraft,  setDeliveryDraft]  = useState<{ customerName: string; customerPhone: string; customerAddress: string; deliveryCity: string; deliveryNotes: string; deliveryCost: string; customerEmail: string }>({ customerName: '', customerPhone: '', customerAddress: '', deliveryCity: '', deliveryNotes: '', deliveryCost: '2000', customerEmail: '' });
 
   // ── Derivados ─────────────────────────────────────────────
   const sections = useMemo(() => {
@@ -551,7 +551,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
 
   const clearDeliveryDraft = () => {
     setDeliveryCart([]);
-    setDeliveryDraft({ customerName: '', customerPhone: '', customerAddress: '', deliveryCity: '', deliveryNotes: '', deliveryCost: '2000' });
+    setDeliveryDraft({ customerName: '', customerPhone: '', customerAddress: '', deliveryCity: '', deliveryNotes: '', deliveryCost: '2000', customerEmail: '' });
   };
 
   const handleRefresh = async () => {

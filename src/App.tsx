@@ -96,7 +96,6 @@ const SuperAdminAudit       = lazy(() => import('@/pages/superadmin/SuperAdminAu
 const SuperAdminTenantDetail = lazy(() => import('@/pages/superadmin/SuperAdminTenantDetail'));
 
 const LandingPage           = lazy(() => import('@/pages/landing/LandingPage').then(m => ({ default: m.LandingPage })));
-const RegisterPage          = lazy(() => import('@/pages/landing/RegisterPage').then(m => ({ default: m.RegisterPage })));
 const InstallPWA            = lazy(() => import('@/components/pwa/InstallPWA').then(m => ({ default: m.InstallPWA })));
 const PwaUpdateNotification = lazy(() => import('@/components/shared/PwaUpdateNotification').then(m => ({ default: m.PwaUpdateNotification })));
 const DteConfigPage          = lazy(() => import('@/pages/apps/DteConfigPage'));
@@ -177,7 +176,7 @@ function AppContent() {
   // Rutas públicas que deben renderizar inmediatamente, sin esperar la verificación de auth.
   // IMPORTANTE: '/' se valida con igualdad exacta, porque startsWith('/') sería true para TODAS las rutas.
   const isPublicRoute =
-    ['/register', '/registro', '/login', '/forgot-password', '/reset-password'].some((p) =>
+    ['/register', '/login', '/forgot-password', '/reset-password'].some((p) =>
       location.pathname.startsWith(p),
     ) || location.pathname === '/';
 
@@ -192,7 +191,7 @@ function AppContent() {
           <Routes>
             {/* Rutas públicas */}
             <Route path="/"        element={<LandingPage />} />
-            <Route path="/registro" element={<RegisterPage />} />
+            <Route path="/registro" element={<Navigate to="/register" replace />} />
             <Route path="/register" element={<RegisterTenant />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />

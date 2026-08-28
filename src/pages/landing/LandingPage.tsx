@@ -175,7 +175,7 @@ export function LandingPage() {
         {/* CTA */}
         <div className="text-center mt-8">
           <button
-            onClick={() => navigate(`/registro?plan=${selected}`)}
+            onClick={() => navigate('/register')}
             className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-10 py-4 rounded-xl text-base transition-colors inline-flex items-center gap-2"
           >
             Comenzar con plan {PLANS.find(p => p.id === selected)?.name}

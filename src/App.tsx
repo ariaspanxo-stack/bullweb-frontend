@@ -106,6 +106,7 @@ const DteDocumentsPage      = lazy(() => import('@/pages/dte/DteDocumentsPage').
 const ForgotPasswordPage    = lazy(() => import('@/pages/auth/ForgotPasswordPage').then(m => ({ default: m.ForgotPasswordPage })));
 const ResetPasswordPage     = lazy(() => import('@/pages/auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const RegisterTenant         = lazy(() => import('@/pages/auth/RegisterTenant'));
+const PagoResultado          = lazy(() => import('@/pages/PagoResultado'));
 const RestaurantProfilePage = lazy(() => import('@/pages/profile/RestaurantProfilePage').then(m => ({ default: m.RestaurantProfilePage })));
 const CouponsPage           = lazy(() => import('@/pages/coupons/CouponsPage').then(m => ({ default: m.CouponsPage })));
 const PromotionsPage        = lazy(() => import('@/pages/Promotions/PromotionsPage'));
@@ -176,7 +177,7 @@ function AppContent() {
   // Rutas públicas que deben renderizar inmediatamente, sin esperar la verificación de auth.
   // IMPORTANTE: '/' se valida con igualdad exacta, porque startsWith('/') sería true para TODAS las rutas.
   const isPublicRoute =
-    ['/register', '/login', '/forgot-password', '/reset-password'].some((p) =>
+    ['/register', '/login', '/forgot-password', '/reset-password', '/pago-resultado'].some((p) =>
       location.pathname.startsWith(p),
     ) || location.pathname === '/';
 
@@ -193,6 +194,7 @@ function AppContent() {
             <Route path="/"        element={<LandingPage />} />
             <Route path="/registro" element={<Navigate to="/register" replace />} />
             <Route path="/register" element={<RegisterTenant />} />
+            <Route path="/pago-resultado" element={<PagoResultado />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password"  element={<ResetPasswordPage />} />

@@ -19,9 +19,10 @@ import { useAuthStore } from '@/store/authStore';
  */
 export default function PaymentRequiredOverlay() {
   const { isSuperAdmin } = useAuthStore();
-  const [open,    setOpen]    = useState(false);
-  const [paying,  setPaying]  = useState(false);
-  const [error,   setError]   = useState<string | null>(null);
+  const [open,      setOpen]      = useState(false);
+  const [paying,    setPaying]    = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [error,     setError]     = useState<string | null>(null);
 
   // ── Escuchar evento 'billing:payment_required' ──────────────────────────────
   useEffect(() => {
@@ -34,6 +35,7 @@ export default function PaymentRequiredOverlay() {
   // Nota: /billing/status responde 200 con el estado real en el body.
   // Solo consideramos reactivado si el campo status es ACTIVE o TRIAL.
   const checkStatus = useCallback(async () => {
+    setVerifying(true);
     try {
       const res = await api.get<{ status: string }>('/billing/status');
       if (res.data?.status === 'ACTIVE' || res.data?.status === 'TRIAL') {
@@ -45,6 +47,8 @@ export default function PaymentRequiredOverlay() {
       }
     } catch {
       // Si sigue vencido, el backend devolverá 402 y no hacemos nada.
+    } finally {
+      setVerifying(false);
     }
   }, []);
 
@@ -121,9 +125,17 @@ export default function PaymentRequiredOverlay() {
           {/* Verificación manual */}
           <button
             onClick={checkStatus}
-            className="text-gray-400 hover:text-gray-600 text-sm py-1 underline underline-offset-2 transition-colors"
+            disabled={verifying}
+            className="text-gray-400 hover:text-gray-600 text-sm py-1 underline underline-offset-2 transition-colors disabled:opacity-60 inline-flex items-center gap-1.5"
           >
-            Ya pagué, verificar ahora
+            {verifying ? (
+              <>
+                <Loader2 size={14} className="animate-spin" />
+                Verificando...
+              </>
+            ) : (
+              'Ya pagué, verificar ahora'
+            )}
           </button>
 
           {/* Indicador de polling */}

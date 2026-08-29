@@ -97,6 +97,7 @@ export interface PaymentSummary {
   allTime:          PaymentPeriod;
   failedThisMonth:  number;
   annualProjection: number;
+  recentMonthLabel?: string;
 }
 
 export interface ImpersonateResult {

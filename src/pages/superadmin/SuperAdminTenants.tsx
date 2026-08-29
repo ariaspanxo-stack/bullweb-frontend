@@ -12,7 +12,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal';
 const PAGE_SIZE = 20;
 
 const MRR_BY_PLAN: Record<string, number> = {
-  STARTER: 28000, PRO: 40000, ENTERPRISE: 80000,
+  STARTER: 29000, PRO: 40000, ENTERPRISE: 80000,
 };
 
 const STATUS_STYLE: Record<string, string> = {
@@ -103,6 +103,10 @@ function normalizeWaNumber(raw: string): string {
 
 function getMrr(t: any): number {
   if (t.status === 'SUSPENDED' || t.status === 'CANCELLED' || t.status === 'TRIAL') return 0;
+  // Precio real de la suscripción del tenant (listTenants incluye subscriptions);
+  // fallback al mapa corregido si priceCLP viene 0/undefined (Hotfix #96).
+  const subPrice = t.subscriptions?.priceCLP;
+  if (subPrice && subPrice > 0) return subPrice;
   return MRR_BY_PLAN[t.plan?.toUpperCase() ?? ''] ?? 0;
 }
 

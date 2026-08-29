@@ -23,16 +23,17 @@ function fmtMonthLabel(d: string | Date) {
 }
 
 const STATUS_STYLE: Record<string, string> = {
-  PAID:     'bg-emerald-900/50 text-emerald-300',
-  FAILED:   'bg-rose-900/50 text-rose-300',
-  PENDING:  'bg-amber-900/50 text-amber-300',
-  OVERDUE:  'bg-red-900/60 text-red-300',
-  REFUNDED: 'bg-gray-700 text-gray-400',
+  PAID:      'bg-emerald-900/50 text-emerald-300',
+  FAILED:    'bg-rose-900/50 text-rose-300',
+  PENDING:   'bg-amber-900/50 text-amber-300',
+  OVERDUE:   'bg-red-900/60 text-red-300',
+  REFUNDED:  'bg-gray-700 text-gray-400',
+  CANCELLED: 'bg-gray-800 text-gray-500',
 };
 
 const STATUS_LABEL: Record<string, string> = {
   PAID: 'Pagado', FAILED: 'Fallido', PENDING: 'Pendiente',
-  OVERDUE: 'Vencido', REFUNDED: 'Reembolsado',
+  OVERDUE: 'Vencido', REFUNDED: 'Reembolsado', CANCELLED: 'Cancelado',
 };
 
 const PLAN_STYLE: Record<string, string> = {
@@ -196,9 +197,13 @@ export default function SuperAdminPayments() {
     return payments.filter((p: any) => p.tenant?.name?.toLowerCase().includes(q) || p.tenant?.slug?.toLowerCase().includes(q));
   }, [payments, tenantSearch]);
 
-  // Tenants con estado OVERDUE/PENDING para alertas
+  // Tenants con estado OVERDUE/PENDING para alertas (umbral: solo >48h de antigüedad)
   const overduePayments = useMemo(() =>
-    payments.filter((p: any) => p.status === 'OVERDUE' || p.status === 'PENDING'),
+    payments.filter((p: any) => {
+      if (p.status !== 'OVERDUE' && p.status !== 'PENDING') return false;
+      const when = p.paidAt ?? p.createdAt;
+      return Boolean(when) && Date.now() - new Date(when).getTime() > 48 * 60 * 60 * 1000;
+    }),
   [payments]);
 
   function handleRefresh() { refetchSummary(); refetchPay(); }
@@ -311,7 +316,7 @@ export default function SuperAdminPayments() {
         </div>
       ) : summary && (
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <MetricCard title={summary.recentMonthLabel ?? 'Últ. mes'} value={fmtCLP(summary.thisMonth.amount)} subtitle={`${summary.thisMonth.count} pagos`} color="teal" />
+          <MetricCard title={summary.recentMonthLabel ?? 'Mes actual'} value={fmtCLP(summary.thisMonth.amount)} subtitle={`${summary.thisMonth.count} pagos`} color="teal" />
           <MetricCard title="Mes anterior"      value={fmtCLP(summary.lastMonth.amount)}  subtitle={`${summary.lastMonth.count} pagos`}  color="blue" />
           <MetricCard title="Total histórico"   value={fmtCLP(summary.allTime.amount)}    subtitle={`${summary.allTime.count} pagos`}    color="purple" />
           <MetricCard title="Proyección anual"  value={fmtCLP(summary.annualProjection)}  subtitle="MRR × 12 por planes activos"          color="green" />

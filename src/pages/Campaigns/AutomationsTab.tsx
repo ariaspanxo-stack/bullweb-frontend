@@ -456,7 +456,23 @@ export function AutomationsTab() {
       {/* Header row */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-gray-900">Automatizaciones de email</h2>
+          <h2 className="text-base font-semibold text-gray-900">
+            Automatizaciones de email
+            {/* Hotfix #98 — Badge de uso mensual de emails */}
+            {(settings as any).usage && (
+              <span
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ring-1 align-middle ml-2 ${
+                  (settings as any).usage.sent >= (settings as any).usage.limit
+                    ? 'bg-rose-500/10 text-rose-400 ring-rose-500/20'
+                    : (settings as any).usage.sent >= (settings as any).usage.limit * 0.8
+                    ? 'bg-amber-500/10 text-amber-400 ring-amber-500/20'
+                    : 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20'
+                }`}
+              >
+                {(settings as any).usage.sent}/{(settings as any).usage.limit} emails este mes
+              </span>
+            )}
+          </h2>
           <p className="text-xs text-gray-500 mt-0.5">
             Los emails se envían automáticamente según las reglas configuradas
           </p>

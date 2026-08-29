@@ -6,6 +6,8 @@ import type { Campaign, CampaignType, CreateCampaignDTO, CampaignTemplate } from
 interface CreateCampaignModalProps {
   onClose: () => void;
   onSuccess: (campaign: Campaign) => void;
+  /** Hotfix #98 — uso mensual de emails para aviso pre-envío (informativo) */
+  emailUsage?: { sent: number; limit: number; remaining: number } | null;
 }
 
 const STEPS = ['Información', 'Destinatarios', 'Contenido', 'Envío'] as const;
@@ -28,7 +30,7 @@ const SEGMENT_OPTIONS = [
   { value: 'AT_RISK',    label: '⚠️ En riesgo' },
 ];
 
-export function CreateCampaignModal({ onClose, onSuccess }: CreateCampaignModalProps) {
+export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCampaignModalProps) {
   const [step, setStep]       = useState<Step>(0);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
@@ -245,6 +247,21 @@ export function CreateCampaignModal({ onClose, onSuccess }: CreateCampaignModalP
                       {audienceEst != null
                         ? Number(audienceEst).toLocaleString('es-CL') + ' clientes'
                         : '—'}
+                    </p>
+                  )}
+                  {/* Hotfix #98 — Aviso pre-envío: cuota disponible del mes */}
+                  {emailUsage && (
+                    <p
+                      className={`text-xs mt-1 font-medium ${
+                        audienceEst != null && audienceEst > emailUsage.remaining
+                          ? 'text-red-600'
+                          : 'text-blue-600'
+                      }`}
+                    >
+                      Disponibles este mes: {emailUsage.remaining}
+                      {audienceEst != null && audienceEst > emailUsage.remaining && (
+                        <> — 1.000 emails adicionales a solo $4.990</>
+                      )}
                     </p>
                   )}
                 </div>

@@ -3,9 +3,17 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
-import { CreditCard, RefreshCw, TrendingUp, AlertTriangle, Plus, Download, FileText, X } from 'lucide-react';
+import { CreditCard, RefreshCw, TrendingUp, AlertTriangle, Plus, Download, FileText, Wallet, CalendarDays, Landmark } from 'lucide-react';
 import toast from 'react-hot-toast';
 import superadminService from '@/services/superadmin/superadminService';
+import { StatusBadge } from '@/components/ui/superadmin/statusBadge';
+import { Table, Thead, Tr, Th, Td } from '@/components/ui/superadmin/table';
+import { Button } from '@/components/ui/superadmin/button';
+import { Modal } from '@/components/ui/superadmin/modal';
+import { PageHeader } from '@/components/ui/superadmin/pageHeader';
+import { EmptyState } from '@/components/ui/superadmin/emptyState';
+import { Input, Select } from '@/components/ui/superadmin/input';
+import { KpiCard } from '@/components/ui/superadmin/kpiCard';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -22,26 +30,6 @@ function fmtMonthLabel(d: string | Date) {
   return new Date(d).toLocaleDateString('es-CL', { month: 'short', year: '2-digit' });
 }
 
-const STATUS_STYLE: Record<string, string> = {
-  PAID:      'bg-emerald-900/50 text-emerald-300',
-  FAILED:    'bg-rose-900/50 text-rose-300',
-  PENDING:   'bg-amber-900/50 text-amber-300',
-  OVERDUE:   'bg-red-900/60 text-red-300',
-  REFUNDED:  'bg-gray-700 text-gray-400',
-  CANCELLED: 'bg-gray-800 text-gray-500',
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  PAID: 'Pagado', FAILED: 'Fallido', PENDING: 'Pendiente',
-  OVERDUE: 'Vencido', REFUNDED: 'Reembolsado', CANCELLED: 'Cancelado',
-};
-
-const PLAN_STYLE: Record<string, string> = {
-  STARTER:    'bg-gray-800 text-gray-300',
-  PRO:        'bg-indigo-900/50 text-indigo-300',
-  ENTERPRISE: 'bg-yellow-900/50 text-yellow-300',
-};
-
 const WA_MSG = (name: string, month: string, amount: number) =>
   encodeURIComponent(
     `Hola ${name}, tu suscripción BullWeb de ${month} está pendiente. Monto: ${fmtCLP(amount)} CLP`
@@ -49,32 +37,6 @@ const WA_MSG = (name: string, month: string, amount: number) =>
 
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
-// ─── MetricCard ───────────────────────────────────────────────────────────────
-
-function MetricCard({ title, value, subtitle, color, alert }: {
-  title: string; value: string | number; subtitle?: string;
-  color: 'teal'|'blue'|'purple'|'green'|'red'; alert?: boolean;
-}) {
-  const C: Record<string, string> = {
-    teal:   'bg-teal-900/30 border-teal-800/50 text-teal-300',
-    blue:   'bg-blue-900/30 border-blue-800/50 text-blue-300',
-    purple: 'bg-purple-900/30 border-purple-800/50 text-purple-300',
-    green:  'bg-emerald-900/30 border-emerald-800/50 text-emerald-300',
-    red:    'bg-rose-900/30 border-rose-800/50 text-rose-300',
-  };
-  const cls = C[color].split(' ');
-  return (
-    <div className={`${cls[0]} border ${cls[1]} rounded-xl p-5`}>
-      <p className="text-xs text-gray-500 uppercase tracking-wide font-medium mb-1">{title}</p>
-      <p className={`text-2xl font-bold ${alert ? 'text-rose-400' : cls[2]}`}>
-        {alert && <AlertTriangle className="inline w-4 h-4 mr-1 mb-0.5" />}
-        {value}
-      </p>
-      {subtitle && <p className="text-xs text-gray-600 mt-1">{subtitle}</p>}
-    </div>
-  );
-}
 
 // ─── Modal historial tenant ───────────────────────────────────────────────────
 
@@ -87,53 +49,41 @@ function TenantPaymentsModal({ tenant, onClose }: { tenant: any; onClose: () => 
   const totalPaid = data?.totalPaid ?? 0;
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="bg-gray-800 rounded-2xl w-full max-w-2xl border border-gray-700 shadow-2xl max-h-[80vh] flex flex-col">
-        <div className="flex items-center justify-between p-5 border-b border-gray-700">
-          <div>
-            <h2 className="text-lg font-bold text-white">{tenant.name}</h2>
-            <p className="text-xs text-gray-500">Historial de pagos · Total pagado: <span className="text-emerald-400 font-semibold">{fmtCLP(totalPaid)}</span></p>
-          </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-gray-700 text-gray-400 hover:text-white transition-colors">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="overflow-y-auto flex-1">
-          {isLoading ? (
-            <div className="p-6 space-y-3">{[...Array(4)].map((_,i) => <div key={i} className="h-10 bg-gray-700 rounded animate-pulse" />)}</div>
-          ) : payments.length === 0 ? (
-            <div className="py-12 text-center text-gray-600"><CreditCard className="w-8 h-8 mx-auto mb-2 opacity-30" /><p>Sin pagos registrados</p></div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-gray-500 border-b border-gray-700 bg-gray-800/70">
-                  <th className="px-4 py-3 font-medium">Fecha</th>
-                  <th className="px-4 py-3 font-medium text-right">Monto</th>
-                  <th className="px-4 py-3 font-medium">Estado</th>
-                  <th className="px-4 py-3 font-medium">Concepto</th>
-                  <th className="px-4 py-3 font-medium">Notas</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-700">
-                {payments.map((p: any) => (
-                  <tr key={p.id} className="hover:bg-gray-700/40 transition-colors">
-                    <td className="px-4 py-3 text-xs text-gray-400">{fmtDate(p.paidAt ?? p.createdAt)}</td>
-                    <td className="px-4 py-3 text-right font-medium text-white tabular-nums">{fmtCLP(p.amount)}</td>
-                    <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_STYLE[p.status] ?? 'bg-gray-800 text-gray-400'}`}>
-                        {STATUS_LABEL[p.status] ?? p.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-400">{p.concept || '—'}</td>
-                    <td className="px-4 py-3 text-xs text-gray-500 max-w-[160px] truncate" title={p.notes ?? undefined}>{p.notes || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </div>
-    </div>
+    <Modal open onClose={onClose} title={tenant.name} wide>
+      <p className="text-xs text-gray-500 mb-4">
+        Historial de pagos · Total pagado: <span className="text-emerald-400 font-semibold">{fmtCLP(totalPaid)}</span>
+      </p>
+      {isLoading ? (
+        <div className="space-y-3">{[...Array(4)].map((_, i) => <div key={i} className="h-10 bg-gray-800 rounded animate-pulse" />)}</div>
+      ) : payments.length === 0 ? (
+        <EmptyState icon={CreditCard} title="Sin pagos registrados" />
+      ) : (
+        <Table>
+          <Thead>
+            <Tr>
+              <Th>Fecha</Th>
+              <Th className="text-right">Monto</Th>
+              <Th>Estado</Th>
+              <Th>Concepto</Th>
+              <Th>Notas</Th>
+            </Tr>
+          </Thead>
+          <tbody>
+            {payments.map((p: any) => (
+              <Tr key={p.id}>
+                <Td className="text-xs text-gray-400">{fmtDate(p.paidAt ?? p.createdAt)}</Td>
+                <Td className="text-right font-medium text-white tabular-nums">{fmtCLP(p.amount)}</Td>
+                <Td><StatusBadge status={p.status} kind="payment" /></Td>
+                <Td className="text-xs text-gray-400">{p.concept || '—'}</Td>
+                <Td className="text-xs text-gray-500 max-w-[160px]">
+                  <span className="block truncate" title={p.notes ?? undefined}>{p.notes || '—'}</span>
+                </Td>
+              </Tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
+    </Modal>
   );
 }
 
@@ -282,32 +232,24 @@ export default function SuperAdminPayments() {
       )}
 
       {/* Encabezado */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <CreditCard className="w-6 h-6 text-teal-400" />
-            Pagos y Facturación
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">Control financiero de todos los tenants</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={exportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm rounded-xl transition-colors"
-          >
-            <Download className="w-4 h-4" />Exportar
-          </button>
-          <button
-            onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-500 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors"
-          >
-            <Plus className="w-4 h-4" />Registrar pago
-          </button>
-          <button onClick={handleRefresh} className="p-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
-            <RefreshCw className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        icon={CreditCard}
+        title="Pagos y Facturación"
+        sub="Control financiero de todos los tenants"
+        actions={
+          <>
+            <Button variant="secondary" size="md" onClick={exportCSV}>
+              <Download className="w-4 h-4" />Exportar
+            </Button>
+            <Button variant="primary" size="md" onClick={() => setShowModal(true)}>
+              <Plus className="w-4 h-4" />Registrar pago
+            </Button>
+            <Button variant="ghost" size="md" onClick={handleRefresh} aria-label="Actualizar">
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </>
+        }
+      />
 
       {/* KPIs */}
       {sumLoading ? (
@@ -316,24 +258,24 @@ export default function SuperAdminPayments() {
         </div>
       ) : summary && (
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <MetricCard title={summary.recentMonthLabel ?? 'Mes actual'} value={fmtCLP(summary.thisMonth.amount)} subtitle={`${summary.thisMonth.count} pagos`} color="teal" />
-          <MetricCard title="Mes anterior"      value={fmtCLP(summary.lastMonth.amount)}  subtitle={`${summary.lastMonth.count} pagos`}  color="blue" />
-          <MetricCard title="Total histórico"   value={fmtCLP(summary.allTime.amount)}    subtitle={`${summary.allTime.count} pagos`}    color="purple" />
-          <MetricCard title="Proyección anual"  value={fmtCLP(summary.annualProjection)}  subtitle="MRR × 12 por planes activos"          color="green" />
-          <MetricCard title="Fallidos este mes" value={summary.failedThisMonth}            color="red" alert={summary.failedThisMonth > 0} />
+          <KpiCard icon={Wallet} label={summary.recentMonthLabel ?? 'Mes actual'} value={fmtCLP(summary.thisMonth.amount)} sub={`${summary.thisMonth.count} pagos`} accent="brand" />
+          <KpiCard icon={CalendarDays} label="Mes anterior" value={fmtCLP(summary.lastMonth.amount)} sub={`${summary.lastMonth.count} pagos`} accent="sky" />
+          <KpiCard icon={Landmark} label="Total histórico" value={fmtCLP(summary.allTime.amount)} sub={`${summary.allTime.count} pagos`} accent="brand" />
+          <KpiCard icon={TrendingUp} label="Proyección anual" value={fmtCLP(summary.annualProjection)} sub="MRR × 12 por planes activos" accent="emerald" />
+          <KpiCard icon={AlertTriangle} label="Fallidos este mes" value={summary.failedThisMonth} accent={summary.failedThisMonth > 0 ? 'rose' : 'gray'} sub={summary.failedThisMonth > 0 ? 'Requieren atención' : 'Sin fallos'} />
         </div>
       )}
 
       {/* Gráfico 6 meses */}
       {chart6.length > 0 && (
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <div className="bg-gray-900/60 border border-white/5 rounded-xl p-5">
           <h2 className="text-sm font-semibold text-white mb-4">Ingresos por mes — últimos 6 meses</h2>
           <ResponsiveContainer width="100%" height={160}>
             <BarChart data={chart6} barSize={18} barGap={4}>
               <XAxis dataKey="label" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis hide />
               <Tooltip
-                contentStyle={{ background: '#111827', border: '1px solid #374151', borderRadius: 8, fontSize: 12 }}
+                contentStyle={{ background: '#111827', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, fontSize: 12 }}
                 formatter={(v: any, name: string) => [
                   name === 'paid' ? fmtCLP(Number(v)) : `${v} vencidos`,
                   name === 'paid' ? 'Ingresos PAID' : 'OVERDUE',
@@ -349,7 +291,7 @@ export default function SuperAdminPayments() {
 
       {/* Alertas de cobro pendiente */}
       {overduePayments.length > 0 && (
-        <div className="bg-rose-900/20 border border-rose-800/50 rounded-xl p-4">
+        <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle className="w-4 h-4 text-rose-400" />
             <h2 className="text-sm font-semibold text-rose-300">
@@ -358,17 +300,17 @@ export default function SuperAdminPayments() {
           </div>
           <div className="space-y-2">
             {overduePayments.slice(0, 5).map((p: any) => (
-              <div key={p.id} className="flex items-center justify-between bg-gray-900/50 rounded-lg px-3 py-2">
-                <div>
-                  <span className="text-sm font-medium text-white">{p.tenant?.name}</span>
-                  <span className="ml-2 text-xs text-gray-500">{fmtCLP(p.amount)}</span>
-                  <span className={`ml-2 text-xs px-1.5 py-0.5 rounded-full ${STATUS_STYLE[p.status]}`}>{STATUS_LABEL[p.status]}</span>
+              <div key={p.id} className="flex items-center justify-between bg-gray-900/60 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="text-sm font-medium text-white truncate">{p.tenant?.name}</span>
+                  <span className="text-xs text-gray-500 tabular-nums">{fmtCLP(p.amount)}</span>
+                  <StatusBadge status={p.status} kind="payment" />
                 </div>
                 <a
                   href={`https://wa.me/?text=${WA_MSG(p.tenant?.name ?? '', MONTHS[(selMonth - 1) % 12], p.amount)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-colors flex-shrink-0"
                 >
                   📲 Cobrar
                 </a>
@@ -387,7 +329,7 @@ export default function SuperAdminPayments() {
               type="checkbox"
               checked={useMonthFlt}
               onChange={e => { setUseMonthFlt(e.target.checked); setPage(1); }}
-              className="rounded border-gray-600"
+              className="rounded border-white/20 bg-gray-950 accent-brand-500"
             />
             <span className="text-sm text-gray-400">Filtrar por mes</span>
           </label>
@@ -396,14 +338,14 @@ export default function SuperAdminPayments() {
               <select
                 value={selMonth}
                 onChange={e => { setSelMonth(Number(e.target.value)); setPage(1); }}
-                className="bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-teal-500"
+                className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors"
               >
                 {MONTHS.map((m, i) => <option key={m} value={i+1}>{m}</option>)}
               </select>
               <select
                 value={selYear}
                 onChange={e => { setSelYear(Number(e.target.value)); setPage(1); }}
-                className="bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-teal-500"
+                className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors"
               >
                 {years.map(y => <option key={y} value={y}>{y}</option>)}
               </select>
@@ -414,7 +356,7 @@ export default function SuperAdminPayments() {
         <select
           value={statusFilter}
           onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-          className="bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-teal-500"
+          className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors"
         >
           <option value="">Todos los estados</option>
           <option value="PAID">Pagado</option>
@@ -429,95 +371,87 @@ export default function SuperAdminPayments() {
           value={tenantSearch}
           onChange={e => setTenantSearch(e.target.value)}
           placeholder="Buscar tenant…"
-          className="bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-teal-500 min-w-[180px]"
+          className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors min-w-[180px]"
         />
       </div>
 
       {/* Tabla */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
-        {payLoading ? (
-          <div className="p-8 space-y-3">{[...Array(8)].map((_, i) => <div key={i} className="h-10 bg-gray-800 rounded animate-pulse" />)}</div>
-        ) : filteredPayments.length === 0 ? (
-          <div className="py-16 text-center text-gray-600">
-            <CreditCard className="w-10 h-10 mx-auto mb-3 opacity-30" /><p>No se encontraron pagos</p>
+      {payLoading ? (
+        <div className="bg-gray-900/60 border border-white/5 rounded-xl p-8 space-y-3">
+          {[...Array(8)].map((_, i) => <div key={i} className="h-10 bg-gray-800 rounded animate-pulse" />)}
+        </div>
+      ) : filteredPayments.length === 0 ? (
+        <div className="bg-gray-900/60 border border-white/5 rounded-xl">
+          <EmptyState icon={CreditCard} title="No se encontraron pagos" sub="Ajusta los filtros o registra un nuevo pago" />
+        </div>
+      ) : (
+        <>
+          <Table>
+            <Thead>
+              <Tr>
+                <Th>Tenant</Th>
+                <Th>Plan</Th>
+                <Th className="text-right">Monto</Th>
+                <Th>Estado</Th>
+                <Th>Fecha</Th>
+                <Th>Concepto</Th>
+                <Th>Notas</Th>
+                <Th className="font-mono">Flow ID</Th>
+              </Tr>
+            </Thead>
+            <tbody>
+              {filteredPayments.map((p: any) => (
+                <Tr key={p.id}>
+                  <Td>
+                    <button
+                      onClick={() => setDetailTenant(p.tenant ? { ...p.tenant, id: p.tenantId } : null)}
+                      className="text-left hover:underline"
+                    >
+                      <div className="font-medium text-white">{p.tenant?.name}</div>
+                      <div className="text-xs text-gray-500 font-mono">{p.tenant?.slug}</div>
+                    </button>
+                  </Td>
+                  <Td>
+                    <StatusBadge status={p.tenant?.plan?.toUpperCase() ?? ''} kind="plan" />
+                  </Td>
+                  <Td className="text-right font-medium text-white tabular-nums">{fmtCLP(p.amount)}</Td>
+                  <Td><StatusBadge status={p.status} kind="payment" /></Td>
+                  <Td className="text-xs text-gray-400">{fmtDate(p.paidAt ?? p.createdAt)}</Td>
+                  <Td className="text-xs text-gray-400">{p.concept || '—'}</Td>
+                  <Td className="text-xs text-gray-500 max-w-[120px]">
+                    {p.notes ? (
+                      <span title={p.notes} className="flex items-center gap-1 cursor-help">
+                        <FileText className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">{p.notes}</span>
+                      </span>
+                    ) : '—'}
+                  </Td>
+                  <Td className="text-xs text-gray-500 font-mono">{p.flowOrderId || '—'}</Td>
+                </Tr>
+              ))}
+            </tbody>
+          </Table>
+          <div className="px-4 py-3 border-t border-white/5 flex items-center justify-between text-sm">
+            <span className="text-gray-500">
+              Total filtrado: <span className="text-white font-semibold tabular-nums">{fmtCLP(totalAmount)}</span>
+              <span className="text-gray-600 ml-1">({pageData?.total ?? 0} pagos)</span>
+            </span>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1}
+                  className="px-3 py-1 rounded-md text-xs bg-gray-800 text-gray-400 hover:text-white disabled:opacity-40 transition-colors">
+                  ← Anterior
+                </button>
+                <span className="px-3 py-1 text-xs text-gray-500 tabular-nums">{page} / {totalPages}</span>
+                <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages}
+                  className="px-3 py-1 rounded-md text-xs bg-gray-800 text-gray-400 hover:text-white disabled:opacity-40 transition-colors">
+                  Siguiente →
+                </button>
+              </div>
+            )}
           </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-800 bg-gray-900/70">
-                    <th className="px-4 py-3 font-medium">Tenant</th>
-                    <th className="px-4 py-3 font-medium">Plan</th>
-                    <th className="px-4 py-3 font-medium text-right">Monto</th>
-                    <th className="px-4 py-3 font-medium">Estado</th>
-                    <th className="px-4 py-3 font-medium">Fecha</th>
-                    <th className="px-4 py-3 font-medium">Concepto</th>
-                    <th className="px-4 py-3 font-medium">Notas</th>
-                    <th className="px-4 py-3 font-medium font-mono">Flow ID</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
-                  {filteredPayments.map((p: any) => (
-                    <tr key={p.id} className="hover:bg-gray-800/40 transition-colors">
-                      <td className="px-4 py-3">
-                        <button
-                          onClick={() => setDetailTenant(p.tenant ? { ...p.tenant, id: p.tenantId } : null)}
-                          className="text-left hover:underline"
-                        >
-                          <div className="font-medium text-white">{p.tenant?.name}</div>
-                          <div className="text-xs text-gray-500 font-mono">{p.tenant?.slug}</div>
-                        </button>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full uppercase ${PLAN_STYLE[p.tenant?.plan?.toUpperCase()] ?? 'bg-gray-800 text-gray-300'}`}>
-                          {p.tenant?.plan}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-medium text-white tabular-nums">{fmtCLP(p.amount)}</td>
-                      <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_STYLE[p.status] ?? 'bg-gray-800 text-gray-400'}`}>
-                          {STATUS_LABEL[p.status] ?? p.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-gray-400">{fmtDate(p.paidAt ?? p.createdAt)}</td>
-                      <td className="px-4 py-3 text-xs text-gray-400">{p.concept || '—'}</td>
-                      <td className="px-4 py-3 text-xs text-gray-500 max-w-[120px]">
-                        {p.notes ? (
-                          <span title={p.notes} className="flex items-center gap-1 cursor-help">
-                            <FileText className="w-3 h-3 flex-shrink-0" />
-                            <span className="truncate">{p.notes}</span>
-                          </span>
-                        ) : '—'}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-gray-500 font-mono">{p.flowOrderId || '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="px-4 py-3 border-t border-gray-800 flex items-center justify-between text-sm">
-              <span className="text-gray-500">
-                Total filtrado: <span className="text-white font-semibold">{fmtCLP(totalAmount)}</span>
-                <span className="text-gray-600 ml-1">({pageData?.total ?? 0} pagos)</span>
-              </span>
-              {totalPages > 1 && (
-                <div className="flex items-center gap-1">
-                  <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1}
-                    className="px-3 py-1 rounded-md text-xs bg-gray-800 text-gray-400 hover:text-white disabled:opacity-40 transition-colors">
-                    ← Anterior
-                  </button>
-                  <span className="px-3 py-1 text-xs text-gray-500">{page} / {totalPages}</span>
-                  <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages}
-                    className="px-3 py-1 rounded-md text-xs bg-gray-800 text-gray-400 hover:text-white disabled:opacity-40 transition-colors">
-                    Siguiente →
-                  </button>
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+        </>
+      )}
 
       {summary && (
         <p className="flex items-center gap-2 text-xs text-gray-600">
@@ -527,104 +461,70 @@ export default function SuperAdminPayments() {
       )}
 
       {/* Modal: Registrar pago */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-gray-700 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-teal-400" />Registrar pago
-              </h2>
-              <button onClick={() => setShowModal(false)} className="p-1.5 rounded-lg hover:bg-gray-700 text-gray-400 transition-colors">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      <Modal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        title="Registrar pago"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => { setShowModal(false); setForm({ tenantId:'', amount:'', plan:'', method:'transferencia', invoiceNumber:'', notes:'', status:'PAID', concept:'' }); }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleSubmitPayment}
+              loading={submitting}
+              disabled={!form.tenantId || !form.amount}
+            >
+              Registrar pago
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {/* Cliente */}
+          <Select label="Cliente *" value={form.tenantId} onChange={e => handleTenantChange(e.target.value)}>
+            <option value="">Seleccionar cliente...</option>
+            {modalTenants.map((t: any) => <option key={t.id} value={t.id}>{t.name} — {t.plan}</option>)}
+          </Select>
 
-            <div className="space-y-4">
-              {/* Cliente */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">Cliente *</label>
-                <select value={form.tenantId} onChange={e => handleTenantChange(e.target.value)}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500">
-                  <option value="">Seleccionar cliente...</option>
-                  {modalTenants.map((t: any) => <option key={t.id} value={t.id}>{t.name} — {t.plan}</option>)}
-                </select>
-              </div>
+          {/* Monto */}
+          <Input label="Monto CLP *" type="number" value={form.amount} onChange={e => setForm(f => ({...f, amount: e.target.value}))} placeholder="29990" />
 
-              {/* Monto */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">Monto CLP *</label>
-                <input type="number" value={form.amount} onChange={e => setForm(f => ({...f, amount: e.target.value}))}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500"
-                  placeholder="29990" />
-              </div>
+          {/* Estado */}
+          <Select label="Estado" value={form.status} onChange={e => setForm(f => ({...f, status: e.target.value}))}>
+            <option value="PAID">Pagado</option>
+            <option value="PENDING">Pendiente</option>
+            <option value="OVERDUE">Vencido</option>
+            <option value="REFUNDED">Reembolsado</option>
+          </Select>
 
-              {/* Estado */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">Estado</label>
-                <select value={form.status} onChange={e => setForm(f => ({...f, status: e.target.value}))}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500">
-                  <option value="PAID">Pagado</option>
-                  <option value="PENDING">Pendiente</option>
-                  <option value="OVERDUE">Vencido</option>
-                  <option value="REFUNDED">Reembolsado</option>
-                </select>
-              </div>
+          {/* Método */}
+          <Select label="Método de pago" value={form.method} onChange={e => setForm(f => ({...f, method: e.target.value}))}>
+            <option value="transferencia">Transferencia bancaria</option>
+            <option value="flow">Flow</option>
+            <option value="efectivo">Efectivo</option>
+            <option value="otro">Otro</option>
+          </Select>
 
-              {/* Método */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">Método de pago</label>
-                <select value={form.method} onChange={e => setForm(f => ({...f, method: e.target.value}))}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500">
-                  <option value="transferencia">Transferencia bancaria</option>
-                  <option value="flow">Flow</option>
-                  <option value="efectivo">Efectivo</option>
-                  <option value="otro">Otro</option>
-                </select>
-              </div>
+          {/* Concepto */}
+          <Input label="Concepto" type="text" value={form.concept} onChange={e => setForm(f => ({...f, concept: e.target.value}))} placeholder="Suscripción mensual Mayo 2026" />
 
-              {/* Concepto */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">Concepto</label>
-                <input type="text" value={form.concept} onChange={e => setForm(f => ({...f, concept: e.target.value}))}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500"
-                  placeholder="Suscripción mensual Mayo 2026" />
-              </div>
+          {/* N° Factura */}
+          <Input label="N° Factura / Comprobante" type="text" value={form.invoiceNumber} onChange={e => setForm(f => ({...f, invoiceNumber: e.target.value}))} placeholder="FAC-001" />
 
-              {/* N° Factura */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">N° Factura / Comprobante</label>
-                <input type="text" value={form.invoiceNumber} onChange={e => setForm(f => ({...f, invoiceNumber: e.target.value}))}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500"
-                  placeholder="FAC-001" />
-              </div>
-
-              {/* Notas */}
-              <div>
-                <label className="text-xs text-gray-400 mb-1 block">Notas (opcional)</label>
-                <textarea value={form.notes} onChange={e => setForm(f => ({...f, notes: e.target.value}))} rows={2}
-                  className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500 resize-none"
-                  placeholder="Pagó por transferencia, acordado precio especial…" />
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => { setShowModal(false); setForm({ tenantId:'', amount:'', plan:'', method:'transferencia', invoiceNumber:'', notes:'', status:'PAID', concept:'' }); }}
-                className="flex-1 border border-gray-600 text-gray-300 font-medium py-2 rounded-xl text-sm hover:bg-gray-700 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSubmitPayment}
-                disabled={!form.tenantId || !form.amount || submitting}
-                className="flex-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-2 rounded-xl text-sm transition-colors"
-              >
-                {submitting ? 'Registrando…' : 'Registrar pago ✅'}
-              </button>
-            </div>
-          </div>
+          {/* Notas */}
+          <label className="block">
+            <span className="block text-xs font-medium text-gray-400 mb-1.5">Notas (opcional)</span>
+            <textarea value={form.notes} onChange={e => setForm(f => ({...f, notes: e.target.value}))} rows={2}
+              className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors resize-none"
+              placeholder="Pagó por transferencia, acordado precio especial…" />
+          </label>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

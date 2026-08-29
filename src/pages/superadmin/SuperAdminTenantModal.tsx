@@ -1,27 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, User, ShoppingCart, Package, LayoutGrid, CreditCard, Trash2, Shield, Plus, ChevronDown, ChevronUp, KeyRound, Eye, EyeOff, Puzzle } from 'lucide-react';
+import { User, ShoppingCart, Package, LayoutGrid, CreditCard, Trash2, Shield, Plus, ChevronDown, ChevronUp, KeyRound, Eye, EyeOff, Puzzle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import superadminService, { type Tenant } from '@/services/superadmin/superadminService';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { StatusBadge } from '@/components/ui/superadmin/statusBadge';
+import { Button } from '@/components/ui/superadmin/button';
+import { Modal } from '@/components/ui/superadmin/modal';
 
 interface Props {
   tenant: Tenant;
   onClose: () => void;
 }
-
-const STATUS_STYLE: Record<string, string> = {
-  ACTIVE:    'bg-emerald-900/50 text-emerald-400',
-  SUSPENDED: 'bg-rose-900/50 text-rose-400',
-  TRIAL:     'bg-amber-900/50 text-amber-400',
-  CANCELLED: 'bg-gray-800 text-gray-500',
-};
-
-const PLAN_STYLE: Record<string, string> = {
-  STARTER:    'bg-gray-700 text-gray-300',
-  PRO:        'bg-indigo-900/50 text-indigo-300',
-  ENTERPRISE: 'bg-yellow-900/50 text-yellow-300',
-};
 
 function fmtDate(d?: string | null) {
   if (!d) return '—';
@@ -30,11 +20,11 @@ function fmtDate(d?: string | null) {
 
 function StatBox({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: number }) {
   return (
-    <div className="bg-gray-800 rounded-lg p-3 flex items-center gap-3">
+    <div className="bg-gray-900/60 border border-white/5 rounded-lg p-3 flex items-center gap-3">
       <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" />
       <div>
         <p className="text-xs text-gray-500">{label}</p>
-        <p className="text-xl font-bold text-white">{value}</p>
+        <p className="text-xl font-bold text-white tabular-nums">{value}</p>
       </div>
     </div>
   );
@@ -79,12 +69,12 @@ function ModulesSection({
   };
 
   return (
-    <div className="border border-gray-700/50 rounded-lg overflow-hidden">
-      <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-800/60">
-        <Puzzle className="w-3.5 h-3.5 text-indigo-400" />
+    <div className="border border-white/5 rounded-lg overflow-hidden">
+      <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-900/60">
+        <Puzzle className="w-3.5 h-3.5 text-brand-400" />
         <span className="text-sm font-medium text-gray-300">Módulos opcionales</span>
       </div>
-      <div className="px-3 py-3 divide-y divide-gray-800">
+      <div className="px-3 py-3 divide-y divide-white/5">
         {MODULE_DEFS.map(({ key, label, price, emoji }) => {
           const enabled = localModules[key as keyof typeof localModules];
           const isLoading = loadingKey === key;
@@ -101,7 +91,7 @@ function ModulesSection({
                 onClick={() => toggle(key as 'fidelizacion' | 'cupones' | 'clientes')}
                 disabled={isLoading}
                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:opacity-60 ${
-                  enabled ? 'bg-indigo-600' : 'bg-gray-700'
+                  enabled ? 'bg-brand-500' : 'bg-gray-700'
                 }`}
               >
                 <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
@@ -218,39 +208,19 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
   const isPending = suspendMut.isPending || activateMut.isPending || extendMut.isPending || changePlanMut.isPending || cleanDemoMut.isPending;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-
-      <div className="relative bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
-
-        {/* Header */}
-        <div className="flex items-start justify-between p-5 border-b border-gray-800">
-          <div>
-            <h2 className="text-lg font-bold text-white">{t.name}</h2>
-            <p className="text-xs text-gray-500 font-mono mt-0.5">{t.slug}</p>
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-800 hover:text-white transition-colors">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="p-5 space-y-5 max-h-[72vh] overflow-y-auto">
+    <Modal open onClose={onClose} title={t.name}>
+      <p className="text-xs text-gray-500 font-mono -mt-2 mb-4">{t.slug}</p>
+      <div className="space-y-5">
 
           {/* Info básica */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <p className="text-gray-500 text-xs mb-1">Plan</p>
-              <span className={`text-xs px-2 py-0.5 rounded-full uppercase ${PLAN_STYLE[t.plan?.toUpperCase()] ?? 'bg-gray-800 text-gray-300'}`}>
-                {t.plan}
-              </span>
+              <StatusBadge status={t.plan?.toUpperCase() ?? ''} kind="plan" />
             </div>
             <div>
               <p className="text-gray-500 text-xs mb-1">Estado</p>
-              <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_STYLE[t.status] ?? 'bg-gray-800 text-gray-400'}`}>
-                {t.status}
-              </span>
+              <StatusBadge status={t.status} kind="tenant" />
             </div>
             <div>
               <p className="text-gray-500 text-xs mb-1">Trial vence</p>
@@ -277,7 +247,7 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
           )}
 
           {/* Suscripción */}
-          <div className="bg-gray-800/60 rounded-lg p-3">
+          <div className="bg-gray-900/60 border border-white/5 rounded-lg p-3">
             <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">Suscripción</p>
             {t.subscriptions ? (
               <div className="space-y-1 text-xs">
@@ -301,7 +271,7 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
 
           {/* Último pago */}
           {detail?.lastPayment && (
-            <div className="bg-gray-800/60 rounded-lg p-3 flex items-center gap-3 text-xs">
+            <div className="bg-gray-900/60 border border-white/5 rounded-lg p-3 flex items-center gap-3 text-xs">
               <CreditCard className="w-4 h-4 text-gray-500 flex-shrink-0" />
               <div>
                 <p className="text-gray-500 mb-0.5">Último pago</p>
@@ -323,8 +293,8 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
                   disabled={isPending || t.plan?.toUpperCase() === p}
                   className={`flex-1 text-xs py-1.5 rounded-lg transition-colors disabled:opacity-50 ${
                     t.plan?.toUpperCase() === p
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                      ? 'bg-brand-500 text-white'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-white/10'
                   }`}
                 >
                   {p}
@@ -334,10 +304,10 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
           </div>
 
           {/* ── Resetear contraseña del admin ── */}
-          <div className="border border-gray-700/50 rounded-lg overflow-hidden">
+          <div className="border border-white/5 rounded-lg overflow-hidden">
             <button
               onClick={() => setShowResetPw(v => !v)}
-              className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-800/60 hover:bg-gray-800 transition-colors text-sm"
+              className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-900/60 hover:bg-gray-800 transition-colors text-sm"
             >
               <span className="flex items-center gap-2 text-gray-300 font-medium">
                 <KeyRound className="w-3.5 h-3.5 text-amber-400" />
@@ -355,7 +325,7 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
                   <div className="relative flex-1">
                     <input
                       type={showPwText ? 'text' : 'password'}
-                      className="w-full bg-gray-800 border border-gray-700 focus:border-amber-500 focus:outline-none rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600 pr-8"
+                      className="w-full bg-gray-950 border border-white/10 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none rounded-lg px-3 py-1.5 text-sm text-gray-200 placeholder:text-gray-600 pr-8"
                       placeholder="Nueva contraseña (mín. 6 caracteres)..."
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
@@ -385,13 +355,13 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
           </div>
 
           {/* ── Gestión de roles ── */}
-          <div className="border border-gray-700/50 rounded-lg overflow-hidden">
+          <div className="border border-white/5 rounded-lg overflow-hidden">
             <button
               onClick={() => setShowRoles(v => !v)}
-              className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-800/60 hover:bg-gray-800 transition-colors text-sm"
+              className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-900/60 hover:bg-gray-800 transition-colors text-sm"
             >
               <span className="flex items-center gap-2 text-gray-300 font-medium">
-                <Shield className="w-3.5 h-3.5 text-indigo-400" />
+                <Shield className="w-3.5 h-3.5 text-sky-400" />
                 Roles del restaurante
               </span>
               {showRoles ? <ChevronUp className="w-3.5 h-3.5 text-gray-500" /> : <ChevronDown className="w-3.5 h-3.5 text-gray-500" />}
@@ -405,7 +375,7 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
                     {tenantRoles.map(r => (
                       <span
                         key={r.id}
-                        className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-gray-800 border border-gray-700"
+                        className="flex items-center gap-1.5 text-xs px-2 py-1 rounded-full bg-gray-900 border border-white/10"
                       >
                         <span
                           className="w-2 h-2 rounded-full flex-shrink-0"
@@ -422,11 +392,11 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
                 )}
 
                 {/* Crear nuevo rol */}
-                <div className="border-t border-gray-700/50 pt-3">
+                <div className="border-t border-white/5 pt-3">
                   <p className="text-xs text-gray-500 mb-2">Crear nuevo rol para <span className="text-gray-300">{t.name}</span></p>
                   <div className="flex gap-2">
                     <input
-                      className="flex-1 bg-gray-800 border border-gray-700 focus:border-indigo-500 focus:outline-none rounded-lg px-3 py-1.5 text-sm text-white placeholder-gray-600"
+                      className="flex-1 bg-gray-950 border border-white/10 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none rounded-lg px-3 py-1.5 text-sm text-gray-200 placeholder:text-gray-600"
                       placeholder="Nombre del rol..."
                       value={newRoleName}
                       onChange={e => setNewRoleName(e.target.value)}
@@ -437,13 +407,13 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
                       type="color"
                       value={newRoleColor}
                       onChange={e => setNewRoleColor(e.target.value)}
-                      className="w-9 h-9 rounded-lg border border-gray-700 bg-gray-800 cursor-pointer p-0.5"
+                      className="w-9 h-9 rounded-lg border border-white/10 bg-gray-950 cursor-pointer p-0.5"
                       title="Color del rol"
                     />
                     <button
                       onClick={handleCreateRole}
                       disabled={creatingRole || !newRoleName.trim()}
-                      className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs rounded-lg transition-colors"
+                      className="flex items-center gap-1 px-3 py-1.5 bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white text-xs rounded-lg transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       {creatingRole ? '...' : 'Crear'}
@@ -463,7 +433,7 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
         </div>
 
         {/* Footer — Acciones */}
-        <div className="p-5 border-t border-gray-800 space-y-3">
+        <div className="border-t border-white/5 pt-4 mt-4 space-y-3">
 
           {/* Extender trial */}
           <div className="flex items-center gap-2">
@@ -473,7 +443,7 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
                 key={d}
                 onClick={() => extendMut.mutate(d)}
                 disabled={isPending}
-                className="text-xs px-3 py-1.5 rounded-lg bg-amber-900/50 hover:bg-amber-800/60 text-amber-300 transition-colors disabled:opacity-50"
+                className="text-xs px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 transition-colors disabled:opacity-50"
               >
                 +{d}d
               </button>
@@ -483,40 +453,41 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
           {/* Activate / Suspend */}
           <div className="flex gap-2">
             {t.status !== 'ACTIVE' && (
-              <button
+              <Button
+                variant="secondary"
+                className="flex-1"
                 onClick={() => activateMut.mutate()}
                 disabled={isPending}
-                className="flex-1 text-sm py-2 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50"
               >
                 Activar
-              </button>
+              </Button>
             )}
             {t.status !== 'SUSPENDED' && (
-              <button
+              <Button
+                variant="danger"
+                className="flex-1"
                 onClick={() => suspendMut.mutate()}
                 disabled={isPending}
-                className="flex-1 text-sm py-2 rounded-lg bg-rose-700 hover:bg-rose-600 text-white transition-colors disabled:opacity-50"
               >
                 Suspender
-              </button>
+              </Button>
             )}
           </div>
 
           {/* Zona peligrosa */}
-          <div className="border-t border-red-900/40 pt-3 mt-1">
-            <p className="text-xs text-red-500/70 font-medium mb-2 flex items-center gap-1">
+          <div className="border-t border-rose-500/20 pt-3 mt-1">
+            <p className="text-xs text-rose-400/70 font-medium mb-2 flex items-center gap-1">
               <Trash2 className="w-3 h-3" /> Zona peligrosa
             </p>
             <button
               onClick={() => setCleanConfirmOpen(true)}
               disabled={isPending}
-              className="w-full text-xs py-2 rounded-lg bg-red-950/60 hover:bg-red-900/60 text-red-400 border border-red-900/40 transition-colors disabled:opacity-50"
+              className="w-full text-xs py-2 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 transition-colors disabled:opacity-50"
             >
               {cleanDemoMut.isPending ? 'Limpiando…' : '🧹 Limpiar datos de prueba'}
             </button>
           </div>
         </div>
-      </div>
 
       <ConfirmModal
         isOpen={cleanConfirmOpen}
@@ -528,6 +499,6 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
         onConfirm={() => { setCleanConfirmOpen(false); cleanDemoMut.mutate(); }}
         onCancel={() => setCleanConfirmOpen(false)}
       />
-    </div>
+    </Modal>
   );
 }

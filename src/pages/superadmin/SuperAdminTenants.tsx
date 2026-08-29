@@ -6,6 +6,11 @@ import { Building2, Plus, RefreshCw, Search, Eye, Download, Trash2, ChevronLeft,
 import superadminService, { type Tenant } from '@/services/superadmin/superadminService';
 import SuperAdminTenantModal from './SuperAdminTenantModal';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { StatusBadge } from '@/components/ui/superadmin/statusBadge';
+import { Table, Thead, Tr, Th, Td } from '@/components/ui/superadmin/table';
+import { Button } from '@/components/ui/superadmin/button';
+import { PageHeader } from '@/components/ui/superadmin/pageHeader';
+import { EmptyState } from '@/components/ui/superadmin/emptyState';
 
 // ─── Constantes ─────────────────────────────────────────────────────────────
 
@@ -13,20 +18,6 @@ const PAGE_SIZE = 20;
 
 const MRR_BY_PLAN: Record<string, number> = {
   STARTER: 29000, PRO: 40000, ENTERPRISE: 80000,
-};
-
-const STATUS_STYLE: Record<string, string> = {
-  ACTIVE:    'bg-emerald-900/50 text-emerald-300',
-  SUSPENDED: 'bg-rose-900/50 text-rose-300',
-  TRIAL:     'bg-amber-900/50 text-amber-300',
-  PAST_DUE:  'bg-yellow-900/50 text-yellow-300',
-  CANCELLED: 'bg-gray-800 text-gray-500',
-};
-
-const PLAN_STYLE: Record<string, string> = {
-  STARTER:    'bg-gray-800 text-gray-300',
-  PRO:        'bg-indigo-900/50 text-indigo-300',
-  ENTERPRISE: 'bg-yellow-900/50 text-yellow-300',
 };
 
 const SEMAFORO_ORDER: Record<string, number> = { red: 0, yellow: 1, green: 2 };
@@ -285,39 +276,29 @@ export default function SuperAdminTenants() {
       />
 
       {/* Encabezado */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Building2 className="w-6 h-6 text-indigo-400" />
-            Clientes
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {filtered.length} de {tenants.length} tenants
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => refetch()}
-            className="p-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-          </button>
-          <button
-            onClick={exportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm rounded-lg transition-colors"
-          >
-            <Download className="w-4 h-4" />
-            Exportar CSV
-          </button>
-          <Link
-            to="/superadmin/tenants/new"
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Nuevo cliente
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        icon={Building2}
+        title="Clientes"
+        sub={`${filtered.length} de ${tenants.length} tenants`}
+        actions={
+          <>
+            <Button variant="ghost" size="md" onClick={() => refetch()} aria-label="Refrescar">
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+            <Button variant="secondary" size="md" onClick={exportCSV}>
+              <Download className="w-4 h-4" />
+              Exportar CSV
+            </Button>
+            <Link
+              to="/superadmin/tenants/new"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg shadow-sm bg-brand-500 hover:bg-brand-600 text-white transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Nuevo cliente
+            </Link>
+          </>
+        }
+      />
 
       {/* Filtros */}
       <div className="flex flex-wrap gap-3 mb-4">
@@ -329,7 +310,7 @@ export default function SuperAdminTenants() {
             value={q}
             onChange={e => setFilter(setQ)(e.target.value)}
             placeholder="Buscar por nombre o slug…"
-            className="w-full bg-gray-900 border border-gray-800 rounded-lg pl-9 pr-4 py-2 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition-colors"
+            className="w-full bg-gray-950 border border-white/10 rounded-lg pl-9 pr-4 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none transition-colors"
           />
         </div>
 
@@ -339,7 +320,7 @@ export default function SuperAdminTenants() {
             <button
               key={f}
               onClick={() => setFilter(setTestFilter)(f)}
-              className={`px-3 py-2 transition-colors ${testFilter === f ? 'bg-indigo-600 text-white' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}
+              className={`px-3 py-2 transition-colors ${testFilter === f ? 'bg-brand-500 text-white' : 'bg-gray-900 text-gray-400 hover:bg-gray-800'}`}
             >
               {f === 'all' ? 'Todos' : f === 'real' ? 'Solo reales' : 'Solo test'}
             </button>
@@ -349,7 +330,7 @@ export default function SuperAdminTenants() {
         <select
           value={statusFilter}
           onChange={e => setFilter(setStatusFilter)(e.target.value)}
-          className="bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+          className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
         >
           <option value="">Todos los estados</option>
           <option value="TRIAL">TRIAL</option>
@@ -362,7 +343,7 @@ export default function SuperAdminTenants() {
         <select
           value={planFilter}
           onChange={e => setFilter(setPlanFilter)(e.target.value)}
-          className="bg-gray-900 border border-gray-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+          className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
         >
           <option value="">Todos los planes</option>
           <option value="STARTER">STARTER</option>
@@ -375,8 +356,8 @@ export default function SuperAdminTenants() {
           onClick={() => { setArchivedFilter(v => !v); setPage(1); }}
           className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg border transition-colors ${
             archivedFilter
-              ? 'bg-amber-700 text-amber-100 border-amber-600'
-              : 'bg-gray-900 text-gray-400 border-gray-800 hover:bg-gray-800'
+              ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+              : 'bg-gray-950 text-gray-400 border-white/10 hover:bg-white/5'
           }`}
         >
           <Archive className="w-3.5 h-3.5" />
@@ -385,39 +366,36 @@ export default function SuperAdminTenants() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <div className="bg-gray-900/60 border border-white/5 rounded-xl overflow-hidden">
         {isLoading ? (
           <div className="p-8 space-y-3">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-10 bg-gray-800 rounded animate-pulse" />
+              <div key={i} className="h-10 bg-white/5 rounded animate-pulse" />
             ))}
           </div>
         ) : filtered.length === 0 ? (
-          <div className="py-16 text-center text-gray-600">
-            <Building2 className="w-10 h-10 mx-auto mb-3 opacity-30" />
-            <p>No se encontraron clientes</p>
-          </div>
+          <EmptyState icon={Building2} title="No se encontraron clientes" />
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-gray-500 border-b border-gray-800 bg-gray-900/70">
-                    <th className="px-3 py-3 w-8"></th>
-                    <th className="px-3 py-3 font-medium">Nombre</th>
-                    <th className="px-3 py-3 font-medium">Slug</th>
-                    <th className="px-3 py-3 font-medium">Plan</th>
-                    <th className="px-3 py-3 font-medium">MRR</th>
-                    <th className="px-3 py-3 font-medium text-right">Órdenes 7d</th>
-                    <th className="px-3 py-3 font-medium">Estado</th>
-                    <th className="px-3 py-3 font-medium">Trial vence</th>
-                    <th className="px-3 py-3 font-medium">Registro</th>
-                    <th className="px-3 py-3 font-medium text-right">Usuarios</th>
-                    <th className="px-3 py-3 font-medium">Último acceso</th>
-                    <th className="px-3 py-3 font-medium text-right">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
+                <Thead>
+                  <Tr>
+                    <Th className="w-8"></Th>
+                    <Th>Nombre</Th>
+                    <Th>Slug</Th>
+                    <Th>Plan</Th>
+                    <Th>MRR</Th>
+                    <Th className="text-right">Órdenes 7d</Th>
+                    <Th>Estado</Th>
+                    <Th>Trial vence</Th>
+                    <Th>Registro</Th>
+                    <Th className="text-right">Usuarios</Th>
+                    <Th>Último acceso</Th>
+                    <Th className="text-right">Acciones</Th>
+                  </Tr>
+                </Thead>
+                <tbody>
                   {paginated.map((t: any) => {
                     const semInfo = getSemaforoInfo(t);
                     const sem = semInfo.color;
@@ -427,72 +405,68 @@ export default function SuperAdminTenants() {
                     const email = t.contact_email ?? t.contactEmail;
                     const waNumber = phone ? normalizeWaNumber(phone) : null;
                     return (
-                      <tr key={t.id} className="hover:bg-gray-800/40 transition-colors">
+                      <Tr key={t.id}>
 
                         {/* Semáforo */}
-                        <td className="px-3 py-3">
+                        <Td>
                           <div
                             className={`w-3 h-3 rounded-full mx-auto ${sem === 'green' ? 'bg-emerald-400' : sem === 'yellow' ? 'bg-amber-400' : 'bg-rose-500'}`}
                             title={semInfo.reason}
                           />
-                        </td>
+                        </Td>
 
                         {/* Nombre + badge TEST */}
-                        <td className="px-3 py-3 font-medium text-white">
+                        <Td className="font-medium text-white">
                           <div className="flex items-center gap-2 flex-wrap">
                             {t.name}
                             {t.isTest && (
                               <span className="text-xs px-1.5 py-0.5 rounded bg-gray-700 text-gray-400 font-normal">TEST</span>
                             )}
                           </div>
-                        </td>
+                        </Td>
 
                         {/* Slug */}
-                        <td className="px-3 py-3">
+                        <Td>
                           <span className="font-mono text-xs text-gray-400">{t.slug}</span>
-                        </td>
+                        </Td>
 
                         {/* Plan */}
-                        <td className="px-3 py-3">
-                          <span className={`text-xs px-2 py-0.5 rounded-full uppercase ${PLAN_STYLE[t.plan?.toUpperCase()] ?? 'bg-gray-800 text-gray-300'}`}>
-                            {t.plan}
-                          </span>
-                        </td>
+                        <Td>
+                          <StatusBadge status={t.plan?.toUpperCase() ?? ''} kind="plan" />
+                        </Td>
 
                         {/* MRR */}
-                        <td className="px-3 py-3 text-xs">
-                          {mrr > 0 ? <span className="text-emerald-400 font-medium">{fmt$(mrr)}</span> : <span className="text-gray-600">—</span>}
-                        </td>
+                        <Td className="text-xs">
+                          {mrr > 0 ? <span className="text-emerald-400 font-medium tabular-nums">{fmt$(mrr)}</span> : <span className="text-gray-600">—</span>}
+                        </Td>
 
                         {/* Órdenes 7d */}
-                        <td className="px-3 py-3 text-right">
-                          <span className={`font-mono text-sm ${(t.orders7d ?? 0) > 0 ? 'text-emerald-400' : 'text-gray-500'}`}>
+                        <Td className="text-right">
+                          <span className={`font-mono text-sm tabular-nums ${(t.orders7d ?? 0) > 0 ? 'text-emerald-400' : 'text-gray-500'}`}>
                             {t.orders7d ?? 0}
                           </span>
-                        </td>
+                        </Td>
 
                         {/* Estado */}
-                        <td className="px-3 py-3">
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${STATUS_STYLE[t.status] ?? 'bg-gray-800 text-gray-400'}`}>
-                            {t.status}
-                          </span>
-                        </td>
+                        <Td>
+                          <StatusBadge status={t.status} kind="tenant" />
+                        </Td>
 
                         {/* Trial vence */}
-                        <td className="px-3 py-3 text-xs text-gray-400">
+                        <Td className="text-xs text-gray-400">
                           {t.status === 'TRIAL' ? fmtDate(t.trialEndsAt) : '—'}
-                        </td>
+                        </Td>
 
                         {/* Registro */}
-                        <td className="px-3 py-3 text-xs text-gray-400">
+                        <Td className="text-xs text-gray-400">
                           {fmtDate(t.created_at)}
-                        </td>
+                        </Td>
 
                         {/* Usuarios */}
-                        <td className="px-3 py-3 text-right text-gray-400">{t._count?.users ?? 0}</td>
+                        <Td className="text-right text-gray-400 tabular-nums">{t._count?.users ?? 0}</Td>
 
                         {/* Último acceso */}
-                        <td className="px-3 py-3 text-xs">
+                        <Td className="text-xs">
                           {isOnline ? (
                             <span className="flex items-center gap-1 text-emerald-400 font-semibold animate-pulse">
                               <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
@@ -501,10 +475,10 @@ export default function SuperAdminTenants() {
                           ) : (
                             <span className={isOld ? 'text-rose-400' : 'text-gray-400'}>{lastAccess}</span>
                           )}
-                        </td>
+                        </Td>
 
                         {/* Acciones */}
-                        <td className="px-3 py-3">
+                        <Td>
                           <div className="flex items-center justify-end gap-1.5 flex-nowrap">
                             {/* WhatsApp */}
                             {waNumber ? (
@@ -513,14 +487,14 @@ export default function SuperAdminTenants() {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title={`WhatsApp: ${phone}`}
-                                className="text-xs p-1.5 rounded-md bg-emerald-800/50 hover:bg-emerald-700/60 text-emerald-300 transition-colors flex items-center"
+                                className="text-xs p-1.5 rounded-md bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 transition-colors flex items-center"
                               >
                                 <MessageCircle className="w-3 h-3" />
                               </a>
                             ) : (
                               <span
                                 title="Sin teléfono de contacto"
-                                className="text-xs p-1.5 rounded-md bg-gray-800/40 text-gray-700 flex items-center cursor-not-allowed"
+                                className="text-xs p-1.5 rounded-md bg-white/5 text-gray-600 flex items-center cursor-not-allowed"
                               >
                                 <MessageCircle className="w-3 h-3" />
                               </span>
@@ -531,35 +505,32 @@ export default function SuperAdminTenants() {
                               <a
                                 href={`mailto:${email}`}
                                 title={`Email: ${email}`}
-                                className="text-xs p-1.5 rounded-md bg-blue-800/50 hover:bg-blue-700/60 text-blue-300 transition-colors flex items-center"
+                                className="text-xs p-1.5 rounded-md bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 transition-colors flex items-center"
                               >
                                 <Mail className="w-3 h-3" />
                               </a>
                             ) : (
                               <span
                                 title="Sin email de contacto"
-                                className="text-xs p-1.5 rounded-md bg-gray-800/40 text-gray-700 flex items-center cursor-not-allowed"
+                                className="text-xs p-1.5 rounded-md bg-white/5 text-gray-600 flex items-center cursor-not-allowed"
                               >
                                 <Mail className="w-3 h-3" />
                               </span>
                             )}
 
                             {/* Separador */}
-                            <span className="w-px h-5 bg-gray-700/50 mx-0.5" />
+                            <span className="w-px h-5 bg-white/10 mx-0.5" />
 
                             <Link
                               to={`/superadmin/tenants/${t.id}`}
-                              className="text-xs px-2.5 py-1 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-200 transition-colors"
+                              className="text-xs px-2.5 py-1 rounded-md bg-gray-800 hover:bg-gray-700 border border-white/10 text-gray-200 transition-colors"
                             >
                               Ver
                             </Link>
 
-                            <button
-                              onClick={() => handleImpersonate(t)}
-                              className="text-xs px-2.5 py-1 rounded-md bg-indigo-800 hover:bg-indigo-700 text-indigo-200 transition-colors flex items-center gap-1"
-                            >
+                            <Button variant="primary" size="sm" onClick={() => handleImpersonate(t)}>
                               <Eye className="w-3 h-3" />Entrar
-                            </button>
+                            </Button>
 
                             {/* Cambiar plan */}
                             <select
@@ -568,7 +539,7 @@ export default function SuperAdminTenants() {
                                 if (e.target.value) setPlanChangeConfirm({ tenant: t, plan: e.target.value });
                                 e.currentTarget.value = '';
                               }}
-                              className="text-xs px-2 py-1 rounded-md bg-violet-900/50 hover:bg-violet-800/60 text-violet-300 border border-violet-700/30 cursor-pointer focus:outline-none transition-colors"
+                              className="text-xs px-2 py-1 rounded-md bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/20 cursor-pointer focus:outline-none transition-colors"
                             >
                               <option value="" disabled>Plan ▼</option>
                               <option value="STARTER">Starter</option>
@@ -577,66 +548,41 @@ export default function SuperAdminTenants() {
                             </select>
 
                             {t.status === 'TRIAL' && (
-                              <button
-                                onClick={() => extendMut.mutate({ id: t.id, days: 7 })}
-                                disabled={isBusy}
-                                className="text-xs px-2.5 py-1 rounded-md bg-amber-900/50 hover:bg-amber-800/60 text-amber-300 transition-colors disabled:opacity-50"
-                              >
+                              <Button variant="secondary" size="sm" onClick={() => extendMut.mutate({ id: t.id, days: 7 })} disabled={isBusy}>
                                 +7d
-                              </button>
+                              </Button>
                             )}
 
                             {t.status === 'SUSPENDED' ? (
-                              <button
-                                onClick={() => activateMut.mutate(t.id)}
-                                disabled={isBusy}
-                                className="text-xs px-2.5 py-1 rounded-md bg-emerald-700 hover:bg-emerald-600 text-white transition-colors disabled:opacity-50"
-                              >
+                              <Button variant="secondary" size="sm" onClick={() => activateMut.mutate(t.id)} disabled={isBusy}>
                                 Activar
-                              </button>
+                              </Button>
                             ) : (
-                              <button
-                                onClick={() => suspendMut.mutate(t.id)}
-                                disabled={isBusy}
-                                className="text-xs px-2.5 py-1 rounded-md bg-rose-700 hover:bg-rose-600 text-white transition-colors disabled:opacity-50"
-                              >
+                              <Button variant="danger" size="sm" onClick={() => suspendMut.mutate(t.id)} disabled={isBusy}>
                                 Suspender
-                              </button>
+                              </Button>
                             )}
 
                             {/* Eliminar — solo archivados (evita borrado de clientes activos) */}
                             {t.isArchived && (
-                              <button
-                                onClick={() => setDeleteTarget(t)}
-                                disabled={deleteMut.isPending}
-                                className="text-xs px-2.5 py-1 rounded-md bg-rose-900/70 hover:bg-rose-800 text-rose-300 transition-colors disabled:opacity-50 flex items-center gap-1"
-                              >
+                              <Button variant="danger" size="sm" onClick={() => setDeleteTarget(t)} disabled={deleteMut.isPending}>
                                 <Trash2 className="w-3 h-3" />Eliminar
-                              </button>
+                              </Button>
                             )}
 
                             {/* Archivar / Restaurar */}
                             {!archivedFilter ? (
-                              <button
-                                onClick={() => archiveMut.mutate(t.id)}
-                                disabled={isBusy}
-                                title="Archivar cliente"
-                                className="text-xs px-2.5 py-1 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 transition-colors disabled:opacity-50 flex items-center gap-1"
-                              >
+                              <Button variant="ghost" size="sm" onClick={() => archiveMut.mutate(t.id)} disabled={isBusy} title="Archivar cliente">
                                 <Archive className="w-3 h-3" />
-                              </button>
+                              </Button>
                             ) : (
-                              <button
-                                onClick={() => unarchiveMut.mutate(t.id)}
-                                disabled={isBusy}
-                                className="text-xs px-2.5 py-1 rounded-md bg-amber-700 hover:bg-amber-600 text-white transition-colors disabled:opacity-50 flex items-center gap-1"
-                              >
+                              <Button variant="secondary" size="sm" onClick={() => unarchiveMut.mutate(t.id)} disabled={isBusy}>
                                 <ArchiveRestore className="w-3 h-3" />Restaurar
-                              </button>
+                              </Button>
                             )}
                           </div>
-                        </td>
-                      </tr>
+                        </Td>
+                      </Tr>
                     );
                   })}
                 </tbody>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { RefreshCw, ChevronUp, ChevronDown, CheckCircle } from 'lucide-react';
 import superadminService, { type AlertsResponse } from '@/services/superadmin/superadminService';
 import toast from 'react-hot-toast';
+import { Button } from '@/components/ui/superadmin/button';
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -25,10 +26,10 @@ interface Alert {
 // ─── Estilos por severidad ────────────────────────────────────────────────────
 
 const STYLES: Record<AlertSeverity, { bg: string; border: string; dot: string }> = {
-  critical: { bg: 'bg-red-950/40',     border: 'border-red-600',    dot: 'bg-red-500'    },
-  warning:  { bg: 'bg-yellow-950/40',  border: 'border-yellow-600', dot: 'bg-yellow-400' },
-  info:     { bg: 'bg-blue-950/40',    border: 'border-blue-600',   dot: 'bg-blue-400'   },
-  success:  { bg: 'bg-emerald-950/40', border: 'border-emerald-600',dot: 'bg-emerald-400'},
+  critical: { bg: 'bg-rose-500/10',     border: 'border-rose-500',     dot: 'bg-rose-400'    },
+  warning:  { bg: 'bg-amber-500/10',    border: 'border-amber-500',    dot: 'bg-amber-400'   },
+  info:     { bg: 'bg-sky-500/10',      border: 'border-sky-500',      dot: 'bg-sky-400'     },
+  success:  { bg: 'bg-emerald-500/10',  border: 'border-emerald-500',  dot: 'bg-emerald-400' },
 };
 
 // ─── AlertCard ────────────────────────────────────────────────────────────────
@@ -99,35 +100,24 @@ function AlertCard({
           {/* Botones de acción para trials */}
           {isTrialAlert && alert.tenantId ? (
             <div className="flex flex-wrap gap-1.5 mt-2">
-              <button
-                onClick={doExtend}
-                disabled={busy}
-                className="text-xs px-2 py-1 rounded bg-amber-600/20 hover:bg-amber-600/40 text-amber-300 border border-amber-700/50 transition-colors disabled:opacity-50"
-              >
+              <Button variant="secondary" size="sm" onClick={doExtend} disabled={busy}>
                 +7 días
-              </button>
-              <button
-                onClick={doActivate}
-                disabled={busy}
-                className="text-xs px-2 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 border border-emerald-700/50 transition-colors disabled:opacity-50"
-              >
+              </Button>
+              <Button variant="primary" size="sm" onClick={doActivate} disabled={busy}>
                 Activar plan
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={openWhatsApp}
                 disabled={!phone}
                 title={phone ? `WhatsApp ${phone}` : 'Sin teléfono registrado'}
-                className="text-xs px-2 py-1 rounded bg-green-600/20 hover:bg-green-600/40 text-green-300 border border-green-700/50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 WhatsApp
-              </button>
-              <button
-                onClick={doSuspend}
-                disabled={busy}
-                className="text-xs px-2 py-1 rounded bg-red-600/20 hover:bg-red-600/40 text-red-300 border border-red-700/50 transition-colors disabled:opacity-50"
-              >
+              </Button>
+              <Button variant="danger" size="sm" onClick={doSuspend} disabled={busy}>
                 Suspender
-              </button>
+              </Button>
             </div>
           ) : alert.actionLabel && alert.actionUrl ? (
             <button
@@ -184,7 +174,7 @@ export function AlertsPanel({ compact = false }: AlertsPanelProps) {
 
   if (loading && !data) {
     return (
-      <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+      <div className="bg-gray-900/60 border border-white/5 rounded-xl p-5">
         <div className="flex items-center gap-2 mb-4">
           <div className="h-4 w-24 bg-gray-800 rounded animate-pulse" />
         </div>
@@ -198,10 +188,10 @@ export function AlertsPanel({ compact = false }: AlertsPanelProps) {
   }
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+    <div className="bg-gray-900/60 border border-white/5 rounded-xl overflow-hidden">
       {/* Header */}
       <div
-        className="flex items-center justify-between px-5 py-3.5 cursor-pointer hover:bg-gray-800/50 transition-colors select-none"
+        className="flex items-center justify-between px-5 py-3.5 cursor-pointer hover:bg-white/5 transition-colors select-none"
         onClick={() => setCollapsed(c => !c)}
       >
         <div className="flex items-center gap-3">
@@ -209,12 +199,12 @@ export function AlertsPanel({ compact = false }: AlertsPanelProps) {
             Alertas
           </h2>
           {criticalCount > 0 && (
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-red-600 text-white animate-pulse">
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-rose-500 text-white animate-pulse tabular-nums">
               {criticalCount} crítica{criticalCount > 1 ? 's' : ''}
             </span>
           )}
           {alerts.length > 0 && criticalCount === 0 && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-400">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-700 text-gray-400 tabular-nums">
               {alerts.length}
             </span>
           )}
@@ -236,19 +226,19 @@ export function AlertsPanel({ compact = false }: AlertsPanelProps) {
 
       {/* Body */}
       {!collapsed && (
-        <div className="border-t border-gray-800">
+        <div className="border-t border-white/5">
           {alerts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-gray-600">
-              <CheckCircle className="w-8 h-8 mb-2 text-emerald-700" />
+              <CheckCircle className="w-8 h-8 mb-2 text-emerald-500/70" />
               <p className="text-sm">Sin alertas pendientes</p>
               {lastRefresh && (
-                <p className="text-xs text-gray-700 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   Actualizado: {lastRefresh.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}
                 </p>
               )}
             </div>
           ) : (
-            <div className="divide-y divide-gray-800/50">
+            <div className="divide-y divide-white/5">
               {/* Agrupar por severidad */}
               {(['critical', 'warning', 'info', 'success'] as AlertSeverity[]).map(sev => {
                 const group = alerts.filter(a => a.severity === sev);

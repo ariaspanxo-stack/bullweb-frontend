@@ -12,6 +12,10 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import superadminService from '@/services/superadmin/superadminService';
+import { StatusBadge } from '@/components/ui/superadmin/statusBadge';
+import { Button } from '@/components/ui/superadmin/button';
+import { Modal } from '@/components/ui/superadmin/modal';
+import { Input, Select } from '@/components/ui/superadmin/input';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -41,33 +45,6 @@ function fmtDayLabel(d: string | Date) {
   return new Date(d).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit' });
 }
 
-const PLAN_STYLE: Record<string, string> = {
-  STARTER:    'bg-gray-700 text-gray-200',
-  PRO:        'bg-indigo-900/70 text-indigo-200',
-  ENTERPRISE: 'bg-yellow-900/70 text-yellow-200',
-};
-
-const STATUS_STYLE: Record<string, { badge: string; icon: React.ReactNode }> = {
-  ACTIVE:    { badge: 'bg-emerald-900/60 text-emerald-300', icon: <CheckCircle className="w-3 h-3" /> },
-  TRIAL:     { badge: 'bg-amber-900/60 text-amber-300',   icon: <Clock className="w-3 h-3" /> },
-  SUSPENDED: { badge: 'bg-rose-900/60 text-rose-300',     icon: <XCircle className="w-3 h-3" /> },
-  CANCELLED: { badge: 'bg-gray-800 text-gray-400',        icon: <XCircle className="w-3 h-3" /> },
-  PAST_DUE:  { badge: 'bg-yellow-900/60 text-yellow-300', icon: <AlertTriangle className="w-3 h-3" /> },
-};
-
-const PAY_STATUS_STYLE: Record<string, string> = {
-  PAID:     'bg-emerald-900/50 text-emerald-300',
-  FAILED:   'bg-rose-900/50 text-rose-300',
-  PENDING:  'bg-amber-900/50 text-amber-300',
-  OVERDUE:  'bg-red-900/60 text-red-300',
-  REFUNDED: 'bg-gray-700 text-gray-400',
-};
-
-const ORDER_STATUS_STYLE: Record<string, string> = {
-  COMPLETED: 'text-emerald-400',
-  PENDING:   'text-amber-400',
-  CANCELLED: 'text-rose-400',
-};
 
 function semaforo(orders7d: number, status: string) {
   if (status === 'SUSPENDED' || status === 'CANCELLED') return 'red';
@@ -111,62 +88,49 @@ function QuickPayModal({ tenantId, tenantName, plan, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md border border-gray-700 shadow-2xl">
-        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-          <CreditCard className="w-5 h-5 text-teal-400" />Registrar pago · {tenantName}
-        </h2>
+    <Modal open onClose={onClose} title={`Registrar pago · ${tenantName}`}>
         <div className="space-y-3">
           {[
             { label: 'Monto CLP *', key: 'amount', type: 'number', placeholder: '28000' },
             { label: 'Concepto',    key: 'concept', type: 'text',   placeholder: 'Suscripción mayo 2026' },
             { label: 'N° Factura',  key: 'invoiceNumber', type: 'text', placeholder: 'FAC-001' },
           ].map(f => (
-            <div key={f.key}>
-              <label className="text-xs text-gray-400 mb-1 block">{f.label}</label>
-              <input type={f.type} value={(form as any)[f.key]}
-                onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                placeholder={f.placeholder}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500" />
-            </div>
+            <Input
+              key={f.key}
+              label={f.label}
+              type={f.type}
+              value={(form as any)[f.key]}
+              onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
+              placeholder={f.placeholder}
+            />
           ))}
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-gray-400 mb-1 block">Estado</label>
-              <select value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500">
-                <option value="PAID">Pagado</option>
-                <option value="PENDING">Pendiente</option>
-                <option value="OVERDUE">Vencido</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-gray-400 mb-1 block">Método</label>
-              <select value={form.method} onChange={e => setForm(p => ({ ...p, method: e.target.value }))}
-                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500">
-                <option value="transferencia">Transferencia</option>
-                <option value="flow">Flow</option>
-                <option value="efectivo">Efectivo</option>
-                <option value="otro">Otro</option>
-              </select>
-            </div>
+            <Select label="Estado" value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value }))}>
+              <option value="PAID">Pagado</option>
+              <option value="PENDING">Pendiente</option>
+              <option value="OVERDUE">Vencido</option>
+            </Select>
+            <Select label="Método" value={form.method} onChange={e => setForm(p => ({ ...p, method: e.target.value }))}>
+              <option value="transferencia">Transferencia</option>
+              <option value="flow">Flow</option>
+              <option value="efectivo">Efectivo</option>
+              <option value="otro">Otro</option>
+            </Select>
           </div>
           <div>
-            <label className="text-xs text-gray-400 mb-1 block">Notas</label>
+            <label className="block text-xs font-medium text-gray-400 mb-1.5">Notas</label>
             <textarea rows={2} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500 resize-none"
+              className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder:text-gray-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none resize-none"
               placeholder="Notas del pago..." />
           </div>
         </div>
         <div className="flex gap-3 mt-5">
-          <button onClick={onClose} className="flex-1 border border-gray-600 text-gray-300 py-2 rounded-xl text-sm hover:bg-gray-700 transition-colors">Cancelar</button>
-          <button onClick={handleSubmit} disabled={!form.amount || submitting}
-            className="flex-1 bg-teal-600 hover:bg-teal-500 disabled:opacity-40 text-white font-bold py-2 rounded-xl text-sm transition-colors">
+          <Button variant="secondary" className="flex-1" onClick={onClose}>Cancelar</Button>
+          <Button variant="primary" className="flex-1" onClick={handleSubmit} disabled={!form.amount || submitting} loading={submitting}>
             {submitting ? 'Registrando…' : '✅ Registrar'}
-          </button>
+          </Button>
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -321,7 +285,6 @@ export default function SuperAdminTenantDetail() {
     );
   }
 
-  const statusInfo = STATUS_STYLE[tenant.status] ?? STATUS_STYLE.SUSPENDED;
   const isSuspended = tenant.status === 'SUSPENDED' || tenant.status === 'CANCELLED';
 
   return (
@@ -349,7 +312,7 @@ export default function SuperAdminTenantDetail() {
       </div>
 
       {/* ══ BLOQUE 1 — Header ════════════════════════════════════════════════ */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6">
+      <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-6">
         <div className="flex flex-col md:flex-row md:items-start gap-5">
           {/* Logo / Inicial */}
           <div className="flex-shrink-0">
@@ -375,13 +338,9 @@ export default function SuperAdminTenantDetail() {
               )}
             </div>
             <p className="text-gray-500 text-sm font-mono mb-2">@{tenant.slug}</p>
-            <div className="flex flex-wrap gap-2">
-              <span className={`text-xs px-3 py-1 rounded-full font-semibold uppercase ${PLAN_STYLE[tenant.plan?.toUpperCase()] ?? 'bg-gray-700 text-gray-300'}`}>
-                {tenant.plan}
-              </span>
-              <span className={`text-xs px-3 py-1 rounded-full flex items-center gap-1 font-semibold ${statusInfo.badge}`}>
-                {statusInfo.icon}{tenant.status}
-              </span>
+            <div className="flex flex-wrap gap-2 items-center">
+              <StatusBadge status={tenant.plan?.toUpperCase() ?? ''} kind="plan" />
+              <StatusBadge status={tenant.status} kind="tenant" />
               {tenant.status === 'TRIAL' && tenant.trialEndsAt && (
                 <span className="text-xs px-3 py-1 rounded-full bg-gray-800 text-gray-400">
                   Trial hasta {fmtDate(tenant.trialEndsAt)}
@@ -392,46 +351,43 @@ export default function SuperAdminTenantDetail() {
 
           {/* Acciones rápidas */}
           <div className="flex flex-wrap gap-2">
-            <button
-              onClick={handleImpersonate}
-              className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-xl transition-colors"
-            >
+            <Button variant="primary" onClick={handleImpersonate}>
               <ExternalLink className="w-4 h-4" />Entrar al POS
-            </button>
+            </Button>
             <a href={waLink} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-semibold rounded-xl transition-colors">
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
               <MessageCircle className="w-4 h-4" />WhatsApp
             </a>
             <div className="relative group">
-              <button
+              <Button
+                variant="secondary"
                 disabled={changingPlan}
-                className="flex items-center gap-1.5 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold rounded-xl transition-colors"
               >
                 <Settings className="w-4 h-4" />Plan <ChevronDown className="w-3 h-3" />
-              </button>
-              <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl min-w-[140px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
+              </Button>
+              <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-white/10 rounded-xl shadow-2xl min-w-[140px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
                 {['STARTER', 'PRO', 'ENTERPRISE'].map(p => (
                   <button key={p} onClick={() => handleChangePlan(p)}
-                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-700 transition-colors ${tenant.plan?.toUpperCase() === p ? 'text-teal-400 font-semibold' : 'text-gray-300'} first:rounded-t-xl last:rounded-b-xl`}>
+                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-white/5 transition-colors ${tenant.plan?.toUpperCase() === p ? 'text-brand-400 font-semibold' : 'text-gray-300'} first:rounded-t-xl last:rounded-b-xl`}>
                     {p}
                   </button>
                 ))}
               </div>
             </div>
-            <button
+            <Button
+              variant={isSuspended ? 'secondary' : 'danger'}
               onClick={handleToggleStatus}
               disabled={changingStatus}
-              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl transition-colors ${isSuspended ? 'bg-emerald-700 hover:bg-emerald-600 text-white' : 'bg-rose-800 hover:bg-rose-700 text-white'}`}
             >
               {isSuspended ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
               {isSuspended ? 'Activar' : 'Suspender'}
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="secondary"
               onClick={handleExtendTrial}
-              className="flex items-center gap-1.5 px-4 py-2 bg-amber-700 hover:bg-amber-600 text-white text-sm font-semibold rounded-xl transition-colors"
             >
               <Clock className="w-4 h-4" />+7d Trial
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -439,16 +395,16 @@ export default function SuperAdminTenantDetail() {
       {/* ══ BLOQUE 2 — KPIs ══════════════════════════════════════════════════ */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: 'Órdenes hoy',     value: kpis.today,        color: 'text-orange-400' },
-          { label: 'Órdenes 30d',     value: kpis.month,        color: 'text-indigo-400' },
-          { label: 'MRR',             value: fmtCLP(kpis.mrr),  color: 'text-teal-400' },
-          { label: 'Usuarios',        value: kpis.userCount,    color: 'text-purple-400' },
-          { label: 'Días cliente',    value: kpis.daysAsClient, color: 'text-amber-400' },
-          { label: 'Último acceso',   value: fmtDayAgo(kpis.lastLogin), color: 'text-gray-400' },
+          { label: 'Órdenes hoy',     value: kpis.today },
+          { label: 'Órdenes 30d',     value: kpis.month },
+          { label: 'MRR',             value: fmtCLP(kpis.mrr) },
+          { label: 'Usuarios',        value: kpis.userCount },
+          { label: 'Días cliente',    value: kpis.daysAsClient },
+          { label: 'Último acceso',   value: fmtDayAgo(kpis.lastLogin) },
         ].map(c => (
-          <div key={c.label} className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">{c.label}</p>
-            <p className={`text-xl font-black ${c.color}`}>{c.value ?? 0}</p>
+          <div key={c.label} className="bg-gray-900/60 border border-white/5 rounded-xl p-4">
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">{c.label}</p>
+            <p className="text-xl font-bold tabular-nums text-white">{c.value ?? 0}</p>
           </div>
         ))}
       </div>
@@ -457,9 +413,9 @@ export default function SuperAdminTenantDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* ── BLOQUE 3 — Info del negocio ─────────────────────────────────── */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">
+        <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-5 space-y-3">
           <h2 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-teal-400" />Información del negocio
+            <Building2 className="w-4 h-4 text-brand-400" />Información del negocio
           </h2>
           {[
             { label: 'Nombre legal', value: tenant.legalName ?? tenant.name },
@@ -490,9 +446,9 @@ export default function SuperAdminTenantDetail() {
         </div>
 
         {/* ── BLOQUE 5 — Actividad (gráfico) ──────────────────────────────── */}
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+        <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-5">
           <h2 className="text-sm font-semibold text-gray-300 flex items-center gap-2 mb-4">
-            <TrendingUp className="w-4 h-4 text-orange-400" />Actividad — últimos 14 días
+            <TrendingUp className="w-4 h-4 text-brand-400" />Actividad — últimos 14 días
           </h2>
           <ResponsiveContainer width="100%" height={120}>
             <BarChart data={chart14} barSize={14}>
@@ -504,7 +460,7 @@ export default function SuperAdminTenantDetail() {
               />
               <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                 {chart14.map((e, i) => (
-                  <Cell key={i} fill={e.count > 0 ? '#ea580c' : '#374151'} />
+                  <Cell key={i} fill={e.count > 0 ? '#FF6B35' : '#374151'} />
                 ))}
               </Bar>
             </BarChart>
@@ -519,7 +475,7 @@ export default function SuperAdminTenantDetail() {
               <div key={o.id} className="flex items-center justify-between text-xs py-1 border-b border-gray-800 last:border-0">
                 <span className="text-gray-400 font-mono">{o.orderNumber}</span>
                 <span className="text-gray-500">{o.type}</span>
-                <span className={ORDER_STATUS_STYLE[o.status] ?? 'text-gray-400'}>{o.status}</span>
+                <StatusBadge status={o.status === 'COMPLETED' ? 'DELIVERED' : o.status} kind="order" />
                 <span className="text-white font-semibold">{fmtCLP(o.total)}</span>
                 <span className="text-gray-600">{fmtDate(o.createdAt, { day: '2-digit', month: 'short' })}</span>
               </div>
@@ -529,9 +485,9 @@ export default function SuperAdminTenantDetail() {
       </div>
 
       {/* ══ BLOQUE 4 — Usuarios ══════════════════════════════════════════════ */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-800 flex items-center gap-2">
-          <Users className="w-4 h-4 text-purple-400" />
+      <div className="bg-gray-900/60 border border-white/5 rounded-2xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-white/5 flex items-center gap-2">
+          <Users className="w-4 h-4 text-sky-400" />
           <h2 className="text-sm font-semibold text-gray-300">Usuarios ({users.length})</h2>
         </div>
         {users.length === 0 ? (
@@ -573,16 +529,15 @@ export default function SuperAdminTenantDetail() {
       </div>
 
       {/* ══ BLOQUE 6 — Pagos ═════════════════════════════════════════════════ */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-        <div className="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+      <div className="bg-gray-900/60 border border-white/5 rounded-2xl overflow-hidden">
+        <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CreditCard className="w-4 h-4 text-teal-400" />
+            <CreditCard className="w-4 h-4 text-brand-400" />
             <h2 className="text-sm font-semibold text-gray-300">Pagos</h2>
           </div>
-          <button onClick={() => setShowPayModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-700 hover:bg-teal-600 text-white text-xs font-semibold rounded-lg transition-colors">
+          <Button variant="primary" size="sm" onClick={() => setShowPayModal(true)}>
             <Plus className="w-3.5 h-3.5" />Registrar pago
-          </button>
+          </Button>
         </div>
         {payments.length === 0 ? (
           <div className="py-8 text-center text-gray-600 text-sm">Sin pagos registrados</div>
@@ -605,9 +560,7 @@ export default function SuperAdminTenantDetail() {
                       <td className="px-4 py-3 text-xs text-gray-400">{fmtDate(p.paidAt ?? p.createdAt)}</td>
                       <td className="px-4 py-3 text-right font-semibold text-white tabular-nums">{fmtCLP(p.amount)}</td>
                       <td className="px-4 py-3">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${PAY_STATUS_STYLE[p.status] ?? 'bg-gray-800 text-gray-400'}`}>
-                          {p.status}
-                        </span>
+                        <StatusBadge status={p.status} kind="payment" />
                       </td>
                       <td className="px-4 py-3 text-xs text-gray-400">{p.concept || '—'}</td>
                       <td className="px-4 py-3 text-xs text-gray-500 max-w-[120px] truncate" title={p.notes}>{p.notes || '—'}</td>
@@ -616,17 +569,17 @@ export default function SuperAdminTenantDetail() {
                 </tbody>
               </table>
             </div>
-            <div className="px-4 py-3 border-t border-gray-800 text-sm text-gray-500">
-              Total pagado histórico: <span className="text-emerald-400 font-bold ml-1">{fmtCLP(totalPaid)}</span>
+            <div className="px-4 py-3 border-t border-white/5 text-sm text-gray-500">
+              Total pagado histórico: <span className="text-emerald-400 font-bold ml-1 tabular-nums">{fmtCLP(totalPaid)}</span>
             </div>
           </>
         )}
       </div>
 
       {/* ══ BLOQUE 7 — Notas internas ════════════════════════════════════════ */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+      <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-5">
         <h2 className="text-sm font-semibold text-gray-300 flex items-center gap-2 mb-4">
-          <FileText className="w-4 h-4 text-yellow-400" />Notas internas del SuperAdmin
+          <FileText className="w-4 h-4 text-amber-400" />Notas internas del SuperAdmin
           <span className="text-xs text-gray-600 font-normal ml-1">Solo visible en /superadmin</span>
         </h2>
 
@@ -637,15 +590,17 @@ export default function SuperAdminTenantDetail() {
             onChange={e => setNoteText(e.target.value)}
             placeholder="Escribe una nota interna... (ej: Cliente difícil de cobrar, acordado precio especial)"
             rows={2}
-            className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-600 resize-none"
+            className="flex-1 bg-gray-950 border border-white/10 rounded-lg px-4 py-2.5 text-sm text-gray-200 placeholder:text-gray-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none resize-none"
           />
-          <button
+          <Button
+            variant="primary"
             onClick={handleSaveNote}
             disabled={!noteText.trim() || savingNote}
-            className="flex-shrink-0 px-4 py-2 bg-yellow-700 hover:bg-yellow-600 disabled:opacity-40 text-white text-sm font-semibold rounded-xl transition-colors flex items-center gap-1.5"
+            loading={savingNote}
+            className="flex-shrink-0"
           >
             <Plus className="w-4 h-4" />{savingNote ? 'Guardando…' : 'Guardar'}
-          </button>
+          </Button>
         </div>
 
         {/* Historial de notas */}
@@ -653,7 +608,7 @@ export default function SuperAdminTenantDetail() {
           {notes.length === 0 ? (
             <p className="text-sm text-gray-600">Sin notas registradas</p>
           ) : notes.map((n: any) => (
-            <div key={n.id} className="bg-gray-800 rounded-xl px-4 py-3 flex gap-3 group">
+            <div key={n.id} className="bg-gray-900 border border-white/5 rounded-xl px-4 py-3 flex gap-3 group">
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-gray-500 mb-1">{fmtDateTime(n.createdAt)}</p>
                 <p className="text-sm text-gray-200 whitespace-pre-wrap break-words">{n.note}</p>
@@ -671,9 +626,9 @@ export default function SuperAdminTenantDetail() {
 
       {/* ══ BLOQUE 8 — Impresoras ════════════════════════════════════════════ */}
       {printers.length > 0 && (
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-gray-800 flex items-center gap-2">
-            <Printer className="w-4 h-4 text-blue-400" />
+        <div className="bg-gray-900/60 border border-white/5 rounded-2xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/5 flex items-center gap-2">
+            <Printer className="w-4 h-4 text-sky-400" />
             <h2 className="text-sm font-semibold text-gray-300">Impresoras ({printers.length})</h2>
           </div>
           <div className="overflow-x-auto">
@@ -715,7 +670,7 @@ export default function SuperAdminTenantDetail() {
       )}
 
       {/* ══ BLOQUE 9 — Configuración rápida ══════════════════════════════════ */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+      <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-5">
         <h2 className="text-sm font-semibold text-gray-300 flex items-center gap-2 mb-4">
           <Settings className="w-4 h-4 text-gray-400" />Configuración rápida
         </h2>
@@ -761,9 +716,9 @@ export default function SuperAdminTenantDetail() {
       </div>
 
       {/* ── MÓDULOS PREMIUM ── */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+      <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-5">
         <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-purple-500" />
+          <span className="w-2 h-2 rounded-full bg-brand-500" />
           Módulos Premium
         </h3>
         <div className="space-y-3">
@@ -776,7 +731,7 @@ export default function SuperAdminTenantDetail() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-sm text-gray-200">{mod.label}</span>
-                  <span className="text-[10px] font-bold text-purple-400 bg-purple-900/50 px-1.5 py-0.5 rounded">{mod.price}</span>
+                  <span className="text-[10px] font-bold text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded">{mod.price}</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-0.5">{mod.desc}</p>
               </div>

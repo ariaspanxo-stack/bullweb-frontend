@@ -88,95 +88,29 @@
     color: #6b7280 !important;
   }
 
-  /* ── SuperAdmin — inputs siempre visibles (fondo oscuro) ── */
-  [data-superadmin] input,
-  [data-superadmin] textarea,
-  [data-superadmin] select {
-    color: #ffffff !important;
-    background-color: #1f2937;
-    caret-color: #ffffff !important;
-  }
-
-  [data-superadmin] input::placeholder,
-  [data-superadmin] textarea::placeholder {
-    color: #6b7280 !important;
-    opacity: 1 !important;
-  }
-
-  [data-superadmin] input:focus,
-  [data-superadmin] textarea:focus,
-  [data-superadmin] select:focus {
-    color: #ffffff !important;
-  }
-
-  /* Fix autofill del browser en superadmin */
-  [data-superadmin] input:-webkit-autofill,
-  [data-superadmin] input:-webkit-autofill:hover,
-  [data-superadmin] input:-webkit-autofill:focus {
-    -webkit-text-fill-color: #ffffff !important;
-    -webkit-box-shadow: 0 0 0px 1000px #1f2937 inset !important;
-    caret-color: #ffffff !important;
-  }
 }
 
-@layer components {
-  /* Glass Card Effect */
-  .glass-card {
-    @apply bg-glass-white backdrop-blur-md border border-glass-border rounded-lg shadow-lg transition-all duration-300;
-  }
-  
-  .glass-card:hover {
-    @apply border-neon-blue shadow-glow-blue;
-  }
+/* ── SuperAdmin Command Center — base scopeada ── */
+[data-superadmin] {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
 
-  /* Cyber Buttons */
-  .btn-cyber-blue {
-    @apply bg-gradient-to-r from-neon-blue to-neon-blue-dark text-cyber-black font-bold px-6 py-3 rounded-lg shadow-glow-blue hover:shadow-glow-blue transition-all duration-300 hover:scale-105;
-  }
+[data-superadmin] ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
 
-  .btn-cyber-green {
-    @apply bg-gradient-to-r from-neon-green to-neon-green-dark text-cyber-black font-bold px-6 py-3 rounded-lg shadow-glow-green hover:shadow-glow-green transition-all duration-300 hover:scale-105;
-  }
+[data-superadmin] ::-webkit-scrollbar-track {
+  background: transparent;
+}
 
-  /* Stat Cards with Glow */
-  .stat-card-blue {
-    @apply glass-card border-neon-blue/30 hover:shadow-glow-blue;
-  }
+[data-superadmin] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
 
-  .stat-card-green {
-    @apply glass-card border-neon-green/30 hover:shadow-glow-green;
-  }
-
-  .stat-card-purple {
-    @apply glass-card border-neon-purple/30 hover:shadow-glow-purple;
-  }
-
-  .stat-card-orange {
-    @apply glass-card border-neon-orange/30 hover:shadow-glow-orange;
-  }
-
-  /* Neon Text */
-  .text-neon-glow {
-    @apply text-neon-blue;
-    text-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
-  }
-
-  /* Badge Variants */
-  .badge-cyber {
-    @apply px-3 py-1 rounded-full text-xs font-semibold border;
-  }
-
-  .badge-success {
-    @apply badge-cyber bg-neon-green/10 text-neon-green border-neon-green/30;
-  }
-
-  .badge-warning {
-    @apply badge-cyber bg-neon-orange/10 text-neon-orange border-neon-orange/30;
-  }
-
-  .badge-info {
-    @apply badge-cyber bg-neon-blue/10 text-neon-blue border-neon-blue/30;
-  }
+[data-superadmin] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
 }
 
 /* Custom Scrollbar - Elegante y minimalista */

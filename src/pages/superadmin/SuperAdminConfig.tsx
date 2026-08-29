@@ -3,14 +3,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Settings, Save, Loader2, CheckCircle2, Users, LayoutGrid, Clock, ShieldCheck, ShieldOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import superadminService, { type PlanConfig } from '@/services/superadmin/superadminService';
-
-const PLAN_COLOR: Record<string, string> = {
-  BULLWEB_COMPLETO_INICIO: 'bg-purple-600',
-};
-
-const PLAN_BADGE: Record<string, string> = {
-  BULLWEB_COMPLETO_INICIO: 'Completo',
-};
+import { StatusBadge } from '@/components/ui/superadmin/statusBadge';
+import { Button } from '@/components/ui/superadmin/button';
+import { PageHeader } from '@/components/ui/superadmin/pageHeader';
 
 function fmtCLP(n: number) {
   return `$${Number(n).toLocaleString('es-CL')} CLP`;
@@ -57,26 +52,20 @@ function PlanEditor({ plan }: PlanEditorProps) {
   }
 
   return (
-    <div className={`rounded-xl border p-5 flex flex-col gap-4 ${PLAN_COLOR[plan.plan] ?? 'border-gray-700 bg-gray-900'}`}>
+    <div className="rounded-xl border border-white/5 bg-gray-900/60 p-5 flex flex-col gap-4">
       {/* Cabecera */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${PLAN_BADGE[plan.plan] ?? 'bg-gray-700 text-gray-300'}`}>
-            {plan.plan}
-          </span>
+          <StatusBadge status={plan.plan} kind="plan" />
           {!plan.isActive && (
-            <span className="text-xs bg-red-900/50 text-red-400 px-2 py-0.5 rounded-full">INACTIVO</span>
+            <span className="text-xs bg-rose-500/10 text-rose-400 px-2 py-0.5 rounded-full ring-1 ring-inset ring-rose-500/20">INACTIVO</span>
           )}
         </div>
         {dirty && (
-          <button
-            onClick={() => mut.mutate()}
-            disabled={mut.isPending}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 transition-colors"
-          >
-            {mut.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
+          <Button variant="primary" size="sm" onClick={() => mut.mutate()} loading={mut.isPending}>
+            {!mut.isPending && <Save className="w-3 h-3" />}
             Guardar
-          </button>
+          </Button>
         )}
         {!dirty && mut.isSuccess && (
           <span className="flex items-center gap-1 text-xs text-emerald-400">
@@ -93,7 +82,7 @@ function PlanEditor({ plan }: PlanEditorProps) {
             type="text"
             value={form.displayName}
             onChange={e => onChange('displayName', e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+            className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors"
           />
         </div>
         <div>
@@ -102,9 +91,9 @@ function PlanEditor({ plan }: PlanEditorProps) {
             type="number"
             value={form.priceCLP}
             onChange={e => onChange('priceCLP', e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+            className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors"
           />
-          <p className="text-xs text-gray-600 mt-0.5">{fmtCLP(Number(form.priceCLP) || 0)}</p>
+          <p className="text-xs text-gray-600 mt-0.5 tabular-nums">{fmtCLP(Number(form.priceCLP) || 0)}</p>
         </div>
       </div>
 
@@ -117,7 +106,7 @@ function PlanEditor({ plan }: PlanEditorProps) {
             type="number"
             value={form.trialDays}
             onChange={e => onChange('trialDays', e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+            className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors"
           />
         </div>
         <div>
@@ -128,7 +117,7 @@ function PlanEditor({ plan }: PlanEditorProps) {
             type="number"
             value={form.maxUsers}
             onChange={e => onChange('maxUsers', e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+            className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors"
           />
         </div>
         <div>
@@ -139,7 +128,7 @@ function PlanEditor({ plan }: PlanEditorProps) {
             type="number"
             value={form.maxTables}
             onChange={e => onChange('maxTables', e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+            className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors"
           />
         </div>
       </div>
@@ -150,7 +139,7 @@ function PlanEditor({ plan }: PlanEditorProps) {
           value={form.features}
           onChange={e => onChange('features', e.target.value)}
           rows={4}
-          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500 resize-none"
+          className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors resize-none"
           placeholder="POS básico&#10;Carta digital&#10;Reportes"
         />
       </div>
@@ -158,7 +147,7 @@ function PlanEditor({ plan }: PlanEditorProps) {
       <div className="flex items-center gap-2">
         <button
           onClick={() => onChange('isActive', !form.isActive)}
-          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${form.isActive ? 'bg-indigo-600' : 'bg-gray-700'}`}
+          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${form.isActive ? 'bg-brand-500' : 'bg-gray-700'}`}
         >
           <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${form.isActive ? 'translate-x-4' : 'translate-x-0.5'}`} />
         </button>
@@ -179,24 +168,20 @@ export default function SuperAdminConfig() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-9 h-9 rounded-lg bg-indigo-600/20 border border-indigo-600/30 flex items-center justify-center">
-          <Settings className="w-5 h-5 text-indigo-400" />
-        </div>
-        <div>
-          <h1 className="text-lg font-bold text-white">Configuración de Planes</h1>
-          <p className="text-xs text-gray-500">Precios, límites y características por plan</p>
-        </div>
-      </div>
+      <PageHeader
+        icon={Settings}
+        title="Configuración de Planes"
+        sub="Precios, límites y características por plan"
+      />
 
       {isLoading && (
         <div className="flex items-center justify-center h-40">
-          <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
+          <Loader2 className="w-6 h-6 animate-spin text-brand-400" />
         </div>
       )}
 
       {isError && (
-        <div className="bg-red-900/20 border border-red-800/50 rounded-xl p-4 text-red-400 text-sm">
+        <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4 text-rose-400 text-sm">
           Error al cargar los planes. Verifica la conexión al backend.
         </div>
       )}
@@ -274,32 +259,28 @@ function TwoFASection() {
   }
 
   return (
-    <div className="mt-8 bg-gray-900 border border-gray-800 rounded-xl p-6">
+    <div className="mt-8 bg-gray-900/60 border border-white/5 rounded-xl p-6">
       <div className="flex items-center gap-3 mb-5">
-        <div className="w-9 h-9 rounded-lg bg-indigo-600/20 border border-indigo-600/30 flex items-center justify-center">
-          <ShieldCheck className="w-5 h-5 text-indigo-400" />
+        <div className="w-9 h-9 rounded-lg bg-brand-500/10 flex items-center justify-center">
+          <ShieldCheck className="w-5 h-5 text-brand-400" />
         </div>
         <div>
           <h2 className="text-base font-bold text-white">Autenticación de dos factores (2FA)</h2>
           <p className="text-xs text-gray-500">TOTP compatible con Google Authenticator / Authy</p>
         </div>
         {enabled === true && (
-          <span className="ml-auto text-xs bg-emerald-900/50 text-emerald-300 border border-emerald-700 px-2 py-0.5 rounded-full">Activo</span>
+          <span className="ml-auto text-xs bg-emerald-500/10 text-emerald-400 ring-1 ring-inset ring-emerald-500/20 px-2 py-0.5 rounded-full">Activo</span>
         )}
         {enabled === false && (
-          <span className="ml-auto text-xs bg-gray-800 text-gray-400 border border-gray-700 px-2 py-0.5 rounded-full">Inactivo</span>
+          <span className="ml-auto text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-full">Inactivo</span>
         )}
       </div>
 
       {!qrUrl && enabled !== true && (
-        <button
-          onClick={handleSetup}
-          disabled={busy}
-          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
-        >
+        <Button variant="primary" onClick={handleSetup} loading={busy}>
           <ShieldCheck className="w-4 h-4" />
           {busy ? 'Generando...' : 'Configurar 2FA'}
-        </button>
+        </Button>
       )}
 
       {qrUrl && (
@@ -316,28 +297,24 @@ function TwoFASection() {
               value={code}
               onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
               placeholder="123456"
-              className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-center text-lg tracking-widest focus:outline-none focus:border-indigo-500"
+              className="flex-1 bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-gray-200 text-center text-lg tracking-widest focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors"
             />
-            <button
-              onClick={handleVerify}
-              disabled={busy || code.length !== 6}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
-            >
+            <Button variant="primary" onClick={handleVerify} disabled={busy || code.length !== 6}>
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Activar'}
-            </button>
+            </Button>
           </div>
         </div>
       )}
 
       {enabled === true && (
-        <button
+        <Button
+          variant="danger"
           onClick={handleDisable}
-          disabled={busy}
-          className="flex items-center gap-2 px-4 py-2 bg-red-900/40 hover:bg-red-900/60 border border-red-700 text-red-300 text-sm rounded-lg transition-colors disabled:opacity-50"
+          loading={busy}
         >
           <ShieldOff className="w-4 h-4" />
           Deshabilitar 2FA
-        </button>
+        </Button>
       )}
     </div>
   );

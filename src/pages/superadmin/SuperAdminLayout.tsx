@@ -1,5 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useNavigate } from 'react-router-dom';
-import { Building2, LayoutDashboard, LogOut, CreditCard, Settings, Activity, ShieldCheck } from 'lucide-react';
+import { Building2, LayoutDashboard, LogOut, CreditCard, Settings, Activity, ShieldCheck, Clock } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import superadminService from '@/services/superadmin/superadminService';
@@ -32,13 +33,23 @@ function SuperAdminGuard({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-const NAV = [
-  { to: '/superadmin',           label: 'Dashboard',  icon: LayoutDashboard },
-  { to: '/superadmin/tenants',   label: 'Clientes',   icon: Building2 },
-  { to: '/superadmin/activity',  label: 'Actividad',  icon: Activity },
-  { to: '/superadmin/payments',  label: 'Pagos',      icon: CreditCard },
-  { to: '/superadmin/audit',     label: 'Auditoría',  icon: ShieldCheck },
-  { to: '/superadmin/config',    label: 'Config',     icon: Settings },
+const NAV_SECTIONS = [
+  {
+    label: 'Gestión',
+    items: [
+      { to: '/superadmin',          label: 'Dashboard',  icon: LayoutDashboard },
+      { to: '/superadmin/tenants',  label: 'Clientes',   icon: Building2 },
+      { to: '/superadmin/activity', label: 'Actividad',  icon: Activity },
+      { to: '/superadmin/payments', label: 'Pagos',      icon: CreditCard },
+    ],
+  },
+  {
+    label: 'Sistema',
+    items: [
+      { to: '/superadmin/audit',  label: 'Auditoría',     icon: ShieldCheck },
+      { to: '/superadmin/config', label: 'Configuración', icon: Settings },
+    ],
+  },
 ];
 
 export default function SuperAdminLayout() {
@@ -52,6 +63,13 @@ export default function SuperAdminLayout() {
   });
   const criticalCount = alertsData?.critical ?? 0;
 
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(t);
+  }, []);
+  const clock = now.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', hour12: false });
+
   function handleLogout() {
     localStorage.removeItem('superadmin_token');
     navigate('/superadmin/login', { replace: true });
@@ -62,53 +80,62 @@ export default function SuperAdminLayout() {
       <div className="min-h-screen flex bg-gray-950 text-white" data-superadmin="true">
 
         {/* ── Sidebar ────────────────────────────────────────────────────── */}
-        <aside className="w-60 flex-shrink-0 bg-gray-900 border-r border-gray-800 flex flex-col">
+        <aside className="w-64 flex-shrink-0 bg-gray-950 border-r border-white/5 flex flex-col">
 
           {/* Logo */}
-          <div className="h-16 flex items-center gap-2 px-5 border-b border-gray-800">
+          <div className="h-16 flex items-center gap-3 px-5 border-b border-white/5">
             <img
-              src="/images/bullweb-logo.png"
+              src="/logo-bullweb.png"
               alt="BullWeb Chile"
-              className="h-10 w-10 object-contain rounded-full flex-shrink-0"
+              className="h-9 w-9 object-contain rounded-xl flex-shrink-0"
             />
-            <span className="font-semibold text-sm leading-tight">
-              BullWeb<br />
-              <span className="text-indigo-400 text-xs font-normal">Super Admin</span>
+            <span className="leading-tight">
+              <span className="block font-bold text-white text-sm">BullWeb</span>
+              <span className="block text-xs text-gray-500">Command Center</span>
             </span>
           </div>
 
           {/* Navegación */}
-          <nav className="flex-1 py-4 px-3 space-y-1">
-            {NAV.map(({ to, label, icon: Icon }) => {
-              const active = location.pathname === to ||
-                (to !== '/superadmin' && location.pathname.startsWith(to));
-              const showBadge = to === '/superadmin' && criticalCount > 0;
-              return (
-                <Link
-                  key={to}
-                  to={to}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${active
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                  }`}
-                >
-                  <Icon className="w-4 h-4 flex-shrink-0" />
-                  <span className="flex-1">{label}</span>
-                  {showBadge && (
-                    <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-600 text-white leading-none">
-                      {criticalCount}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
+          <nav className="flex-1 py-4 px-3 space-y-4 overflow-y-auto">
+            {NAV_SECTIONS.map((section) => (
+              <div key={section.label}>
+                <p className="px-3 mb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-600">
+                  {section.label}
+                </p>
+                <div className="space-y-1">
+                  {section.items.map(({ to, label, icon: Icon }) => {
+                    const active = location.pathname === to ||
+                      (to !== '/superadmin' && location.pathname.startsWith(to));
+                    const showBadge = to === '/superadmin' && criticalCount > 0;
+                    return (
+                      <Link
+                        key={to}
+                        to={to}
+                        className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${active
+                          ? 'bg-brand-500/10 text-brand-400 ring-1 ring-inset ring-brand-500/20'
+                          : 'text-gray-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4 flex-shrink-0" />
+                        <span className="flex-1">{label}</span>
+                        {showBadge && (
+                          <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-red-600 text-white leading-none">
+                            {criticalCount}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* Footer */}
-          <div className="px-3 pb-4 border-t border-gray-800 pt-4">
+          <div className="px-3 pb-4 border-t border-white/5 pt-4">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
             >
               <LogOut className="w-4 h-4" />
               Cerrar sesión
@@ -117,9 +144,18 @@ export default function SuperAdminLayout() {
         </aside>
 
         {/* ── Contenido principal ─────────────────────────────────────────── */}
-        <main className="flex-1 overflow-auto bg-gray-950">
-          <Outlet />
-        </main>
+        <div className="flex-1 flex flex-col min-w-0 bg-[#0A0A0B]">
+          <header className="sticky top-0 z-40 h-14 border-b border-white/5 bg-gray-950/80 backdrop-blur px-6 flex items-center justify-between flex-shrink-0">
+            <span className="text-sm text-gray-500">Super Admin</span>
+            <span className="flex items-center gap-2 text-sm text-gray-400 tabular-nums">
+              <Clock className="w-4 h-4 text-gray-500" />
+              {clock} CLT
+            </span>
+          </header>
+          <main className="flex-1 overflow-auto p-6 lg:p-8">
+            <Outlet />
+          </main>
+        </div>
       </div>
     </SuperAdminGuard>
   );

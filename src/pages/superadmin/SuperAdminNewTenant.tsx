@@ -4,6 +4,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Building2, Copy, Eye, EyeOff } from 'lucide-react';
 import superadminService, { type CreateTenantDTO } from '@/services/superadmin/superadminService';
+import { Button } from '@/components/ui/superadmin/button';
+import { PageHeader } from '@/components/ui/superadmin/pageHeader';
 
 const PLANS = [
   { value: 'STARTER',    label: 'Starter',    price: '$29.990 CLP/mes' },
@@ -60,41 +62,42 @@ export default function SuperAdminNewTenant() {
   if (created) {
     return (
       <div className="p-6 max-w-lg mx-auto">
-        <div className="bg-emerald-950 border border-emerald-700 rounded-2xl p-8 text-center">
-          <div className="w-14 h-14 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">✓</div>
+        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-8 text-center">
+          <div className="w-14 h-14 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl text-white">✓</div>
           <h2 className="text-xl font-bold text-white mb-1">¡Cliente creado!</h2>
-          <p className="text-sm text-emerald-300 mb-6">{created.tenantName}</p>
+          <p className="text-sm text-emerald-400 mb-6">{created.tenantName}</p>
 
-          <div className="bg-gray-900 rounded-xl p-4 text-left mb-6 space-y-3">
+          <div className="bg-gray-900/60 border border-white/5 rounded-xl p-4 text-left mb-6 space-y-3">
             <div>
               <p className="text-xs text-gray-500 mb-1">Email de administrador</p>
               <div className="flex items-center gap-2">
                 <code className="text-sm text-white flex-1">{created.adminEmail}</code>
-                <button onClick={() => copyToClipboard(created.adminEmail)} className="text-gray-400 hover:text-white"><Copy className="w-4 h-4" /></button>
+                <button onClick={() => copyToClipboard(created.adminEmail)} className="text-gray-400 hover:text-white transition-colors"><Copy className="w-4 h-4" /></button>
               </div>
             </div>
             <div>
               <p className="text-xs text-gray-500 mb-1">Contraseña temporal</p>
               <div className="flex items-center gap-2">
-                <code className="text-sm text-amber-300 flex-1 font-mono tracking-widest">
+                <code className="text-sm text-amber-400 flex-1 font-mono tracking-widest">
                   {showPass ? created.tempPassword : '••••••••••••'}
                 </code>
-                <button onClick={() => setShowPass(v => !v)} className="text-gray-400 hover:text-white">
+                <button onClick={() => setShowPass(v => !v)} className="text-gray-400 hover:text-white transition-colors">
                   {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
-                <button onClick={() => copyToClipboard(created.tempPassword)} className="text-gray-400 hover:text-white"><Copy className="w-4 h-4" /></button>
+                <button onClick={() => copyToClipboard(created.tempPassword)} className="text-gray-400 hover:text-white transition-colors"><Copy className="w-4 h-4" /></button>
               </div>
             </div>
           </div>
 
           <p className="text-xs text-gray-500 mb-6">⚠️ Copia y comparte estas credenciales con el cliente. No se mostrarán nuevamente.</p>
 
-          <button
+          <Button
+            variant="primary"
+            className="w-full"
             onClick={() => navigate('/superadmin/tenants')}
-            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-medium transition-colors"
           >
             Ver lista de clientes
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -104,20 +107,19 @@ export default function SuperAdminNewTenant() {
   return (
     <div className="p-6 max-w-2xl mx-auto">
 
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Building2 className="w-6 h-6 text-indigo-400" />
-            Nuevo cliente
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Crea un nuevo tenant en la plataforma</p>
-        </div>
-      </div>
+      <PageHeader
+        icon={Building2}
+        title="Nuevo cliente"
+        sub="Crea un nuevo tenant en la plataforma"
+        actions={
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="w-4 h-4" />
+            Volver
+          </Button>
+        }
+      />
 
-      <form onSubmit={handleSubmit} className="bg-gray-900 border border-gray-800 rounded-xl divide-y divide-gray-800">
+      <form onSubmit={handleSubmit} className="bg-gray-900/60 border border-white/5 rounded-xl divide-y divide-white/5">
 
         {/* Datos del negocio */}
         <div className="p-5 space-y-4">
@@ -126,15 +128,15 @@ export default function SuperAdminNewTenant() {
           <div>
             <label className="block text-sm text-gray-400 mb-1.5">Nombre del negocio *</label>
             <input value={form.name} onChange={set('name')} placeholder="Ej: Restaurante La Canoa"
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500" />
+              className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-200 placeholder:text-gray-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors" />
           </div>
 
           <div>
             <label className="block text-sm text-gray-400 mb-1.5">Slug (identificador único) *</label>
             <div className="flex items-center">
-              <span className="bg-gray-800 border border-r-0 border-gray-700 rounded-l-lg px-3 py-2.5 text-sm text-gray-500 select-none">app/</span>
+              <span className="bg-gray-900 border border-r-0 border-white/10 rounded-l-lg px-3 py-2.5 text-sm text-gray-500 select-none">app/</span>
               <input value={form.slug} onChange={set('slug')} placeholder="la-canoa"
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-r-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500" />
+                className="flex-1 bg-gray-950 border border-white/10 rounded-r-lg px-3 py-2.5 text-sm text-gray-200 placeholder:text-gray-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors" />
             </div>
             <p className="text-xs text-gray-600 mt-1">Solo minúsculas, números y guiones. No se puede cambiar después.</p>
           </div>
@@ -145,10 +147,10 @@ export default function SuperAdminNewTenant() {
               {PLANS.map(p => (
                 <button type="button" key={p.value} onClick={() => setForm(prev => ({ ...prev, plan: p.value }))}
                   className={`border rounded-lg p-3 text-left transition-colors ${
-                    form.plan === p.value ? 'border-indigo-500 bg-indigo-900/30' : 'border-gray-700 bg-gray-800 hover:border-gray-600'
+                    form.plan === p.value ? 'border-brand-500 bg-brand-500/10' : 'border-white/10 bg-gray-950 hover:border-white/20'
                   }`}>
                   <p className="text-sm font-semibold text-white">{p.label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{p.price}</p>
+                  <p className="text-xs text-gray-500 mt-0.5 tabular-nums">{p.price}</p>
                 </button>
               ))}
             </div>
@@ -162,28 +164,26 @@ export default function SuperAdminNewTenant() {
           <div>
             <label className="block text-sm text-gray-400 mb-1.5">Nombre completo *</label>
             <input value={form.adminName} onChange={set('adminName')} placeholder="Juan Pérez"
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500" />
+              className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-200 placeholder:text-gray-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors" />
           </div>
 
           <div>
             <label className="block text-sm text-gray-400 mb-1.5">Email *</label>
             <input type="email" value={form.adminEmail} onChange={set('adminEmail')} placeholder="juan@restaurante.cl"
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-gray-600 focus:outline-none focus:border-indigo-500" />
+              className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2.5 text-sm text-gray-200 placeholder:text-gray-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors" />
           </div>
 
-          <p className="text-xs text-yellow-600/80">Se generará una contraseña temporal automáticamente. Anótala al crear el cliente.</p>
+          <p className="text-xs text-amber-400/80">Se generará una contraseña temporal automáticamente. Anótala al crear el cliente.</p>
         </div>
 
         {/* Botones */}
         <div className="p-5 flex justify-end gap-3">
-          <button type="button" onClick={() => navigate(-1)}
-            className="px-4 py-2.5 text-sm text-gray-400 hover:text-white transition-colors">
+          <Button variant="secondary" onClick={() => navigate(-1)}>
             Cancelar
-          </button>
-          <button type="submit" disabled={mutation.isPending}
-            className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2">
+          </Button>
+          <Button type="submit" loading={mutation.isPending}>
             {mutation.isPending ? 'Creando…' : 'Crear cliente'}
-          </button>
+          </Button>
         </div>
       </form>
     </div>

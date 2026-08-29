@@ -68,7 +68,7 @@ export default function SuperAdminLogin() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center px-4" data-superadmin="true">
+    <div className="min-h-screen bg-[#0A0A0B] flex items-center justify-center px-4" data-superadmin="true">
       <div className="w-full max-w-sm">
 
         {/* Logo */}
@@ -80,19 +80,21 @@ export default function SuperAdminLogin() {
           />
           <div className="text-white">
             <p className="font-bold text-lg leading-tight">BullWeb</p>
-            <p className="text-indigo-400 text-xs">Super Admin</p>
+            <p className="text-brand-400 text-xs">Super Admin</p>
           </div>
         </div>
 
         {/* Card */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-8">
+        <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-8">
 
           {step === 'totp' ? (
             /* ── Paso 2: código TOTP ────────────────────────────────── */
             <>
               <div className="flex flex-col items-center mb-6">
-                <ShieldCheck className="w-10 h-10 text-indigo-400 mb-2" />
-                <h1 className="text-white text-xl font-semibold">Verificación 2FA</h1>
+                <div className="w-12 h-12 rounded-xl bg-brand-500/10 flex items-center justify-center mb-3">
+                  <ShieldCheck className="w-6 h-6 text-brand-400" />
+                </div>
+                <h1 className="text-white text-xl font-bold">Verificación 2FA</h1>
                 <p className="text-xs text-gray-500 mt-1 text-center">
                   Ingresa el código de 6 dígitos de tu app de autenticación
                 </p>
@@ -110,12 +112,12 @@ export default function SuperAdminLogin() {
                     required
                     autoFocus
                     placeholder="123456"
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-center text-2xl tracking-[0.5em] placeholder-gray-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2.5 text-gray-200 text-center text-2xl tabular-nums tracking-[0.5em] placeholder:text-gray-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
                   />
                 </div>
 
                 {error && (
-                  <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
+                  <p className="text-rose-400 text-sm bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
                     {error}
                   </p>
                 )}
@@ -123,7 +125,7 @@ export default function SuperAdminLogin() {
                 <button
                   type="submit"
                   disabled={loading || totpCode.length !== 6}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg px-4 py-2.5 text-sm transition-colors"
+                  className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg px-4 py-2.5 text-sm transition-colors"
                 >
                   {loading ? 'Verificando...' : 'Verificar'}
                 </button>
@@ -140,7 +142,7 @@ export default function SuperAdminLogin() {
           ) : (
             /* ── Paso 1: email + contraseña ─────────────────────────── */
             <>
-              <h1 className="text-white text-xl font-semibold mb-6 text-center">
+              <h1 className="text-white text-xl font-bold mb-6 text-center">
                 Acceso restringido
               </h1>
 
@@ -153,7 +155,7 @@ export default function SuperAdminLogin() {
                     onChange={e => setEmail(e.target.value)}
                     required
                     autoFocus
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2.5 text-gray-200 text-sm placeholder:text-gray-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
                     placeholder="admin@bullweb.com"
                   />
                 </div>
@@ -165,13 +167,13 @@ export default function SuperAdminLogin() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2.5 text-gray-200 text-sm placeholder:text-gray-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
                     placeholder="••••••••"
                   />
                 </div>
 
                 {error && (
-                  <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-lg px-3 py-2">
+                  <p className="text-rose-400 text-sm bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
                     {error}
                   </p>
                 )}
@@ -179,7 +181,7 @@ export default function SuperAdminLogin() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg px-4 py-2.5 text-sm transition-colors"
+                  className="w-full bg-brand-500 hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium rounded-lg px-4 py-2.5 text-sm transition-colors"
                 >
                   {loading ? 'Verificando...' : 'Ingresar'}
                 </button>

@@ -87,6 +87,18 @@ registerRoute(
   'GET'
 );
 
+// API: Pública (carta) — NetworkFirst agresivo, frescura máxima ~60s
+// Registrada ANTES de la regla general: workbox matchea en orden de registro.
+registerRoute(
+  /^https:\/\/app\.bullwebchile\.com\/api\/public\/.*/i,
+  new NetworkFirst({
+    cacheName: 'public-api-cache',
+    networkTimeoutSeconds: 5,
+    plugins: [new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 60 })],
+  }),
+  'GET'
+);
+
 // API: NetworkFirst con TTL corto (regla general — va DESPUÉS de las específicas)
 registerRoute(
   /^https:\/\/app\.bullwebchile\.com\/api\/.*/i,
@@ -123,7 +135,7 @@ self.addEventListener('message', (event: any) => {
 // Al activar: borrar cachés viejas. skipWaiting + clientsClaim ya garantizan
 // que el nuevo SW toma control inmediatamente sin necesidad de forzar reload.
 self.addEventListener('activate', (event: ExtendableEvent) => {
-  const KEEP_CACHES = ['api-cache-v2', 'notifications-cache', 'qr-count-cache'];
+  const KEEP_CACHES = ['api-cache-v2', 'public-api-cache', 'notifications-cache', 'qr-count-cache'];
   event.waitUntil(
     caches.keys().then((cacheNames) =>
       Promise.all(

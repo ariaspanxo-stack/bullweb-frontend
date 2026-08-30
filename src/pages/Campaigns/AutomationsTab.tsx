@@ -385,19 +385,6 @@ export function AutomationsTab() {
     setSettings(updated);
   };
 
-  const handleTest = async (type: string) => {
-    setConfirmTest(null);
-    setTesting(type);
-    try {
-      await fidelizacionService.runTest(type as 'inactive' | 'birthday' | 'welcome');
-      await load();
-    } catch {
-      // noop
-    } finally {
-      setTesting(null);
-    }
-  };
-
   const handleConfirmTestEmail = async () => {
     if (!confirmTest) return;
     if (!testEmail || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(testEmail)) {

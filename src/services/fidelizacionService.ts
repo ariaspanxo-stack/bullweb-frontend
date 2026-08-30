@@ -52,11 +52,6 @@ const fidelizacionService = {
     return res.data;
   },
 
-  async runTest(type: 'inactive' | 'birthday' | 'welcome'): Promise<{ message: string }> {
-    const res = await api.post(`/fidelizacion/test/${type}`);
-    return res.data.data;
-  },
-
   async runTestEmail(type: 'inactive' | 'birthday' | 'welcome' | 'vip', email: string): Promise<{ message: string; messageId?: string }> {
     const res = await api.post(`/fidelizacion/test-email/${type}`, { email });
     return res.data.data ?? res.data;

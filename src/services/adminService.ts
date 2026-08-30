@@ -1633,7 +1633,7 @@ export const adminService = {
     return data;
   },
   async reprintOrder(orderId: string, printerId: string, type: 'kitchen' | 'receipt'): Promise<{ job_id: string }> {
-    const { data } = await api.post('/printers/reprint', { order_id: orderId, printer_id: printerId, type });
+    const { data } = await api.post('/admin/printers/reprint', { order_id: orderId, printer_id: printerId, type });
     return data;
   },
   async getDailyStats(date?: string): Promise<PrintDailyStats> {

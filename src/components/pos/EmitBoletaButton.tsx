@@ -73,7 +73,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
     if (!orderId) return;
     setPrinting(true);
     try {
-      await api.post('/printers/reprint', {
+      await api.post('/admin/printers/reprint', {
         order_id: orderId,
         printer_id: undefined,
         type: 'receipt',

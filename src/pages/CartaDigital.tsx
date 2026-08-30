@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail } from 'lucide-react';
+import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail, Instagram, Facebook, Globe } from 'lucide-react';
 
 const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
 
@@ -17,6 +17,7 @@ interface Product {
 interface Category {
   id: string;
   name: string;
+  image?: string | null;
   products: Product[];
 }
 interface CartaSettings {
@@ -32,6 +33,9 @@ interface CartaSettings {
   phone?:           string | null;
   email?:           string | null;
   hours?:           string | null;
+  instagram?:       string | null;
+  facebook?:        string | null;
+  website?:         string | null;
 }
 interface CartItem {
   product:  Product;
@@ -185,14 +189,14 @@ function ProductCard({
   return (
     <div
       onClick={isAvailable && onClick ? onClick : undefined}
-      className={`bg-white border border-gray-100 shadow-sm rounded-xl p-3 flex items-center gap-3 hover:shadow-md transition-shadow
+      className={`bg-white border border-gray-100 shadow-sm rounded-2xl p-3.5 flex items-center gap-3.5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200
         ${isAvailable && onClick ? 'cursor-pointer' : ''}
         ${!isAvailable ? 'opacity-55' : ''}
       `}
     >
       {/* Imagen / emoji — solo si existe */}
       {(product.image || product.emoji) && (
-        <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 flex items-center justify-center relative">
+        <div className="w-[88px] h-[88px] rounded-2xl overflow-hidden flex-shrink-0 bg-gray-50 flex items-center justify-center relative">
           {product.image ? (
             <img
               src={product.image}
@@ -219,9 +223,9 @@ function ProductCard({
       <div className="flex-1 min-w-0 flex flex-col justify-between">
         {/* Zona superior: Info */}
         <div>
-          <p className="font-semibold text-gray-800 text-sm truncate">{product.name.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}</p>
+          <p className="font-semibold text-gray-800 text-sm leading-snug">{product.name.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}</p>
           {product.description && (
-            <p className="text-xs text-gray-400 line-clamp-1 mt-0.5">{product.description}</p>
+            <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed mt-0.5">{product.description}</p>
           )}
           {product.tags && product.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">
@@ -479,19 +483,26 @@ function CartaHero({
         )}
         <div className="flex items-center gap-4">
         {logo && !logoError
-          ? <img src={logo} alt={name} className="w-[72px] h-[72px] rounded-full object-contain shrink-0 border-[3px] border-white shadow-xl" style={{ backgroundColor: '#18181b' }} onError={() => setLogoError(true)} />
+          ? <img src={logo} alt={name} className="w-20 h-20 rounded-full object-contain shrink-0 shadow-xl" style={{ backgroundColor: '#18181b', border: `3px solid ${themeColor}`, boxShadow: `0 0 0 3px rgba(255,255,255,0.25), 0 8px 24px ${themeColor}55` }} onError={() => setLogoError(true)} />
           : <div
-              className="w-[72px] h-[72px] rounded-full flex items-center justify-center shrink-0 font-black text-white text-xl border-[3px] border-white shadow-xl"
-              style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}99)`, boxShadow: `0 4px 20px ${themeColor}40` }}
+              className="w-20 h-20 rounded-full flex items-center justify-center shrink-0 font-black text-white text-2xl shadow-xl"
+              style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}99)`, border: `3px solid ${themeColor}`, boxShadow: `0 0 0 3px rgba(255,255,255,0.25), 0 8px 24px ${themeColor}55` }}
             >{initials}</div>
         }
         <div className="flex-1 min-w-0">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight truncate drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">{name}</h1>
-          {tagline && <p className="text-base text-white/80 font-medium mt-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)]">{tagline}</p>}
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">{name}</h1>
+          {tagline && <p className="text-base text-white/80 font-medium mt-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">{tagline}</p>}
           {isOpen !== null && (
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: isOpen ? '#22c55e' : '#ef4444' }} />
-              <span className="text-[11px]" style={{ color: isOpen ? '#86efac' : '#fca5a5' }}>
+            <div
+              className="inline-flex items-center gap-1.5 mt-2 py-1 px-2.5 rounded-full text-[11px] font-semibold"
+              style={{
+                backgroundColor: isOpen ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+                border: `1px solid ${isOpen ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+                backdropFilter: 'blur(4px)',
+              }}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'animate-pulse' : ''}`} style={{ backgroundColor: isOpen ? '#22c55e' : '#ef4444' }} />
+              <span style={{ color: isOpen ? '#86efac' : '#fca5a5' }}>
                 {isOpen
                   ? `Abierto · ${nextChange}`
                   : nextChange
@@ -1423,33 +1434,33 @@ export default function CartaDigital() {
         bannerUrl={cartaSettings?.bannerUrl ?? null}
       />
 
-      {/* ── Barra de información de contacto ── */}
+      {/* ── Barra de información de contacto (chips) ── */}
       {(cartaSettings?.address || cartaSettings?.phone || cartaSettings?.email || isOpen !== null) && (
-        <div className="relative z-10 -mt-6 mx-4 md:mx-8 lg:mx-auto lg:max-w-5xl bg-white/90 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 px-5 py-3 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-700">
+        <div className="relative z-10 -mt-6 mx-4 md:mx-8 lg:mx-auto lg:max-w-5xl bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-white/60 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-[13px] text-gray-700">
             {cartaSettings?.address && (
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: themeColor }} />
-                <span>{cartaSettings.address}</span>
+              <div className="flex items-center gap-1.5 max-w-full sm:max-w-[280px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
+                <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
+                <span className="truncate">{cartaSettings.address}</span>
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 flex-shrink-0" style={{ color: themeColor }} />
-              <span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
+              <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
+              <span className="whitespace-nowrap">
               {isOpen !== null
                     ? (isOpen ? `Abierto · ${nextChange}` : `Cerrado · ${nextChange}`)
                     : 'Horario no disponible'}
               </span>
             </div>
             {cartaSettings?.phone && (
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 flex-shrink-0" style={{ color: themeColor }} />
-                <span>{cartaSettings.phone}</span>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
+                <Phone className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
+                <span className="whitespace-nowrap">{cartaSettings.phone}</span>
               </div>
             )}
             {cartaSettings?.email && (
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 flex-shrink-0" style={{ color: themeColor }} />
-                <span>{cartaSettings.email}</span>
+              <div className="hidden sm:flex items-center gap-1.5 max-w-[240px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
+                <Mail className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
+                <span className="truncate">{cartaSettings.email}</span>
               </div>
             )}
           </div>
@@ -1467,23 +1478,37 @@ export default function CartaDigital() {
         />
         {categories.length > 1 && (
           <div className="w-full px-6 py-3 overflow-x-auto scrollbar-hide scroll-smooth flex gap-2">
-            {categories.map(cat => (
+            {categories.map(cat => {
+              const catThumb = cat.image ?? null;
+              const catEmoji = cat.products.find(p => p.emoji)?.emoji ?? null;
+              return (
               <button
                 key={cat.id}
                 onClick={() => {
                   setActiveTab(cat.id);
                   document.getElementById(`cat-${cat.id}`)?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 ${
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
                   activeTab === cat.id
-                    ? 'text-white shadow-sm font-bold'
+                    ? 'text-white shadow-md font-bold'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
-                style={activeTab === cat.id ? { backgroundColor: themeColor } : undefined}
+                style={activeTab === cat.id
+                  ? { backgroundColor: themeColor, boxShadow: `0 0 0 2px ${themeColor}55, 0 4px 12px ${themeColor}40` }
+                  : undefined}
               >
+                {(catThumb || catEmoji) && (
+                  <span className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-white/25">
+                    {catThumb
+                      ? <img src={catThumb} alt="" className="w-full h-full object-cover" loading="lazy" />
+                      : <span className="text-sm leading-none">{catEmoji}</span>
+                    }
+                  </span>
+                )}
                 {cat.name}
               </button>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -1560,10 +1585,11 @@ export default function CartaDigital() {
 
         {filtered.map(cat => (
           <div key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-28">
-            <div className="mt-6 mb-3">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-3">{cat.name}</h2>
+            <div className="mt-8 mb-4 flex items-center gap-2">
+              <span className="w-1 h-5 rounded-full" style={{ backgroundColor: themeColor }} />
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">{cat.name}</h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {cat.products.map(product => (
                 <ProductCard
                   key={product.id}
@@ -1593,7 +1619,7 @@ export default function CartaDigital() {
         {/* ── Columna derecha: Carrito desktop ── */}
         <div className="hidden lg:flex lg:w-[35%] xl:w-[30%] flex-col bg-gray-50 border-l border-gray-200 sticky top-0 h-screen">
           {/* Header */}
-          <div className="px-5 py-4 border-b border-gray-100 bg-white">
+          <div className="px-5 py-4 border-b border-gray-100 bg-white" style={{ background: `linear-gradient(135deg, ${themeColor}14, transparent 70%)` }}>
             <h3 className="font-bold text-xl text-gray-900 flex items-center gap-2">
               <ShoppingCart className="w-5 h-5" style={{ color: themeColor }} />
               Mi Pedido
@@ -1662,7 +1688,8 @@ export default function CartaDigital() {
               </div>
               <button
                 onClick={() => setShowCart(true)}
-                className="w-full py-4 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white font-extrabold text-lg tracking-wide shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-[1.02] transition-all duration-200"
+                className="w-full py-4 rounded-xl text-white font-extrabold text-lg tracking-wide hover:scale-[1.02] transition-all duration-200"
+                style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}cc)`, boxShadow: `0 8px 24px ${themeColor}40` }}
               >
                 Ver mi pedido →
               </button>
@@ -1681,7 +1708,56 @@ export default function CartaDigital() {
         </div>
       </div>{/* ── fin split-view ── */}
 
-      {/* Botón flotante del carrito (solo mobile) */}
+    {/* ── Footer: redes sociales + powered by ── */}
+    <footer className="relative z-10 mx-4 md:mx-8 lg:mx-auto lg:max-w-5xl mt-10 mb-28 lg:mb-12 py-6 border-t border-white/10 flex flex-col items-center gap-4">
+      {(cartaSettings?.instagram || cartaSettings?.facebook || cartaSettings?.website) && (
+        <div className="flex items-center gap-3">
+          {cartaSettings?.instagram && (
+            <a
+              href={cartaSettings.instagram.startsWith('http') ? cartaSettings.instagram : `https://instagram.com/${cartaSettings.instagram}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram"
+              className="w-10 h-10 rounded-full flex items-center justify-center border border-white/15 bg-white/5 hover:bg-white/15 hover:border-white/30 transition-all"
+            >
+              <Instagram className="w-4 h-4 text-white/80" />
+            </a>
+          )}
+          {cartaSettings?.facebook && (
+            <a
+              href={cartaSettings.facebook.startsWith('http') ? cartaSettings.facebook : `https://facebook.com/${cartaSettings.facebook}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+              className="w-10 h-10 rounded-full flex items-center justify-center border border-white/15 bg-white/5 hover:bg-white/15 hover:border-white/30 transition-all"
+            >
+              <Facebook className="w-4 h-4 text-white/80" />
+            </a>
+          )}
+          {cartaSettings?.website && (
+            <a
+              href={cartaSettings.website.startsWith('http') ? cartaSettings.website : `https://${cartaSettings.website}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Sitio web"
+              className="w-10 h-10 rounded-full flex items-center justify-center border border-white/15 bg-white/5 hover:bg-white/15 hover:border-white/30 transition-all"
+            >
+              <Globe className="w-4 h-4 text-white/80" />
+            </a>
+          )}
+        </div>
+      )}
+      <a
+        href="https://www.bullwebchile.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-[11px] text-white/35 hover:text-white/70 transition-colors tracking-widest uppercase"
+      >
+        Powered by <span className="font-bold">BullWeb</span>
+      </a>
+    </footer>
+
+    {/* Botón flotante del carrito (solo mobile) */}
       <div className="lg:hidden">
       {!showCart && (
         <CartaFloatingCart
@@ -1781,14 +1857,16 @@ export default function CartaDigital() {
                     <div className="flex items-center gap-3 bg-gray-100 rounded-full px-2 py-1">
                       <button
                         onClick={() => setModalQty(q => Math.max(1, q - 1))}
-                        className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-orange-600 font-bold text-lg hover:bg-gray-50 transition-colors"
+                        className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center font-bold text-lg hover:bg-gray-50 transition-colors"
+                        style={{ color: themeColor }}
                       >
                         <Minus className="w-5 h-5" />
                       </button>
                       <span className="font-bold text-gray-900 w-8 text-center text-lg">{modalQty}</span>
                       <button
                         onClick={() => setModalQty(q => q + 1)}
-                        className="w-10 h-10 rounded-full bg-orange-500 shadow-sm flex items-center justify-center text-white font-bold text-lg hover:bg-orange-600 transition-colors"
+                        className="w-10 h-10 rounded-full shadow-sm flex items-center justify-center text-white font-bold text-lg transition-colors"
+                        style={{ backgroundColor: themeColor }}
                       >
                         <Plus className="w-5 h-5" />
                       </button>
@@ -1799,7 +1877,8 @@ export default function CartaDigital() {
                         for (let i = 0; i < modalQty; i++) addToCart(selected);
                         resetAndClose();
                       }}
-                      className="flex-1 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-red-500 text-white font-extrabold text-lg shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-[1.02] transition-all duration-200"
+                      className="flex-1 py-3 rounded-xl text-white font-extrabold text-lg hover:scale-[1.02] transition-all duration-200"
+                      style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}cc)`, boxShadow: `0 8px 24px ${themeColor}40` }}
                     >
                       Agregar {fmtCLP(selected.price * modalQty)}
                     </button>

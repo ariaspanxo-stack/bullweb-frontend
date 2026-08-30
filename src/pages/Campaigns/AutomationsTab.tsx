@@ -560,6 +560,9 @@ export function AutomationsTab() {
           onToggle={(v) => toggleSetting('autoVipEnabled', v)}
           statLabel="enviados"
           statValue={fStats?.vipCount ?? 0}
+          lastSent={lastSentByType('vip')}
+          onTest={() => setConfirmTest('vip')}
+          testing={testing === 'vip'}
           onEdit={() => setEditingType('vip')}
         />
       </div>

@@ -55,13 +55,13 @@ interface CartItem {
 
 // ── TAG config ─────────────────────────────────────────────────
 const TAG_CONFIG: Record<string, { label: string; emoji: string; bg: string; text: string }> = {
-  vegano:      { label: 'Vegano',      emoji: '🌱', bg: 'bg-green-900/40',  text: 'text-green-400'  },
-  vegetariano: { label: 'Vegetariano', emoji: '🥦', bg: 'bg-lime-900/40',   text: 'text-lime-400'   },
-  sin_gluten:  { label: 'Sin gluten',  emoji: '🌾', bg: 'bg-yellow-900/40', text: 'text-yellow-400' },
-  picante:     { label: 'Picante',     emoji: '🌶️', bg: 'bg-red-900/40',    text: 'text-red-400'    },
-  popular:     { label: 'Popular',     emoji: '⭐', bg: 'bg-orange-900/40', text: 'text-orange-400' },
-  nuevo:       { label: 'Nuevo',       emoji: '🆕', bg: 'bg-blue-900/40',   text: 'text-blue-400'   },
-  oferta:      { label: 'Oferta',      emoji: '🏷️', bg: 'bg-pink-900/40',   text: 'text-pink-400'   },
+  vegano:      { label: 'Vegano',      emoji: '🌱', bg: 'bg-green-100',  text: 'text-green-700'  },
+  vegetariano: { label: 'Vegetariano', emoji: '🥦', bg: 'bg-lime-100',   text: 'text-lime-700'   },
+  sin_gluten:  { label: 'Sin gluten',  emoji: '🌾', bg: 'bg-yellow-100', text: 'text-yellow-700' },
+  picante:     { label: 'Picante',     emoji: '🌶️', bg: 'bg-red-100',    text: 'text-red-700'    },
+  popular:     { label: 'Popular',     emoji: '⭐', bg: 'bg-orange-100', text: 'text-orange-700' },
+  nuevo:       { label: 'Nuevo',       emoji: '🆕', bg: 'bg-blue-100',   text: 'text-blue-700'   },
+  oferta:      { label: 'Oferta',      emoji: '🏷️', bg: 'bg-pink-100',   text: 'text-pink-700'   },
 };
 
 function ProductTag({ tag }: { tag: string }) {
@@ -571,15 +571,14 @@ function CartaNavbar({
           value={searchQuery}
           onChange={e => onSearchChange(e.target.value)}
           placeholder="Buscar en el menú..."
-          className="w-full rounded-xl pl-9 pr-10 py-2 text-sm text-white focus:outline-none transition-all backdrop-blur"
-          style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
+          className="w-full rounded-xl pl-9 pr-10 py-2 text-sm bg-white/90 border border-gray-200 text-gray-900 placeholder:text-gray-400 focus:outline-none transition-all"
           onFocus={e => { e.target.style.borderColor = _themeColor; e.target.style.boxShadow = `0 0 0 3px ${_themeColor}22`; }}
-          onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = 'none'; }}
+          onBlur={e => { e.target.style.borderColor = '#e5e7eb'; e.target.style.boxShadow = 'none'; }}
         />
         {searchQuery && (
           <button
             onClick={() => onSearchChange('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-gray-700"
           >
             <X className="w-4 h-4" />
           </button>
@@ -1468,7 +1467,7 @@ export default function CartaDigital() {
 
       {/* ── Barra de información de contacto (chips) ── */}
       {(cartaSettings?.address || cartaSettings?.phone || cartaSettings?.email || isOpen !== null) && (
-        <div className="relative z-10 -mt-6 mx-4 md:mx-8 lg:mx-auto lg:max-w-5xl bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-white/60 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-[13px] text-gray-700">
+        <div className="relative z-10 -mt-6 mx-4 md:mx-8 lg:mx-auto lg:max-w-5xl bg-white rounded-2xl shadow-xl border border-gray-200 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-[13px] text-gray-700">
             {cartaSettings?.address && (
               <div className="flex items-center gap-1.5 max-w-full sm:max-w-[280px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
@@ -1499,7 +1498,7 @@ export default function CartaDigital() {
       )}
 
       {/* ── 3. Barra de búsqueda + Categorías (full-width sticky) */}
-      <div className="sticky top-0 z-40 shadow-sm" style={{ backgroundColor: 'rgba(9,9,11,0.80)', backdropFilter: 'blur(24px) saturate(1.5)', WebkitBackdropFilter: 'blur(24px) saturate(1.5)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="sticky top-0 z-40 shadow-sm border-b border-gray-200/80" style={{ backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(24px) saturate(1.5)', WebkitBackdropFilter: 'blur(24px) saturate(1.5)' }}>
         <CartaNavbar
           searchQuery={search}
           onSearchChange={setSearch}
@@ -1523,14 +1522,14 @@ export default function CartaDigital() {
                 className={`shrink-0 whitespace-nowrap flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
                   activeTab === cat.id
                     ? 'text-white font-bold'
-                    : 'bg-white/5 border border-white/10 text-gray-700 hover:bg-white/10'
+                    : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
                 }`}
                 style={activeTab === cat.id
                   ? { backgroundColor: themeColor, boxShadow: `0 4px 14px ${themeColor}66`, transform: 'scale(1.02)' }
                   : undefined}
               >
                 {(catThumb || catEmoji) && (
-                  <span className={`w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 transition-all ${activeTab === cat.id ? 'ring-2 ring-white/60' : 'bg-white/25'}`}>
+                  <span className={`w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 transition-all ${activeTab === cat.id ? 'ring-2 ring-white/60' : 'bg-gray-100'}`}>
                     {catThumb
                       ? <img src={catThumb} alt="" className="w-full h-full object-cover" loading="lazy" />
                       : <span className="text-sm leading-none">{catEmoji}</span>
@@ -1579,7 +1578,7 @@ export default function CartaDigital() {
               <button
                 onClick={() => setActiveTag(null)}
                 className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  !activeTag ? 'bg-gray-700 text-white ring-1 ring-gray-500' : 'bg-gray-800/80 text-gray-400 hover:text-white'
+                  !activeTag ? 'bg-gray-900 text-white ring-1 ring-gray-700' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                 }`}
               >
                 Todos
@@ -1595,7 +1594,7 @@ export default function CartaDigital() {
                       transition-all flex items-center gap-1 border active:scale-95
                       ${ activeTag === tag
                         ? `${cfg.bg} ${cfg.text} border-current`
-                        : 'bg-gray-800/80 border-gray-700 text-gray-400 hover:text-white hover:border-gray-500'
+                        : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
                       }`}
                   >
                     {cfg.emoji} {cfg.label}
@@ -1619,7 +1618,7 @@ export default function CartaDigital() {
           <div key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-28">
             <div className="mt-8 mb-4 flex items-center gap-2">
               <span className="w-1 h-6 rounded-full" style={{ backgroundColor: themeColor }} />
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">{cat.name}</h2>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-900">{cat.name}</h2>
               <span className="text-xs text-gray-400 ml-auto">{cat.products.length} producto{cat.products.length !== 1 ? 's' : ''}</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1675,7 +1674,7 @@ export default function CartaDigital() {
           ) : (
             <div className="space-y-0">
               {cart.map((item, idx) => (
-                <div key={item.product.id} className={`flex items-center gap-3 py-3 rounded-xl px-2 -mx-2 transition-colors hover:bg-white/5 ${idx < cart.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                <div key={item.product.id} className={`flex items-center gap-3 py-3 rounded-xl px-2 -mx-2 transition-colors hover:bg-gray-50 ${idx < cart.length - 1 ? 'border-b border-gray-100' : ''}`}>
                   <div className="w-10 h-10 rounded-lg bg-gray-100 shrink-0 flex items-center justify-center overflow-hidden">
                     {item.product.image
                       ? <img src={item.product.image} alt="" className="w-full h-full object-cover" />

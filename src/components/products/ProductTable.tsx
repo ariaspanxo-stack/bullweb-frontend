@@ -106,6 +106,9 @@ export const ProductTable: React.FC<ProductTableProps> = ({
             {products.map((product) => {
               const isLowStock = (product.currentStock || 0) < 10;
               const metrics = calculateProductMetrics(product.price, product.cost || 0);
+              // Thumbnail: el backend envía 'image' (Prisma); imageUrl es el nombre frontend
+              const imageSrc: string | undefined = (product as any).image || product.imageUrl;
+              const emoji: string | undefined = (product as any).emoji;
 
               return (
                 <tr
@@ -115,14 +118,15 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                   {/* Imagen */}
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
-                      {product.imageUrl ? (
+                      {imageSrc ? (
                         <img
-                          src={product.imageUrl}
+                          src={imageSrc}
                           alt={product.name}
+                          loading="lazy"
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-gray-400 text-xs">Sin img</span>
+                        <span className="text-xl">{emoji ?? '🍽️'}</span>
                       )}
                     </div>
                   </td>

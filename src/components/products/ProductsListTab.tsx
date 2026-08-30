@@ -486,11 +486,14 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {currentItems.map((product) => {
               const category = categories.find(c => c.id === product.categoryId);
-              const margin = product.cost 
+              const margin = product.cost
                 ? Math.round(((product.price - product.cost) / product.price) * 100)
                 : 0;
               const metrics = calculateProductMetrics(product.price, product.cost || 0);
               const marginColor = margin >= 40 ? 'text-green-600' : margin >= 20 ? 'text-yellow-600' : 'text-red-600';
+              // Thumbnail: el backend envía 'image' (Prisma); imageUrl es el nombre frontend
+              const imageSrc: string | undefined = (product as any).image || product.imageUrl;
+              const emoji: string | undefined = (product as any).emoji;
 
               return (
                 <div
@@ -503,15 +506,16 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                 >
                   {/* Imagen */}
                   <div className="relative h-48 bg-gradient-to-br from-orange-100 to-orange-200">
-                    {product.imageUrl ? (
-                      <img 
-                        src={product.imageUrl} 
+                    {imageSrc ? (
+                      <img
+                        src={imageSrc}
                         alt={product.name}
+                        loading="lazy"
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Package size={48} className="text-orange-300" />
+                        <span className="text-4xl">{emoji ?? '🍽️'}</span>
                       </div>
                     )}
                     

@@ -26,6 +26,8 @@ interface DteConfig {
   contribuyenteCiudad?: string | null;
   ambiente?: 'certificacion' | 'produccion';
   folios?: FolioConfig[];
+  resolutionNumber?: number | null;
+  resolutionDate?: string | null;
 }
 
 // ─── Sección CAF (Folios Autorizados) ────────────────────────────
@@ -33,6 +35,9 @@ function CafSection({ config, onSaved }: { config: DteConfig | null; onSaved: ()
   const [uploading, setUploading] = useState(false);
   const [folioInicio, setFolioInicio] = useState('1');
   const [folioFin, setFolioFin] = useState('');
+  // HOTFIX #100: errores server-side del CAF visibles junto a la sección.
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [validatedInfo, setValidatedInfo] = useState<string | null>(null);
 
   const boletaFolio = config?.folios?.find((f) => f.tipo === 39);
 
@@ -49,6 +54,8 @@ function CafSection({ config, onSaved }: { config: DteConfig | null; onSaved: ()
     }
 
     setUploading(true);
+    setServerError(null);
+    setValidatedInfo(null);
     try {
       // Leer XML como texto
       const xmlText = await new Promise<string>((resolve, reject) => {
@@ -86,11 +93,20 @@ function CafSection({ config, onSaved }: { config: DteConfig | null; onSaved: ()
       const updatedFolios = existingFolios.filter((f) => f.tipo !== 39);
       updatedFolios.push(newFolio);
 
-      await api.post('/dte/engine/config', { folios: updatedFolios });
-      toast.success(`CAF cargado: folios ${inicio} → ${fin}`);
+      const { data } = await api.post('/dte/engine/config', { folios: updatedFolios });
+      // HOTFIX #100: el backend valida el CAF server-side (RNG, rango, tipo,
+      // RUT RE) — mostramos la confirmación de folios validados.
+      const validation = (data as any)?.data?.validation ?? (data as any)?.validation;
+      if (validation?.foliosValidados) {
+        setValidatedInfo(`Folios tipo 39: ${inicio}–${fin} cargados y validados`);
+      } else {
+        toast.success(`CAF cargado: folios ${inicio} → ${fin}`);
+      }
       onSaved();
     } catch (err: any) {
-      toast.error(err?.response?.data?.error ?? 'Error al subir CAF');
+      const msg = err?.response?.data?.error ?? 'Error al subir CAF';
+      toast.error(msg);
+      setServerError(msg);
     } finally {
       setUploading(false);
     }
@@ -99,6 +115,20 @@ function CafSection({ config, onSaved }: { config: DteConfig | null; onSaved: ()
   return (
     <fieldset className="mt-5 border border-gray-200 rounded-xl p-4 space-y-4">
       <legend className="text-sm font-semibold text-gray-700 px-2">📄 Folios Autorizados (CAF)</legend>
+
+      {/* HOTFIX #100: confirmación de validación server-side */}
+      {validatedInfo && (
+        <p className="text-xs text-emerald-700 font-medium bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+          ✓ {validatedInfo}
+        </p>
+      )}
+
+      {/* HOTFIX #100: rechazo server-side visible junto al upload */}
+      {serverError && (
+        <p className="text-xs text-red-600 font-medium bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          ✕ {serverError}
+        </p>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -171,6 +201,11 @@ export default function DteConfigPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [togglingActive, setTogglingActive] = useState(false);
+  // HOTFIX #100: feedback post-guardado (respuesta enriquecida del backend)
+  // y errores 400 mostrados inline junto a la sección correspondiente.
+  const [saveFeedback, setSaveFeedback] = useState<string | null>(null);
+  const [certError, setCertError] = useState<string | null>(null);
+  const [cafError, setCafError] = useState<string | null>(null);
   const [form, setForm] = useState({
     certificadoPfx: '',
     certificadoPassword: '',
@@ -182,6 +217,8 @@ export default function DteConfigPage() {
     contribuyenteComuna: '',
     contribuyenteCiudad: '',
     ambiente: 'certificacion' as 'certificacion' | 'produccion',
+    resolucionNumero: '',
+    resolucionFecha: '',
   });
 
   const loadConfig = useCallback(() => {
@@ -200,6 +237,8 @@ export default function DteConfigPage() {
             contribuyenteComuna: cfg.contribuyenteComuna ?? '',
             contribuyenteCiudad: cfg.contribuyenteCiudad ?? '',
             ambiente: cfg.ambiente ?? 'certificacion',
+            resolucionNumero: cfg.resolutionNumber != null ? String(cfg.resolutionNumber) : '',
+            resolucionFecha: cfg.resolutionDate ? cfg.resolutionDate.slice(0, 10) : '',
           }));
         }
       })
@@ -240,6 +279,9 @@ export default function DteConfigPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
+    setSaveFeedback(null);
+    setCertError(null);
+    setCafError(null);
     try {
       // Enviar siempre TODOS los campos del contribuyente (sin || undefined)
       // y forzar el motor nativo
@@ -257,12 +299,33 @@ export default function DteConfigPage() {
       if (form.certificadoPassword) payload.certificadoPassword = form.certificadoPassword;
       if (form.certificadoNombre) payload.certificadoNombre = form.certificadoNombre;
 
-      await api.post('/dte/engine/config', payload);
+      // HOTFIX #100: resolución SII para RCOF (en certificación el backend
+      // aplica defaults 0 / 2019-10-18 automáticamente si van vacíos).
+      if (form.resolucionNumero.trim()) payload.resolucionNumero = Number(form.resolucionNumero);
+      if (form.resolucionFecha.trim()) payload.resolucionFecha = form.resolucionFecha;
+
+      const { data } = await api.post('/dte/engine/config', payload);
+      const validation = (data as any)?.data?.validation ?? (data as any)?.validation;
+
+      // HOTFIX #100: feedback inmediato con la validación real del backend.
+      if (validation?.certValido) {
+        const vence = validation.certExpira
+          ? ` — vence ${new Date(validation.certExpira).toLocaleDateString('es-CL')}`
+          : '';
+        setSaveFeedback(`✓ Certificado válido${vence}`);
+      }
       toast.success('Configuración DTE guardada ✓');
       setForm(f => ({ ...f, certificadoPfx: '', certificadoPassword: '' }));
       loadConfig();
     } catch (err: any) {
-      toast.error(err?.response?.data?.error ?? err?.message ?? 'Error al guardar');
+      const msg = err?.response?.data?.error ?? err?.message ?? 'Error al guardar';
+      toast.error(msg);
+      // Errores 400 del backend mostrados junto a la sección correspondiente:
+      // certificado (contraseña/expiración/RUT) vs folios (CAF/RNG/RE).
+      const isCert = /contraseña del certificado|certificado/i.test(msg);
+      const isCaf  = /CAF|RNG|folio/i.test(msg);
+      if (isCert) setCertError(msg);
+      else if (isCaf) setCafError(msg);
     } finally {
       setSaving(false);
     }
@@ -372,6 +435,18 @@ export default function DteConfigPage() {
             {config?.hasCertificado && !form.certificadoPfx && (
               <p className="mt-1 text-xs text-gray-400">Ya hay un certificado cargado. Sube uno nuevo solo para reemplazarlo.</p>
             )}
+            {/* HOTFIX #100: rechazo del backend visible junto al certificado */}
+            {certError && (
+              <p className="mt-2 text-xs text-red-600 font-medium bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                ✕ {certError}
+              </p>
+            )}
+            {/* HOTFIX #100: confirmación de validación real post-guardado */}
+            {saveFeedback && !certError && (
+              <p className="mt-2 text-xs text-emerald-700 font-medium bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                {saveFeedback}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -454,6 +529,33 @@ export default function DteConfigPage() {
               />
             </div>
           </div>
+
+          {/* HOTFIX #100: Resolución SII (requerida por RCOF) */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Resolución SII — Nro.</label>
+              <input
+                type="number"
+                placeholder="0"
+                value={form.resolucionNumero}
+                onChange={e => setForm(f => ({ ...f, resolucionNumero: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Resolución SII — Fecha</label>
+              <input
+                type="date"
+                value={form.resolucionFecha}
+                onChange={e => setForm(f => ({ ...f, resolucionFecha: e.target.value }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-gray-400">
+            Los encuentra en su resolución del SII. En ambiente de Certificación se usan valores por
+            defecto automáticamente — puede dejarlos vacíos.
+          </p>
         </fieldset>
 
         {/* Ambiente */}

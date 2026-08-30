@@ -33,40 +33,57 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
   const [emittedDoc, setEmittedDoc] = useState<any>(null);
   const [printing, setPrinting] = useState(false);
   const [printed, setPrinted] = useState(false);
+  // HOTFIX #100: estado de fallo visible en el modal (antes fire-and-forget
+  // que cerraba el modal y la vista post-emisión era código muerto).
+  const [emitError, setEmitError] = useState<string | null>(null);
+  const [timedOut, setTimedOut] = useState(false);
 
-  const handleEmit = (e: React.FormEvent) => {
+  // El backend corta el envío al SII a los 15s (Promise.race); el frontend
+  // espera hasta 25s antes de declarar timeout propio.
+  const EMIT_TIMEOUT_MS = 25_000;
+
+  const handleEmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setEmittedDoc(null);
     setPrinted(false);
+    setEmitError(null);
+    setTimedOut(false);
+    setLoading(true);
 
-    // 🚀 HOTFIX FIRE-AND-FORGET: lanzamos la emisión SIN await para no bloquear
-    // el POS si el SII está lento o caído. El modal se cierra inmediatamente y
-    // el mesero puede seguir vendiendo. El resultado (éxito/error/timeout) se
-    // resuelve en segundo plano con toasts no bloqueantes.
-    api
-      .post(`/dte/emit/${orderId}`, {
-        tipo: 39,
-        clientEmail: email || undefined,
-      })
-      .then(({ data }) => {
-        // Éxito en background (no bloqueante): actualiza estado del padre
-        toast.success('Boleta emitida correctamente');
-        onEmitted?.(data);
-      })
-      .catch(() => {
-        // Cualquier fallo (timeout del SII incluido) → warning estandarizado
-        // y no bloqueante. La boleta queda PENDING/ERROR en backend para
-        // reintento posterior.
-        // Nota: react-hot-toast no expone toast.warning; usamos toast() con
-        // icono y duración para simular un warning.
-        toast('Boleta electrónica en proceso. Revisa el estado en un momento.', {
-          icon: '⚠️',
-          duration: 6000,
-        });
-      });
+    try {
+      const { data } = await Promise.race([
+        api.post(`/dte/emit/${orderId}`, {
+          tipo: 39,
+          clientEmail: email || undefined,
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('EMIT_TIMEOUT')), EMIT_TIMEOUT_MS)
+        ),
+      ]);
 
-    // Cierra el modal de inmediato: el mesero puede seguir operando.
-    handleClose();
+      // Éxito: la vista post-emisión (folio, Track ID, PDF, imprimir) REVIVE.
+      const doc = (data as any)?.data ?? data;
+      setEmittedDoc(doc);
+      toast.success('Boleta emitida correctamente');
+      onEmitted?.(doc);
+    } catch (err: any) {
+      if (err?.message === 'EMIT_TIMEOUT' || err?.code === 'ECONNABORTED') {
+        // Timeout: la boleta quedó PENDING en backend con reintento disponible.
+        setTimedOut(true);
+        setEmitError('La emisión está tardando — revisa Boletas DTE en unos minutos');
+      } else {
+        const msg = err?.response?.data?.error ?? err?.message ?? 'Error al emitir boleta';
+        setEmitError(msg);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRetry = () => {
+    setEmitError(null);
+    setTimedOut(false);
+    handleEmit({ preventDefault: () => {} } as React.FormEvent);
   };
 
   const handlePrint = async () => {
@@ -87,10 +104,23 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
     }
   };
 
-  const handleDownloadPdf = () => {
-    if (!emittedDoc?.pdfUrl && !emittedDoc?.pdf) return;
-    const url = emittedDoc.pdfUrl ?? emittedDoc.pdf;
-    window.open(url, '_blank');
+  // HOTFIX #100: descarga vía el endpoint existente GET /dte/documents/:id/pdf
+  // (mismo patrón blob que DteDocumentsPage). El pdfUrl viejo casi nunca
+  // existía — el botón era inalcanzable de todas formas.
+  const handleDownloadPdf = async () => {
+    const docId = emittedDoc?.id;
+    if (!docId) return;
+    try {
+      const res = await api.get(`/dte/documents/${docId}/pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data as BlobPart], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `boleta-${emittedDoc.folioNumber ?? docId}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('No se pudo generar el PDF de la boleta');
+    }
   };
 
   const handleClose = () => {
@@ -98,6 +128,9 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
     setEmittedDoc(null);
     setEmail('');
     setPrinted(false);
+    setEmitError(null);
+    setTimedOut(false);
+    setLoading(false);
   };
 
   if (!canIssueBoleta) return null;
@@ -142,7 +175,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
             </div>
 
             {!emittedDoc ? (
-              /* ─── Formulario de emisión ─── */
+              /* ─── Formulario de emisión (o estado de fallo con reintento) ─── */
               <div className="px-6 pb-6 !bg-gray-900">
                 <p className="!text-gray-400 !text-xs mb-5">
                   La boleta se emitirá como{' '}
@@ -193,6 +226,29 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
                     Cancelar
                   </button>
                 </form>
+
+                {/* HOTFIX #100: fallo visible con reintento (antes fire-and-forget) */}
+                {emitError && !loading && (
+                  <div className="mt-4 p-3 rounded-lg !bg-red-500/10 !border !border-red-500/40 space-y-3">
+                    <p className="!text-red-300 !text-sm">{emitError}</p>
+                    {timedOut && (
+                      <Link
+                        to="/dte/documentos"
+                        className="block !text-orange-300 !text-xs underline hover:!text-orange-200"
+                      >
+                        Ir a Boletas DTE →
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleRetry}
+                      className="w-full py-2 rounded-lg !bg-red-500/80 hover:!bg-red-500
+                                 !text-white !text-sm !font-semibold transition-colors"
+                    >
+                      Reintentar emisión
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               /* ─── Vista post-emisión: éxito + imprimir ─── */
@@ -240,18 +296,16 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
                   )}
                 </button>
 
-                {/* Botón Descargar PDF (alternativa) */}
-                {(emittedDoc?.pdfUrl || emittedDoc?.pdf) && (
-                  <button
-                    onClick={handleDownloadPdf}
-                    className="w-full py-2 rounded-lg !bg-gray-700 hover:!bg-gray-600
-                               !text-gray-300 !text-sm transition-colors
-                               flex items-center justify-center gap-2"
-                  >
-                    <Download className="w-4 h-4 !text-gray-300" />
-                    <span className="!text-gray-300">Descargar PDF</span>
-                  </button>
-                )}
+                {/* HOTFIX #100: PDF siempre disponible vía GET /dte/documents/:id/pdf */}
+                <button
+                  onClick={handleDownloadPdf}
+                  className="w-full py-2 rounded-lg !bg-gray-700 hover:!bg-gray-600
+                             !text-gray-300 !text-sm transition-colors
+                             flex items-center justify-center gap-2"
+                >
+                  <Download className="w-4 h-4 !text-gray-300" />
+                  <span className="!text-gray-300">Descargar PDF</span>
+                </button>
 
                 <button
                   onClick={handleClose}

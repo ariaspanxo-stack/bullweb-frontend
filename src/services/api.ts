@@ -103,6 +103,9 @@ export const productsApi = {
     if (payload.stationId === '' || payload.stationId === null) {
       delete payload.stationId;
     }
+    // Renombrar imageUrl → image (campo que espera el backend)
+    const imageVal = data.image || data.imageUrl;
+    if (imageVal) payload.image = imageVal;
     const response = await fetch(`${API_BASE_URL}/menu/products/${id}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),

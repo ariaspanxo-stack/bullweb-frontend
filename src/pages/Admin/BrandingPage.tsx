@@ -72,7 +72,7 @@ function SettingField({
       formData.append('logo', file);
       const token = localStorage.getItem('bullweb_token') ?? '';
       const res = await fetch(
-        `${(import.meta.env.VITE_API_URL as string) ?? ''}/api/menu/upload-logo`,
+        `${(import.meta.env.VITE_API_URL as string) ?? ''}/menu/upload-logo`,
         { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData }
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);

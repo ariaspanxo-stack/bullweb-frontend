@@ -215,7 +215,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       const token = localStorage.getItem('bullweb_token') ?? '';
       const baseUrl = import.meta.env.VITE_API_URL ?? '';
 
-      const res = await fetch(`${baseUrl}/api/menu/upload-logo`, {
+      const res = await fetch(`${baseUrl}/menu/upload-logo`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: fd,

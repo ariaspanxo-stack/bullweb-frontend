@@ -4,6 +4,17 @@ import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Pl
 
 const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
 
+// Hotfix #104 — oscurecimiento hex inline (sin dependencias) para gradientes themeColor
+const darkenColor = (hex: string, amt = 40) => {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  const n = parseInt(full, 16);
+  const r = Math.max(0, (n >> 16) - amt);
+  const g = Math.max(0, ((n >> 8) & 0xff) - amt);
+  const b = Math.max(0, (n & 0xff) - amt);
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+};
+
 interface Product {
   id: string;
   name: string;
@@ -172,6 +183,7 @@ function ProductCard({
   onRemove,
   onClick,
   isBusinessOpen = true,
+  index = 0,
 }: {
   product:         Product;
   quantity:        number;
@@ -180,6 +192,7 @@ function ProductCard({
   onRemove:        () => void;
   onClick?:        () => void;
   isBusinessOpen?: boolean | null;
+  index?:          number;
 }) {
   const isAvailable      = product.available !== false;
   const canAdd           = isAvailable && isBusinessOpen !== false;
@@ -189,24 +202,33 @@ function ProductCard({
   return (
     <div
       onClick={isAvailable && onClick ? onClick : undefined}
-      className={`bg-white border border-gray-100 shadow-sm rounded-2xl p-3.5 flex items-center gap-3.5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200
-        ${isAvailable && onClick ? 'cursor-pointer' : ''}
-        ${!isAvailable ? 'opacity-55' : ''}
+      className={`bw-fade-in-up bg-white border border-gray-100 rounded-2xl p-3.5 flex items-center gap-3.5 transition-all duration-200
+        ${isAvailable && onClick ? 'cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]' : ''}
+        ${!isAvailable ? 'opacity-80' : ''}
       `}
+      style={{
+        animationDelay: `${Math.min(index * 40, 400)}ms`,
+        ...(isAvailable ? {} : { borderColor: 'rgba(0,0,0,0.04)' }),
+      }}
     >
       {/* Imagen / emoji — solo si existe */}
       {(product.image || product.emoji) && (
-        <div className="w-[88px] h-[88px] rounded-2xl overflow-hidden flex-shrink-0 bg-gray-50 flex items-center justify-center relative">
+        <div className="w-[96px] h-[96px] sm:w-[110px] sm:h-[110px] rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 flex items-center justify-center relative">
           {product.image ? (
             <img
               src={product.image}
               alt={product.name}
-              className={`w-full h-full object-cover ${!isAvailable ? 'grayscale' : ''}`}
+              className={`w-full h-full object-cover ${!isAvailable ? 'grayscale opacity-60' : ''}`}
               loading="lazy"
               onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
           ) : (
-            <span className="text-4xl select-none">{fallbackEmoji}</span>
+            <span className={`text-4xl select-none ${!isAvailable ? 'grayscale opacity-60' : ''}`}>{fallbackEmoji}</span>
+          )}
+          {!isAvailable && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
+              <span className="text-[10px] font-bold text-white px-2 py-0.5 rounded-full bg-black/45">No disponible</span>
+            </div>
           )}
           {inCart && (
             <div
@@ -225,7 +247,7 @@ function ProductCard({
         <div>
           <p className="font-semibold text-gray-800 text-sm leading-snug">{product.name.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}</p>
           {product.description && (
-            <p className="text-xs text-gray-400 line-clamp-2 leading-relaxed mt-0.5">{product.description}</p>
+            <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-0.5">{product.description}</p>
           )}
           {product.tags && product.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-1">
@@ -244,7 +266,7 @@ function ProductCard({
           {!isAvailable ? (
             <span className="font-bold text-gray-400 text-sm line-through">{fmtCLP(product.price)}</span>
           ) : (
-            <span className="font-extrabold text-xl" style={{ color: themeColor }}>{fmtCLP(product.price)}</span>
+            <span className="font-bold text-sm rounded-lg px-2 py-0.5" style={{ backgroundColor: `${themeColor}15`, color: themeColor }}>{fmtCLP(product.price)}</span>
           )}
           {isAvailable && (
             canAdd ? (
@@ -252,7 +274,7 @@ function ProductCard({
                 <div className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
                   <button
                     onClick={onRemove}
-                    className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 transition-colors"
+                    className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 active:scale-95 transition-all"
                     aria-label={`Quitar ${product.name}`}
                   >
                     <Minus className="w-3.5 h-3.5" />
@@ -260,7 +282,7 @@ function ProductCard({
                   <span className="font-bold text-gray-900 w-5 text-center text-sm">{quantity}</span>
                   <button
                     onClick={onAdd}
-                    className="w-8 h-8 rounded-full shadow-sm flex items-center justify-center text-white hover:opacity-90 transition-colors"
+                    className="w-8 h-8 rounded-full shadow-sm flex items-center justify-center text-white hover:brightness-110 active:scale-95 transition-all"
                     style={{ backgroundColor: themeColor }}
                     aria-label={`Agregar ${product.name}`}
                   >
@@ -271,7 +293,7 @@ function ProductCard({
                 <button
                   onClick={onAdd}
                   className="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex-shrink-0"
-                  style={{ backgroundColor: themeColor }}
+                  style={{ backgroundColor: themeColor, boxShadow: `0 4px 14px ${themeColor}55` }}
                   aria-label={`Agregar ${product.name}`}
                 >
                   <Plus className="w-4 h-4 text-white" />
@@ -442,24 +464,32 @@ function CartaHero({
   const [logoError, setLogoError] = useState(false);
 
   return (
-    <div className="w-full" style={{ position: 'relative' }}>
-      {/* Gradiente hero / Banner */}
+    <div className="w-full bw-fade-in-up" style={{ position: 'relative' }}>
+      {/* Hotfix #104 — keyframes CSS puros (fadeInUp + pop), único <style> del componente */}
+      <style>{`
+        @keyframes bwFadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes bwPop { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
+        .bw-fade-in-up { animation: bwFadeInUp 0.3s ease both; }
+        .bw-pop { animation: bwPop 0.25s ease-out; }
+      `}</style>
+      {/* Gradiente hero / Banner — cinematográfico */}
       <div
         style={{
           width: '100%',
-          minHeight: '180px',
+          minHeight: '240px',
           position: 'relative',
           overflow: 'hidden',
           backgroundImage: bannerUrl
             ? `url(${bannerUrl.trim()})`
-            : `linear-gradient(135deg, ${themeColor}dd 0%, ${themeColor}88 40%, ${themeColor}22 75%, #09090b 100%)`,
+            : `linear-gradient(135deg, ${themeColor}dd 0%, ${darkenColor(themeColor, 30)} 100%)`,
           backgroundSize: bannerUrl ? 'cover' : undefined,
           backgroundPosition: bannerUrl ? 'center' : undefined,
           backgroundRepeat: bannerUrl ? 'no-repeat' : undefined,
         }}
+        className="md:min-h-[340px]"
       >
-        {/* Overlay degradado cuando hay banner */}
-        {bannerUrl && <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />}
+        {/* Overlay degradado 2 stops cuando hay banner — legibilidad garantizada */}
+        {bannerUrl && <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 0%, ${themeColor}22 55%, #09090b 100%)` }} />}
         <div style={{
           position: 'absolute',
           top: '-20px',
@@ -475,23 +505,22 @@ function CartaHero({
       <div className="py-6 px-6 relative z-10" style={{ marginTop: bannerUrl ? '-60px' : '-48px', position: 'relative' }}>
         {tableNumber && (
           <div
-            className="flex items-center justify-center gap-2 mb-3 py-1.5 px-3 rounded-xl text-xs font-semibold"
-            style={{ backgroundColor: `${themeColor}22`, color: themeColor, border: `1px solid ${themeColor}40` }}
+            className="flex items-center justify-center gap-2 mb-3 py-1.5 px-3 rounded-xl text-xs font-semibold bg-white/10 backdrop-blur border border-white/20 text-white/90"
           >
             🧉 Mesa {tableNumber}
           </div>
         )}
         <div className="flex items-center gap-4">
         {logo && !logoError
-          ? <img src={logo} alt={name} className="w-20 h-20 rounded-full object-contain shrink-0 shadow-xl" style={{ backgroundColor: '#18181b', border: `3px solid ${themeColor}`, boxShadow: `0 0 0 3px rgba(255,255,255,0.25), 0 8px 24px ${themeColor}55` }} onError={() => setLogoError(true)} />
+          ? <img src={logo} alt={name} className="w-20 h-20 rounded-full object-contain shrink-0 shadow-xl" style={{ backgroundColor: '#18181b', border: '3px solid #ffffff', boxShadow: `0 0 0 2px ${themeColor}, 0 8px 24px rgba(0,0,0,0.35)` }} onError={() => setLogoError(true)} />
           : <div
               className="w-20 h-20 rounded-full flex items-center justify-center shrink-0 font-black text-white text-2xl shadow-xl"
-              style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}99)`, border: `3px solid ${themeColor}`, boxShadow: `0 0 0 3px rgba(255,255,255,0.25), 0 8px 24px ${themeColor}55` }}
+              style={{ background: `linear-gradient(135deg, ${themeColor}, ${darkenColor(themeColor, 40)})`, border: '3px solid #ffffff', boxShadow: `0 0 0 2px ${themeColor}, 0 8px 24px rgba(0,0,0,0.35)` }}
             >{initials}</div>
         }
         <div className="flex-1 min-w-0">
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight text-white leading-tight truncate drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">{name}</h1>
-          {tagline && <p className="text-base text-white/80 font-medium mt-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">{tagline}</p>}
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight truncate" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>{name}</h1>
+          {tagline && <span className="inline-block text-sm text-white/90 font-medium mt-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur border border-white/20" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{tagline}</span>}
           {isOpen !== null && (
             <div
               className="inline-flex items-center gap-1.5 mt-2 py-1 px-2.5 rounded-full text-[11px] font-semibold"
@@ -542,8 +571,10 @@ function CartaNavbar({
           value={searchQuery}
           onChange={e => onSearchChange(e.target.value)}
           placeholder="Buscar en el menú..."
-          className="w-full rounded-xl pl-9 pr-10 py-2 text-sm text-white focus:outline-none transition-colors"
+          className="w-full rounded-xl pl-9 pr-10 py-2 text-sm text-white focus:outline-none transition-all backdrop-blur"
           style={{ backgroundColor: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', color: '#fff' }}
+          onFocus={e => { e.target.style.borderColor = _themeColor; e.target.style.boxShadow = `0 0 0 3px ${_themeColor}22`; }}
+          onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.08)'; e.target.style.boxShadow = 'none'; }}
         />
         {searchQuery && (
           <button
@@ -577,12 +608,13 @@ function CartaFloatingCart({
         onClick={onClick}
         className="w-full max-w-[420px] flex items-center justify-between px-5 py-4 rounded-2xl text-white font-bold active:scale-[0.97] transition-all"
         style={{
-          background: `linear-gradient(135deg, ${themeColor}, ${themeColor}dd)`,
+          background: `linear-gradient(135deg, ${themeColor}, ${darkenColor(themeColor, 40)})`,
           boxShadow: `0 8px 32px ${themeColor}55`,
         }}
       >
         <span
-          className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-black animate-pulse"
+          key={count}
+          className="bw-pop w-7 h-7 rounded-full flex items-center justify-center text-sm font-black"
           style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
         >
           {count}
@@ -1438,12 +1470,12 @@ export default function CartaDigital() {
       {(cartaSettings?.address || cartaSettings?.phone || cartaSettings?.email || isOpen !== null) && (
         <div className="relative z-10 -mt-6 mx-4 md:mx-8 lg:mx-auto lg:max-w-5xl bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-white/60 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-[13px] text-gray-700">
             {cartaSettings?.address && (
-              <div className="flex items-center gap-1.5 max-w-full sm:max-w-[280px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
+              <div className="flex items-center gap-1.5 max-w-full sm:max-w-[280px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
                 <span className="truncate">{cartaSettings.address}</span>
               </div>
             )}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
               <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
               <span className="whitespace-nowrap">
               {isOpen !== null
@@ -1452,13 +1484,13 @@ export default function CartaDigital() {
               </span>
             </div>
             {cartaSettings?.phone && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
                 <Phone className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
                 <span className="whitespace-nowrap">{cartaSettings.phone}</span>
               </div>
             )}
             {cartaSettings?.email && (
-              <div className="hidden sm:flex items-center gap-1.5 max-w-[240px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100">
+              <div className="hidden sm:flex items-center gap-1.5 max-w-[240px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
                 <Mail className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
                 <span className="truncate">{cartaSettings.email}</span>
               </div>
@@ -1477,7 +1509,7 @@ export default function CartaDigital() {
           themeColor={themeColor}
         />
         {categories.length > 1 && (
-          <div className="w-full px-6 py-3 overflow-x-auto scrollbar-hide scroll-smooth flex gap-2">
+          <div className="w-full px-6 py-3 overflow-x-auto scrollbar-hide scroll-smooth flex gap-2" style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}>
             {categories.map(cat => {
               const catThumb = cat.image ?? null;
               const catEmoji = cat.products.find(p => p.emoji)?.emoji ?? null;
@@ -1490,15 +1522,15 @@ export default function CartaDigital() {
                 }}
                 className={`shrink-0 whitespace-nowrap flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
                   activeTab === cat.id
-                    ? 'text-white shadow-md font-bold'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    ? 'text-white font-bold'
+                    : 'bg-white/5 border border-white/10 text-gray-700 hover:bg-white/10'
                 }`}
                 style={activeTab === cat.id
-                  ? { backgroundColor: themeColor, boxShadow: `0 0 0 2px ${themeColor}55, 0 4px 12px ${themeColor}40` }
+                  ? { backgroundColor: themeColor, boxShadow: `0 4px 14px ${themeColor}66`, transform: 'scale(1.02)' }
                   : undefined}
               >
                 {(catThumb || catEmoji) && (
-                  <span className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 bg-white/25">
+                  <span className={`w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 transition-all ${activeTab === cat.id ? 'ring-2 ring-white/60' : 'bg-white/25'}`}>
                     {catThumb
                       ? <img src={catThumb} alt="" className="w-full h-full object-cover" loading="lazy" />
                       : <span className="text-sm leading-none">{catEmoji}</span>
@@ -1586,17 +1618,19 @@ export default function CartaDigital() {
         {filtered.map(cat => (
           <div key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-28">
             <div className="mt-8 mb-4 flex items-center gap-2">
-              <span className="w-1 h-5 rounded-full" style={{ backgroundColor: themeColor }} />
+              <span className="w-1 h-6 rounded-full" style={{ backgroundColor: themeColor }} />
               <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500">{cat.name}</h2>
+              <span className="text-xs text-gray-400 ml-auto">{cat.products.length} producto{cat.products.length !== 1 ? 's' : ''}</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {cat.products.map(product => (
+              {cat.products.map((product, idx) => (
                 <ProductCard
                   key={product.id}
                   product={product}
                   quantity={cartQtyMap[product.id] ?? 0}
                   themeColor={themeColor}
                   isBusinessOpen={isOpen}
+                  index={idx}
                   onAdd={() => addToCart(product)}
                   onRemove={() => updateCartItem(product.id, -1)}
                   onClick={() => setSelected(product)}
@@ -1619,12 +1653,12 @@ export default function CartaDigital() {
         {/* ── Columna derecha: Carrito desktop ── */}
         <div className="hidden lg:flex lg:w-[35%] xl:w-[30%] flex-col bg-gray-50 border-l border-gray-200 sticky top-0 h-screen">
           {/* Header */}
-          <div className="px-5 py-4 border-b border-gray-100 bg-white" style={{ background: `linear-gradient(135deg, ${themeColor}14, transparent 70%)` }}>
-            <h3 className="font-bold text-xl text-gray-900 flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5" style={{ color: themeColor }} />
+          <div className="px-5 py-4 border-b border-gray-100" style={{ background: `linear-gradient(135deg, ${themeColor}, ${darkenColor(themeColor, 40)})` }}>
+            <h3 className="font-bold text-xl text-white flex items-center gap-2">
+              <ShoppingCart className="w-5 h-5" />
               Mi Pedido
               {totalCartQty > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full font-semibold text-white" style={{ backgroundColor: themeColor }}>
+                <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-white/25 text-white backdrop-blur">
                   {totalCartQty}
                 </span>
               )}
@@ -1641,7 +1675,7 @@ export default function CartaDigital() {
           ) : (
             <div className="space-y-0">
               {cart.map((item, idx) => (
-                <div key={item.product.id} className={`flex items-center gap-3 py-3 ${idx < cart.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                <div key={item.product.id} className={`flex items-center gap-3 py-3 rounded-xl px-2 -mx-2 transition-colors hover:bg-white/5 ${idx < cart.length - 1 ? 'border-b border-gray-100' : ''}`}>
                   <div className="w-10 h-10 rounded-lg bg-gray-100 shrink-0 flex items-center justify-center overflow-hidden">
                     {item.product.image
                       ? <img src={item.product.image} alt="" className="w-full h-full object-cover" />
@@ -1688,8 +1722,8 @@ export default function CartaDigital() {
               </div>
               <button
                 onClick={() => setShowCart(true)}
-                className="w-full py-4 rounded-xl text-white font-extrabold text-lg tracking-wide hover:scale-[1.02] transition-all duration-200"
-                style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}cc)`, boxShadow: `0 8px 24px ${themeColor}40` }}
+                className="w-full py-4 rounded-xl text-white font-extrabold text-lg tracking-wide hover:scale-[1.02] hover:-translate-y-[1px] transition-all duration-200"
+                style={{ background: `linear-gradient(135deg, ${themeColor}, ${darkenColor(themeColor, 40)})`, boxShadow: `0 8px 24px ${themeColor}55` }}
               >
                 Ver mi pedido →
               </button>
@@ -1804,11 +1838,11 @@ export default function CartaDigital() {
                   <img
                     src={selected.image}
                     alt={selected.name}
-                    className="w-full h-64 object-cover"
+                    className="w-full h-64 object-cover rounded-b-2xl"
                     onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                 ) : (
-                  <div className="w-full h-64 bg-gray-50 flex items-center justify-center text-8xl">
+                  <div className="w-full h-64 bg-gray-50 flex items-center justify-center text-8xl rounded-b-2xl">
                     {selected.emoji ?? '🍽️'}
                   </div>
                 )}
@@ -1842,8 +1876,8 @@ export default function CartaDigital() {
                   </span>
                 )}
                 <p
-                  className={`text-3xl font-extrabold mt-4 ${selected.available === false ? 'text-gray-400 line-through' : ''}`}
-                  style={selected.available !== false ? { color: themeColor } : undefined}
+                  className={`text-3xl font-extrabold mt-4 inline-block rounded-xl px-3 py-1 ${selected.available === false ? 'text-gray-400 line-through' : ''}`}
+                  style={selected.available !== false ? { color: themeColor, backgroundColor: `${themeColor}15` } : undefined}
                 >
                   {fmtCLP(selected.price)}
                 </p>
@@ -1878,7 +1912,7 @@ export default function CartaDigital() {
                         resetAndClose();
                       }}
                       className="flex-1 py-3 rounded-xl text-white font-extrabold text-lg hover:scale-[1.02] transition-all duration-200"
-                      style={{ background: `linear-gradient(135deg, ${themeColor}, ${themeColor}cc)`, boxShadow: `0 8px 24px ${themeColor}40` }}
+                      style={{ background: `linear-gradient(135deg, ${themeColor}, ${darkenColor(themeColor, 40)})`, boxShadow: `0 8px 24px ${themeColor}55` }}
                     >
                       Agregar {fmtCLP(selected.price * modalQty)}
                     </button>

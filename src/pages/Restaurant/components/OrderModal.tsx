@@ -7,7 +7,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   X, Search, Plus, Minus, ShoppingCart, CreditCard, FileText,
   Clock, Star, Users, MessageSquare, UserPlus, Loader2, Tag, Pencil,
-  Printer, ChefHat, ClipboardList, CheckCircle,
+  Printer, ChefHat, ClipboardList, CheckCircle, Mail,
 } from 'lucide-react';
 import { ModifiersModal } from './ModifiersModal';
 import type {
@@ -78,6 +78,8 @@ export const OrderModal = ({
   const [clientPhone, setClientPhone]               = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(undefined);
   const [saveToCustomers, setSaveToCustomers]       = useState(true);
+  const [customerEmail, setCustomerEmail]           = useState('');
+  const [marketingOptIn, setMarketingOptIn]         = useState(false);
   const [pendingProduct, setPendingProduct]         = useState<Product | null>(null);
   const [showModifiersModal, setShowModifiersModal] = useState(false);
   const [orderNote, setOrderNote]                 = useState('');
@@ -551,6 +553,39 @@ export const OrderModal = ({
                     <span className="font-bold">Guardar &quot;{clientName.trim()}&quot; en Clientes</span>
                   </button>
                 )}
+                {clientName.trim() && !selectedCustomerId && saveToCustomers && (
+                  <div className="mt-2 space-y-2">
+                    {/* ── Hotfix #115: Email opcional (solo creación nueva) ── */}
+                    <div>
+                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
+                        <Mail size={9} /> Email
+                        <span className="text-gray-300 normal-case font-normal ml-1">— opcional</span>
+                      </label>
+                      <input
+                        type="email"
+                        placeholder="cliente@ejemplo.com"
+                        value={customerEmail}
+                        onChange={(e) => setCustomerEmail(e.target.value)}
+                        className="w-full px-3 py-1.5 bg-white border-2 border-gray-200 rounded-xl text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
+                      />
+                    </div>
+                    {/* ── Hotfix #115: Opt-in de marketing (desmarcado por defecto) ── */}
+                    <button
+                      type="button"
+                      onClick={() => setMarketingOptIn(v => !v)}
+                      className={`flex items-center gap-2 w-full px-3 py-1.5 rounded-xl border-2 transition-all text-xs ${
+                        marketingOptIn
+                          ? 'border-orange-400 bg-orange-50 text-orange-700'
+                          : 'border-dashed border-gray-300 bg-white text-gray-500'
+                      }`}
+                    >
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${marketingOptIn ? 'bg-orange-500 border-orange-500' : 'border-gray-300 bg-white'}`}>
+                        {marketingOptIn && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+                      </div>
+                      <span className="font-bold">Quiero recibir ofertas y promociones por email</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Items orden — scrollable flex-1 */}
@@ -848,6 +883,8 @@ export const OrderModal = ({
                         const customer = await customersService.findOrCreate({
                           name: clientName.trim(),
                           phone: clientPhone.trim() || undefined,
+                          email: customerEmail.trim() || undefined,
+                          marketingOptIn,
                         });
                         customerId = customer.id;
                         if (existingOrderId) {
@@ -884,6 +921,8 @@ export const OrderModal = ({
                         const customer = await customersService.findOrCreate({
                           name: clientName.trim(),
                           phone: clientPhone.trim() || undefined,
+                          email: customerEmail.trim() || undefined,
+                          marketingOptIn,
                         });
                         customerId = customer.id;
                         toast.success('Vinculado');

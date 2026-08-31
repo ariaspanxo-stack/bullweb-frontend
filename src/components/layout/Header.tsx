@@ -58,7 +58,7 @@ function InstallAppButton() {
   return (
     <button
       onClick={handleInstall}
-      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+      className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors border border-white/10"
       title="Instalar aplicación"
     >
       <Download className="h-4 w-4" />
@@ -137,26 +137,26 @@ export default function Header({ onMenuClick }: HeaderProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-sm">
+    <header className="sticky top-0 z-30 bg-gray-950/90 backdrop-blur border-b border-white/5 shadow-sm">
       <div className="flex items-center justify-between px-4 lg:px-6 h-16">
         {/* Left: Menu button + Breadcrumbs */}
         <div className="flex items-center gap-4">
           {/* Botón menú (mobile) */}
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="lg:hidden p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             aria-label="Abrir menú"
           >
-            <Menu className="h-6 w-6 text-gray-700" />
+            <Menu className="h-6 w-6" />
           </button>
 
           {/* Breadcrumbs */}
           <nav className="flex items-center gap-2 text-sm">
-            <span className="text-gray-400">Inicio</span>
+            <span className="text-gray-500">Inicio</span>
             {breadcrumb !== 'Inicio' && (
               <>
-                <ChevronRight className="h-4 w-4 text-gray-400" />
-                <span className="font-medium text-gray-900">{breadcrumb}</span>
+                <ChevronRight className="h-4 w-4 text-gray-500" />
+                <span className="font-medium text-white">{breadcrumb}</span>
               </>
             )}
           </nav>
@@ -175,7 +175,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 window.$crisp.push(['do', 'chat:open'])
               }
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             aria-label="Abrir chat de soporte"
           >
             <MessageCircle className="h-4 w-4" />
@@ -187,7 +187,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             href="https://download.teamviewer.com/download/TeamViewerQS.exe"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-gray-200"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors border border-white/10"
             title="Descargar TeamViewer QuickSupport"
           >
             <Headset className="h-4 w-4" />
@@ -198,45 +198,45 @@ export default function Header({ onMenuClick }: HeaderProps) {
           <div className="relative" ref={notifRef}>
             <button
               onClick={() => setShowNotif(v => !v)}
-              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="relative p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               aria-label="Notificaciones"
             >
-              <Bell className="h-5 w-5 text-gray-700" />
+              <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 h-5 w-5 bg-brand-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
               )}
             </button>
 
             {showNotif && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+              <div className="absolute right-0 mt-2 w-80 bg-gray-900 rounded-xl shadow-2xl border border-white/10 z-50 overflow-hidden">
                 {/* Header panel */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                  <span className="font-semibold text-gray-900 text-sm">Notificaciones</span>
+                <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+                  <span className="font-semibold text-white text-sm">Notificaciones</span>
                   {unreadCount > 0 && (
-                    <button onClick={markAllRead} className="text-xs text-blue-600 hover:underline">
+                    <button onClick={markAllRead} className="text-xs text-brand-400 hover:underline">
                       Marcar todas como leídas
                     </button>
                   )}
                 </div>
 
                 {/* Lista */}
-                <ul className="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                <ul className="max-h-80 overflow-y-auto divide-y divide-white/5">
                   {notifications.length === 0 && (
                     <li className="px-4 py-8 text-center text-sm text-gray-400">Sin notificaciones</li>
                   )}
                   {notifications.map(n => (
-                    <li key={n.id} className={cn('flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors', !n.read && 'bg-blue-50/40')}>
-                      <div className="mt-0.5 p-1.5 rounded-lg bg-gray-100 flex-shrink-0">
+                    <li key={n.id} className={cn('flex items-start gap-3 px-4 py-3 hover:bg-white/5 transition-colors', !n.read && 'bg-brand-500/10')}>
+                      <div className="mt-0.5 p-1.5 rounded-lg bg-white/5 flex-shrink-0">
                         {notifIcon(n.type)}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={cn('text-sm truncate', !n.read ? 'font-semibold text-gray-900' : 'text-gray-700')}>{n.title}</p>
+                        <p className={cn('text-sm truncate', !n.read ? 'font-semibold text-white' : 'text-gray-300')}>{n.title}</p>
                         <p className="text-xs text-gray-500 truncate">{n.body}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">{formatRelative(n.createdAt)}</p>
+                        <p className="text-xs text-gray-600 mt-0.5">{formatRelative(n.createdAt)}</p>
                       </div>
-                      <button onClick={() => dismiss(n.id)} className="text-gray-300 hover:text-gray-500 flex-shrink-0">
+                      <button onClick={() => dismiss(n.id)} className="text-gray-600 hover:text-gray-400 flex-shrink-0">
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </li>
@@ -252,12 +252,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
               <button
                 className={cn(
                   'flex items-center gap-3 px-3 py-2 rounded-lg',
-                  'hover:bg-gray-100 transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-blue-500'
+                  'hover:bg-white/5 transition-colors',
+                  'focus:outline-none focus:ring-2 focus:ring-brand-500/50'
                 )}
               >
                 {/* Avatar */}
-                <div className="bg-amber-500 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs">
+                <div className="bg-gradient-to-br from-brand-400 to-brand-600 text-white w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ring-2 ring-brand-500/30">
                   <span>
                     {(user?.name || 'Usuario')
                       .split(' ')
@@ -269,7 +269,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
                 {/* Nombre (oculto en mobile) */}
                 <div className="hidden md:block text-left">
-                  <p className="text-sm font-medium text-gray-900">{user?.name || 'Usuario'}</p>
+                  <p className="text-sm font-medium text-white">{user?.name || 'Usuario'}</p>
                   <p className="text-xs text-gray-500">{user?.role?.name || 'N/A'}</p>
                 </div>
               </button>
@@ -278,7 +278,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <DropdownMenu.Portal>
               <DropdownMenu.Content
                 className={cn(
-                  'min-w-56 bg-white rounded-lg shadow-lg border border-gray-200',
+                  'min-w-56 bg-gray-900 rounded-lg shadow-2xl border border-white/10',
                   'py-1.5 z-50',
                   'animate-in fade-in-0 zoom-in-95'
                 )}
@@ -286,8 +286,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 align="end"
               >
                 {/* Header del dropdown */}
-                <div className="px-3 py-2 border-b border-gray-100">
-                  <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+                <div className="px-3 py-2 border-b border-white/5">
+                  <p className="text-sm font-medium text-white">{user?.name}</p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
 
@@ -295,8 +295,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <DropdownMenu.Item
                   className={cn(
                     'flex items-center gap-3 px-3 py-2 text-sm',
-                    'text-gray-700 hover:bg-gray-100 cursor-pointer',
-                    'focus:outline-none focus:bg-gray-100'
+                    'text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer',
+                    'focus:outline-none focus:bg-white/5'
                   )}
                   onSelect={() => navigate('/profile')}
                 >
@@ -307,8 +307,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 <DropdownMenu.Item
                   className={cn(
                     'flex items-center gap-3 px-3 py-2 text-sm',
-                    'text-gray-700 hover:bg-gray-100 cursor-pointer',
-                    'focus:outline-none focus:bg-gray-100'
+                    'text-gray-400 hover:text-white hover:bg-white/5 cursor-pointer',
+                    'focus:outline-none focus:bg-white/5'
                   )}
                   onSelect={() => navigate('/settings')}
                 >
@@ -316,13 +316,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   <span>Configuración</span>
                 </DropdownMenu.Item>
 
-                <DropdownMenu.Separator className="h-px bg-gray-200 my-1.5" />
+                <DropdownMenu.Separator className="h-px bg-white/5 my-1.5" />
 
                 <DropdownMenu.Item
                   className={cn(
                     'flex items-center gap-3 px-3 py-2 text-sm',
-                    'text-red-600 hover:bg-red-50 cursor-pointer',
-                    'focus:outline-none focus:bg-red-50'
+                    'text-red-400 hover:bg-red-500/10 cursor-pointer',
+                    'focus:outline-none focus:bg-red-500/10'
                   )}
                   onSelect={handleLogout}
                 >

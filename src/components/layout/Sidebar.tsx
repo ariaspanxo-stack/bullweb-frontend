@@ -263,17 +263,6 @@ const adminSections: MenuSection[] = [
 // COMPONENTE SIDEBAR
 // ============================================================================
 
-function avatarGradient(name: string) {
-  const palettes = [
-    'from-blue-500 to-blue-600', 'from-violet-500 to-violet-600',
-    'from-emerald-500 to-emerald-600', 'from-orange-500 to-orange-600',
-    'from-pink-500 to-pink-600', 'from-teal-500 to-teal-600',
-  ];
-  let h = 0;
-  for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffffffff;
-  return palettes[Math.abs(h) % palettes.length];
-}
-
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const location  = useLocation();
   const navigate  = useNavigate();
@@ -343,12 +332,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
       {adminOpen && (
         <>
           <div
-            className="fixed inset-0 z-50"
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
             onClick={() => setAdminOpen(false)}
           />
-          <div className="fixed left-0 top-0 h-full w-72 bg-gray-950 border-r border-gray-800 z-[60] flex flex-col shadow-2xl overflow-hidden">
+          <div className="fixed left-0 top-0 h-full w-72 bg-gray-950 border-r border-white/5 z-[60] flex flex-col shadow-2xl overflow-hidden">
             {/* Header panel admin */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800 bg-gray-900/60">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/5 bg-gray-900/60">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-brand-500/10 rounded-lg flex items-center justify-center">
                   <ShieldCheck className="w-4 h-4 text-brand-400" />
@@ -373,7 +362,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                   .filter(s => (!s.superAdminOnly || isSuperAdmin) && s.items.some(i => (!i.superAdminOnly || isSuperAdmin) && canSee(i.permission)))
                   .map(section => (
                   <div key={section.title}>
-                    <p className="px-2 mb-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    <p className="px-2 mb-1.5 text-[10px] font-semibold text-gray-600 uppercase tracking-wider">
                       {section.title}
                     </p>
                     <div className="space-y-0.5">
@@ -411,7 +400,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </nav>
 
             {/* Footer panel admin */}
-            <div className="px-4 py-3 border-t border-gray-800">
+            <div className="px-4 py-3 border-t border-white/5">
               <button
                 onClick={() => { handleAdminNav('/dashboard'); }}
                 className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-gray-500 hover:text-white hover:bg-white/5 transition-colors"

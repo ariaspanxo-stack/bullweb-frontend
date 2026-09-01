@@ -26,6 +26,7 @@ export const PERMISSION_TREE: PermModule[] = [
           { key: 'pos.create_order',     label: 'Crear órdenes nuevas' },
           { key: 'pos.edit_order',       label: 'Editar ítems de una orden' },
           { key: 'pos.cobrar',           label: 'Emitir boletas DTE desde orden' },
+          { key: 'pos.split_bill',       label: 'Dividir cuenta' },
           { key: 'pos.cancel_order_own', label: 'Cancelar órdenes propias (activas)' },
           { key: 'pos.cancel_order_any', label: 'Cancelar cualquier orden / anular ventas PAID' },
           { key: 'pos.apply_discount',   label: 'Aplicar descuentos (todos los módulos)' },

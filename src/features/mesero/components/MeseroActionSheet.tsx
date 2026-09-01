@@ -25,6 +25,11 @@ export function MeseroActionSheet({
 
   if (!isOpen) return null;
 
+  // Hotfix #116: split/transfer OCULTOS — el frontend invoca POST /orders/:id/split
+  // y /orders/transfer que NO existen en el backend (404). Feature real a BACKLOG:
+  // volver esta constante a `true` cuando el backend los implemente.
+  const SPLIT_TRANSFER_ENABLED = false;
+
   const actions = [
     // Cobrar — solo si tiene permiso charge
     ...(canCharge && onCharge ? [{
@@ -49,30 +54,33 @@ export function MeseroActionSheet({
       disabled:  !hasItems,
       onClick:   onPreCuenta,
     },
-    {
-      id:        'split',
-      icon:      Scissors,
-      label:     'Dividir cuenta',
-      sublabel:  !canSplit
-        ? 'Sin permiso para dividir'
-        : hasItems ? 'Separar ítems en dos cuentas' : 'Sin ítems para dividir',
-      bg:        'bg-gray-50 hover:bg-gray-100',
-      iconBg:    'bg-indigo-100',
-      iconColor: 'text-indigo-500',
-      disabled:  !hasItems || !canSplit,
-      onClick:   onSplitBill,
-    },
-    {
-      id:        'transfer',
-      icon:      ArrowRightLeft,
-      label:     'Transferir mesa',
-      sublabel:  canTransfer ? 'Mover pedido a otra mesa' : 'Sin permiso para transferir',
-      bg:        'bg-gray-50 hover:bg-gray-100',
-      iconBg:    'bg-blue-100',
-      iconColor: 'text-blue-500',
-      disabled:  !canTransfer,
-      onClick:   onTransfer,
-    },
+    // Hotfix #116: ocultos — endpoint 404, feature en backlog
+    ...(SPLIT_TRANSFER_ENABLED ? [
+      {
+        id:        'split',
+        icon:      Scissors,
+        label:     'Dividir cuenta',
+        sublabel:  !canSplit
+          ? 'Sin permiso para dividir'
+          : hasItems ? 'Separar ítems en dos cuentas' : 'Sin ítems para dividir',
+        bg:        'bg-gray-50 hover:bg-gray-100',
+        iconBg:    'bg-indigo-100',
+        iconColor: 'text-indigo-500',
+        disabled:  !hasItems || !canSplit,
+        onClick:   onSplitBill,
+      },
+      {
+        id:        'transfer',
+        icon:      ArrowRightLeft,
+        label:     'Transferir mesa',
+        sublabel:  canTransfer ? 'Mover pedido a otra mesa' : 'Sin permiso para transferir',
+        bg:        'bg-gray-50 hover:bg-gray-100',
+        iconBg:    'bg-blue-100',
+        iconColor: 'text-blue-500',
+        disabled:  !canTransfer,
+        onClick:   onTransfer,
+      },
+    ] : []),
   ];
 
   return (

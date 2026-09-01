@@ -54,7 +54,13 @@ export function MeseroLayout({
           )}
           <ConnectionIndicator />
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => {
+              // Hotfix #116: logout del mesero a SU login (no al admin),
+              // preservando el tenant del localStorage (misma mecánica que
+              // WaiterProtectedRoute.buildLoginUrl)
+              const tenant = localStorage.getItem('waiterTenant');
+              navigate(tenant ? `/mesero/login?tenant=${tenant}` : '/mesero/login');
+            }}
             className="p-2 rounded-lg hover:bg-orange-400 transition-colors"
             aria-label="Cerrar sesión"
           >

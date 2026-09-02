@@ -208,8 +208,8 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
         onClick={() => handleSort(field)}
         className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
           isActive
-            ? 'bg-blue-100 text-blue-700'
-            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            ? 'bg-brand-500/10 text-brand-400 ring-1 ring-inset ring-brand-500/20'
+            : 'text-gray-400 hover:bg-white/5 hover:text-white'
         }`}
       >
         {label}
@@ -225,30 +225,33 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
 
   return (
     <>
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      {/* Header premium #124 — patrón Command Center #110-111 */}
+      <div className="sticky top-0 z-20 bg-gray-950/90 backdrop-blur border-b border-white/5 px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             {/* Botón toggle sidebar (mobile) */}
             <button
               onClick={onCategoryToggle}
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="lg:hidden p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               title="Abrir categorías"
             >
-              <Menu className="w-5 h-5 text-gray-600" />
+              <Menu className="w-5 h-5" />
             </button>
             
+            <div className="w-10 h-10 rounded-lg bg-brand-500/10 flex items-center justify-center flex-shrink-0">
+              <Package className="w-5 h-5 text-brand-400" />
+            </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Productos</h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <h1 className="text-xl font-bold text-white">Productos</h1>
+              <p className="text-xs text-gray-500 mt-1">
                 Mostrando {startIndex + 1}-{endIndex} de {totalItems} productos
                 {filteredProducts.length !== products.length && ` (${products.length} total)`}
               </p>
             </div>
           </div>
-          <button 
+          <button
             onClick={onAddProduct}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+            className="inline-flex items-center px-4 py-2 bg-brand-500 text-white font-medium rounded-lg hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/25"
             style={canManage ? undefined : { display: 'none' }}
           >
             <Plus className="w-5 h-5 mr-2" />
@@ -260,20 +263,20 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
         <div className="flex items-center gap-3">
           {/* Búsqueda */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
             <input
               type="text"
               placeholder="Buscar por nombre, descripción o SKU..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 text-white placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-transparent"
             />
           </div>
 
           {/* Exportar CSV */}
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 border border-white/10 text-gray-400 text-sm font-medium rounded-lg hover:bg-white/5 hover:text-white transition-colors"
             title="Exportar productos filtrados a CSV"
           >
             <Download className="w-4 h-4" />
@@ -286,8 +289,8 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
               onClick={() => setViewType('grid')}
               className={`p-2 rounded-lg transition-colors ${
                 viewType === 'grid'
-                  ? 'bg-blue-100 text-blue-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-brand-500/10 text-brand-400 ring-1 ring-inset ring-brand-500/20'
+                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
               }`}
               title="Vista Cards"
             >
@@ -297,8 +300,8 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
               onClick={() => setViewType('table')}
               className={`p-2 rounded-lg transition-colors ${
                 viewType === 'table'
-                  ? 'bg-blue-100 text-blue-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-brand-500/10 text-brand-400 ring-1 ring-inset ring-brand-500/20'
+                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
               }`}
               title="Vista Tabla"
             >
@@ -314,8 +317,8 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
               onClick={() => onCategoryChange(null)}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                 !selectedCategory
-                  ? 'bg-gray-800 text-white border-gray-800'
-                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-brand-500/10 text-brand-400 border-brand-500/20 ring-1 ring-inset ring-brand-500/20'
+                  : 'border-white/10 text-gray-400 hover:bg-white/5 hover:text-white'
               }`}
             >
               Todas
@@ -326,13 +329,13 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                 onClick={() => onCategoryChange(selectedCategory === cat.id ? null : cat.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                   selectedCategory === cat.id
-                    ? 'bg-orange-500 text-white border-orange-500'
-                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                    ? 'bg-brand-500/10 text-brand-400 border-brand-500/20 ring-1 ring-inset ring-brand-500/20'
+                    : 'border-white/10 text-gray-400 hover:bg-white/5 hover:text-white'
                 }`}
               >
                 {cat.icon && <span className="text-sm">{cat.icon}</span>}
                 {cat.name}
-                <span className={`text-xs ml-0.5 ${selectedCategory === cat.id ? 'text-orange-100' : 'text-gray-400'}`}>
+                <span className={`text-xs ml-0.5 ${selectedCategory === cat.id ? 'text-brand-300' : 'text-gray-500'}`}>
                   ({products.filter(p => p.categoryId === cat.id).length})
                 </span>
                 {selectedCategory === cat.id && (
@@ -349,8 +352,8 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
             onClick={() => setQuickFilter('all')}
             className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
               quickFilter === 'all'
-                ? 'bg-orange-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-brand-500/10 text-brand-400 ring-1 ring-inset ring-brand-500/20'
+                : 'text-gray-400 hover:bg-white/5 hover:text-white'
             }`}
           >
             Todos ({products.length})
@@ -359,19 +362,19 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
             onClick={() => setQuickFilter('active')}
             className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
               quickFilter === 'active'
-                ? 'bg-green-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-green-500/15 text-green-400 ring-1 ring-inset ring-green-500/30'
+                : 'text-gray-400 hover:bg-white/5 hover:text-white'
             }`}
           >
-            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+            <div className={`w-2 h-2 rounded-full ${quickFilter === 'active' ? 'bg-green-400' : 'bg-green-500/60'}`}></div>
             Activos ({stats.active})
           </button>
           <button
             onClick={() => setQuickFilter('popular')}
             className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
               quickFilter === 'popular'
-                ? 'bg-yellow-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-yellow-500/15 text-yellow-400 ring-1 ring-inset ring-yellow-500/30'
+                : 'text-gray-400 hover:bg-white/5 hover:text-white'
             }`}
           >
             <TrendingUp size={14} />
@@ -381,8 +384,8 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
             onClick={() => setQuickFilter('lowstock')}
             className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
               quickFilter === 'lowstock'
-                ? 'bg-red-500 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                ? 'bg-red-500/15 text-red-400 ring-1 ring-inset ring-red-500/30'
+                : 'text-gray-400 hover:bg-white/5 hover:text-white'
             }`}
           >
             <AlertCircle size={14} />
@@ -391,8 +394,8 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
         </div>
 
         {/* Ordenamiento */}
-        <div className="flex items-center gap-2 pt-3 border-t border-gray-200">
-          <span className="text-sm text-gray-600">Ordenar por:</span>
+        <div className="flex items-center gap-2 pt-3 border-t border-white/5">
+          <span className="text-sm text-gray-500">Ordenar por:</span>
           <div className="flex flex-wrap gap-2">
             <SortButton field="name" label="Nombre" />
             <SortButton field="price" label="Precio" />
@@ -405,14 +408,14 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
 
       {/* Barra de acciones masivas */}
       {selectedIds.size > 0 && (
-        <div className="bg-blue-600 text-white px-6 py-3 flex items-center gap-3 shadow-md z-10">
-          <span className="font-medium text-sm flex-shrink-0">
+        <div className="bg-gray-900 border-b border-brand-500/30 px-6 py-3 flex items-center gap-3 shadow-md z-10">
+          <span className="font-medium text-sm flex-shrink-0 text-brand-400">
             {selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''}
           </span>
           {selectedIds.size < currentItems.length && (
             <button
               onClick={toggleSelectAll}
-              className="text-sm text-blue-200 hover:text-white underline"
+              className="text-sm text-gray-400 hover:text-white underline"
             >
               Seleccionar todos ({currentItems.length})
             </button>
@@ -421,7 +424,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
             <button
               onClick={() => handleBulkAvailability(true)}
               disabled={bulkLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-400 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/15 hover:bg-green-500/25 text-green-400 border border-green-500/30 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
             >
               <ToggleRight className="w-4 h-4" />
               Habilitar
@@ -429,14 +432,14 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
             <button
               onClick={() => handleBulkAvailability(false)}
               disabled={bulkLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500 hover:bg-red-400 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
             >
               <ToggleLeft className="w-4 h-4" />
               Deshabilitar
             </button>
             <button
               onClick={clearSelection}
-              className="px-3 py-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-medium rounded-lg transition-colors"
+              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white text-sm font-medium rounded-lg transition-colors"
             >
               Cancelar
             </button>
@@ -450,13 +453,13 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
           // Empty state
           <div className="flex items-center justify-center h-64">
             <div className="text-center max-w-md">
-              <div className="w-20 h-20 rounded-full bg-orange-50 flex items-center justify-center mx-auto mb-4">
-                <Package size={40} className="text-orange-300" />
+              <div className="w-20 h-20 rounded-full bg-brand-500/10 flex items-center justify-center mx-auto mb-4">
+                <Package size={40} className="text-brand-400/60" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-white mb-2">
                 {products.length === 0 ? 'Aún no hay registros' : 'No se encontraron productos'}
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-500 mb-6">
                 {products.length === 0
                   ? 'Crea tu primer producto en 3 pasos: nombre, precio y categoría.'
                   : 'Intenta cambiar los filtros o búsqueda.'}
@@ -464,7 +467,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
               {products.length === 0 && canManage && (
                 <button
                   onClick={onAddProduct}
-                  className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-6 py-3 bg-brand-500 text-white font-medium rounded-lg hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/25"
                 >
                   <Plus className="w-5 h-5 inline mr-2" />
                   Crear Primer Producto
@@ -498,24 +501,24 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
               return (
                 <div
                   key={product.id}
-                  className={`bg-white rounded-xl border overflow-hidden hover:shadow-lg transition-all group ${
+                  className={`bg-white/[0.03] rounded-2xl border overflow-hidden transition-all duration-200 group ${
                     selectedIds.has(product.id)
-                      ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-50'
-                      : 'border-gray-200'
+                      ? 'border-brand-500/50 ring-2 ring-brand-500/50'
+                      : 'border-white/5 hover:border-white/10 hover:bg-white/[0.05]'
                   }`}
                 >
-                  {/* Imagen */}
-                  <div className="relative h-48 bg-gradient-to-br from-orange-100 to-orange-200">
+                  {/* Imagen — thumbnail protagonista #124 */}
+                  <div className="relative h-48 bg-gray-800">
                     {imageSrc ? (
                       <img
                         src={imageSrc}
                         alt={product.name}
                         loading="lazy"
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full object-cover transition-all duration-300 ${!product.available ? 'grayscale opacity-60' : 'group-hover:scale-105'}`}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <span className="text-4xl">{emoji ?? '🍽️'}</span>
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-brand-500/10 to-gray-800">
+                        <span className="text-5xl">{emoji ?? '🍽️'}</span>
                       </div>
                     )}
                     
@@ -547,63 +550,65 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                         </span>
                       )}
                       {!product.available && (
-                        <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-md">
-                          No disponible
-                        </span>
+                        <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-[2px]">
+                          <span className="text-[10px] font-bold text-white px-2 py-0.5 rounded-full bg-black/45 uppercase tracking-wider">
+                            Agotado
+                          </span>
+                        </div>
                       )}
                     </div>
 
                     {/* Stock badge */}
                     {product.hasStock && product.currentStock !== undefined && (
                       <div className="absolute top-2 right-2">
-                        <span className={`px-2 py-1 text-xs font-bold rounded-md ${
+                        <span className={`px-2 py-1 text-xs font-bold rounded-md backdrop-blur-sm ${
                           product.currentStock === 0
                             ? 'bg-red-500 text-white'
                             : product.minStock && product.currentStock < product.minStock
                             ? 'bg-yellow-500 text-white'
                             : 'bg-green-500 text-white'
                         }`}>
-                          {product.currentStock === 0 
+                          {product.currentStock === 0
                             ? 'Sin stock'
                             : `Stock: ${product.currentStock}`}
                         </span>
                       </div>
                     )}
 
-                    {/* Margin badge */}
-                    {product.cost !== undefined && product.cost > 0 && (
-                      <div className="absolute bottom-2 right-2">
-                        <span className={`px-2 py-1 text-xs font-bold rounded-md ${
-                          margin >= 40 ? 'bg-green-500 text-white' :
-                          margin >= 20 ? 'bg-yellow-500 text-white' :
-                          'bg-red-500 text-white'
-                        }`}>
-                          {margin}% mrg
-                        </span>
-                      </div>
-                    )}
+                    {/* Pastilla de precio #124 — patrón carta #103 */}
+                    <div className="absolute bottom-2 right-2">
+                      <span className={`px-2.5 py-1 text-sm font-bold rounded-full shadow-lg ${
+                        product.available === false
+                          ? 'bg-gray-950/80 text-gray-400 line-through'
+                          : 'bg-brand-500 text-white'
+                      }`}>
+                        {formatCurrency(product.price)}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Contenido */}
                   <div className="p-4">
-                    {/* Categoría */}
-                    {category && (
-                      <div className="text-xs text-gray-500 mb-1">
-                        {category.icon} {category.name}
-                      </div>
-                    )}
+                    {/* Categoría + SKU — línea meta */}
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      {category ? (
+                        <span className="text-[10px] font-medium text-brand-300 bg-brand-500/10 border border-brand-500/20 rounded-full px-2 py-0.5">
+                          {category.icon} {category.name}
+                        </span>
+                      ) : (
+                        <span />
+                      )}
+                      <span className="text-[10px] font-mono text-gray-500 truncate">
+                        {product.sku}
+                      </span>
+                    </div>
 
                     {/* Nombre */}
-                    <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">
+                    <h3 className="font-bold text-white text-[15px] mb-1 line-clamp-1">
                       {product.name}
                     </h3>
-                    
-                    {/* SKU */}
-                    <p className="text-xs font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded w-fit mt-1 mb-2">
-                      {product.sku}
-                    </p>
 
-                    {/* Tags */}
+                    {/* Tags — chips patrón carta */}
                     {product.tags && product.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2">
                         {product.tags.map((tag) => {
@@ -612,7 +617,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                             picante: '🌶️', popular: '⭐', nuevo: '🆕', oferta: '🏷️',
                           };
                           return (
-                            <span key={tag} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-50 border border-orange-200 text-orange-700 text-xs rounded-full">
+                            <span key={tag} className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-white/5 text-gray-400 text-[10px] rounded-full">
                               {TAG_EMOJI[tag] ?? '🏷️'} {tag.replace('_', ' ')}
                             </span>
                           );
@@ -622,68 +627,51 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
 
                     {/* Descripción */}
                     {product.description && (
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2 h-10">
+                      <p className="text-xs text-gray-500 mb-3 line-clamp-2 leading-relaxed min-h-[2rem]">
                         {product.description}
                       </p>
                     )}
 
-                    {/* Precio y métricas */}
-                    <div className="space-y-2">
-                      <div className="flex items-baseline justify-between">
-                        <span className="text-2xl font-bold text-gray-900">
-                          {formatCurrency(product.price)}
-                        </span>
-                        <span className="text-sm text-gray-500">
-                          Costo: {formatCurrency(product.cost || 0)}
-                        </span>
-                      </div>
-                      
-                      {/* Métricas en grid */}
-                      {product.cost && (
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="text-center p-2 bg-gray-50 rounded">
-                            <p className="text-xs text-gray-600">Margen $</p>
-                            <p className="text-sm font-semibold text-gray-900">
-                              {formatMetric(metrics.marginAmount, 'currency')}
-                            </p>
-                          </div>
-                          <div className="text-center p-2 bg-gray-50 rounded">
-                            <p className="text-xs text-gray-600">Margen %</p>
-                            <p className={`text-sm font-semibold ${marginColor}`}>
-                              {metrics.marginPercent}%
-                            </p>
-                          </div>
-                          <div className="text-center p-2 bg-gray-50 rounded">
-                            <p className="text-xs text-gray-600">Markup %</p>
-                            <p className={`text-sm font-semibold ${
-                              metrics.markupPercent >= 67 ? 'text-green-600' : 
-                              metrics.markupPercent >= 25 ? 'text-yellow-600' : 
-                              'text-red-600'
-                            }`}>
-                              {metrics.markupPercent}%
-                            </p>
-                          </div>
-                        </div>
-                      )}
+                    {/* Métricas como chips discretos #124 — cálculo intacto (:489-493) */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[10px] text-gray-500 bg-white/5 rounded-full px-2 py-0.5">
+                        Costo {formatCurrency(product.cost || 0)}
+                      </span>
+                      {product.cost ? (
+                        <>
+                          <span className={`text-[10px] rounded-full px-2 py-0.5 font-medium bg-white/5 ${marginColor}`}>
+                            Mrg {metrics.marginPercent}%
+                          </span>
+                          <span className="text-[10px] text-gray-500 bg-white/5 rounded-full px-2 py-0.5">
+                            Mkup {metrics.markupPercent}%
+                          </span>
+                        </>
+                      ) : null}
                     </div>
 
-                    {/* Acciones */}
-                    <div className="flex gap-2 pt-2">
-                      <button 
+                    {/* Acciones al hover #124 — handlers intactos */}
+                    <div className="flex gap-2 pt-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
+                      <button
                         onClick={() => onEditProduct(product)}
-                        className="flex-1 px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 transition-colors"
+                        title="Editar"
+                        aria-label={`Editar ${product.name}`}
+                        className="flex-1 px-3 py-2 bg-brand-500/10 border border-brand-500/20 text-brand-400 text-sm font-medium rounded-lg hover:bg-brand-500/20 transition-colors"
                       >
                         Editar
                       </button>
-                      <button 
+                      <button
                         onClick={() => onDuplicateProduct(product)}
-                        className="px-3 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded hover:bg-gray-50 transition-colors"
+                        title="Duplicar"
+                        aria-label={`Duplicar ${product.name}`}
+                        className="px-3 py-2 border border-white/10 text-gray-400 text-sm font-medium rounded-lg hover:bg-white/5 hover:text-white transition-colors"
                       >
                         Duplicar
                       </button>
-                      <button 
+                      <button
                         onClick={() => onDeleteProduct(product)}
-                        className="px-3 py-2 border border-red-300 text-red-600 text-sm font-medium rounded hover:bg-red-50 transition-colors"
+                        title="Eliminar"
+                        aria-label={`Eliminar ${product.name}`}
+                        className="px-3 py-2 border border-red-500/20 text-red-400 text-sm font-medium rounded-lg hover:bg-red-500/10 transition-colors"
                       >
                         Eliminar
                       </button>

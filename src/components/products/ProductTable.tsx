@@ -19,29 +19,14 @@ export const ProductTable: React.FC<ProductTableProps> = ({
   onDelete,
   canManage = true,
 }) => {
-  // Mapeo de categorías para mostrar nombres legibles
-  const categoryNames: Record<string, string> = {
-    laptops: 'Laptops',
-    phones: 'Teléfonos',
-    accessories: 'Accesorios',
-    men: 'Ropa Hombre',
-    women: 'Ropa Mujer',
-    kids: 'Ropa Niños',
-    furniture: 'Muebles',
-    decoration: 'Decoración',
-    kitchen: 'Cocina',
-    'power-tools': 'Herramientas Eléctricas',
-    'hand-tools': 'Herramientas Manuales',
-    fiction: 'Ficción',
-    'non-fiction': 'No Ficción',
-    educational: 'Educativos',
-  };
+  // #124: fix — eliminado categoryNames hardcodeado (demo e-commerce);
+  // ahora se usa la categoría real poblada del producto (product.category)
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-gray-900 rounded-xl border border-white/5 overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-white/5">
+          <thead className="bg-white/5">
             <tr>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Imagen
@@ -102,7 +87,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="divide-y divide-white/5">
             {products.map((product) => {
               const isLowStock = (product.currentStock || 0) < 10;
               const metrics = calculateProductMetrics(product.price, product.cost || 0);
@@ -113,11 +98,11 @@ export const ProductTable: React.FC<ProductTableProps> = ({
               return (
                 <tr
                   key={product.id}
-                  className="hover:bg-gray-50 transition-colors"
+                  className={`hover:bg-white/5 transition-colors ${!product.available ? 'opacity-60' : ''}`}
                 >
                   {/* Imagen */}
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center overflow-hidden">
+                    <div className={`w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center overflow-hidden ${!product.available ? 'grayscale' : ''}`}>
                       {imageSrc ? (
                         <img
                           src={imageSrc}
@@ -133,7 +118,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
 
                   {/* SKU */}
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className="text-xs font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                    <span className="text-xs font-mono text-gray-400 bg-white/5 px-2 py-1 rounded">
                       {product.sku}
                     </span>
                   </td>
@@ -141,7 +126,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                   {/* Nombre */}
                   <td className="px-4 py-3">
                     <div className="max-w-xs">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-white truncate">
                         {product.name}
                       </p>
                       {product.description && (
@@ -150,37 +135,41 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                         </p>
                       )}
                       {product.popular && (
-                        <span className="inline-flex items-center mt-1 text-xs text-yellow-600">
+                        <span className="inline-flex items-center mt-1 text-xs text-yellow-500">
                           ⭐ Popular
                         </span>
                       )}
                     </div>
                   </td>
 
-                  {/* Categoría */}
+                  {/* Categoría — fix #124: categoría real, no hardcode */}
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className="text-sm text-gray-700">
-                      {categoryNames[product.categoryId] || product.categoryId}
+                    <span className="text-sm text-gray-400">
+                      {product.category?.name || product.categoryId}
                     </span>
                   </td>
 
-                  {/* Precio */}
+                  {/* Precio — pastilla patrón carta #124 */}
                   <td className="px-4 py-3 whitespace-nowrap text-right">
-                    <span className="text-sm font-semibold text-gray-900">
+                    <span className={`inline-block text-sm font-semibold rounded-lg px-2.5 py-1 ${
+                      product.available === false
+                        ? 'text-gray-500 line-through bg-white/5'
+                        : 'bg-brand-500/15 text-brand-400'
+                    }`}>
                       {formatCurrency(product.price)}
                     </span>
                   </td>
 
                   {/* Costo */}
                   <td className="px-4 py-3 whitespace-nowrap text-right">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-gray-500">
                       {formatCurrency(product.cost || 0)}
                     </span>
                   </td>
 
                   {/* Margen $ */}
                   <td className="px-4 py-3 whitespace-nowrap text-center">
-                    <span className="text-sm font-semibold text-gray-900">
+                    <span className="text-sm font-semibold text-white">
                       {formatMetric(metrics.marginAmount, 'currency')}
                     </span>
                   </td>
@@ -201,7 +190,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
 
                   {/* Stock */}
                   <td className="px-4 py-3 whitespace-nowrap text-center">
-                    <span className={`text-sm font-medium ${isLowStock ? 'text-red-600' : 'text-gray-900'}`}>
+                    <span className={`text-sm font-medium ${isLowStock ? 'text-red-400' : 'text-white'}`}>
                       {product.currentStock || 0}
                     </span>
                     {isLowStock && (
@@ -215,7 +204,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                       {canManage && (
                         <button
                           onClick={() => onEdit(product)}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                          className="p-1.5 text-brand-400 hover:bg-brand-500/10 rounded transition-colors"
                           title="Editar"
                         >
                           <PencilIcon className="w-4 h-4" />
@@ -224,7 +213,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                       {canManage && (
                         <button
                           onClick={() => onDuplicate(product)}
-                          className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                          className="p-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded transition-colors"
                           title="Duplicar"
                         >
                           <CopyIcon className="w-4 h-4" />
@@ -233,7 +222,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                       {canManage && (
                         <button
                           onClick={() => onDelete(product)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition-colors"
                           title="Eliminar"
                         >
                           <TrashIcon className="w-4 h-4" />

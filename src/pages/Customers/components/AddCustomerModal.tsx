@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, User, Phone, Mail, MapPin, Home, MessageSquare } from 'lucide-react';
+import { X, User, Phone, Mail, MapPin, Home, MessageSquare, Cake, IdCard } from 'lucide-react';
 import customersService from '../../../services/customersService';
 import toast from 'react-hot-toast';
 
@@ -17,6 +17,9 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
   const [addressNumber, setAddressNumber] = useState('');
   const [sector, setSector] = useState('');
   const [notes, setNotes] = useState('');
+  // Hotfix #119: birthdate + rut
+  const [birthdate, setBirthdate] = useState('');
+  const [rut, setRut] = useState('');
   const [saving, setSaving] = useState(false);
 
   if (!isOpen) return null;
@@ -37,7 +40,9 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
       await customersService.create({
         name: name.trim(),
         phone: phone.trim(),
+        rut: rut.trim() || undefined,
         email: email.trim() || undefined,
+        birthdate: birthdate ? new Date(birthdate + 'T12:00:00').toISOString() : undefined,
         address: address.trim() || undefined,
         addressNumber: addressNumber.trim() || undefined,
         sector: sector || undefined,
@@ -53,6 +58,8 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
       setAddressNumber('');
       setSector('');
       setNotes('');
+      setBirthdate('');
+      setRut('');
 
       onSuccess();
     } catch (err: any) {
@@ -130,6 +137,40 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="cliente@email.com"
+                  className="w-full rounded-md pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all outline-none"
+                  style={inputStyle}
+                />
+              </div>
+            </div>
+
+            {/* Fecha de nacimiento (Hotfix #119) */}
+            <div>
+              <label className="block text-sm font-medium mb-2" style={labelStyle}>Fecha de nacimiento</label>
+              <div className="relative">
+                <Cake className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+                <input
+                  type="date"
+                  value={birthdate}
+                  max={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => setBirthdate(e.target.value)}
+                  className="w-full rounded-md pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all outline-none"
+                  style={inputStyle}
+                />
+                <p className="text-xs text-zinc-500 mt-1">Para felicitarlo en su cumpleaños 🎂</p>
+              </div>
+            </div>
+
+            {/* RUT (Hotfix #119) */}
+            <div>
+              <label className="block text-sm font-medium mb-2" style={labelStyle}>RUT</label>
+              <div className="relative">
+                <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={rut}
+                  maxLength={12}
+                  onChange={(e) => setRut(e.target.value)}
+                  placeholder="12.345.678-9"
                   className="w-full rounded-md pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all outline-none"
                   style={inputStyle}
                 />

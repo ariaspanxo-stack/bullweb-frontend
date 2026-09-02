@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, User, Phone, Mail, MapPin, Home, MessageSquare } from 'lucide-react';
+import { X, User, Phone, Mail, MapPin, Home, MessageSquare, Cake, IdCard } from 'lucide-react';
 import type { Customer } from '../../Restaurant/types';
 import { SECTORES_CHILE } from '../../../constants/sectors';
 import customersService from '../../../services/customersService';
@@ -20,6 +20,9 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
   const [addressNumber, setAddressNumber] = useState('');
   const [sector, setSector] = useState('');
   const [notes, setNotes] = useState('');
+  // Hotfix #119: birthdate + rut
+  const [birthdate, setBirthdate] = useState('');
+  const [rut, setRut] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -31,6 +34,8 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
       setAddressNumber(customer.addressNumber || '');
       setSector(customer.sector || '');
       setNotes(customer.notes || '');
+      setBirthdate(customer.birthdate ? customer.birthdate.slice(0, 10) : '');
+      setRut(customer.rut || '');
     }
   }, [isOpen, customer]);
 
@@ -52,7 +57,9 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
       await customersService.update(customer.id, {
         name: name.trim(),
         phone: phone.trim(),
+        rut: rut.trim() || undefined,
         email: email.trim() || undefined,
+        birthdate: birthdate ? new Date(birthdate + 'T12:00:00').toISOString() : undefined,
         address: address.trim() || undefined,
         addressNumber: addressNumber.trim() || undefined,
         sector: sector || undefined,
@@ -106,7 +113,24 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
-                           placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 
+                           placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
+                           transition-all outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">RUT</label>
+              <div className="relative">
+                <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <input
+                  type="text"
+                  value={rut}
+                  maxLength={12}
+                  onChange={(e) => setRut(e.target.value)}
+                  placeholder="12.345.678-9"
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
+                           placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
                            transition-all outline-none"
                 />
               </div>
@@ -121,9 +145,26 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
-                           placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 
+                           placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
                            transition-all outline-none"
                 />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-300 mb-2">Fecha de nacimiento</label>
+              <div className="relative">
+                <Cake className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none z-10" />
+                <input
+                  type="date"
+                  value={birthdate}
+                  max={new Date().toISOString().slice(0, 10)}
+                  onChange={(e) => setBirthdate(e.target.value)}
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
+                           focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
+                           transition-all outline-none"
+                />
+                <p className="text-xs text-zinc-500 mt-1">Para felicitarlo en su cumpleaños 🎂</p>
               </div>
             </div>
 

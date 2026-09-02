@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Phone, Mail, MapPin, DollarSign, ShoppingBag, TrendingUp, Clock, Award } from 'lucide-react';
+import { X, Phone, Mail, MapPin, DollarSign, ShoppingBag, TrendingUp, Clock, Award, Cake } from 'lucide-react';
 import { formatSaleNumber } from '../../../utils/formatSaleNumber';
 import type { Customer } from '../../Restaurant/types';
 import { getTagConfig } from '../../../utils/customers';
@@ -124,6 +124,14 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
                   <span className="text-white">
                     {customer.address} {customer.addressNumber}
                     {customer.sector && `, ${customer.sector}`}
+                  </span>
+                </div>
+              )}
+              {customer.birthdate && (
+                <div className="flex items-center gap-2">
+                  <Cake className="w-4 h-4 text-zinc-500" />
+                  <span className="text-white">
+                    {new Date(customer.birthdate).toLocaleDateString('es-CL')}
                   </span>
                 </div>
               )}

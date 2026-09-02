@@ -24,6 +24,8 @@ export interface Customer {
   sector?: string | null;
   city?: string | null;
   notes?: string | null;
+  // Hotfix #119: fecha de nacimiento (alimenta el cron de cumpleaños #102)
+  birthdate?: string | null;
   // Tags computados en frontend desde totalOrders/totalSpent/lastVisit
   tags: CustomerTag[];
   totalOrders: number;

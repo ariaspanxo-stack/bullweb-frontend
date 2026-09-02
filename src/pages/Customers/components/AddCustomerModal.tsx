@@ -153,7 +153,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
                   value={birthdate}
                   max={new Date().toISOString().slice(0, 10)}
                   onChange={(e) => setBirthdate(e.target.value)}
-                  className="w-full rounded-md pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all outline-none"
+                  className="w-full rounded-md pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500 transition-all outline-none [color-scheme:dark]"
                   style={inputStyle}
                 />
                 <p className="text-xs text-zinc-500 mt-1">Para felicitarlo en su cumpleaños 🎂</p>

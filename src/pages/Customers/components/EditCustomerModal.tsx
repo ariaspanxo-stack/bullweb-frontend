@@ -161,8 +161,8 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   max={new Date().toISOString().slice(0, 10)}
                   onChange={(e) => setBirthdate(e.target.value)}
                   className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
-                           focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
-                           transition-all outline-none"
+                           placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
+                           transition-all outline-none [color-scheme:dark]"
                 />
                 <p className="text-xs text-zinc-500 mt-1">Para felicitarlo en su cumpleaños 🎂</p>
               </div>

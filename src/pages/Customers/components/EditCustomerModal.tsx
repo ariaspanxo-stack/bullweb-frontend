@@ -97,8 +97,8 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
-                           placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 
+                  className="w-full bg-zinc-800 border border-zinc-700 !text-white rounded-lg pl-10 pr-4 py-2.5
+                           placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
                            transition-all outline-none"
                 />
               </div>
@@ -112,7 +112,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
+                  className="w-full bg-zinc-800 border border-zinc-700 !text-white rounded-lg pl-10 pr-4 py-2.5
                            placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
                            transition-all outline-none"
                 />
@@ -129,7 +129,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   maxLength={12}
                   onChange={(e) => setRut(e.target.value)}
                   placeholder="12.345.678-9"
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
+                  className="w-full bg-zinc-800 border border-zinc-700 !text-white rounded-lg pl-10 pr-4 py-2.5
                            placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
                            transition-all outline-none"
                 />
@@ -144,7 +144,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
+                  className="w-full bg-zinc-800 border border-zinc-700 !text-white rounded-lg pl-10 pr-4 py-2.5
                            placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
                            transition-all outline-none"
                 />
@@ -160,7 +160,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   value={birthdate}
                   max={new Date().toISOString().slice(0, 10)}
                   onChange={(e) => setBirthdate(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
+                  className="w-full bg-zinc-800 border border-zinc-700 !text-white rounded-lg pl-10 pr-4 py-2.5
                            placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
                            transition-all outline-none [color-scheme:dark]"
                 />
@@ -175,9 +175,9 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                 <select
                   value={sector}
                   onChange={(e) => setSector(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
-                           focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 
-                           transition-all outline-none appearance-none"
+                  className="w-full bg-zinc-800 border border-zinc-700 !text-white rounded-lg pl-10 pr-4 py-2.5
+                           focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
+                           transition-all outline-none appearance-none [color-scheme:dark]"
                 >
                   <option value="">Selecciona un sector</option>
                   {SECTORES_CHILE.map(s => (
@@ -195,8 +195,8 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
-                           placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 
+                  className="w-full bg-zinc-800 border border-zinc-700 !text-white rounded-lg pl-10 pr-4 py-2.5
+                           placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
                            transition-all outline-none"
                 />
               </div>
@@ -208,8 +208,8 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                 type="text"
                 value={addressNumber}
                 onChange={(e) => setAddressNumber(e.target.value)}
-                className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg px-4 py-2.5
-                         placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 
+                className="w-full bg-zinc-800 border border-zinc-700 !text-white rounded-lg px-4 py-2.5
+                         placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
                          transition-all outline-none"
               />
             </div>
@@ -221,8 +221,8 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-lg pl-10 pr-4 py-2.5
-                           placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 
+                  className="w-full bg-zinc-800 border border-zinc-700 !text-white rounded-lg pl-10 pr-4 py-2.5
+                           placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
                            transition-all outline-none resize-none"
                   rows={3}
                 />

@@ -25,15 +25,18 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
   permissionError = false,
 }) => {
   // Derivar categorías desde los propios ingredientes si el endpoint no existe
+  // H127: deducir del campo real category (la row no trae categoryId — columna
+  // fantasma eliminada del modal en #126; la key undefined fabricaba "📦 undefined")
   const categories = useMemo<IngredientCategory[]>(() => {
     if (categoriesProp.length > 0) return categoriesProp;
     const map = new Map<string, number>();
     ingredients.forEach((i) => {
-      map.set(i.categoryId, (map.get(i.categoryId) ?? 0) + 1);
+      const key = (i as any).category || 'Sin categoría';
+      map.set(key, (map.get(key) ?? 0) + 1);
     });
-    return Array.from(map.entries()).map(([id, count]) => ({
-      id,
-      name: id,
+    return Array.from(map.entries()).map(([name, count]) => ({
+      id: name,
+      name,
       icon: '📦',
       ingredientsCount: count,
     }));
@@ -89,10 +92,12 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
     canGoPrevious,
   } = usePagination({ data: filteredIngredients, itemsPerPage: 10, initialSortField: null, initialSortDirection: null });
 
-  // Obtener categoría
-  const getCategoryName = (categoryId: string) => {
-    const category = categories.find((c) => c.id === categoryId);
-    return category ? `${category.icon} ${category.name}` : categoryId;
+  // H127: la row real no trae categoryId (columna fantasma fuera del modal en #126) —
+  // trae category (string Prisma). Sin ella: "Sin categoría" (antes pintaba "📦 undefined").
+  const getCategoryName = (ingredient: Ingredient) => {
+    const category = categories.find((c) => c.id === ingredient.categoryId);
+    if (category) return `${category.icon} ${category.name}`;
+    return (ingredient as any).category || 'Sin categoría';
   };
 
   // Estado de stock
@@ -127,9 +132,11 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
   }
 
   return (
-    // H126: flex-1 overflow-y-auto — el fondo oscuro de la página cubre TODO el grid
-    // (antes el div plano desbordaba el h-full y el gris-50 del Layout asomaba tras el último card)
-    <div className="flex-1 overflow-y-auto p-6 space-y-6">
+    // H127: wrapper plano (patrón del RecipesListTab hermano) — el overflow-y-auto del #126
+    // convertía este div en scroll-container: su caja quedaba clavada a la altura del padre
+    // y el fondo del tab se detenía ahí (el gris del Layout asomaba tras el scroll).
+    // El scroll de página lo maneja el Layout; el fondo lo pinta bg-gray-950 en Products.tsx:727.
+    <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -274,7 +281,7 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
                 <div className="p-4 space-y-3">
                   <div>
                     <h3 className="font-semibold text-gray-900 text-lg mb-1">{ingredient.name}</h3>
-                    <p className="text-sm text-gray-600">{getCategoryName(ingredient.categoryId)}</p>
+                    <p className="text-sm text-gray-600">{getCategoryName(ingredient)}</p>
                   </div>
 
                   {/* Métricas */}
@@ -282,7 +289,8 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
                     <div className="bg-gray-50 rounded p-2">
                       <p className="text-xs text-gray-600">Precio/{ingredient.unit}</p>
                       <p className="text-sm font-bold text-gray-900">
-                        {formatCurrency(ingredient.pricePerUnit)}
+                        {/* H127: el backend persiste unitCost (schema Prisma) — fallback al nombre legacy */}
+                        {formatCurrency(Number((ingredient as any).unitCost ?? ingredient.pricePerUnit ?? 0))}
                       </p>
                     </div>
                     <div className="bg-gray-50 rounded p-2">

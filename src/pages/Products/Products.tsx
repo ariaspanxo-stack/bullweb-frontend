@@ -723,8 +723,11 @@ const Products = () => {
   };
 
   // ========== RENDER ==========
+  // H127: min-h-full — el fondo negro crece CON el contenido (h-full bajo el main
+  // overflow-y-auto del Layout quedaba clavado a la altura visible y el gris asomaba
+  // tras el último card al scrollear — el nivel real del desborde que el #126 no tocó)
   return (
-    <div className="h-full flex bg-gray-950">
+    <div className="min-h-full flex bg-gray-950">
       {/* Loading overlay — solo para operaciones de guardado/eliminación */}
       {(loadingTab === 'saving' || loadingTab === 'delete') && (
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">

@@ -493,7 +493,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                 ? Math.round(((product.price - product.cost) / product.price) * 100)
                 : 0;
               const metrics = calculateProductMetrics(product.price, product.cost || 0);
-              const marginColor = margin >= 40 ? 'text-green-600' : margin >= 20 ? 'text-yellow-600' : 'text-red-600';
+              const marginColor = margin >= 40 ? 'text-emerald-400' : margin >= 20 ? 'text-amber-400' : 'text-rose-400';
               // Thumbnail: el backend envía 'image' (Prisma); imageUrl es el nombre frontend
               const imageSrc: string | undefined = (product as any).image || product.imageUrl;
               const emoji: string | undefined = (product as any).emoji;

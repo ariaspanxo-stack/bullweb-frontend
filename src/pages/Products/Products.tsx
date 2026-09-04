@@ -53,8 +53,8 @@ function PermissionErrorView({ message }: { message: string }) {
     <div className="flex items-center justify-center py-16">
       <div className="text-center max-w-sm">
         <div className="text-5xl mb-4">🔒</div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Sin permisos</h3>
-        <p className="text-sm text-gray-600">{message}</p>
+        <h3 className="text-lg font-semibold text-white mb-2">Sin permisos</h3>
+        <p className="text-sm text-gray-400">{message}</p>
       </div>
     </div>
   );
@@ -728,10 +728,10 @@ const Products = () => {
       {/* Loading overlay — solo para operaciones de guardado/eliminación */}
       {(loadingTab === 'saving' || loadingTab === 'delete') && (
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 shadow-xl">
+          <div className="bg-gray-900 rounded-lg p-6 shadow-xl border border-white/10">
             <div className="flex items-center space-x-3">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-              <span className="text-gray-700 font-medium">Guardando...</span>
+              <span className="text-gray-300 font-medium">Guardando...</span>
             </div>
           </div>
         </div>
@@ -739,7 +739,7 @@ const Products = () => {
       
       {/* Error message */}
       {error && loadingTab === null && (
-        <div className="fixed top-4 right-4 bg-red-50 border border-red-200 rounded-lg p-4 shadow-lg z-50 max-w-md">
+        <div className="fixed top-4 right-4 bg-gray-900 border border-red-500/30 rounded-lg p-4 shadow-lg z-50 max-w-md">
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -747,11 +747,11 @@ const Products = () => {
               </svg>
             </div>
             <div className="ml-3 flex-1">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <p className="mt-1 text-sm text-red-700">{error}</p>
+              <h3 className="text-sm font-medium text-red-400">Error</h3>
+              <p className="mt-1 text-sm text-red-300">{error}</p>
               <button
                 onClick={() => reloadTab(activeTab)}
-                className="mt-2 text-sm font-medium text-red-600 hover:text-red-500"
+                className="mt-2 text-sm font-medium text-red-400 hover:text-red-300"
               >
                 Reintentar
               </button>

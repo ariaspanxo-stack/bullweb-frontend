@@ -1,7 +1,7 @@
 import React from 'react';
 import { PencilIcon, CopyIcon, TrashIcon, Info } from 'lucide-react';
 import type { Product } from '../../types/product.types';
-import { calculateProductMetrics, formatMetric, getMetricColor, metricDescriptions } from '../../utils/metricsCalculator';
+import { calculateProductMetrics, formatMetric, metricDescriptions } from '../../utils/metricsCalculator';
 import { formatCurrency } from '../../lib/utils';
 
 interface ProductTableProps {
@@ -176,14 +176,14 @@ export const ProductTable: React.FC<ProductTableProps> = ({
 
                   {/* Margen % */}
                   <td className="px-4 py-3 whitespace-nowrap text-center">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${getMetricColor(metrics.marginPercent, 'margin')}`}>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${metrics.marginPercent >= 40 ? 'bg-emerald-500/10 text-emerald-400' : metrics.marginPercent >= 20 ? 'bg-amber-500/10 text-amber-400' : 'bg-rose-500/10 text-rose-400'}`}>
                       {metrics.marginPercent}%
                     </span>
                   </td>
 
                   {/* Markup % */}
                   <td className="px-4 py-3 whitespace-nowrap text-center">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${getMetricColor(metrics.markupPercent, 'markup')}`}>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${metrics.markupPercent >= 67 ? 'bg-emerald-500/10 text-emerald-400' : metrics.markupPercent >= 25 ? 'bg-amber-500/10 text-amber-400' : 'bg-rose-500/10 text-rose-400'}`}>
                       {metrics.markupPercent}%
                     </span>
                   </td>

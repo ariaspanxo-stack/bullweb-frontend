@@ -896,7 +896,6 @@ const Products = () => {
         onSave={handleSaveIngredient}
         ingredient={editingIngredient}
         mode={editingIngredient ? 'edit' : 'create'}
-        categories={ingredientCategories}
       />
 
       {/* Modal de Ficha Técnica */}

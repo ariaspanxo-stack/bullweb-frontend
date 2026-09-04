@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { X } from 'lucide-react';
-import type { Ingredient, IngredientFormData, IngredientFormErrors, IngredientCategory } from '../../types/ingredient.types';
+import type { Ingredient, IngredientFormData, IngredientFormErrors } from '../../types/ingredient.types';
 import UnitSelector from './UnitSelector';
 
 interface IngredientModalProps {
@@ -9,12 +9,21 @@ interface IngredientModalProps {
   onSave: (data: IngredientFormData) => void;
   ingredient?: Ingredient | null;
   mode: 'create' | 'edit';
-  categories: IngredientCategory[];
 }
 
 const inputBaseClass =
   'w-full bg-slate-50 border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors';
 const labelClass = 'text-sm font-medium text-slate-700 mb-1 block';
+
+// H126: parseo robusto chileno — acepta "8000", "8.000" (miles) y "14.5" (decimal).
+// El viejo parseFloat("8.000") devolvía 8 y el stock quedaba dividido por 1000.
+const normalizaNumeroCL = (raw: string): number => {
+  const s = raw.trim();
+  if (s === '') return 0;
+  if (/^\d{1,3}(\.\d{3})+$/.test(s)) return Number(s.replace(/\./g, ''));
+  const n = parseFloat(s);
+  return Number.isNaN(n) ? 0 : n;
+};
 
 export const IngredientModal: React.FC<IngredientModalProps> = ({
   isOpen,
@@ -22,7 +31,6 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
   onSave,
   ingredient,
   mode,
-  categories,
 }) => {
   const [formData, setFormData] = useState<IngredientFormData>({
     name: '',
@@ -50,7 +58,8 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
           description: ingredient.description || '',
           categoryId: ingredient.categoryId,
           unit: ingredient.unit,
-          pricePerUnit: ingredient.pricePerUnit,
+          // H126: el backend persiste en unitCost — leer esa columna (fallback pricePerUnit legacy)
+          pricePerUnit: Number((ingredient as any).unitCost ?? ingredient.pricePerUnit ?? 0),
           currentStock: ingredient.currentStock,
           minStock: ingredient.minStock,
           supplier: ingredient.supplier || '',
@@ -131,12 +140,9 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      // Si no se eligió categoría, asignar "General" por defecto
-      const dataToSave = {
-        ...formData,
-        categoryId: formData.categoryId || 'General',
-      };
-      onSave(dataToSave);
+      // H126: categoría/proveedor eran columnas fantasma — ya no se fuerzan ni se envían
+      const { categoryId, supplier, ...rest } = formData;
+      onSave(rest as IngredientFormData);
     }
   };
 
@@ -209,36 +215,6 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                   />
                 </div>
 
-                {/* Categoría — input con datalist (permite crear categoría nueva) */}
-                <div>
-                  <label className={labelClass}>
-                    Categoría{' '}
-                    <span className="text-slate-400 font-normal text-xs">
-                      (opcional — puedes escribir una nueva)
-                    </span>
-                  </label>
-                  <input
-                    type="text"
-                    list="ingredient-categories-list"
-                    value={formData.categoryId}
-                    onChange={(e) => handleChange('categoryId', e.target.value)}
-                    placeholder="Ej: Lácteos, Vegetales, Carnes... o déjalo vacío"
-                    className={`${inputBaseClass} border-slate-200`}
-                  />
-                  <datalist id="ingredient-categories-list">
-                    {categories.map((cat) => (
-                      <option key={cat.id} value={cat.name}>
-                        {cat.icon} {cat.name}
-                      </option>
-                    ))}
-                  </datalist>
-                  <p className="mt-1 text-xs text-slate-400">
-                    {categories.length === 0
-                      ? '💡 No hay categorías creadas aún. Escribe una nueva o se asignará "General" automáticamente.'
-                      : 'Elige una categoría existente o escribe una nueva.'}
-                  </p>
-                </div>
-
                 {/* Unidad */}
                 <UnitSelector
                   value={formData.unit}
@@ -259,16 +235,18 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                     Precio por {formData.unit || 'unidad'} <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="number"
-                    value={formData.pricePerUnit}
-                    onChange={(e) => handleChange('pricePerUnit', parseFloat(e.target.value) || 0)}
-                    placeholder="1200"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
+                    value={formData.pricePerUnit === 0 ? '' : formData.pricePerUnit}
+                    onChange={(e) => handleChange('pricePerUnit', normalizaNumeroCL(e.target.value))}
+                    placeholder="1200 (punto solo para decimales: 14.5)"
                     className={`${inputBaseClass} ${
                       errors.pricePerUnit ? 'border-red-500' : 'border-slate-200'
                     }`}
                   />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Acepta 8000 o 8.000 — se guarda 8000
+                  </p>
                   {errors.pricePerUnit && (
                     <p className="mt-1 text-sm text-red-600">{errors.pricePerUnit}</p>
                   )}
@@ -280,16 +258,18 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                     Stock Actual <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="number"
-                    value={formData.currentStock}
-                    onChange={(e) => handleChange('currentStock', parseFloat(e.target.value) || 0)}
-                    placeholder="50"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
+                    value={formData.currentStock === 0 ? '' : formData.currentStock}
+                    onChange={(e) => handleChange('currentStock', normalizaNumeroCL(e.target.value))}
+                    placeholder="8000 (punto solo para decimales)"
                     className={`${inputBaseClass} ${
                       errors.currentStock ? 'border-red-500' : 'border-slate-200'
                     }`}
                   />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Cantidad en {formData.unit || 'la unidad elegida'} — acepta 8000 o 8.000
+                  </p>
                   {errors.currentStock && (
                     <p className="mt-1 text-sm text-red-600">{errors.currentStock}</p>
                   )}
@@ -301,12 +281,11 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                     Stock Mínimo <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="number"
-                    value={formData.minStock}
-                    onChange={(e) => handleChange('minStock', parseFloat(e.target.value) || 0)}
-                    placeholder="10"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
+                    value={formData.minStock === 0 ? '' : formData.minStock}
+                    onChange={(e) => handleChange('minStock', normalizaNumeroCL(e.target.value))}
+                    placeholder="1000"
                     className={`${inputBaseClass} ${
                       errors.minStock ? 'border-red-500' : 'border-slate-200'
                     }`}
@@ -314,21 +293,9 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                   {errors.minStock && (
                     <p className="mt-1 text-sm text-red-600">{errors.minStock}</p>
                   )}
-                  <p className="mt-1 text-xs text-slate-400">
-                    Alerta si stock cae por debajo de este valor
+                  <p className="mt-1 text-xs text-slate-500">
+                    Alerta si el stock cae por debajo de este valor
                   </p>
-                </div>
-
-                {/* Proveedor */}
-                <div>
-                  <label className={labelClass}>Proveedor</label>
-                  <input
-                    type="text"
-                    value={formData.supplier}
-                    onChange={(e) => handleChange('supplier', e.target.value)}
-                    placeholder="Nombre del proveedor"
-                    className={`${inputBaseClass} border-slate-200`}
-                  />
                 </div>
               </div>
             </div>

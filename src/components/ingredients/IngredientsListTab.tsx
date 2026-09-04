@@ -127,7 +127,9 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
   }
 
   return (
-    <div className="p-6 space-y-6">
+    // H126: flex-1 overflow-y-auto — el fondo oscuro de la página cubre TODO el grid
+    // (antes el div plano desbordaba el h-full y el gris-50 del Layout asomaba tras el último card)
+    <div className="flex-1 overflow-y-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

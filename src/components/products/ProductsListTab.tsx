@@ -485,8 +485,8 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
             canManage={canManage}
           />
         ) : (
-          // Vista Cards
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          // Vista Cards — H126: grid denso (8-18 productos por pantalla para catálogos grandes)
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
             {currentItems.map((product) => {
               const category = categories.find(c => c.id === product.categoryId);
               const margin = product.cost
@@ -507,8 +507,8 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                       : 'border-white/5 hover:border-white/10 hover:bg-white/[0.05]'
                   }`}
                 >
-                  {/* Imagen — thumbnail protagonista #124 */}
-                  <div className="relative h-48 bg-gray-800">
+                  {/* Imagen — H126: thumbnail compacto (h-48→h-32, -64px por card) */}
+                  <div className="relative h-32 bg-gray-800">
                     {imageSrc ? (
                       <img
                         src={imageSrc}
@@ -587,8 +587,8 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                     </div>
                   </div>
 
-                  {/* Contenido */}
-                  <div className="p-4">
+                  {/* Contenido — H126: p-4→p-3 compacto */}
+                  <div className="p-3">
                     {/* Categoría + SKU — línea meta */}
                     <div className="flex items-center justify-between gap-2 mb-1.5">
                       {category ? (
@@ -608,10 +608,10 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                       {product.name}
                     </h3>
 
-                    {/* Tags — chips patrón carta */}
+                    {/* Tags — H126: máximo 2 chips visibles */}
                     {product.tags && product.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2">
-                        {product.tags.map((tag) => {
+                        {product.tags.slice(0, 2).map((tag) => {
                           const TAG_EMOJI: Record<string, string> = {
                             vegano: '🌱', vegetariano: '🥦', sin_gluten: '🌾',
                             picante: '🌶️', popular: '⭐', nuevo: '🆕', oferta: '🏷️',
@@ -625,9 +625,9 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                       </div>
                     )}
 
-                    {/* Descripción */}
+                    {/* Descripción — H126: 1 línea, sin min-height */}
                     {product.description && (
-                      <p className="text-xs text-gray-500 mb-3 line-clamp-2 leading-relaxed min-h-[2rem]">
+                      <p className="text-xs text-gray-500 mb-2 line-clamp-1 leading-relaxed">
                         {product.description}
                       </p>
                     )}

@@ -90,18 +90,34 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                   <option value="">Seleccionar ingrediente...</option>
                   {ingredients.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
                 </select>
-                <input 
-                  type="number" 
-                  min="0.001" 
-                  step="0.001" 
-                  value={item.quantity} 
-                  onChange={e => handleItemChange(index, 'quantity', Number(e.target.value))} 
+                <input
+                  type="number"
+                  min="0.001"
+                  step="0.001"
+                  value={item.quantity}
+                  onChange={e => handleItemChange(index, 'quantity', Number(e.target.value))}
                   className="w-24 border rounded-lg p-2"
                   placeholder="Cant."
                 />
                 <span className="bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg p-2 text-gray-600 text-sm font-medium w-14 text-center">
                   {ingredientUnit}
                 </span>
+                {/* H126: hint de equivalencia — la celda descuenta en la unidad del ingrediente (0.12 kg = 120 gr) */}
+                {(ingredientUnit === 'kg' || ingredientUnit === 'L') && (
+                  <span className="text-xs text-gray-500 w-32 flex-shrink-0">
+                    = {Number(item.quantity * 1000).toLocaleString('es-CL')} {ingredientUnit === 'kg' ? 'gr' : 'ml'}
+                  </span>
+                )}
+                {(ingredientUnit === 'g' || ingredientUnit === 'ml') && (
+                  <span className="text-xs text-gray-500 w-32 flex-shrink-0">
+                    = {Number(item.quantity).toLocaleString('es-CL')} {ingredientUnit === 'g' ? 'gr' : 'ml'}
+                  </span>
+                )}
+                {(ingredientUnit === 'unit' || ingredientUnit === 'unidad') && (
+                  <span className="text-xs text-gray-500 w-32 flex-shrink-0">
+                    unidades
+                  </span>
+                )}
                 <button 
                   onClick={() => handleRemoveItem(index)} 
                   className="p-2 text-red-500 hover:bg-red-50 rounded-lg"

@@ -26,6 +26,18 @@ async function _tryRefreshToken(): Promise<string | null> {
 }
 
 function _forceLogout(): void {
+  // Hotfix #129 (HUECO B): si el logout forzado ocurre durante el polling de
+  // /pago-resultado, redirigir a /login en vez de '/' — la remontura de la SPA
+  // mataba el interval sin estado final y la página revivía en 'confirmando'.
+  if (
+    typeof window !== 'undefined' &&
+    window.location.pathname.startsWith('/pago-resultado') &&
+    sessionStorage.getItem('pago_resultado_poll') === '1'
+  ) {
+    sessionStorage.removeItem('pago_resultado_poll');
+    window.location.href = '/login';
+    return;
+  }
   localStorage.removeItem('bullweb_token');
   localStorage.removeItem('bullweb_user');
   localStorage.removeItem('auth-storage');

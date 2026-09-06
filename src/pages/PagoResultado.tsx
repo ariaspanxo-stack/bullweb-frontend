@@ -23,49 +23,93 @@ const MAX_FALLOS_AUTH = 3;
 
 export default function PagoResultado() {
   const [estado, setEstado]       = useState<Estado>('confirmando');
-  const intervalRef               = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerRef                  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intentosRef               = useRef(0);
   const fallosAuthRef             = useRef(0);
 
   useEffect(() => {
+    let desmontado = false;   // corte legítimo (unmount): no seguir polleando
+    let enVuelo    = false;   // evita cadenas paralelas de polling (visibility + timer)
+
+    // HUECO B (#129): marca para el guard de _forceLogout (api.ts). Se setea AL MONTAR
+    // porque el _forceLogout dispara DENTRO de api.get(), antes de que el catch corra.
+    sessionStorage.setItem('pago_resultado_poll', '1');
+
+    // REGLA DE CIERRE (#129): todo path que corta el polling setea estado final —
+    // el clearTimeout jamás viaja sin su setEstado hermano (salvo el unmount legítimo).
+    const parar = () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = null;
+    };
+
     const verificar = async () => {
-      intentosRef.current += 1;
-
-      // Límite de intentos alcanzado sin éxito ni fallo de auth → estado paciente
-      if (intentosRef.current > MAX_INTENTOS) {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        setEstado('paciente');
-        return;
-      }
-
+      if (desmontado || enVuelo) return;
+      enVuelo = true;
       try {
-        // Mismo patrón que PaymentRequiredOverlay: GET /billing/status vía `api`
-        const res = await api.get<{ status: string }>('/billing/status');
-        fallosAuthRef.current = 0;
+        intentosRef.current += 1;
 
-        // Misma condición que el overlay: éxito si status es ACTIVE o TRIAL
-        if (res.data?.status === 'ACTIVE' || res.data?.status === 'TRIAL') {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          setEstado('exito');
+        // Límite de intentos alcanzado sin éxito ni fallo de auth → estado paciente
+        if (intentosRef.current > MAX_INTENTOS) {
+          parar();
+          setEstado('paciente');
+          return;
         }
-      } catch (err: any) {
-        // Fallo de autenticación (401/403): la sesión expiró tras volver de Flow
-        if (err?.response?.status === 401 || err?.response?.status === 403) {
-          fallosAuthRef.current += 1;
-          if (fallosAuthRef.current >= MAX_FALLOS_AUTH) {
-            if (intervalRef.current) clearInterval(intervalRef.current);
-            setEstado('sesion');
+
+        try {
+          // Mismo patrón que PaymentRequiredOverlay: GET /billing/status vía `api`
+          const res = await api.get<{ status: string }>('/billing/status');
+          fallosAuthRef.current = 0;
+
+          // Misma condición que el overlay: éxito si status es ACTIVE o TRIAL
+          if (res.data?.status === 'ACTIVE' || res.data?.status === 'TRIAL') {
+            sessionStorage.removeItem('pago_resultado_poll');
+            parar();
+            setEstado('exito');
+            return;
           }
+        } catch (err: any) {
+          // HUECO A (#129): la api es fetch-based y lanza err.status PLANO — la
+          // condición original (err?.response?.status, formato axios) era inalcanzable
+          // por construcción. El 404 del tenantMiddleware con JWT muerto tras Flow
+          // = sesión rota en este flujo.
+          const s = err?.status ?? err?.response?.status;
+
+          if (s === 401 || s === 403 || s === 404) {
+            fallosAuthRef.current += 1;
+            if (fallosAuthRef.current >= MAX_FALLOS_AUTH) {
+              parar();
+              setEstado('sesion');
+              return;
+            }
+          }
+          // Otros errores (red, 402 aún vencido): seguir polleando hasta el límite
         }
-        // Otros errores (red, 402 aún vencido): seguir polleando hasta el límite
+
+        // HUECO C (#129): bucle setTimeout encadenado — verificar() se agenda a sí
+        // misma al final de cada ciclo (sobrevive al throttle móvil mejor que setInterval).
+        timerRef.current = setTimeout(verificar, 4000);
+      } finally {
+        enVuelo = false;
       }
     };
 
+    // HUECO C (#129): rescate móvil — al volver a foreground (banco/Flow app), el
+    // primer vistazo dispara la verificación inmediata en vez de esperar el timer.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && !desmontado) {
+        parar();
+        verificar();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
     verificar();
-    intervalRef.current = setInterval(verificar, 4000);
 
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      desmontado = true;
+      parar();                                              // unmount = corte legítimo
+      sessionStorage.removeItem('pago_resultado_poll');     // higiene de la marca
+      document.removeEventListener('visibilitychange', onVisible);
     };
   }, []);
 

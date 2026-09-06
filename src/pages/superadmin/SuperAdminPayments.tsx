@@ -35,6 +35,16 @@ const WA_MSG = (name: string, month: string, amount: number) =>
     `Hola ${name}, tu suscripción BullWeb de ${month} está pendiente. Monto: ${fmtCLP(amount)} CLP`
   );
 
+// Normaliza teléfono chileno a formato wa.me (solo dígitos, con 9 y 56 si falta)
+function waPhone(raw?: string | null): string | null {
+  if (!raw) return null;
+  let d = String(raw).replace(/[^\d+]/g, '').replace(/^\+/, '');
+  if (d.startsWith('56')) return d;
+  if (d.startsWith('9') && d.length >= 9) return `56${d}`;
+  if (d.length === 8) return `569${d}`;
+  return d.length >= 8 ? d : null;
+}
+
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -147,12 +157,18 @@ export default function SuperAdminPayments() {
     return payments.filter((p: any) => p.tenant?.name?.toLowerCase().includes(q) || p.tenant?.slug?.toLowerCase().includes(q));
   }, [payments, tenantSearch]);
 
-  // Tenants con estado OVERDUE/PENDING para alertas (umbral: solo >48h de antigüedad)
+  // Tenants con estado OVERDUE/PENDING para alertas (umbral: solo >48h de antigüedad).
+  // Hotfix #130: excluye pagos de tenants YA ACTIVOS con período vigente (el caso
+  // del huérfano de doble-click: tenant ACTIVE con suscripción al día — cobrarle
+  // de nuevo es absurdo operativamente).
   const overduePayments = useMemo(() =>
     payments.filter((p: any) => {
       if (p.status !== 'OVERDUE' && p.status !== 'PENDING') return false;
       const when = p.paidAt ?? p.createdAt;
-      return Boolean(when) && Date.now() - new Date(when).getTime() > 48 * 60 * 60 * 1000;
+      if (!when || Date.now() - new Date(when).getTime() <= 48 * 60 * 60 * 1000) return false;
+      const periodEnd = p.tenant?.subscriptions?.currentPeriodEnd;
+      const activeWithPeriod = p.tenant?.status === 'ACTIVE' && periodEnd && new Date(periodEnd).getTime() > Date.now();
+      return !activeWithPeriod;
     }),
   [payments]);
 
@@ -307,7 +323,11 @@ export default function SuperAdminPayments() {
                   <StatusBadge status={p.status} kind="payment" />
                 </div>
                 <a
-                  href={`https://wa.me/?text=${WA_MSG(p.tenant?.name ?? '', MONTHS[(selMonth - 1) % 12], p.amount)}`}
+                  href={`https://wa.me/${waPhone(p.tenant?.contact_phone) ?? ''}?text=${WA_MSG(
+                    p.tenant?.name ?? '',
+                    MONTHS[new Date(p.paidAt ?? p.createdAt).getMonth()],
+                    p.amount,
+                  )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white transition-colors flex-shrink-0"

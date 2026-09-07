@@ -27,7 +27,7 @@ function fmtDate(d?: string | null) {
 }
 
 function fmtMonthLabel(d: string | Date) {
-  return new Date(d).toLocaleDateString('es-CL', { month: 'short', year: '2-digit' });
+  return new Date(d).toLocaleDateString('es-CL', { month: 'short', year: '2-digit', timeZone: 'America/Santiago' });
 }
 
 const WA_MSG = (name: string, month: string, amount: number) =>

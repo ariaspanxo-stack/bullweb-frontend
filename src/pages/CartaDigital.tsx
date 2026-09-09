@@ -65,6 +65,49 @@ const TAG_CONFIG: Record<string, { label: string; emoji: string; bg: string; tex
   oferta:      { label: 'Oferta',      emoji: '🏷️', bg: 'bg-pink-100',   text: 'text-pink-700'   },
 };
 
+// ── Hotfix #140 — Emojis de categoría por nombre (matching normalizado por substring) ──
+const CATEGORY_EMOJIS: Record<string, string> = {
+  hamburguesa: '🍔',
+  sandwich:    '🥪',
+  completo:    '🌭',
+  pizza:       '🍕',
+  sushi:       '🍣',
+  pescado:     '🐟',
+  marisco:     '🦐',
+  carne:       '🥩',
+  parrilla:    '🥩',
+  asado:       '🥩',
+  pollo:       '🍗',
+  ensalada:    '🥗',
+  pasta:       '🍝',
+  postre:      '🍰',
+  helado:      '🍦',
+  fruta:       '🍓',
+  desayuno:    '🥞',
+  onces:       '☕',
+  cafe:        '☕',
+  bebida:      '🥤',
+  jugo:        '🧃',
+  trago:       '🍹',
+  cocktail:    '🍹',
+  cerveza:     '🍺',
+  vino:        '🍷',
+  licor:       '🥃',
+  bar:         '🍸',
+  snack:       '🍿',
+  veggie:      '🥦',
+  promocion:   '🔥',
+  oferta:      '🔥',
+  infantil:    '🧒',
+  comida:      '🍔',
+};
+
+function getEmojiForCategory(name: string): string | null {
+  const n = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const hit = Object.keys(CATEGORY_EMOJIS).find(k => n.includes(k));
+  return hit ? CATEGORY_EMOJIS[hit] : null;
+}
+
 function ProductTag({ tag }: { tag: string }) {
   const cfg = TAG_CONFIG[tag];
   if (!cfg) return null;
@@ -1570,7 +1613,10 @@ export default function CartaDigital() {
           <div className="w-full px-6 py-3 overflow-x-auto scrollbar-hide scroll-smooth flex gap-2" style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}>
             {categories.map(cat => {
               const catThumb = cat.image ?? null;
-              const catEmoji = cat.products.find(p => p.emoji)?.emoji ?? null;
+              // Hotfix #140 — jerarquía: imagen → emoji por nombre → emoji derivado de producto → default
+              const catEmoji = getEmojiForCategory(cat.name)
+                ?? cat.products.find(p => p.emoji)?.emoji
+                ?? '🍽️';
               return (
               <button
                 key={cat.id}

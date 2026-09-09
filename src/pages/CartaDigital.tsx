@@ -119,15 +119,76 @@ function ProductTag({ tag }: { tag: string }) {
   );
 }
 
-// ── Business hours hook ─────────────────────────────────────────
+// ── Business hours ──────────────────────────────────────────────
+// Hotfix #141 — cálculo extraído a función PURA (hours, timezone) → estado.
+// Permite re-evaluar el badge cada 60s y al recuperar foco/visibilidad
+// sin re-fetchear (patrón institucional del #129).
+function computeBusinessHoursState(
+  hours: Record<string, any>,
+  timezone?: string | null,
+): { isOpen: boolean; nextChange: string; todayIdx: number } {
+  const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const dayNames = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+
+  // Respetar el timezone del restaurant (ej: "America/Lima")
+  const tz = (timezone && timezone !== '') ? timezone : Intl.DateTimeFormat().resolvedOptions().timeZone;
+  // Convertir la hora actual al timezone del restaurant
+  const tzDate = new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
+  const dayIndex = tzDate.getDay();
+  const dayName  = days[dayIndex];
+  const nowMin   = tzDate.getHours() * 60 + tzDate.getMinutes();
+  const todayH   = hours[dayName];
+
+  if (!todayH?.enabled) {
+    // Buscar próximo día abierto
+    for (let i = 1; i <= 7; i++) {
+      const nextIdx = (dayIndex + i) % 7;
+      const nextDay = days[nextIdx];
+      if (hours[nextDay]?.enabled) {
+        const label = i === 1 ? 'mañana' : `el ${dayNames[nextIdx]}`;
+        return { isOpen: false, nextChange: `Abre ${label} a las ${hours[nextDay].open}`, todayIdx: dayIndex };
+      }
+    }
+    return { isOpen: false, nextChange: 'Cerrado hoy', todayIdx: dayIndex };
+  }
+  const [oh, om] = todayH.open.split(':').map(Number);
+  const [ch, cm] = todayH.close.split(':').map(Number);
+  const openMin  = oh * 60 + om;
+  const closeMin = ch * 60 + cm;
+
+  if (nowMin >= openMin && nowMin < closeMin) {
+    return { isOpen: true, nextChange: `Cierra a las ${todayH.close}`, todayIdx: dayIndex };
+  } else if (nowMin < openMin) {
+    return { isOpen: false, nextChange: `Abre hoy a las ${todayH.open}`, todayIdx: dayIndex };
+  } else {
+    // Ya pasó el horario de hoy — buscar próximo día abierto
+    for (let i = 1; i <= 7; i++) {
+      const nextIdx = (dayIndex + i) % 7;
+      const nextDay = days[nextIdx];
+      if (hours[nextDay]?.enabled) {
+        const label = i === 1 ? 'mañana' : `el ${dayNames[nextIdx]}`;
+        return { isOpen: false, nextChange: `Abre ${label} a las ${hours[nextDay].open}`, todayIdx: dayIndex };
+      }
+    }
+    return { isOpen: false, nextChange: '', todayIdx: dayIndex };
+  }
+}
+
 function useBusinessHours(slug: string | null) {
   const [isOpen,     setIsOpen]     = useState<boolean | null>(null);
   const [nextChange, setNextChange] = useState('');
   const [hours,      setHours]      = useState<Record<string, any> | null>(null);
   const [todayIdx,   setTodayIdx]   = useState(-1);
+  const [timezone,   setTimezone]   = useState<string | null>(null);
 
+  // Fetch — depende SOLO del slug (Hotfix #141)
   useEffect(() => {
     if (!slug) return;
+    setHours(null);
+    setTimezone(null);
+    setIsOpen(null);
+    setNextChange('');
+    setTodayIdx(-1);
     const params = new URLSearchParams({ slug });
     fetch(`/api/public/hours?${params.toString()}`)
       .then(r => r.json())
@@ -136,60 +197,31 @@ function useBusinessHours(slug: string | null) {
         if (!hours) return;
         // Hotfix #139 — exponer horario semanal completo para la vista expandible
         setHours(hours);
-        const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
-        const dayNames = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
-
-        // Respetar el timezone del restaurant (ej: "America/Lima")
-        const tz = (timezone && timezone !== '') ? timezone : Intl.DateTimeFormat().resolvedOptions().timeZone;
-        // Convertir la hora actual al timezone del restaurant
-        const tzDate = new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
-        const dayIndex = tzDate.getDay();
-        setTodayIdx(dayIndex);
-        const dayName  = days[dayIndex];
-        const nowMin   = tzDate.getHours() * 60 + tzDate.getMinutes();
-        const todayH   = hours[dayName];
-
-        if (!todayH?.enabled) {
-          setIsOpen(false); setNextChange('Cerrado hoy');
-          // Buscar próximo día abierto
-          for (let i = 1; i <= 7; i++) {
-            const nextIdx = (dayIndex + i) % 7;
-            const nextDay = days[nextIdx];
-            if (hours[nextDay]?.enabled) {
-              const label = i === 1 ? 'mañana' : `el ${dayNames[nextIdx]}`;
-              setNextChange(`Abre ${label} a las ${hours[nextDay].open}`);
-              break;
-            }
-          }
-          return;
-        }
-        const [oh, om] = todayH.open.split(':').map(Number);
-        const [ch, cm] = todayH.close.split(':').map(Number);
-        const openMin  = oh * 60 + om;
-        const closeMin = ch * 60 + cm;
-
-        if (nowMin >= openMin && nowMin < closeMin) {
-          setIsOpen(true);
-          setNextChange(`Cierra a las ${todayH.close}`);
-        } else if (nowMin < openMin) {
-          setIsOpen(false);
-          setNextChange(`Abre hoy a las ${todayH.open}`);
-        } else {
-          // Ya pasó el horario de hoy — buscar próximo día abierto
-          setIsOpen(false);
-          for (let i = 1; i <= 7; i++) {
-            const nextIdx = (dayIndex + i) % 7;
-            const nextDay = days[nextIdx];
-            if (hours[nextDay]?.enabled) {
-              const label = i === 1 ? 'mañana' : `el ${dayNames[nextIdx]}`;
-              setNextChange(`Abre ${label} a las ${hours[nextDay].open}`);
-              break;
-            }
-          }
-        }
+        setTimezone(timezone ?? null);
       })
       .catch(() => { /* silencioso */ });
   }, [slug]);
+
+  // Re-evaluación viva: al cargar hours, cada 60s y al volver a la pestaña (Hotfix #141, patrón #129)
+  useEffect(() => {
+    if (!hours) return;
+    const reevaluate = () => {
+      const st = computeBusinessHoursState(hours, timezone);
+      setIsOpen(st.isOpen);
+      setNextChange(st.nextChange);
+      setTodayIdx(st.todayIdx);
+    };
+    reevaluate();
+    const interval = setInterval(reevaluate, 60_000);
+    const onVisibility = () => { if (document.visibilityState === 'visible') reevaluate(); };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', reevaluate);
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', reevaluate);
+    };
+  }, [hours, timezone]);
 
   return { isOpen, nextChange, hours, todayIdx };
 }

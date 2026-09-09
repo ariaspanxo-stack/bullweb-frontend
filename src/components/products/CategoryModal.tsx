@@ -6,13 +6,14 @@ interface Category {
   id: string;
   name: string;
   icon?: string;
+  image?: string | null; // Hotfix #139 — imagen de categoría (endpoint multer preexistente)
   productsCount?: number;
 }
 
 interface CategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (category: { name: string; icon: string }) => void;
+  onSave: (category: { name: string; icon: string; image?: string }) => void;
   category?: Category | null;
   mode: 'create' | 'edit';
   existingNames: string[];
@@ -21,6 +22,7 @@ interface CategoryModalProps {
 interface FormData {
   name: string;
   icon: string;
+  image: string;
 }
 
 interface FormErrors {
@@ -39,9 +41,11 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   const [formData, setFormData] = useState<FormData>({
     name: '',
     icon: '📦',
+    image: '',
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+  const [uploadingImage, setUploadingImage] = useState(false); // Hotfix #139
 
   // Inicializar formulario al abrir
   useEffect(() => {
@@ -50,11 +54,13 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
         setFormData({
           name: category.name,
           icon: category.icon || '📦',
+          image: category.image || '',
         });
       } else {
         setFormData({
           name: '',
           icon: '📦',
+          image: '',
         });
       }
       setErrors({});
@@ -113,6 +119,30 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
     setErrors((prev) => ({ ...prev, icon: undefined }));
   };
 
+  // ── Hotfix #139 — Subir imagen de categoría (patrón CartaQRPage /menu/upload-logo) ──
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImage(true);
+    try {
+      const fd = new FormData();
+      fd.append('logo', file);
+      const token   = localStorage.getItem('bullweb_token') ?? '';
+      const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:4200/api';
+      const resp    = await fetch(`${baseUrl}/menu/upload-logo`, {
+        method:  'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body:    fd,
+      });
+      const data = await resp.json();
+      if (data.url) {
+        setFormData((prev) => ({ ...prev, image: data.url }));
+        setErrors((prev) => ({ ...prev, name: prev.name }));
+      }
+    } catch { /* silencioso */ }
+    finally { setUploadingImage(false); }
+  };
+
   // Validar formulario completo
   const validateForm = (): boolean => {
     const nameError = validateName(formData.name);
@@ -137,6 +167,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
     onSave({
       name: formData.name.trim(),
       icon: formData.icon,
+      image: formData.image || undefined,
     });
 
     onClose();
@@ -214,6 +245,45 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
               )}
             </div>
 
+            {/* Hotfix #139 — Imagen de categoría */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Imagen de la categoría <span className="text-gray-400 text-xs">(opcional, se muestra en la carta QR)</span>
+              </label>
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 rounded-lg border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {uploadingImage ? (
+                    <span className="text-xs text-gray-400 animate-pulse">Subiendo…</span>
+                  ) : formData.image ? (
+                    <img src={formData.image} alt="Imagen de categoría" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-3xl">{formData.icon}</span>
+                  )}
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-sm cursor-pointer text-center">
+                    {uploadingImage ? 'Subiendo…' : '📷 Subir imagen'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      disabled={uploadingImage}
+                    />
+                  </label>
+                  {formData.image && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, image: '' }))}
+                      className="px-4 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      Quitar imagen
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             {/* Preview */}
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
               <p className="text-sm font-semibold text-gray-800 mb-3">
@@ -221,7 +291,11 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
               </p>
               <div className="bg-white rounded-lg p-4 border border-gray-200">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">{formData.icon}</span>
+                  {formData.image ? (
+                    <img src={formData.image} alt="" className="w-14 h-14 rounded-lg object-cover border border-gray-200" />
+                  ) : (
+                    <span className="text-3xl">{formData.icon}</span>
+                  )}
                   <div>
                     <h3 className="font-semibold text-gray-900">
                       {formData.name || 'Nombre de la categoría'}

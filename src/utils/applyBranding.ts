@@ -18,7 +18,7 @@ export async function applyBranding(): Promise<void> {
     const headers: Record<string, string> = { 'x-tenant-id': tenantId };
 
     const res = await fetch(
-      `${(import.meta.env.VITE_API_URL as string) ?? ''}/api/admin/branding/public`,
+      `${(import.meta.env.VITE_API_URL as string) ?? ''}/admin/branding/public`,
       { headers }
     );
 

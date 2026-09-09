@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail, Instagram, Facebook, Globe } from 'lucide-react';
+import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail, Instagram, Facebook, Globe, MessageCircle } from 'lucide-react';
 
 const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
 
@@ -41,6 +41,7 @@ interface CartaSettings {
   slug?:            string | null;
   paymentMethods?:  Array<{ id: string; name: string }>;
   address?:         string | null;
+  city?:            string | null;
   phone?:           string | null;
   email?:           string | null;
   hours?:           string | null;
@@ -79,6 +80,8 @@ function ProductTag({ tag }: { tag: string }) {
 function useBusinessHours(slug: string | null) {
   const [isOpen,     setIsOpen]     = useState<boolean | null>(null);
   const [nextChange, setNextChange] = useState('');
+  const [hours,      setHours]      = useState<Record<string, any> | null>(null);
+  const [todayIdx,   setTodayIdx]   = useState(-1);
 
   useEffect(() => {
     if (!slug) return;
@@ -88,6 +91,8 @@ function useBusinessHours(slug: string | null) {
       .then(res => {
         const { hours, timezone } = res.data ?? res ?? {};
         if (!hours) return;
+        // Hotfix #139 — exponer horario semanal completo para la vista expandible
+        setHours(hours);
         const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
         const dayNames = ['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
 
@@ -96,6 +101,7 @@ function useBusinessHours(slug: string | null) {
         // Convertir la hora actual al timezone del restaurant
         const tzDate = new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
         const dayIndex = tzDate.getDay();
+        setTodayIdx(dayIndex);
         const dayName  = days[dayIndex];
         const nowMin   = tzDate.getHours() * 60 + tzDate.getMinutes();
         const todayH   = hours[dayName];
@@ -142,7 +148,7 @@ function useBusinessHours(slug: string | null) {
       .catch(() => { /* silencioso */ });
   }, [slug]);
 
-  return { isOpen, nextChange };
+  return { isOpen, nextChange, hours, todayIdx };
 }
 
 // ── Skeleton components ─────────────────────────────────────────
@@ -1268,7 +1274,7 @@ export default function CartaDigital() {
   const [searchParams]  = useSearchParams();
   const mesaNumber      = searchParams.get('mesa');
   const tenantSlug      = slugFromPath ?? searchParams.get('t') ?? null;
-  const { isOpen, nextChange } = useBusinessHours(tenantSlug);
+  const { isOpen, nextChange, hours, todayIdx } = useBusinessHours(tenantSlug);
 
   const [categories,    setCategories]    = useState<Category[]>([]);
   const [cartaSettings, setCartaSettings] = useState<CartaSettings | null>(null);
@@ -1280,6 +1286,7 @@ export default function CartaDigital() {
   const [retryCount,    setRetryCount]    = useState(0);
   const [activeTag,     setActiveTag]     = useState<string | null>(null);
   const [modalQty,     setModalQty]     = useState(1);
+  const [showHours,    setShowHours]    = useState(false); // Hotfix #139 — horario semanal expandible
 
   // ── Cart state (persistido en localStorage por restaurante + mesa) ──
   const cartKey = `bullweb:cart:${tenantSlug ?? 'default'}:${mesaNumber ?? 'generico'}`;
@@ -1471,22 +1478,38 @@ export default function CartaDigital() {
             {cartaSettings?.address && (
               <div className="flex items-center gap-1.5 max-w-full sm:max-w-[280px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
-                <span className="truncate">{cartaSettings.address}</span>
+                <span className="truncate">{cartaSettings.address}{cartaSettings.city ? `, ${cartaSettings.city}` : ''}</span>
               </div>
             )}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
+            <button
+              type="button"
+              onClick={() => setShowHours(v => !v)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors cursor-pointer"
+            >
               <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
               <span className="whitespace-nowrap">
               {isOpen !== null
                     ? (isOpen ? `Abierto · ${nextChange}` : `Cerrado · ${nextChange}`)
                     : 'Horario no disponible'}
               </span>
-            </div>
+            </button>
             {cartaSettings?.phone && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
                 <Phone className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
                 <span className="whitespace-nowrap">{cartaSettings.phone}</span>
               </div>
+            )}
+            {cartaSettings?.phone && (
+              <a
+                href={`https://wa.me/${cartaSettings.phone.replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Escríbenos por WhatsApp"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#25D366]/10 border border-[#25D366]/30 hover:border-[#25D366]/60 transition-colors"
+              >
+                <MessageCircle className="w-3.5 h-3.5 flex-shrink-0 text-[#25D366]" />
+                <span className="whitespace-nowrap font-medium text-[#128C7E]">WhatsApp</span>
+              </a>
             )}
             {cartaSettings?.email && (
               <div className="hidden sm:flex items-center gap-1.5 max-w-[240px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
@@ -1495,6 +1518,42 @@ export default function CartaDigital() {
               </div>
             )}
           </div>
+      )}
+
+      {/* ── Hotfix #139 — Horario semanal expandible ── */}
+      {showHours && hours && (
+        <div className="relative z-10 mx-4 md:mx-8 lg:mx-auto lg:max-w-5xl mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <Clock className="w-4 h-4" style={{ color: themeColor }} /> Horario semanal
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowHours(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Cerrar horario"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[13px]">
+            {['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map(d => {
+              const label: Record<string, string> = { monday: 'Lunes', tuesday: 'Martes', wednesday: 'Miércoles', thursday: 'Jueves', friday: 'Viernes', saturday: 'Sábado', sunday: 'Domingo' };
+              const h       = hours[d];
+              const isToday = todayIdx === ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'].indexOf(d);
+              return (
+                <div
+                  key={d}
+                  className={`flex items-center justify-between px-3 py-2 rounded-lg border ${isToday ? 'font-semibold' : 'border-gray-100 bg-gray-50'}`}
+                  style={isToday ? { borderColor: themeColor, backgroundColor: `${themeColor}14` } : undefined}
+                >
+                  <span className="text-gray-800">{label[d]}{isToday ? ' · hoy' : ''}</span>
+                  <span className="text-gray-600">{h?.enabled ? `${h.open} – ${h.close}` : 'Cerrado'}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
       )}
 
       {/* ── 3. Barra de búsqueda + Categorías (full-width sticky) */}

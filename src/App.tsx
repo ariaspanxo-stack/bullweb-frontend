@@ -112,6 +112,7 @@ const CouponsPage           = lazy(() => import('@/pages/coupons/CouponsPage').t
 const PromotionsPage        = lazy(() => import('@/pages/Promotions/PromotionsPage'));
 const OnboardingWizard       = lazy(() => import('@/components/OnboardingWizard'));
 const Suspended              = lazy(() => import('@/pages/Suspended'));
+const Subscription           = lazy(() => import('@/pages/Subscription/Subscription'));
 
 // ── Spinner para Suspense ───────────────────────────────────────────────────
 function LazyFallback() {
@@ -125,12 +126,6 @@ function LazyFallback() {
       </div>
     </div>
   );
-}
-
-// Subscription page — redirect directo a Flow (variable de entorno)
-function SubscriptionRedirect() {
-  useEffect(() => { window.location.replace(import.meta.env.VITE_FLOW_REDIRECT_URL || 'https://www.flow.cl/uri/jaNHWz61V'); }, []);
-  return null;
 }
 
 // ============================================================================
@@ -198,9 +193,9 @@ function AppContent() {
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password"  element={<ResetPasswordPage />} />
-            <Route path="/subscription"           element={<SubscriptionRedirect />} />
-            <Route path="/subscription/success"   element={<SubscriptionRedirect />} />
-            <Route path="/subscription/cancelled" element={<SubscriptionRedirect />} />
+            <Route path="/subscription"           element={<Subscription />} />
+            <Route path="/subscription/success"   element={<Subscription />} />
+            <Route path="/subscription/cancelled" element={<Subscription />} />
             <Route path="/suspended" element={<Suspended />} />
             <Route path="/onboarding" element={<OnboardingWizard />} />
             <Route path="/attendance"        element={<AttendanceKiosk />} />

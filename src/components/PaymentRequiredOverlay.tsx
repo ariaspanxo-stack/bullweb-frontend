@@ -96,7 +96,7 @@ export default function PaymentRequiredOverlay() {
 
           {/* Descripción */}
           <p className="text-gray-500 text-sm mb-6">
-            Para continuar operando y no perder tus ventas, activa tu plan PRO.
+            Para continuar operando y no perder tus ventas, activa tu plan Starter ($29.000/mes).
           </p>
 
           {/* Error */}

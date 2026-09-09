@@ -46,7 +46,7 @@ export default function Subscription() {
   async function loadStatus() {
     try {
       setLoading(true);
-      const response = await api.get<BillingStatus>('/api/billing/status');
+      const response = await api.get<BillingStatus>('/billing/status');
       setBillingStatus(response.data);
     } catch {
       // Si no hay tenant, mostramos los planes de todas formas
@@ -74,7 +74,7 @@ export default function Subscription() {
   async function handleCancel() {
     try {
       setError(null);
-      await api.post('/api/billing/cancel', {});
+      await api.post('/billing/cancel', {});
       await loadStatus();
     } catch (err: any) {
       setError(err.message ?? 'Error cancelando suscripción.');
@@ -94,7 +94,7 @@ export default function Subscription() {
             Volver al dashboard
           </a>
           <h1 className="text-4xl font-bold text-gray-900 mb-3">
-            Elige tu plan BullWeb
+            Tu plan BullWeb
           </h1>
           <p className="text-lg text-gray-600">
             Gestión completa para tu negocio gastronómico. Sin costos ocultos.

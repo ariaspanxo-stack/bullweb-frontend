@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle, Zap, Star, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react';
+import { CheckCircle, Star, AlertTriangle, Loader2, ArrowLeft } from 'lucide-react';
 import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
@@ -21,53 +21,12 @@ interface BillingStatus {
   } | null;
 }
 
-// ─── Planes ───────────────────────────────────────────────────────────────────
-
-const PLANS = [
-  {
-    id:          'STARTER' as const,
-    name:        'Starter',
-    price:       29990,
-    description: 'Perfecto para restaurantes y cafeterías pequeñas',
-    icon:        Zap,
-    color:       'orange',
-    features: [
-      'POS completo + comandas',
-      'Hasta 3 usuarios',
-      'Módulo KDS',
-      'Reportes básicos',
-      'Soporte por email',
-      'Actualizaciones incluidas',
-    ],
-  },
-  {
-    id:          'PRO' as const,
-    name:        'Pro',
-    price:       59990,
-    description: 'Para negocios en crecimiento con múltiples sucursales',
-    icon:        Star,
-    color:       'indigo',
-    features: [
-      'Todo lo de Starter',
-      'Usuarios ilimitados',
-      'Múltiples sucursales',
-      'Delivery integrado',
-      'Campañas de marketing',
-      'Facturación DTE',
-      'Soporte prioritario',
-      'API acceso completo',
-    ],
-    popular: true,
-  },
-];
-
 // ─── Componente ───────────────────────────────────────────────────────────────
 
 export default function Subscription() {
   const tenantId = useAuthStore(s => s.user?.tenantId);
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
   const [loading,       setLoading]       = useState(true);
-  const [subscribing,   setSubscribing]   = useState<string | null>(null);
   const [paying,        setPaying]        = useState(false);
   const [error,         setError]         = useState<string | null>(null);
 
@@ -94,19 +53,6 @@ export default function Subscription() {
       setBillingStatus(null);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function handleSubscribe(plan: 'STARTER' | 'PRO') {
-    try {
-      setError(null);
-      setSubscribing(plan);
-      const result = await api.post<{ redirectUrl: string }>('/api/billing/subscribe', { plan });
-      // Redirigir a Flow para registro de tarjeta
-      window.location.href = result.data.redirectUrl;
-    } catch (err: any) {
-      setError(err.message ?? 'Error iniciando suscripción. Intenta nuevamente.');
-      setSubscribing(null);
     }
   }
 
@@ -209,7 +155,7 @@ export default function Subscription() {
           onCancel={() => setCancelConfirmOpen(false)}
         />
 
-        {/* ── Plan Premium — Pagar Suscripción (Flow) ────────────────────── */}
+        {/* ── Plan Starter — Pagar Suscripción (Flow) ────────────────────── */}
         {!loading && (
           <div className="mb-8 p-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg text-white">
             <div className="flex items-center justify-between flex-wrap gap-4">
@@ -218,8 +164,9 @@ export default function Subscription() {
                   <Star size={28} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Plan Premium</h3>
-                  <p className="text-indigo-100 text-sm">$29.000 CLP / mes</p>
+                  <h3 className="text-xl font-bold">Plan Starter</h3>
+                  <p className="text-indigo-100 text-sm">$29.000 CLP/mes</p>
+                  <p className="text-indigo-100 text-xs">Todo incluido — sin IVA extra</p>
                 </div>
               </div>
               <button
@@ -237,6 +184,22 @@ export default function Subscription() {
                 )}
               </button>
             </div>
+            <ul className="mt-5 grid sm:grid-cols-2 gap-x-6 gap-y-2">
+              {[
+                'POS completo (Mesas, Mostrador, Delivery)',
+                'KDS de cocina',
+                'Carta QR',
+                'Clientes y fidelización',
+                'Inventario',
+                'Reportes',
+                '1 sucursal',
+              ].map(f => (
+                <li key={f} className="flex items-center gap-2 text-sm text-white">
+                  <CheckCircle size={15} className="flex-shrink-0" />
+                  {f}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
@@ -248,91 +211,9 @@ export default function Subscription() {
         )}
 
         {/* Loading */}
-        {loading ? (
+        {loading && (
           <div className="flex justify-center items-center py-20">
             <Loader2 className="animate-spin text-orange-500" size={32} />
-          </div>
-        ) : (
-          /* Cards de planes */
-          <div className="grid md:grid-cols-2 gap-6">
-            {PLANS.map(plan => {
-              const Icon        = plan.icon;
-              const isActive    = billingStatus?.subscription?.plan === plan.id &&
-                                  billingStatus?.status === 'ACTIVE';
-              const isLoading   = subscribing === plan.id;
-              const isOrange    = plan.color === 'orange';
-
-              return (
-                <div
-                  key={plan.id}
-                  className={`relative rounded-2xl border-2 bg-white p-8 shadow-sm transition-shadow hover:shadow-md ${
-                    plan.popular
-                      ? 'border-indigo-500'
-                      : 'border-gray-200'
-                  } ${isActive ? 'ring-2 ring-green-400' : ''}`}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-500 text-white text-xs font-bold px-4 py-1 rounded-full">
-                      MÁS POPULAR
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className={`p-2 rounded-lg ${isOrange ? 'bg-orange-100' : 'bg-indigo-100'}`}>
-                      <Icon
-                        size={22}
-                        className={isOrange ? 'text-orange-500' : 'text-indigo-500'}
-                      />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-bold text-gray-900">{plan.name}</h2>
-                      <p className="text-sm text-gray-500">{plan.description}</p>
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <span className="text-4xl font-extrabold text-gray-900">
-                      ${plan.price.toLocaleString('es-CL')}
-                    </span>
-                    <span className="text-gray-500 ml-1">/mes + IVA</span>
-                  </div>
-
-                  <ul className="space-y-2 mb-8">
-                    {plan.features.map(f => (
-                      <li key={f} className="flex items-center gap-2 text-sm text-gray-700">
-                        <CheckCircle size={15} className="text-green-500 flex-shrink-0" />
-                        {f}
-                      </li>
-                    ))}
-                  </ul>
-
-                  {isActive ? (
-                    <div className="w-full py-3 rounded-xl font-semibold text-center bg-green-100 text-green-700">
-                      ✓ Plan actual
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => handleSubscribe(plan.id)}
-                      disabled={isLoading || !!subscribing}
-                      className={`w-full py-3 rounded-xl font-semibold transition-colors flex items-center justify-center gap-2 ${
-                        plan.popular
-                          ? 'bg-indigo-600 hover:bg-indigo-700 text-white disabled:bg-indigo-300'
-                          : 'bg-orange-500 hover:bg-orange-600 text-white disabled:bg-orange-300'
-                      }`}
-                    >
-                      {isLoading ? (
-                        <>
-                          <Loader2 size={16} className="animate-spin" />
-                          Redirigiendo a Flow...
-                        </>
-                      ) : (
-                        `Suscribirse a ${plan.name}`
-                      )}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
           </div>
         )}
 

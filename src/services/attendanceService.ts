@@ -72,13 +72,13 @@ export const attendanceService = {
     tipo: Justificativo['tipo'];
     descripcion?: string;
   }) {
-    const { data } = await api.post('/attendance/justificativos', payload);
+    const { data } = await api.post('/attendance/justificativo', payload);
     return data.data as Justificativo;
   },
 
   /** Aprobar o rechazar justificativo (requiere employees.manage) */
   async approveJustificativo(id: string, estado: 'aprobado' | 'rechazado') {
-    const { data } = await api.patch(`/attendance/justificativos/${id}`, { estado });
+    const { data } = await api.patch(`/attendance/justificativo/${id}`, { estado });
     return data.data as Justificativo;
   },
 
@@ -86,7 +86,7 @@ export const attendanceService = {
   async uploadDocumento(id: string, file: File, onProgress?: (pct: number) => void) {
     const form = new FormData();
     form.append('documento', file);
-    const { data } = await api.post(`/attendance/justificativos/${id}/documento`, form, {
+    const { data } = await api.post(`/attendance/justificativo/${id}/documento`, form, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: onProgress
         ? (evt) => {

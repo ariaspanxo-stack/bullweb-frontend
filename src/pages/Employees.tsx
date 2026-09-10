@@ -1375,6 +1375,9 @@ function EmployeeModal({
                         : 'morning',
     shiftStart:       (employee?.shift && !['morning','afternoon','night'].includes(employee.shift)) ? (employee.shift.split('–')[0] ?? '') : (employee?.shiftStart ?? ''),
     shiftEnd:         (employee?.shift && !['morning','afternoon','night'].includes(employee.shift)) ? (employee.shift.split('–')[1] ?? '') : (employee?.shiftEnd ?? ''),
+    workDays:         Array.isArray(employee?.workDays) ? employee.workDays : [],
+    lunchStart:       employee?.lunchStart ?? '',
+    lunchEnd:         employee?.lunchEnd ?? '',
     // ── Acceso al Sistema
     password:         '',
     roleId:           employee?.roleId            ?? '',
@@ -1479,6 +1482,9 @@ function EmployeeModal({
       data.pin = form.pin;
       data.attendancePin = form.pin;
     }
+    if (form.shift === 'custom' && form.workDays.length > 0) data.workDays = form.workDays;
+    if (form.lunchStart) data.lunchStart = form.lunchStart;
+    if (form.lunchEnd) data.lunchEnd = form.lunchEnd;
     if (!isEdit && form.password) data.password = form.password;
     if (isEdit) data.active = form.active;
     onSubmit(data);
@@ -1724,6 +1730,56 @@ function EmployeeModal({
                             required
                             className="w-full border border-indigo-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
                           />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-indigo-700 mb-1">Colación — salida (opcional)</label>
+                          <input
+                            type="time"
+                            value={form.lunchStart}
+                            onChange={e => setForm(f => ({ ...f, lunchStart: e.target.value }))}
+                            className="w-full border border-indigo-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-indigo-700 mb-1">Colación — entrada (opcional)</label>
+                          <input
+                            type="time"
+                            value={form.lunchEnd}
+                            onChange={e => setForm(f => ({ ...f, lunchEnd: e.target.value }))}
+                            className="w-full border border-indigo-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <label className="block text-xs font-medium text-indigo-700 mb-1">Días de trabajo (opcional)</label>
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              { label: 'L', value: 'mon' },
+                              { label: 'M', value: 'tue' },
+                              { label: 'M', value: 'wed' },
+                              { label: 'J', value: 'thu' },
+                              { label: 'V', value: 'fri' },
+                              { label: 'S', value: 'sat' },
+                              { label: 'D', value: 'sun' },
+                            ].map(d => (
+                              <button
+                                key={d.value}
+                                type="button"
+                                onClick={() => setForm(f => ({
+                                  ...f,
+                                  workDays: f.workDays.includes(d.value)
+                                    ? f.workDays.filter((x: string) => x !== d.value)
+                                    : [...f.workDays, d.value],
+                                }))}
+                                className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${
+                                  form.workDays.includes(d.value)
+                                    ? 'bg-indigo-600 text-white border-indigo-600'
+                                    : 'bg-white text-indigo-700 border-indigo-300 hover:border-indigo-500'
+                                }`}
+                              >
+                                {d.label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     )}

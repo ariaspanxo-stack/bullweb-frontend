@@ -11,14 +11,15 @@ import api from '@/services/api';
  *
  * - Reutiliza EXACTAMENTE el patrón de llamada de PaymentRequiredOverlay:
  *   GET /billing/status con el cliente `api` y éxito si status es ACTIVE o TRIAL.
- * - Polling cada 4s (inmediato al montar), máximo 15 intentos (~60s).
+ * - Polling escalonado #143: cada 5s durante los primeros 90s desde el montaje,
+ *   luego cada 30s; máximo 22 intentos (~3.5 min).
  * - Estados: confirmando → éxito | sesión (401/403, tras 3 fallos) | paciente (timeout).
  * - Renderiza sin autenticación (ruta pública): si la sesión expiró, muestra
  *   aviso y link a /login.
  */
 type Estado = 'confirmando' | 'exito' | 'sesion' | 'paciente';
 
-const MAX_INTENTOS = 15;
+const MAX_INTENTOS = 22; // #143: 18 intentos rápidos (90s) + 4 lentos (2min) ≈ 3.5 min
 const MAX_FALLOS_AUTH = 3;
 
 export default function PagoResultado() {
@@ -28,6 +29,7 @@ export default function PagoResultado() {
   const fallosAuthRef             = useRef(0);
 
   useEffect(() => {
+    const inicio = Date.now(); // #143: ancla del schedule escalonado (5s → 30s a los 90s)
     let desmontado = false;   // corte legítimo (unmount): no seguir polleando
     let enVuelo    = false;   // evita cadenas paralelas de polling (visibility + timer)
 
@@ -87,7 +89,10 @@ export default function PagoResultado() {
 
         // HUECO C (#129): bucle setTimeout encadenado — verificar() se agenda a sí
         // misma al final de cada ciclo (sobrevive al throttle móvil mejor que setInterval).
-        timerRef.current = setTimeout(verificar, 4000);
+        // #143: schedule escalonado — 5s durante los primeros 90s desde el montaje,
+        // luego 30s (condición de éxito, fallos auth, timeout y cleanup intactos).
+        const espera = Date.now() - inicio < 90000 ? 5000 : 30000;
+        timerRef.current = setTimeout(verificar, espera);
       } finally {
         enVuelo = false;
       }

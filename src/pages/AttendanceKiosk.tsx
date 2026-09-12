@@ -17,16 +17,19 @@ export default function AttendanceKiosk() {
   const [dateStr,        setDateStr]        = useState('');
   const [todaySummary,   setTodaySummary]   = useState<TodaySummary | null>(null);
   const [recentActions,  setRecentActions]  = useState<RecentAction[]>([]);
+  // Hotfix #146 — tenantRef: acepta ?tenant=<slug|uuid> (canónico) y legado ?tid=<uuid>.
+  // Se envía tal cual al backend, que resuelve slug→UUID y aísla todas las queries.
   const [tenantId,       setTenantId]       = useState<string | null>(() => {
-    // Prioridad: ?tid en URL (cuando admin abre el kiosco desde el panel)
-    const urlTid = new URLSearchParams(window.location.search).get('tid');
-    if (urlTid) {
-      localStorage.setItem('bullweb-kiosk-tenant', urlTid);
-      return urlTid;
+    const qs     = new URLSearchParams(window.location.search);
+    const urlRef = qs.get('tenant') || qs.get('tid');
+    if (urlRef) {
+      localStorage.setItem('bullweb-kiosk-tenant', urlRef);
+      return urlRef;
     }
     return localStorage.getItem('bullweb-kiosk-tenant');
   });
   const tenantIdRef = useRef<string | null>(
+    new URLSearchParams(window.location.search).get('tenant') ||
     new URLSearchParams(window.location.search).get('tid') ||
     localStorage.getItem('bullweb-kiosk-tenant')
   );
@@ -62,17 +65,11 @@ export default function AttendanceKiosk() {
   const fetchToken = useCallback(async () => {
     try {
       const res = await attendancePublicService.getToken(tenantIdRef.current ?? undefined);
-      const { token: t, expiresIn: exp, tenantId: tid } = res.data.data;
+      const { token: t, expiresIn: exp } = res.data.data;
       setToken(t);
       setExpiresIn(exp);
       setLoadError(false);
-      if (tid && !tenantIdRef.current) {
-        // Sólo persiste si no teníamos tenantId previo (no sobreescribir con null del server)
-        setTenantId(tid);
-        tenantIdRef.current = tid;
-        localStorage.setItem('bullweb-kiosk-tenant', tid);
-      }
-      const url     = `${BASE_URL}/checkin?t=${t}${tenantIdRef.current ? `&tid=${tenantIdRef.current}` : ''}`;
+      const url     = `${BASE_URL}/checkin?t=${t}${tenantIdRef.current ? `&tenant=${tenantIdRef.current}` : ''}`;
       const dataUrl = await QRCode.toDataURL(url, {
         width: 500,
         margin: 2,

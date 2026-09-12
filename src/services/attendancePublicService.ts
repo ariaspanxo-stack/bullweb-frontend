@@ -39,35 +39,45 @@ export interface TodaySummary {
 // Cliente sin interceptor de auth (endpoints públicos de asistencia)
 const publicApi = axios.create({ baseURL: API_BASE });
 
+// Hotfix #146 — tenantRef: slug o UUID del tenant del kiosco. TODA llamada
+// pública lo envía (el backend resuelve slug→UUID y aísla las queries).
 export const attendancePublicService = {
-  getToken: (tenantId?: string) =>
+  getToken: (tenantRef?: string) =>
     publicApi.get<{ success: boolean; data: { token: string; expiresIn: number; windowSeconds: number; tenantId: string | null } }>(
-      tenantId ? `/attendance/token?tenantId=${tenantId}` : '/attendance/token'
+      tenantRef ? `/attendance/token?tenant=${encodeURIComponent(tenantRef)}` : '/attendance/token'
     ),
 
-  getEmployees: (tenantId: string) =>
-    publicApi.get<{ success: boolean; data: Employee[] }>(`/attendance/employees?tenantId=${tenantId}`),
+  getEmployees: (tenantRef: string) =>
+    publicApi.get<{ success: boolean; data: Employee[] }>(`/attendance/employees?tenant=${encodeURIComponent(tenantRef)}`),
 
-  checkin: (employeeId: string, token: string, notes?: string, pin?: string, lat?: number | null, lon?: number | null) =>
+  checkin: (
+    employeeId: string,
+    token:      string,
+    tenantRef:  string,
+    notes?:     string,
+    pin?:       string,
+    lat?:       number | null,
+    lon?:       number | null,
+  ) =>
     publicApi.post<{ success: boolean; data: { type: 'ENTRY' | 'EXIT'; employeeName: string; shift: string | null } }>('/attendance/checkin', {
-      employeeId, token, notes, pin, lat, lon,
+      employeeId, token, tenant: tenantRef, notes, pin, lat, lon,
     }),
 
-  startColacion: (employeeId: string) =>
-    publicApi.post<{ success: boolean; data: { message: string; entryId: string } }>('/attendance/colacion/start', { employeeId }),
+  startColacion: (employeeId: string, tenantRef: string) =>
+    publicApi.post<{ success: boolean; data: { message: string; entryId: string } }>('/attendance/colacion/start', { employeeId, tenant: tenantRef }),
 
-  endColacion: (employeeId: string) =>
-    publicApi.post<{ success: boolean; data: { message: string; minutos: number } }>('/attendance/colacion/end', { employeeId }),
+  endColacion: (employeeId: string, tenantRef: string) =>
+    publicApi.post<{ success: boolean; data: { message: string; minutos: number } }>('/attendance/colacion/end', { employeeId, tenant: tenantRef }),
 
-  getEmployeeStatus: (employeeId: string) =>
-    publicApi.get<{ success: boolean; data: EmployeeStatus }>(`/attendance/employee-status/${employeeId}`),
+  getEmployeeStatus: (employeeId: string, tenantRef: string) =>
+    publicApi.get<{ success: boolean; data: EmployeeStatus }>(`/attendance/employee-status/${employeeId}?tenant=${encodeURIComponent(tenantRef)}`),
 
-  getTodayKiosk: (tenantId: string) =>
-    publicApi.get<{ success: boolean; data: KioskEmployee[] }>(`/attendance/today-kiosk?tenantId=${tenantId}`),
+  getTodayKiosk: (tenantRef: string) =>
+    publicApi.get<{ success: boolean; data: KioskEmployee[] }>(`/attendance/today-kiosk?tenant=${encodeURIComponent(tenantRef)}`),
 
-  getTodaySummary: (tenantId: string) =>
-    publicApi.get<{ success: boolean; data: TodaySummary }>(`/attendance/today-summary?tenantId=${tenantId}`),
+  getTodaySummary: (tenantRef: string) =>
+    publicApi.get<{ success: boolean; data: TodaySummary }>(`/attendance/today-summary?tenant=${encodeURIComponent(tenantRef)}`),
 
-  getRecentActions: (limit = 8, tenantId: string) =>
-    publicApi.get<{ success: boolean; data: RecentAction[] }>(`/attendance/recent-actions?limit=${limit}&tenantId=${tenantId}`),
+  getRecentActions: (limit = 8, tenantRef: string) =>
+    publicApi.get<{ success: boolean; data: RecentAction[] }>(`/attendance/recent-actions?limit=${limit}&tenant=${encodeURIComponent(tenantRef)}`),
 };

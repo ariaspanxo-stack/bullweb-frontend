@@ -97,7 +97,10 @@ export default function AttendanceCheckin() {
   const [params] = useSearchParams();
   const token = params.get('t') ?? '';
   const empId = params.get('emp') ?? '';
-  const urlTid = params.get('tid') ?? '';
+  // Hotfix #146 — ?tenant=<slug|uuid> canónico; legado ?tid=<uuid> del QR viejo
+  const tenantRef = params.get('tenant') || params.get('tid') || '';
+  // Estado del tenant resuelto (UUID que devuelve el backend tras resolver slug)
+  const [tenantResolved, setTenantResolved] = useState('');
 
   const [employees,    setEmployees]    = useState<Employee[]>([]);
   const [loading,      setLoading]      = useState(true);
@@ -136,11 +139,13 @@ export default function AttendanceCheckin() {
   }, []);
 
   useEffect(() => {
-    // urlTid viene del QR (?tid=UUID). Si no está (acceso directo), getToken() lo obtiene del server.
-    attendancePublicService.getToken(urlTid || undefined)
+    // tenantRef viene del QR (?tenant=slug o UUID). El backend lo resuelve y
+    // devuelve el UUID definitivo, que se usa para el resto de llamadas.
+    attendancePublicService.getToken(tenantRef || undefined)
       .then(res => {
-        const tid = urlTid || res.data.data.tenantId;
+        const tid = res.data.data.tenantId;
         if (!tid) throw new Error('tenantId no disponible');
+        setTenantResolved(tid);
         return attendancePublicService.getEmployees(tid);
       })
       .then(res => setEmployees(res.data.data ?? []))
@@ -184,7 +189,7 @@ export default function AttendanceCheckin() {
     setStatusLoading(true);
     setStep('preview');
     try {
-      const res = await attendancePublicService.getEmployeeStatus(employee.id);
+      const res = await attendancePublicService.getEmployeeStatus(employee.id, tenantResolved);
       setEmpStatus(res.data.data);
     } catch {
       setEmpStatus(null);
@@ -204,19 +209,19 @@ export default function AttendanceCheckin() {
     try {
       if (action === 'checkin') {
         const res = await attendancePublicService.checkin(
-          selected!.id, token, undefined, pin || undefined,
+          selected!.id, token, tenantResolved, undefined, pin || undefined,
           geoLocation?.lat ?? null, geoLocation?.lon ?? null,
         );
         setResult(res.data.data);
         setColResult(null);
         playCheckinSound(res.data.data.type === 'ENTRY' ? 'entry' : 'exit');
       } else if (action === 'colacion_start') {
-        const res = await attendancePublicService.startColacion(selected!.id);
+        const res = await attendancePublicService.startColacion(selected!.id, tenantResolved);
         setColResult(res.data.data);
         setResult(null);
         playCheckinSound('colacion');
       } else {
-        const res = await attendancePublicService.endColacion(selected!.id);
+        const res = await attendancePublicService.endColacion(selected!.id, tenantResolved);
         setColResult(res.data.data);
         setResult(null);
         playCheckinSound('colacion');

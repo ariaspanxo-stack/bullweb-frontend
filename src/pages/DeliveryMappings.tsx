@@ -180,10 +180,8 @@ export default function DeliveryMappings() {
         api.get('/integrations/delivery/unmapped-items', { params: { platform } }).catch((e) => {
           throw e;
         }),
-        api.get('/products').catch(async () => {
-          const r = await api.get('/menu/products', { params: { perPage: 500 } });
-          return r;
-        }),
+        // Hotfix #155 — fin de la ruta fantasma /api/products: carga directa del endpoint real
+        api.get('/menu/products', { params: { perPage: 500 } }),
       ]);
 
       const state = stateRes.data?.data ?? stateRes.data ?? {};

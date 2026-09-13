@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Plus,
+  Minus,
   X,
   ClipboardList,
   Link2,
@@ -46,6 +47,9 @@ interface Product {
   name: string;
   sku?: string | null;
   price?: number;
+  emoji?: string | null;
+  image?: string | null;
+  available?: boolean;
 }
 
 interface ManualItem {
@@ -54,6 +58,16 @@ interface ManualItem {
   productName: string;
   quantity: number;
   unitPrice: number;
+  emoji?: string | null;
+  image?: string | null;
+}
+
+// Hotfix #151 — fila de comisión nombrable: monto fijo CLP o % del subtotal
+interface CommissionRow {
+  key: string;
+  name: string;
+  type: 'amount' | 'percent';
+  value: string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -106,11 +120,12 @@ export default function DeliveryMappings() {
 
   // Pedido manual
   const [manualItems, setManualItems] = useState<ManualItem[]>([]);
-  const [pickProductId, setPickProductId] = useState('');
-  const [pickQty, setPickQty] = useState(1);
+  const [gridQuery, setGridQuery] = useState('');
   const [manualCustomer, setManualCustomer] = useState('');
   const [manualNotes, setManualNotes] = useState('');
-  const [platformFee, setPlatformFee] = useState('');
+  // Hotfix #151 — comisiones múltiples: base de plataforma + filas nombrables
+  const [commissionBase, setCommissionBase] = useState('');
+  const [commissionRows, setCommissionRows] = useState<CommissionRow[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const platformLabel = PLATFORMS.find((p) => p.slug === platform)?.label ?? platform;
@@ -146,6 +161,9 @@ export default function DeliveryMappings() {
         name: String(p.name ?? ''),
         sku: (p.sku as string | null | undefined) ?? null,
         price: typeof p.price === 'number' ? p.price : undefined,
+        emoji: (p.emoji as string | null | undefined) ?? null,
+        image: (p.image as string | null | undefined) ?? null,
+        available: typeof p.available === 'boolean' ? p.available : undefined,
       }));
 
       setMappings(mapList);
@@ -276,36 +294,62 @@ export default function DeliveryMappings() {
     else toast('No se encontraron coincidencias automáticas.', { icon: 'ℹ️' });
   };
 
-  // ── Pedido manual ──────────────────────────────────────────────────────────
-  const addManualItem = () => {
-    if (!pickProductId) {
-      toast.error('Selecciona un producto.');
-      return;
-    }
-    const qty = Math.max(1, Math.round(Number(pickQty) || 1));
-    const prod = products.find((p) => p.id === pickProductId);
+  // ── Pedido manual (Hotfix #152: selección visual — click agrega / suma +1) ──
+  const addProductToOrder = (productId: string) => {
+    const prod = products.find((p) => p.id === productId);
     if (!prod) return;
-    const price = prod.price ?? 0;
-    setManualItems((prev) => [
-      ...prev,
-      {
-        key: `${pickProductId}-${Date.now()}`,
-        productId: prod.id,
-        productName: prod.name,
-        quantity: qty,
-        unitPrice: price,
-      },
-    ]);
-    setPickProductId('');
-    setPickQty(1);
+    setManualItems((prev) => {
+      const existing = prev.find((x) => x.productId === productId);
+      if (existing) {
+        return prev.map((x) =>
+          x.key === existing.key ? { ...x, quantity: x.quantity + 1 } : x
+        );
+      }
+      return [
+        ...prev,
+        {
+          key: `${productId}-${Date.now()}`,
+          productId: prod.id,
+          productName: prod.name,
+          quantity: 1,
+          unitPrice: prod.price ?? 0,
+          emoji: prod.emoji ?? null,
+          image: prod.image ?? null,
+        },
+      ];
+    });
+  };
+
+  // El − no baja de 1; para eliminar la línea está el botón quitar
+  const changeManualQty = (key: string, delta: number) => {
+    setManualItems((prev) =>
+      prev.map((x) =>
+        x.key === key ? { ...x, quantity: Math.max(1, x.quantity + delta) } : x
+      )
+    );
   };
 
   const manualSubtotal = useMemo(
     () => manualItems.reduce((acc, it) => acc + it.quantity * it.unitPrice, 0),
     [manualItems]
   );
-  const manualFee = Math.max(0, Math.round(Number(platformFee) || 0));
+  // Hotfix #151 — comisión total = base + filas nombrables (monto o % del subtotal), CLP redondeado
+  const manualFee = useMemo(
+    () =>
+      Math.max(
+        0,
+        Math.round(
+          (Number(commissionBase) || 0) +
+            commissionRows.reduce((acc, r) => {
+              const v = Number(r.value) || 0;
+              return acc + (r.type === 'percent' ? (manualSubtotal * v) / 100 : v);
+            }, 0)
+        )
+      ),
+    [commissionBase, commissionRows, manualSubtotal]
+  );
   const manualTotal = manualSubtotal + manualFee;
+  const manualNet = manualSubtotal - manualFee;
 
   const submitManualOrder = async () => {
     if (manualItems.length === 0) {
@@ -334,7 +378,8 @@ export default function DeliveryMappings() {
       setManualItems([]);
       setManualCustomer('');
       setManualNotes('');
-      setPlatformFee('');
+      setCommissionBase('');
+      setCommissionRows([]);
       toast.success(`Pedido ${orderNumber} creado y comanda enviada a cocina.`);
     } catch (e: unknown) {
       const msg =
@@ -359,6 +404,28 @@ export default function DeliveryMappings() {
         it.externalId.toLowerCase().includes(q)
     );
   }, [items, query]);
+
+  // Hotfix #152 — productos mapeados a la plataforma activa (priorizados en la grilla)
+  const mappedProductIds = useMemo(
+    () => new Set(mappings.map((m) => m.product_id)),
+    [mappings]
+  );
+
+  // Hotfix #152 — grilla filtrante: solo activos, por nombre/código, mapeados primero
+  const visibleProducts = useMemo(() => {
+    const q = gridQuery.trim().toLowerCase();
+    const list = products
+      .filter((p) => p.available !== false)
+      .filter(
+        (p) =>
+          !q ||
+          p.name.toLowerCase().includes(q) ||
+          (p.sku ?? '').toLowerCase().includes(q)
+      );
+    return [...list].sort(
+      (a, b) => Number(mappedProductIds.has(b.id)) - Number(mappedProductIds.has(a.id))
+    );
+  }, [products, gridQuery, mappedProductIds]);
 
   const inputCls =
     'w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-sm !text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500';
@@ -700,45 +767,100 @@ export default function DeliveryMappings() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Construcción del pedido */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Hotfix #152 — Selección visual de productos (grilla clickeable) */}
               <div className="bg-white/5 border border-white/10 rounded-xl p-4">
                 <h3 className="text-sm font-semibold text-white mb-1">
                   Agregar productos — pedido de {platformLabel}
                 </h3>
                 <p className="text-xs text-gray-400 mb-3">
-                  Busca el producto de tu carta por nombre o código, indica la cantidad y agrégalo
-                  al pedido.
+                  Toca un producto para agregarlo (tocar de nuevo suma +1). Los mapeados a{' '}
+                  {platformLabel} aparecen primero.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <select
-                    value={pickProductId}
-                    onChange={(e) => setPickProductId(e.target.value)}
-                    className={selectCls}
-                  >
-                    <option value="">— Buscar producto interno —</option>
-                    {products.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name}
-                        {p.sku ? ` (${p.sku})` : ''}
-                        {typeof p.price === 'number' ? ` — ${fmtCLP(p.price)}` : ''}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="number"
-                    min={1}
-                    value={pickQty}
-                    onChange={(e) => setPickQty(Number(e.target.value))}
-                    className={inputCls + ' sm:w-24 text-center'}
-                  />
-                  <button
-                    onClick={addManualItem}
-                    disabled={!pickProductId}
-                    className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 disabled:bg-white/10 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Agregar
-                  </button>
-                </div>
+                {products.length === 0 ? (
+                  <div className="py-10 text-center">
+                    <div className="w-14 h-14 mx-auto bg-white/5 rounded-full flex items-center justify-center mb-3 border border-white/10">
+                      <Search className="w-6 h-6 text-gray-500" />
+                    </div>
+                    <p className="text-sm text-gray-300 font-medium mb-1">
+                      Agrega productos a tu carta primero
+                    </p>
+                    <p className="text-xs text-gray-500 mb-4">
+                      Tu carta no tiene productos para vender por delivery.
+                    </p>
+                    <Link
+                      to="/products"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 transition-colors"
+                    >
+                      Ir a Productos
+                    </Link>
+                  </div>
+                ) : (
+                  <>
+                    <div className="relative mb-3">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                      <input
+                        type="text"
+                        value={gridQuery}
+                        onChange={(e) => setGridQuery(e.target.value)}
+                        placeholder="Buscar por nombre o código…"
+                        className={inputCls + ' !pl-9'}
+                      />
+                    </div>
+                    {visibleProducts.length === 0 ? (
+                      <div className="py-8 text-center text-sm text-gray-400">
+                        No se encontraron productos con “{gridQuery}”.
+                      </div>
+                    ) : (
+                      <div className="max-h-80 overflow-y-auto pr-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                        {visibleProducts.map((p) => {
+                          const isMapped = mappedProductIds.has(p.id);
+                          const inOrderItem = manualItems.find((x) => x.productId === p.id);
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => addProductToOrder(p.id)}
+                              className={`relative text-left p-2.5 rounded-xl border transition-all active:scale-[0.97] ${
+                                inOrderItem
+                                  ? 'border-brand-500 bg-brand-500/10 ring-1 ring-brand-500/40'
+                                  : 'border-white/10 bg-white/5 hover:border-brand-500/40 hover:bg-white/10'
+                              }`}
+                            >
+                              {isMapped && (
+                                <span className="absolute top-1.5 right-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">
+                                  mapeado
+                                </span>
+                              )}
+                              {inOrderItem && (
+                                <span className="absolute bottom-1.5 right-1.5 w-5 h-5 rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center tabular-nums">
+                                  {inOrderItem.quantity}
+                                </span>
+                              )}
+                              <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden mb-1.5">
+                                {p.image ? (
+                                  <img
+                                    src={p.image}
+                                    alt=""
+                                    loading="lazy"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <span className="text-lg leading-none">{p.emoji ?? '🍽️'}</span>
+                                )}
+                              </div>
+                              <p className="text-xs font-medium text-white leading-tight line-clamp-2 break-words pr-6">
+                                {p.name}
+                              </p>
+                              <p className="text-[11px] text-brand-400 font-semibold tabular-nums mt-0.5">
+                                {typeof p.price === 'number' ? fmtCLP(p.price) : '—'}
+                              </p>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
               {/* Items del pedido */}
@@ -753,24 +875,55 @@ export default function DeliveryMappings() {
                 ) : (
                   <div className="divide-y divide-white/5">
                     {manualItems.map((it) => (
-                      <div
-                        key={it.key}
-                        className="flex items-center gap-3 px-4 py-3"
-                      >
+                      <div key={it.key} className="flex items-center gap-3 px-4 py-3">
+                        <div className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {it.image ? (
+                            <img
+                              src={it.image}
+                              alt=""
+                              loading="lazy"
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-lg leading-none">{it.emoji ?? '🍽️'}</span>
+                          )}
+                        </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate">{it.productName}</p>
-                          <p className="text-xs text-gray-400">
-                            {it.quantity} × {fmtCLP(it.unitPrice)}
+                          <p className="text-sm font-medium text-white truncate">
+                            {it.productName}
+                          </p>
+                          <p className="text-xs text-gray-400 tabular-nums">
+                            {fmtCLP(it.unitPrice)} c/u
                           </p>
                         </div>
-                        <p className="text-sm font-semibold text-white tabular-nums">
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => changeManualQty(it.key, -1)}
+                            disabled={it.quantity <= 1}
+                            className="w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+                            title="Restar (mínimo 1)"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="w-8 text-center text-sm font-semibold text-white tabular-nums">
+                            {it.quantity}
+                          </span>
+                          <button
+                            onClick={() => changeManualQty(it.key, 1)}
+                            className="w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 flex items-center justify-center transition-colors"
+                            title="Sumar"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-sm font-semibold text-white tabular-nums flex-shrink-0 w-20 text-right">
                           {fmtCLP(it.quantity * it.unitPrice)}
                         </p>
                         <button
                           onClick={() =>
                             setManualItems((prev) => prev.filter((x) => x.key !== it.key))
                           }
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                          className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0"
                           title="Quitar"
                         >
                           <X className="w-4 h-4" />
@@ -819,20 +972,124 @@ export default function DeliveryMappings() {
                     <span>Subtotal</span>
                     <span className="tabular-nums">{fmtCLP(manualSubtotal)}</span>
                   </div>
-                  <div className="flex justify-between items-center gap-2 text-gray-300">
-                    <span className="whitespace-nowrap">Comisión {platformLabel}</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={platformFee}
-                      onChange={(e) => setPlatformFee(e.target.value)}
-                      placeholder="0"
-                      className="w-28 px-2 py-1 rounded-lg border border-white/10 bg-white/5 text-sm !text-white text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-500"
-                    />
+
+                  {/* Hotfix #151 — Comisiones múltiples: base + filas nombrables monto/% */}
+                  <div className="border-t border-white/10 pt-2 mt-2 space-y-2">
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+                      Comisiones
+                    </p>
+                    <div className="flex justify-between items-center gap-2 text-gray-300">
+                      <span className="whitespace-nowrap text-xs">Base {platformLabel}</span>
+                      <input
+                        type="number"
+                        min={0}
+                        value={commissionBase}
+                        onChange={(e) => setCommissionBase(e.target.value)}
+                        placeholder="0"
+                        className="w-28 px-2 py-1 rounded-lg border border-white/10 bg-white/5 text-sm !text-white text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-500"
+                      />
+                    </div>
+                    {commissionRows.map((row) => {
+                      const v = Number(row.value) || 0;
+                      const amount =
+                        row.type === 'percent' ? Math.round((manualSubtotal * v) / 100) : v;
+                      return (
+                        <div
+                          key={row.key}
+                          className="flex flex-col gap-1 bg-white/[0.03] border border-white/10 rounded-lg p-2"
+                        >
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              value={row.name}
+                              onChange={(e) =>
+                                setCommissionRows((prev) =>
+                                  prev.map((r) =>
+                                    r.key === row.key ? { ...r, name: e.target.value } : r
+                                  )
+                                )
+                              }
+                              placeholder="Nombre (ej: Propina driver)"
+                              className="flex-1 min-w-0 px-2 py-1 rounded-md border border-white/10 bg-white/5 text-xs !text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                            />
+                            <button
+                              onClick={() =>
+                                setCommissionRows((prev) =>
+                                  prev.filter((r) => r.key !== row.key)
+                                )
+                              }
+                              className="p-1 rounded-md text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0"
+                              title="Quitar comisión"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <select
+                              value={row.type}
+                              onChange={(e) =>
+                                setCommissionRows((prev) =>
+                                  prev.map((r) =>
+                                    r.key === row.key
+                                      ? { ...r, type: e.target.value as 'amount' | 'percent' }
+                                      : r
+                                  )
+                                )
+                              }
+                              className={selectCls + ' !py-1 !text-xs w-20'}
+                            >
+                              <option value="amount">$ CLP</option>
+                              <option value="percent">% subtot.</option>
+                            </select>
+                            <input
+                              type="number"
+                              min={0}
+                              value={row.value}
+                              onChange={(e) =>
+                                setCommissionRows((prev) =>
+                                  prev.map((r) =>
+                                    r.key === row.key ? { ...r, value: e.target.value } : r
+                                  )
+                                )
+                              }
+                              placeholder="0"
+                              className="flex-1 min-w-0 px-2 py-1 rounded-md border border-white/10 bg-white/5 text-xs !text-white text-right tabular-nums focus:outline-none focus:ring-1 focus:ring-brand-500"
+                            />
+                          </div>
+                          <p className="text-[11px] text-gray-400 text-right tabular-nums">
+                            = {fmtCLP(amount)}
+                            {row.type === 'percent' && v > 0 ? ` (${v}% del subtotal)` : ''}
+                          </p>
+                        </div>
+                      );
+                    })}
+                    <button
+                      onClick={() =>
+                        setCommissionRows((prev) => [
+                          ...prev,
+                          { key: `c-${Date.now()}`, name: '', type: 'amount', value: '' },
+                        ])
+                      }
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-brand-400 bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/20 transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Agregar comisión
+                    </button>
+                    <div className="flex justify-between text-gray-300 pt-1">
+                      <span>Total comisiones</span>
+                      <span className="tabular-nums text-amber-300">{fmtCLP(manualFee)}</span>
+                    </div>
                   </div>
+
                   <div className="border-t border-white/10 pt-2 flex justify-between font-bold text-white">
                     <span>Total</span>
                     <span className="tabular-nums">{fmtCLP(manualTotal)}</span>
+                  </div>
+                  <div className="flex justify-between items-center rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
+                    <span className="font-bold text-emerald-300 text-sm">NETO PARA TI</span>
+                    <span className="font-bold text-emerald-300 tabular-nums text-base">
+                      {fmtCLP(manualNet)}
+                    </span>
                   </div>
                 </div>
                 <button

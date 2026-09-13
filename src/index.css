@@ -296,6 +296,34 @@
   animation: ring 1s ease-in-out;
 }
 
+/* ── Hotfix #153 — Ticket interno Mapeo Delivery: impresión limpia ──
+   El contenedor #delivery-ticket-print es lo ÚNICO visible al imprimir;
+   el resto de la UI (marcada .no-print desde el componente) se oculta. */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  #delivery-ticket-print,
+  #delivery-ticket-print * {
+    visibility: visible !important;
+  }
+  #delivery-ticket-print {
+    position: fixed !important;
+    inset: 0 auto auto 0 !important;
+    width: 100% !important;
+    max-width: 80mm !important;
+    margin: 0 !important;
+    padding: 4mm !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    color: #000 !important;
+    box-shadow: none !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
 /* ── Force light inputs: modal Clientes (tema oscuro no pisa estilos) ── */
 .force-light-inputs input,
 .force-light-inputs select,

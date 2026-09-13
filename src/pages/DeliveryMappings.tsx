@@ -12,6 +12,9 @@ import {
   X,
   ClipboardList,
   Link2,
+  History,
+  Printer,
+  PackageCheck,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '@/services/api';
@@ -70,6 +73,20 @@ interface CommissionRow {
   value: string;
 }
 
+// Hotfix #153 — historial propio de la sección (solo platform_orders)
+interface HistoryItem {
+  id: string;
+  platformOrderId: string;
+  platform: string;
+  status: string | null;
+  customerName: string | null;
+  notes: string | null;
+  items: Array<{ productId: string | null; nombre: string; qty: number; precioUnit: number; subtotal: number }>;
+  commissions: Array<{ name?: string; type?: string; value?: number; amount?: number }>;
+  totals: { subtotal: number | null; totalComisiones: number | null; neto: number | null; total: number | null };
+  createdAt: string | null;
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const PLATFORMS: Array<{ slug: PlatformSlug; label: string; badge: string }> = [
@@ -94,7 +111,30 @@ function extractArray<T>(resp: unknown): T[] {
 // ─── Componente ──────────────────────────────────────────────────────────────
 
 export default function DeliveryMappings() {
-  const [tab, setTab] = useState<'mappings' | 'manual'>('mappings');
+  const [tab, setTab] = useState<'mappings' | 'manual' | 'history'>('mappings');
+
+  // Hotfix #153 — toggle de inventario por tenant (deliveryManualDeductStock)
+  const [deductStock, setDeductStock] = useState(false);
+  const [toggleSaving, setToggleSaving] = useState(false);
+  const [toggleMsg, setToggleMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+
+  // Hotfix #153 — historial propio (paginación simple)
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [historyTotal, setHistoryTotal] = useState(0);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+
+  // Hotfix #153 — ticket imprimible interno (modal propio de la sección)
+  const [ticketData, setTicketData] = useState<{
+    platform: string;
+    createdAt: string | null;
+    customerName: string | null;
+    notes: string | null;
+    items: HistoryItem['items'];
+    commissions: HistoryItem['commissions'];
+    totals: HistoryItem['totals'];
+  } | null>(null);
 
   // Plataforma seleccionada (slug minúscula)
   const [platform, setPlatform] = useState<PlatformSlug>('rappi');
@@ -186,6 +226,63 @@ export default function DeliveryMappings() {
   useEffect(() => {
     loadAll();
   }, [loadAll]);
+
+  // Hotfix #153 — estado inicial del toggle desde GET /delivery/settings
+  useEffect(() => {
+    api
+      .get('/integrations/delivery/settings')
+      .then((r) => setDeductStock(Boolean(r.data?.data?.deliveryManualDeductStock)))
+      .catch(() => {/* toggle queda en default OFF si falla la carga */});
+  }, []);
+
+  // Hotfix #153 — PATCH del toggle con feedback inline
+  const handleToggleDeductStock = async (next: boolean) => {
+    setToggleSaving(true);
+    setToggleMsg(null);
+    try {
+      await api.patch('/integrations/delivery/settings', { deliveryManualDeductStock: next });
+      setDeductStock(next);
+      setToggleMsg({ kind: 'ok', text: next ? 'Guardado: se descontará stock' : 'Guardado: sin descuento de stock' });
+    } catch (e: unknown) {
+      const msg =
+        (e as { response?: { data?: { message?: string; error?: string } } })?.response?.data
+          ?.message ||
+        (e as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        'Error al guardar la configuración.';
+      setToggleMsg({ kind: 'err', text: msg });
+    } finally {
+      setToggleSaving(false);
+    }
+  };
+
+  // Hotfix #153 — cargar historial (GET /delivery/manual-orders)
+  const loadHistory = useCallback(async (page: number) => {
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const r = await api.get('/integrations/delivery/manual-orders', {
+        params: { page, perPage: 20 },
+      });
+      const d = r.data?.data ?? r.data ?? {};
+      setHistory(Array.isArray(d.orders) ? d.orders : []);
+      setHistoryTotal(Number(d.total) || 0);
+      setHistoryPage(Number(d.page) || page);
+    } catch (e: unknown) {
+      const msg =
+        (e as { response?: { data?: { message?: string; error?: string } } })?.response?.data
+          ?.message ||
+        (e as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        'No se pudo cargar el historial.';
+      setHistoryError(msg);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (tab === 'history') loadHistory(historyPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab, historyPage, loadHistory]);
 
   // ── Guardar mapeo de un item detectado (patrón f6c582d) ────────────────────
   const handleSave = async (item: UnmappedItem) => {
@@ -358,6 +455,24 @@ export default function DeliveryMappings() {
     }
     setSubmitting(true);
     try {
+      // Hotfix #153 — desglose de comisiones #151 viaja completo para el ticket
+      const commissionsPayload = [
+        ...(Number(commissionBase) > 0
+          ? [{ name: `Base ${platformLabel}`, type: 'amount', value: Number(commissionBase) || 0, amount: Number(commissionBase) || 0 }]
+          : []),
+        ...commissionRows
+          .filter((r) => (Number(r.value) || 0) > 0)
+          .map((r) => {
+            const v = Number(r.value) || 0;
+            const amount = r.type === 'percent' ? Math.round((manualSubtotal * v) / 100) : v;
+            return {
+              name: r.name.trim() || 'Comisión',
+              type: r.type,
+              value: v,
+              amount,
+            };
+          }),
+      ];
       const res = await api.post('/integrations/delivery/manual-order', {
         platform,
         items: manualItems.map((it) => ({
@@ -371,16 +486,39 @@ export default function DeliveryMappings() {
           platformFee: manualFee,
           total: manualTotal,
         },
+        commissions: commissionsPayload,
         customerName: manualCustomer.trim() || undefined,
         notes: manualNotes.trim() || undefined,
       });
-      const orderNumber = res.data?.data?.orderNumber ?? '';
+      // Hotfix #153 — post-confirma autocontenido: nada de POS/comanda.
+      // Ticket listo con los datos locales (+neto del backend si vino).
+      const backendNeto = res.data?.data?.neto;
+      setTicketData({
+        platform,
+        createdAt: new Date().toISOString(),
+        customerName: manualCustomer.trim() || null,
+        notes: manualNotes.trim() || null,
+        items: manualItems.map((it) => ({
+          productId: it.productId,
+          nombre: it.productName,
+          qty: it.quantity,
+          precioUnit: it.unitPrice,
+          subtotal: it.quantity * it.unitPrice,
+        })),
+        commissions: commissionsPayload,
+        totals: {
+          subtotal: manualSubtotal,
+          totalComisiones: manualFee,
+          neto: typeof backendNeto === 'number' ? backendNeto : manualNet,
+          total: manualTotal,
+        },
+      });
       setManualItems([]);
       setManualCustomer('');
       setManualNotes('');
       setCommissionBase('');
       setCommissionRows([]);
-      toast.success(`Pedido ${orderNumber} creado y comanda enviada a cocina.`);
+      toast.success('Pedido registrado');
     } catch (e: unknown) {
       const msg =
         (e as { response?: { data?: { message?: string; error?: string } } })?.response?.data
@@ -484,6 +622,46 @@ export default function DeliveryMappings() {
             ))}
           </div>
           <div className="flex-1" />
+
+          {/* Hotfix #153 — Toggle de descuento de inventario por tenant */}
+          <div className="flex items-center gap-2 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 no-print">
+            <PackageCheck className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <div className="flex flex-col">
+              <label className="text-xs font-medium text-gray-300 flex items-center gap-2 cursor-pointer">
+                Descontar inventario
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={deductStock}
+                  disabled={toggleSaving}
+                  onClick={() => handleToggleDeductStock(!deductStock)}
+                  className={`relative w-9 h-5 rounded-full transition-colors disabled:opacity-50 ${
+                    deductStock ? 'bg-emerald-500' : 'bg-white/10'
+                  }`}
+                  title="Al activarlo, cada pedido manual registrado descontará stock de los ingredientes (según las recetas vinculadas)"
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+                      deductStock ? 'translate-x-4' : ''
+                    }`}
+                  />
+                </button>
+              </label>
+              <span className="text-[10px] text-gray-500">
+                Descuenta ingredientes al registrar un pedido manual
+              </span>
+              {toggleMsg && (
+                <span
+                  className={`text-[10px] mt-0.5 ${
+                    toggleMsg.kind === 'ok' ? 'text-emerald-400' : 'text-red-400'
+                  }`}
+                >
+                  {toggleMsg.text}
+                </span>
+              )}
+            </div>
+          </div>
+
           <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 w-fit">
             <button
               onClick={() => setTab('mappings')}
@@ -502,6 +680,15 @@ export default function DeliveryMappings() {
             >
               <ClipboardList className="w-4 h-4" />
               Ingreso Manual
+            </button>
+            <button
+              onClick={() => setTab('history')}
+              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                tab === 'history' ? 'bg-brand-500 text-white' : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              <History className="w-4 h-4" />
+              Historial
             </button>
           </div>
         </div>
@@ -1111,14 +1298,248 @@ export default function DeliveryMappings() {
                 </button>
                 <p className="mt-3 text-[11px] text-gray-500 flex items-start gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                  Al confirmar se crea la orden interna con la comisión registrada y la comanda se
-                  envía a cocina (KDS/impresora).
+                  Al confirmar, el pedido queda registrado en esta sección (con su historial y ticket
+                  interno). No se crea orden en el POS ni comanda de cocina.
                 </p>
               </div>
             </div>
           </div>
         )}
+
+        {/* ── TAB HISTORIAL (Hotfix #153 — solo platform_orders) ── */}
+        {!loading && !error && tab === 'history' && (
+          <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+            <div className="px-4 py-3 bg-white/5 border-b border-white/10 flex items-center justify-between">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Pedidos manuales registrados ({historyTotal})
+              </span>
+              <button
+                onClick={() => loadHistory(historyPage)}
+                disabled={historyLoading}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${historyLoading ? 'animate-spin' : ''}`} />
+                Actualizar
+              </button>
+            </div>
+            {historyError ? (
+              <div className="px-4 py-10 text-center text-sm text-red-400">{historyError}</div>
+            ) : historyLoading && history.length === 0 ? (
+              <div className="px-4 py-10 text-center text-sm text-gray-400">Cargando historial…</div>
+            ) : history.length === 0 ? (
+              <div className="px-4 py-10 text-center text-sm text-gray-400">
+                Sin pedidos manuales todavía. Regístralos desde la pestaña Ingreso Manual.
+              </div>
+            ) : (
+              <>
+                <div className="divide-y divide-white/5">
+                  {history.map((h) => (
+                    <div key={h.id} className="flex items-center gap-3 px-4 py-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs text-gray-400 tabular-nums">
+                            {h.createdAt ? new Date(h.createdAt).toLocaleString('es-CL') : '—'}
+                          </span>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/5 text-gray-300 border border-white/10 uppercase">
+                            {h.platform}
+                          </span>
+                          {h.customerName && (
+                            <span className="text-xs text-gray-400 truncate max-w-[140px]">
+                              · {h.customerName}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-300 truncate mt-0.5">
+                          {h.items.map((i) => `${i.qty}× ${i.nombre}`).join(', ')}
+                        </p>
+                        <div className="flex items-center gap-3 text-xs mt-1 tabular-nums">
+                          <span className="text-gray-400">
+                            Subtotal {h.totals.subtotal != null ? fmtCLP(h.totals.subtotal) : '—'}
+                          </span>
+                          <span className="text-amber-300/80">
+                            Comisiones{' '}
+                            {h.totals.totalComisiones != null ? fmtCLP(h.totals.totalComisiones) : '—'}
+                          </span>
+                          <span className="font-bold text-emerald-300">
+                            NETO {h.totals.neto != null ? fmtCLP(h.totals.neto) : '—'}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setTicketData({
+                            platform: h.platform,
+                            createdAt: h.createdAt,
+                            customerName: h.customerName,
+                            notes: h.notes,
+                            items: h.items,
+                            commissions: h.commissions,
+                            totals: h.totals,
+                          })
+                        }
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-brand-400 bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/20 transition-colors flex-shrink-0 no-print"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        Ticket
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                {historyTotal > 20 && (
+                  <div className="px-4 py-3 border-t border-white/10 flex items-center justify-between text-xs text-gray-400 no-print">
+                    <button
+                      onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                      disabled={historyPage <= 1 || historyLoading}
+                      className="px-3 py-1.5 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-40"
+                    >
+                      ← Anterior
+                    </button>
+                    <span className="tabular-nums">
+                      Página {historyPage} de {Math.ceil(historyTotal / 20)}
+                    </span>
+                    <button
+                      onClick={() => setHistoryPage((p) => p + 1)}
+                      disabled={historyPage >= Math.ceil(historyTotal / 20) || historyLoading}
+                      className="px-3 py-1.5 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-40"
+                    >
+                      Siguiente →
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
       </main>
+
+      {/* Hotfix #153 — TICKET IMPRIMIBLE INTERNO (formato propio de la sección;
+          PROHIBIDO reutilizar estilos de comanda de cocina). Contenedor dedicado
+          + @media print ocultando el resto de la UI. */}
+      {ticketData && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm no-print"
+          onClick={() => setTicketData(null)}
+        >
+          <div
+            className="bg-gray-900 border border-white/10 rounded-xl max-w-sm w-full max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
+              <span className="text-sm font-semibold text-white">Ticket interno</span>
+              <button
+                onClick={() => setTicketData(null)}
+                className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="p-4">
+              {/* Cuerpo imprimible — monospace, formato propio */}
+              <div id="delivery-ticket-print" className="bg-white text-black rounded-lg p-4 font-mono text-[11px] leading-relaxed">
+                <div className="text-center">
+                  <p className="font-bold text-sm uppercase">Registro interno — Mapeo Delivery</p>
+                  <p className="text-[10px] mt-1">
+                    {ticketData.createdAt ? new Date(ticketData.createdAt).toLocaleString('es-CL') : '—'}
+                  </p>
+                  <p className="text-[10px] uppercase font-semibold">
+                    Plataforma: {ticketData.platform}
+                  </p>
+                  {ticketData.customerName && (
+                    <p className="text-[10px]">Cliente: {ticketData.customerName}</p>
+                  )}
+                </div>
+                <div className="border-t border-dashed border-black my-2" />
+                {ticketData.items.map((it, idx) => (
+                  <div key={idx} className="flex justify-between gap-2">
+                    <span className="truncate">
+                      {it.qty}× {it.nombre}
+                    </span>
+                    <span className="whitespace-nowrap">
+                      {fmtCLP(it.precioUnit)} · {fmtCLP(it.subtotal)}
+                    </span>
+                  </div>
+                ))}
+                <div className="border-t border-dashed border-black my-2" />
+                {ticketData.commissions.length > 0 ? (
+                  ticketData.commissions.map((c, idx) => (
+                    <div key={idx} className="flex justify-between">
+                      <span className="truncate">
+                        Comisión: {c.name ?? 'Comisión'}
+                        {c.type === 'percent' && c.value ? ` (${c.value}%)` : ''}
+                      </span>
+                      <span className="whitespace-nowrap">
+                        {c.amount != null ? fmtCLP(c.amount) : '—'}
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex justify-between">
+                    <span>Comisiones</span>
+                    <span>
+                      {ticketData.totals.totalComisiones != null
+                        ? fmtCLP(ticketData.totals.totalComisiones)
+                        : '—'}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between font-semibold mt-1">
+                  <span>Total comisiones</span>
+                  <span>
+                    {ticketData.totals.totalComisiones != null
+                      ? fmtCLP(ticketData.totals.totalComisiones)
+                      : '—'}
+                  </span>
+                </div>
+                <div className="border-t border-black my-2" />
+                <div className="flex justify-between font-bold text-sm">
+                  <span>NETO PARA TI</span>
+                  <span>
+                    {ticketData.totals.neto != null ? fmtCLP(ticketData.totals.neto) : '—'}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Total plataforma</span>
+                  <span>
+                    {ticketData.totals.total != null ? fmtCLP(ticketData.totals.total) : '—'}
+                  </span>
+                </div>
+                {ticketData.notes && (
+                  <>
+                    <div className="border-t border-dashed border-black my-2" />
+                    <p className="text-[10px]">Notas: {ticketData.notes}</p>
+                  </>
+                )}
+                <div className="border-t border-dashed border-black my-2" />
+                <p className="text-center text-[9px]">
+                  Registro interno — Mapeo Delivery · BullWeb
+                </p>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => window.print()}
+                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-brand-500 hover:bg-brand-600 transition-colors"
+                >
+                  <Printer className="w-4 h-4" />
+                  Imprimir ticket
+                </button>
+                <button
+                  onClick={() => setTicketData(null)}
+                  className="px-4 py-2.5 rounded-lg text-sm text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10"
+                >
+                  Cerrar
+                </button>
+              </div>
+              <Link
+                to="/delivery/mappings"
+                onClick={() => setTicketData(null)}
+                className="block mt-3 text-center text-xs text-brand-400 hover:text-brand-300"
+              >
+                Ver en Historial →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

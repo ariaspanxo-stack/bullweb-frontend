@@ -4,7 +4,6 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -192,11 +191,26 @@
   background-color: white;
 }
 
-/* ─── Hotfix #156: options de selects nativos visibles en dark theme ───
-   Windows/Edge/Chrome pintan el popup nativo de <select> con fondo blanco;
-   esta regla global fuerza fondo oscuro + texto claro en TODAS las options
-   del panel (complemento de la lección #121, que era por-componente). */
-select option {
+/* ─── Hotfix #161: options de selects nativos visibles en dark theme, SCOPEADAS ───
+   El #156 aplicaba color-scheme:dark al :root y esta regla de forma GLOBAL,
+   oscureciendo inputs nativos de pantallas CLARAS (login/registro: celdas negras).
+   Ahora viven scopeadas al contenedor del panel oscuro (.panel-dark, Layout.tsx)
+   y al Command Center superadmin ([data-superadmin], atributo preexistente).
+   Lección: color-scheme es GLOBAL por naturaleza — scopear al contenedor de tema. */
+.panel-dark {
+  color-scheme: dark;
+}
+
+.panel-dark select option {
+  background-color: #1f293b;
+  color: #f8fafc;
+}
+
+[data-superadmin] {
+  color-scheme: dark;
+}
+
+[data-superadmin] select option {
   background-color: #1f293b;
   color: #f8fafc;
 }

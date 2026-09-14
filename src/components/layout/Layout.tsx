@@ -131,7 +131,7 @@ export default function Layout() {
   }, []);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 flex-col">
+    <div className="panel-dark flex h-screen overflow-hidden bg-gray-50 flex-col">
       {/* Crisp chat widget con datos del usuario logueado */}
       <CrispChat userName={user?.name} userEmail={user?.email} />
       {/* Overlay de cuenta suspendida/cancelada */}

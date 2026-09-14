@@ -1258,7 +1258,7 @@ export default function DeliveryMappings() {
                                   )
                                 )
                               }
-                              className={selectCls + ' !py-1 !text-xs w-20'}
+                              className={selectCls + ' !py-1 !text-xs !w-20 flex-shrink-0'}
                             >
                               <option value="amount">$ CLP</option>
                               <option value="percent">% subtot.</option>

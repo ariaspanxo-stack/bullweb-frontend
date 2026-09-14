@@ -111,7 +111,12 @@ function extractArray<T>(resp: unknown): T[] {
 // ─── Componente ──────────────────────────────────────────────────────────────
 
 export default function DeliveryMappings() {
-  const [tab, setTab] = useState<'mappings' | 'manual' | 'history'>('mappings');
+  // Hotfix #157 — vista de Mapeos OCULTA de la navegación visible: la cara
+  // visible queda Ingreso Manual (DEFAULT forzado) + Historial. El código de
+  // mapeos NO se borra (queda inaccesible desde la UI) — el estado es memoria
+  // pura (useState, sin localStorage ni query param), así que ningún estado
+  // persistido puede revivir la vista oculta tras el deploy.
+  const [tab, setTab] = useState<'mappings' | 'manual' | 'history'>('manual');
 
   // Hotfix #153 — toggle de inventario por tenant (deliveryManualDeductStock)
   const [deductStock, setDeductStock] = useState(false);
@@ -516,7 +521,8 @@ export default function DeliveryMappings() {
       setManualNotes('');
       setCommissionBase('');
       setCommissionRows([]);
-      toast.success('Pedido registrado');
+      // Hotfix #157 — el pedido ahora SÍ crea la orden POS (Ventas/Delivery).
+      toast.success('Pedido registrado — aparece en Ventas/Delivery');
     } catch (e: unknown) {
       const msg =
         (e as { response?: { data?: { message?: string; error?: string } } })?.response?.data
@@ -661,15 +667,21 @@ export default function DeliveryMappings() {
           </div>
 
           <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 w-fit">
-            <button
-              onClick={() => setTab('mappings')}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                tab === 'mappings' ? 'bg-brand-500 text-white' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              <Link2 className="w-4 h-4" />
-              Mapeos
-            </button>
+            {/* Hotfix #157 — tab Mapeos OCULTO de la navegación visible (los
+                mapeos persisten en BD: alimentan la priorización de la grilla
+                #152 y el futuro modo automático). El botón no se renderiza;
+                la vista no es alcanzable desde la UI (default: Ingreso Manual). */}
+            {false && (
+              <button
+                onClick={() => setTab('mappings')}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  tab === 'mappings' ? 'bg-brand-500 text-white' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Link2 className="w-4 h-4" />
+                Mapeos
+              </button>
+            )}
             <button
               onClick={() => setTab('manual')}
               className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
@@ -1297,7 +1309,7 @@ export default function DeliveryMappings() {
                 <p className="mt-3 text-[11px] text-gray-500 flex items-start gap-1.5">
                   <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                   Al confirmar, el pedido queda registrado en esta sección (con su historial y ticket
-                  interno). No se crea orden en el POS ni comanda de cocina.
+                  interno) y aparece en Ventas/Delivery. No se envía comanda a cocina.
                 </p>
               </div>
             </div>

@@ -1208,7 +1208,7 @@ export default function DeliveryMappings() {
                         value={commissionBase}
                         onChange={(e) => setCommissionBase(e.target.value)}
                         placeholder="0"
-                        className="w-28 px-2 py-1 rounded-lg border border-white/10 bg-white/5 text-sm !text-white text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        className={inputCls + ' !w-28 !px-2 !py-1 text-right tabular-nums'}
                       />
                     </div>
                     {commissionRows.map((row) => {
@@ -1232,7 +1232,7 @@ export default function DeliveryMappings() {
                                 )
                               }
                               placeholder="Nombre (ej: Propina driver)"
-                              className="flex-1 min-w-0 px-2 py-1 rounded-md border border-white/10 bg-white/5 text-xs !text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                              className={inputCls + ' !flex-1 min-w-0 !px-2 !py-1 !text-xs focus:!ring-1'}
                             />
                             <button
                               onClick={() =>
@@ -1275,7 +1275,7 @@ export default function DeliveryMappings() {
                                 )
                               }
                               placeholder="0"
-                              className="flex-1 min-w-0 px-2 py-1 rounded-md border border-white/10 bg-white/5 text-xs !text-white text-right tabular-nums focus:outline-none focus:ring-1 focus:ring-brand-500"
+                              className={inputCls + ' !flex-1 min-w-0 !px-2 !py-1 !text-xs text-right tabular-nums focus:!ring-1'}
                             />
                           </div>
                           <p className="text-[11px] text-gray-400 text-right tabular-nums">

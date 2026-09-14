@@ -171,6 +171,8 @@ export default function DeliveryMappings() {
   // Hotfix #151 — comisiones múltiples: base de plataforma + filas nombrables
   const [commissionBase, setCommissionBase] = useState('');
   const [commissionRows, setCommissionRows] = useState<CommissionRow[]>([]);
+  // Hotfix #158 — guard de comisiones: error inline visible (cero descartes silenciosos)
+  const [commissionError, setCommissionError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const platformLabel = PLATFORMS.find((p) => p.slug === platform)?.label ?? platform;
@@ -456,6 +458,23 @@ export default function DeliveryMappings() {
       toast.error('Agrega al menos un producto al pedido.');
       return;
     }
+    // Hotfix #158 — guard de comisiones: fila a medio llenar (nombre sin valor,
+    // o valor no-numérico) o base no-parseable BLOQUEA el envío con mensaje
+    // visible. Filas totalmente vacías y base vacía/0 se omiten como hoy.
+    const invalidBase =
+      commissionBase.trim() !== '' && !Number.isFinite(Number(commissionBase));
+    const invalidRow = commissionRows.some((r) => {
+      const hasName = r.name.trim().length > 0;
+      const raw = r.value.trim();
+      if (hasName && raw === '') return true;
+      if (raw !== '' && !Number.isFinite(Number(raw))) return true;
+      return false;
+    });
+    if (invalidBase || invalidRow) {
+      setCommissionError('Completa el valor de las comisiones o elimínalas');
+      return;
+    }
+    setCommissionError(null);
     setSubmitting(true);
     try {
       // Hotfix #153 — desglose de comisiones #151 viaja completo para el ticket
@@ -496,9 +515,15 @@ export default function DeliveryMappings() {
       // Hotfix #153 — post-confirma autocontenido: nada de POS/comanda.
       // Ticket listo con los datos locales (+neto del backend si vino).
       const backendNeto = res.data?.data?.neto;
+      // Hotfix #158 — fecha del ticket desde el SERVIDOR (fin de la dependencia
+      // del reloj del PC cliente); fallback local solo si el campo no vino.
+      const backendReceivedAt = res.data?.data?.receivedAt;
       setTicketData({
         platform,
-        createdAt: new Date().toISOString(),
+        createdAt:
+          typeof backendReceivedAt === 'string' && backendReceivedAt
+            ? backendReceivedAt
+            : new Date().toISOString(),
         customerName: manualCustomer.trim() || null,
         notes: manualNotes.trim() || null,
         items: manualItems.map((it) => ({
@@ -1276,6 +1301,12 @@ export default function DeliveryMappings() {
                       <span>Total comisiones</span>
                       <span className="tabular-nums text-amber-300">{fmtCLP(manualFee)}</span>
                     </div>
+                    {commissionError && (
+                      <p className="mt-1 text-[11px] text-red-400 flex items-start gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                        {commissionError}
+                      </p>
+                    )}
                   </div>
 
                   <div className="border-t border-white/10 pt-2 flex justify-between font-bold text-white">
@@ -1283,7 +1314,7 @@ export default function DeliveryMappings() {
                     <span className="tabular-nums">{fmtCLP(manualTotal)}</span>
                   </div>
                   <div className="flex justify-between items-center rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
-                    <span className="font-bold text-emerald-300 text-sm">NETO PARA TI</span>
+                    <span className="font-bold text-emerald-300 text-sm">TE QUEDA</span>
                     <span className="font-bold text-emerald-300 tabular-nums text-base">
                       {fmtCLP(manualNet)}
                     </span>
@@ -1371,7 +1402,7 @@ export default function DeliveryMappings() {
                             {h.totals.totalComisiones != null ? fmtCLP(h.totals.totalComisiones) : '—'}
                           </span>
                           <span className="font-bold text-emerald-300">
-                            NETO {h.totals.neto != null ? fmtCLP(h.totals.neto) : '—'}
+                            Te queda {h.totals.neto != null ? fmtCLP(h.totals.neto) : '—'}
                           </span>
                         </div>
                       </div>
@@ -1502,7 +1533,7 @@ export default function DeliveryMappings() {
                 </div>
                 <div className="border-t border-black my-2" />
                 <div className="flex justify-between font-bold text-sm">
-                  <span>NETO PARA TI</span>
+                  <span>TE QUEDA</span>
                   <span>
                     {ticketData.totals.neto != null ? fmtCLP(ticketData.totals.neto) : '—'}
                   </span>

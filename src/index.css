@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    color-scheme: dark;
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
@@ -189,6 +190,15 @@
   color: #111827 !important;
   -webkit-text-fill-color: #111827 !important;
   background-color: white;
+}
+
+/* ─── Hotfix #156: options de selects nativos visibles en dark theme ───
+   Windows/Edge/Chrome pintan el popup nativo de <select> con fondo blanco;
+   esta regla global fuerza fondo oscuro + texto claro en TODAS las options
+   del panel (complemento de la lección #121, que era por-componente). */
+select option {
+  background-color: #1f293b;
+  color: #f8fafc;
 }
 
 /* Smooth scrolling */

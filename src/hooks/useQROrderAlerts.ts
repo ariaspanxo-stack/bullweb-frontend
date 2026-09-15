@@ -20,6 +20,10 @@ export interface QROrder {
   createdAt:       string;
   paymentMethod:   string | null;
   cashAmount:      number | null;
+  /** Hotfix #166 — envío del pedido (hoy 0 desde la carta) y default del tenant
+   *  (viaja en el mismo payload del WS para prellenar el campo del modal). */
+  deliveryFee?:         number;
+  deliveryFeeDefault?:  number;
 }
 
 /** Lee el tenantId del usuario almacenado en localStorage (mismo origen que authService).
@@ -93,6 +97,8 @@ export function useQROrderAlerts() {
         ...order,
         total:      Number(order.total)      || 0,
         cashAmount: order.cashAmount != null ? Number(order.cashAmount) : null,
+        deliveryFee:        Number(order.deliveryFee ?? 0) || 0,
+        deliveryFeeDefault: Number(order.deliveryFeeDefault ?? 2000) || 2000,
         items:      (order.items ?? []).map(i => ({
           ...i,
           price: Number(i.price) || 0,
@@ -143,7 +149,7 @@ export function useQROrderAlerts() {
     return '/api/qr-orders';
   };
 
-  const acceptOrder = useCallback(async (orderId: string) => {
+  const acceptOrder = useCallback(async (orderId: string, deliveryFee?: number) => {
     removeOrder(orderId);
     try {
       const order = pendingOrdersRef.current.find(o => o.orderId === orderId);
@@ -159,6 +165,11 @@ export function useQROrderAlerts() {
               price:    Number(i.price) || 0,
               quantity: Number(i.quantity) || 0,
             })),
+            // Hotfix #166 — envío editable del modal. Solo para pedidos QR nativos
+            // (las integraciones tienen su propio flujo — no se les envía el campo).
+            ...(order.platform == null || order.platform === 'qr'
+              ? { deliveryFee: Math.max(0, Math.round(Number(deliveryFee ?? 0) || 0)) }
+              : {}),
           }
         : {};
 

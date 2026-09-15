@@ -4,7 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, XCircle, Phone, MapPin, ShoppingBag, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Phone, MapPin, ShoppingBag, Clock, Bike } from 'lucide-react';
 import type { QROrder } from '@/hooks/useQROrderAlerts';
 import { formatCurrency } from '@/lib/utils';
 
@@ -23,7 +23,7 @@ const fmtCLP = (n: number) => formatCurrency(n);
 
 interface Props {
   order:    QROrder;
-  onAccept: (orderId: string) => void;
+  onAccept: (orderId: string, deliveryFee?: number) => void;
   onCancel: (orderId: string, reason?: string) => void;
 }
 
@@ -54,10 +54,23 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
   const pct         = (remaining / COUNTDOWN_SEC) * 100;
   const urgentColor = remaining <= 30 ? '#ef4444' : remaining <= 60 ? '#f97316' : '#22c55e';
 
+  // Hotfix #166 — Costo de envío asignable al aceptar (solo delivery).
+  // Prellenado: deliveryFee del pedido (hoy 0 desde la carta) o el default del
+  // tenant qrDeliveryFeeDefault (viaja en el payload del WS). Editable, 0 permitido.
+  const isQrNative = !order.platform || order.platform === 'qr';
+  const feeDefault = isDelivery
+    ? Math.max(0, Math.round(Number(order.deliveryFeeDefault ?? 2000) || 2000))
+    : 0;
+  const [feeInput, setFeeInput] = useState<string>(String(feeDefault));
+  useEffect(() => { setFeeInput(String(feeDefault)); }, [feeDefault]);
+  const feeValue  = Math.max(0, Math.round(Number(feeInput) || 0));
+  const liveTotal = isDelivery ? order.total + feeValue : order.total;
+
   const handleAccept = async () => {
     setIsProcessing(true);
     try {
-      await onAccept(order.orderId);
+      // Hotfix #166 — el envío editable viaja al endpoint de aceptación (solo QR nativo)
+      await onAccept(order.orderId, isDelivery && isQrNative ? feeValue : undefined);
       // Navegar al tab correcto en /restaurant
       const tabValue = order.orderType === 'delivery' ? 'delivery' : 'mostrador';
       navigate('/restaurant', { state: { openTab: tabValue } });
@@ -187,9 +200,34 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
               </div>
             ))}
           </div>
+          {/* Hotfix #166 — Costo de envío editable + total en vivo (solo delivery) */}
+          {isDelivery && (
+            <div className="mt-2 bg-blue-950/40 border border-blue-500/30 rounded-xl p-3 space-y-2">
+              <label className="flex items-center gap-2 text-sm font-semibold text-blue-200">
+                <Bike className="w-4 h-4 shrink-0" />
+                Costo de envío
+              </label>
+              <div className="flex items-center gap-2">
+                <span className="text-blue-300 font-bold">$</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={feeInput}
+                  onChange={e => {
+                    const v = e.target.value.replace(/[^\d]/g, '');
+                    setFeeInput(v === '' ? '0' : v);
+                  }}
+                  disabled={isProcessing}
+                  aria-label="Costo de envío"
+                  className="w-28 rounded-lg bg-white text-gray-900 font-bold text-base px-2 py-1.5 text-right focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                />
+                <span className="text-gray-500 text-xs">editable · 0 = sin envío</span>
+              </div>
+            </div>
+          )}
           <div className="flex justify-between items-center mt-2 px-1">
             <span className="text-gray-400 text-sm">Total</span>
-            <span className="text-white font-black text-lg">{fmtCLP(order.total)}</span>
+            <span className="text-white font-black text-lg">{fmtCLP(liveTotal)}</span>
           </div>
         </div>
 

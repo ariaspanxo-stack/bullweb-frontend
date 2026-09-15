@@ -497,6 +497,15 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
             </div>
           )}
 
+          {/* Hotfix #167 — Línea informativa "Costo de envío" (solo órdenes delivery con fee > 0).
+              SOLO informativa: el TOTAL de abajo ya incluye el envío (subtotal + deliveryFee en backend). */}
+          {sale.type === 'delivery' && Number(sale.deliveryFee ?? 0) > 0 && (
+            <div className="flex justify-between text-sm text-gray-300">
+              <span>Costo de envío:</span>
+              <span>{formatCurrency(Number(sale.deliveryFee))}</span>
+            </div>
+          )}
+
           {/* Línea divisoria */}
           <div className="border-t border-gray-600 pt-2 mt-2">
             {sale.status === 'cancelled' ? (

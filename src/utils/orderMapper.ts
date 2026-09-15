@@ -180,6 +180,7 @@ export function mapOrderToSale(order: BackendOrder): Sale {
     discountType: order.discountType,
     tax: order.tax,
     total: order.total,
+    deliveryFee: (order as any).deliveryFee ?? 0, // Hotfix #167 — columna orders."deliveryFee" viaja en el include del backend
     numberOfPeople: (order as any).persons ?? (order as any).numberOfPeople ?? 1,
     cancel_reason: (order as any).cancel_reason,
     cancelledAt: (order as any).cancelledAt ? new Date((order as any).cancelledAt) : undefined,

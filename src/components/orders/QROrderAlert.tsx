@@ -34,24 +34,20 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
   const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectReason,   setRejectReason]   = useState('');
 
-  // Cuenta regresiva — auto-cancela al llegar a 0
+  // Hotfix #168 — El countdown es INFORMATIVO: nunca dispara una decisión.
+  // Al llegar a 0 NO se rechaza nada: el modal permanece abierto con estado
+  // "atrasado" (contador ASCENDENTE en rojo desde 0) y el pedido sigue
+  // aceptable/rechazable — la decisión es SIEMPRE humana.
   useEffect(() => {
     const t = setInterval(() => {
-      setRemaining(r => {
-        if (r <= 1) {
-          clearInterval(t);
-          onCancel(order.orderId, 'Tiempo expirado');
-          return 0;
-        }
-        return r - 1;
-      });
+      setRemaining(r => r - 1);
     }, 1000);
     return () => clearInterval(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order.orderId]);
 
   const isDelivery  = order.orderType === 'delivery';
-  const pct         = (remaining / COUNTDOWN_SEC) * 100;
+  const isOverdue   = remaining <= 0;                        // estado atrasado: pasó el tiempo sugerido
+  const pct         = isOverdue ? 100 : (remaining / COUNTDOWN_SEC) * 100;
   const urgentColor = remaining <= 30 ? '#ef4444' : remaining <= 60 ? '#f97316' : '#22c55e';
 
   // Hotfix #166 — Costo de envío asignable al aceptar (solo delivery).
@@ -123,10 +119,18 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
               <p className="text-orange-400 font-mono font-bold">{order.orderNumber}</p>
             </div>
           </div>
-          {/* Countdown badge */}
-          <div className="flex items-center gap-1 shrink-0" style={{ color: urgentColor }}>
+          {/* Countdown badge — Hotfix #168: informativo; al llegar a 0 pasa a
+              estado atrasado (contador ascendente en rojo), NUNCA auto-rechaza */}
+          <div className="flex items-center gap-1 shrink-0" style={{ color: isOverdue ? '#ef4444' : urgentColor }}>
             <Clock className="w-4 h-4" />
-            <span className="font-mono font-bold text-sm">{remaining}s</span>
+            <span className="font-mono font-bold text-sm">
+              {isOverdue ? `+${Math.abs(remaining)}s` : `${remaining}s`}
+            </span>
+            {isOverdue && (
+              <span className="font-bold text-[10px] uppercase tracking-wide bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded-full animate-pulse">
+                ¡Atrasado!
+              </span>
+            )}
           </div>
         </div>
 

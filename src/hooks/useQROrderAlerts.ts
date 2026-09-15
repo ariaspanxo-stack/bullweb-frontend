@@ -49,9 +49,15 @@ export function useQROrderAlerts() {
   const alertIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ── Repetir sonido cada 30 s mientras haya pedidos pendientes ──
+  // Hotfix #168 — TOPE de repeticiones: máximo 5 beeps (~primeros 2,5 min) y
+  // luego silencia. La urgencia VISUAL persiste (estado atrasado del modal +
+  // badge minutesAgo de la lista) — el sonido no castiga para siempre.
   useEffect(() => {
     if (pendingOrders.length > 0) {
+      let beeps = 0;
       alertIntervalRef.current = setInterval(() => {
+        if (beeps >= 5) return; // tope alcanzado: silencio
+        beeps++;
         const vol = parseFloat(localStorage.getItem('qr_alert_volume') ?? '0.8');
         playOrderAlert(vol);
       }, 30_000);
@@ -149,8 +155,11 @@ export function useQROrderAlerts() {
     return '/api/qr-orders';
   };
 
+  // Hotfix #168 — El pedido se descarta de la lista de alertas SOLO tras
+  // respuesta real del endpoint (aceptar/rechazar). Si el fetch falla (red
+  // caída), el pedido PERMANECE en pantalla — jamás optimista-sin-restore.
+  // Misma filosofía del guard del #158: si algo no viajó, el usuario lo ve.
   const acceptOrder = useCallback(async (orderId: string, deliveryFee?: number) => {
-    removeOrder(orderId);
     try {
       const order = pendingOrdersRef.current.find(o => o.orderId === orderId);
       // Sanitizar campos numéricos: el backend puede guardar strings con ceros
@@ -173,7 +182,7 @@ export function useQROrderAlerts() {
           }
         : {};
 
-      await fetch(`${buildBasePath(orderId)}/${orderId}/accept`, {
+      const res = await fetch(`${buildBasePath(orderId)}/${orderId}/accept`, {
         method:  'PATCH',
         headers: {
           Authorization:  `Bearer ${getToken()}`,
@@ -181,13 +190,13 @@ export function useQROrderAlerts() {
         },
         body: JSON.stringify(payload),
       });
-    } catch { /* silencioso */ }
+      if (res.ok) removeOrder(orderId);
+    } catch { /* fetch falló: el pedido PERMANECE en la lista de alertas */ }
   }, [removeOrder]);
 
   const cancelOrder = useCallback(async (orderId: string, reason?: string) => {
-    removeOrder(orderId);
     try {
-      await fetch(`${buildBasePath(orderId)}/${orderId}/cancel`, {
+      const res = await fetch(`${buildBasePath(orderId)}/${orderId}/cancel`, {
         method:  'PATCH',
         headers: {
           Authorization:  `Bearer ${getToken()}`,
@@ -195,7 +204,8 @@ export function useQROrderAlerts() {
         },
         body: JSON.stringify({ reason }),
       });
-    } catch { /* silencioso */ }
+      if (res.ok) removeOrder(orderId);
+    } catch { /* fetch falló: el pedido PERMANECE en la lista de alertas */ }
   }, [removeOrder]);
 
   return { pendingOrders, acceptOrder, cancelOrder };

@@ -450,7 +450,10 @@ export default function DeliveryMappings() {
       ),
     [commissionBase, commissionRows, manualSubtotal]
   );
-  const manualTotal = manualSubtotal + manualFee;
+  // Hotfix #163 — Total = lo que pagó el cliente (subtotal de items, IVA
+  // incluido). Las comisiones NO se suman al Total: se descuentan para
+  // TE QUEDA (= manualSubtotal − manualFee, intacto). Bug congénito #150.
+  const manualTotal = manualSubtotal;
   const manualNet = manualSubtotal - manualFee;
 
   const submitManualOrder = async () => {

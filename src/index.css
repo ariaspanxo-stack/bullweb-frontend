@@ -232,6 +232,22 @@
   background-color: #ffffff;
 }
 
+/* ─── Hotfix #163: chromes nativos claros en inputs del panel ───
+   Los inputs nativos recibieron fondo claro en #162, pero heredan el
+   color-scheme:dark del #161 → sus chromes nativos (flechas/spinners
+   de number, scrollbars internas) se pintan claros sobre el fondo
+   blanco = invisibles. color-scheme:light los renderiza para fondo
+   claro (flechas oscuras visibles).
+   Exclusiones del :not(): checkbox/radio (caja nativa, patrón #162) y
+   date (los .date-input-dark usan filter:invert(1) sobre el widget
+   nativo claro — Reports.tsx lleva [color-scheme:dark] explícito que
+   gana por especificidad; exclusión defensiva). Los SELECTS no
+   matchean (solo input) — options oscuras del #156 INTACTAS.
+   Técnica :where del #162: especificidad (0,0,0). */
+:where(.panel-dark input:not([type="checkbox"],[type="radio"],[type="date"])) {
+  color-scheme: light;
+}
+
 /* Smooth scrolling */
 .custom-scrollbar {
   scroll-behavior: smooth;

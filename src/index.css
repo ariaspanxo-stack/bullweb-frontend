@@ -248,6 +248,29 @@
   color-scheme: light;
 }
 
+/* ─── Hotfix #164: scrollbars visibles en el panel oscuro ───
+   El color-scheme:dark del #161 hace que el navegador pinte las
+   scrollbars nativas negro-sobre-negro (invisibles) en TODAS las
+   áreas de scroll del panel (modales, grillas, listas). scrollbar-
+   color NO es heredable — es propiedad del ELEMENTO con overflow —
+   por eso el selector desciende con * (VÍA 1): cubre todo
+   contenedor scrollable del panel, incluidos los que obtienen
+   overflow por clases Tailwind o CSS custom. Thumb gris claro
+   (#94a3b8) / track slate-800 (#1e293b, distinguible del fondo
+   bg-gray-950 #030712 de páginas y sidebar). Coexistencia: los
+   elementos con ::-webkit-scrollbar custom (.custom-scrollbar,
+   [data-superadmin]) retienen su estilo — el mecanismo legacy
+   webkit tiene prioridad sobre scrollbar-color en Chromium para
+   esos elementos; .scrollbar-none intacto (scrollbar-width:none
+   es propiedad distinta y más específica). #156/#161/#162/#163
+   INTACTOS — esto SOLO AÑADE. Modales Radix portaled al body
+   quedan fuera del scope (residual documentado, decisión del
+   nivel superior). */
+.panel-dark,
+.panel-dark * {
+  scrollbar-color: #94a3b8 #1e293b;
+}
+
 /* Smooth scrolling */
 .custom-scrollbar {
   scroll-behavior: smooth;

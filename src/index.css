@@ -215,6 +215,23 @@
   color: #f8fafc;
 }
 
+/* ─── Hotfix #162: legibilidad universal de inputs del panel ───
+   Dentro del panel oscuro, los inputs NATIVOS sin estilo heredan el
+   color-scheme:dark del #161 (celda negra) mientras la regla global #121
+   fuerza texto OSCURO → texto invisible. Esta regla añade la pareja de
+   FONDO claro que la #121 siempre asumió. Técnica: :where() envuelve la
+   lista completa → especificidad (0,0,0) — pierde contra CUALQUIER clase
+   de fondo (bg-white/5, bg-white, etc.), así los inputs estilizados del
+   panel NO se afectan; solo captura a los nativos sin fondo explícito.
+   Checkbox/radio excluidos: su caja la pinta el navegador (un fondo
+   blanco forzaría un rectángulo claro flotante). Login intacto (fuera
+   del scope). Reglas #121 y #161 INTACTAS — esto SOLO AÑADE. */
+:where(.panel-dark input:not([type="checkbox"],[type="radio"]),
+       .panel-dark textarea,
+       .panel-dark select) {
+  background-color: #ffffff;
+}
+
 /* Smooth scrolling */
 .custom-scrollbar {
   scroll-behavior: smooth;

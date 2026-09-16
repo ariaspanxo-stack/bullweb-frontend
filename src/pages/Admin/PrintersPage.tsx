@@ -178,10 +178,45 @@ function ExtensionSection() {
   const EXTENSION_ZIP_URL = 'https://app.bullwebchile.com/downloads/bullweb-extension.zip';
   const EXTENSION_REPO_URL = 'https://github.com/ariaspanxo-stack/bullweb-extension';
 
-  // ── Extensión detectada ───────────────────────────────────────────────────
+  // ── Extensión detectada — LEGACY con advertencia (Hotfix #172) ────────────
   if (detected) {
     return (
-      <div className="bg-white rounded-xl border border-emerald-200 overflow-hidden">
+      /* Hotfix #172: extensión vieja detectada — compite con el Agente BullWeb por la impresora.
+         Se degrada a método antiguo colapsado con instrucciones de eliminación (código original intacto abajo). */
+      <details className="bg-white rounded-xl border border-amber-300 overflow-hidden group">
+        <summary className="cursor-pointer select-none list-none">
+          <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-5 text-white">
+            <div className="flex items-start gap-3">
+              <div className="bg-white/20 p-2 rounded-xl shrink-0">
+                <Puzzle className="w-7 h-7" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold flex items-center gap-2 flex-wrap">
+                  BullWeb Extension
+                  <span className="text-xs bg-white/90 text-amber-700 font-semibold px-2 py-0.5 rounded-full">Detectada — Método antiguo (legacy)</span>
+                  {extVersion && <span className="text-xs bg-white/25 font-semibold px-2 py-0.5 rounded-full">v{extVersion}</span>}
+                </h3>
+                <p className="text-sm text-amber-50 mt-0.5">
+                  Método antiguo — no usar en instalaciones nuevas. Si tienes la extensión vieja instalada en Chrome, elimínala porque interfiere con el agente (usa la impresora en su lugar e imprime en formato viejo).
+                </p>
+              </div>
+              <span className="shrink-0 text-xs text-white/80 font-semibold px-2 py-0.5 rounded-full border border-white/30 group-open:hidden">
+                Ver más
+              </span>
+            </div>
+          </div>
+        </summary>
+
+        {/* Instrucciones de eliminación visibles al desplegar (Hotfix #172) */}
+        <div className="bg-amber-50 border-b border-amber-200 px-5 py-3 flex items-start gap-2 text-sm text-amber-800">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>
+            <strong>Advertencia:</strong> esta extensión <strong>compite con el Agente BullWeb por la impresora</strong>: puede tomar los trabajos e imprimirlos en formato viejo (texto grande). Para migrar: <strong>elimínala de Chrome</strong> en <code className="bg-amber-100 px-1 rounded">chrome://extensions</code> y borra la carpeta <code className="bg-amber-100 px-1 rounded">C:\ProgramData\BullWeb</code> si existe.
+          </span>
+        </div>
+
+        {/* Contenido original de la extensión (legacy, intacto) */}
+        <div>
         <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-5 text-white">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -240,55 +275,74 @@ function ExtensionSection() {
           <CheckCircle className="w-4 h-4 shrink-0" />
           La extensión procesa trabajos de impresión localmente — funciona aunque el backend reinicie
         </div>
-      </div>
+        </div>
+      </details>
     );
   }
 
-  // ── Wizard de instalación (4 pasos) ──────────────────────────────────────
+  // ── Wizard de instalación (4 pasos) — LEGACY (Hotfix #172: colapsado, no recomendado) ──
   const steps = [
     { num: 1 as const, icon: <Puzzle className="w-5 h-5" />,      title: 'Instalar extensión',  desc: 'Añade BullWeb Extension a Chrome o Edge' },
     { num: 2 as const, icon: <Terminal className="w-5 h-5" />,    title: 'Native Host',          desc: 'Script PowerShell en el PC de la caja' },
-    { num: 3 as const, icon: <Copy className="w-5 h-5" />,        title: 'API Key',              desc: 'Configura la clave en el popup' },
+    { num: 3 as const, icon: <Copy className="w-5 h-5" />,  title: 'API Key',              desc: 'Configura la clave en el popup' },
     { num: 4 as const, icon: <MonitorCheck className="w-5 h-5" />, title: 'Verificar',           desc: 'Recarga y confirma conexión' },
   ];
 
   return (
-    <div className="bg-white rounded-xl border border-indigo-200 overflow-hidden">
+    /* Hotfix #172: método antiguo plegado por defecto — el Agente BullWeb (arriba) es el camino recomendado único */
+    <details className="bg-white rounded-xl border border-amber-300 overflow-hidden group">
+      <summary className="cursor-pointer select-none list-none">
       {/* Header */}
-      <div className="bg-gradient-to-br from-violet-600 to-indigo-700 p-5 text-white">
+      <div className="bg-gradient-to-br from-gray-500 to-gray-600 p-5 text-white">
         <div className="flex items-start gap-3">
           <div className="bg-white/20 p-2 rounded-xl shrink-0">
             <Puzzle className="w-7 h-7" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-bold">BullWeb Extension (Recomendado)</h3>
-            <p className="text-sm text-indigo-100 mt-0.5">
-              Sin agente .exe, sin WebSocket. Arranca con el navegador y nunca falla por reinicios del servidor.
+            <h3 className="text-base font-bold flex items-center gap-2 flex-wrap">
+              BullWeb Extension
+              <span className="text-xs bg-amber-400 text-amber-900 font-semibold px-2 py-0.5 rounded-full">Método antiguo (legacy)</span>
+            </h3>
+            <p className="text-sm text-gray-100 mt-0.5">
+              Método antiguo — no usar en instalaciones nuevas. Si tienes la extensión vieja instalada en Chrome, elimínala porque interfiere con el agente (usa la impresora en su lugar e imprime en formato viejo).
             </p>
           </div>
-          <span className="shrink-0 text-xs bg-amber-400 text-amber-900 font-semibold px-2 py-0.5 rounded-full">
-            Nuevo
+          <span className="shrink-0 text-xs text-white/80 font-semibold px-2 py-0.5 rounded-full border border-white/30 group-open:hidden">
+            Ver más
           </span>
         </div>
+      </div>
+      </summary>
 
+      {/* Advertencia visible al desplegar */}
+      <div className="bg-amber-50 border-b border-amber-200 px-5 py-3 flex items-start gap-2 text-sm text-amber-800">
+        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+        <span>
+          <strong>Advertencia:</strong> esta extensión es un método antiguo y <strong>compite con el Agente BullWeb por la impresora</strong>: si queda instalada, puede tomar los trabajos e imprimirlos en formato viejo (texto grande). Para instalaciones nuevas usa el <strong>Agente BullWeb</strong> (arriba). Si ya tienes la extensión instalada, <strong>elimínala de Chrome</strong> (chrome://extensions) y borra la carpeta <code className="bg-amber-100 px-1 rounded">C:\ProgramData\BullWeb</code> si existe.
+        </span>
+      </div>
+
+      {/* Stepper + contenido por paso (código legacy intacto) */}
+      <div>
+      <div className="bg-gray-50 border-b border-gray-200 px-5 pt-4">
         {/* Stepper */}
-        <div className="mt-4 flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5">
           {steps.map((s, i) => (
             <div key={s.num} className="flex items-center gap-1.5 flex-1">
               <button
                 onClick={() => setStep(s.num)}
                 className={`flex items-center gap-2 text-left w-full rounded-xl px-2.5 py-2 transition-colors ${
-                  step === s.num ? 'bg-white/25' : 'bg-white/10 hover:bg-white/15'
+                  step === s.num ? 'bg-indigo-100' : 'bg-white hover:bg-gray-100 border border-gray-200'
                 }`}
               >
                 <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                  step > s.num ? 'bg-green-400 text-white' : step === s.num ? 'bg-white text-indigo-700' : 'bg-white/30 text-white'
+                  step > s.num ? 'bg-green-400 text-white' : step === s.num ? 'bg-indigo-600 text-white' : 'bg-gray-300 text-white'
                 }`}>
                   {step > s.num ? <Check className="w-3 h-3" /> : s.num}
                 </span>
-                <span className="text-xs font-medium leading-tight hidden sm:block">{s.title}</span>
+                <span className="text-xs font-medium leading-tight hidden sm:block text-gray-700">{s.title}</span>
               </button>
-              {i < steps.length - 1 && <ChevronRight className="w-3 h-3 text-white/40 shrink-0" />}
+              {i < steps.length - 1 && <ChevronRight className="w-3 h-3 text-gray-300 shrink-0" />}
             </div>
           ))}
         </div>
@@ -488,6 +542,7 @@ function ExtensionSection() {
 
       </div>
     </div>
+    </details>
   );
 }
 
@@ -545,7 +600,13 @@ function AgentsSection() {
               <Bot className="w-7 h-7" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-bold">BullWeb Print Agent</h3>
+              <h3 className="text-base font-bold flex items-center gap-2 flex-wrap">
+                Agente de Impresión BullWeb
+                <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-bold leading-tight">Recomendado</span>
+                {(release?.version ?? downloadInfo?.version) && (
+                  <span className="bg-white/20 text-xs font-semibold px-2 py-0.5 rounded-full">v{release?.version ?? downloadInfo?.version}</span>
+                )}
+              </h3>
               <p className="text-sm text-blue-100 mt-0.5">
                 Instalá el agente en las PCs con impresoras USB, Serial o de driver SO. Se conecta al servidor usando una clave API y procesa trabajos automáticamente.
               </p>
@@ -575,6 +636,34 @@ function AgentsSection() {
                   >
                     <Copy className="w-3.5 h-3.5" />
                   </button>
+                </div>
+              </div>
+
+              {/* ── Pasos 1-4: flujo real del agente (Hotfix #172) ── */}
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="bg-white/10 border border-white/20 rounded-xl p-3 flex gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-white text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">1</span>
+                  <p className="text-xs text-blue-100 leading-relaxed">
+                    <strong className="text-white">Creá un agente</strong> con el botón <strong className="text-white">"Nuevo agente"</strong> (más abajo) y copiá su <strong className="text-white">API Key</strong>.
+                  </p>
+                </div>
+                <div className="bg-white/10 border border-white/20 rounded-xl p-3 flex gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-white text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">2</span>
+                  <p className="text-xs text-blue-100 leading-relaxed">
+                    Abrí <strong className="text-white">PowerShell como Administrador</strong> y ejecutá el comando de arriba (<code className="text-green-300 font-mono">iwr -useb https://app.bullwebchile.com/install-agent.ps1 | iex</code>).
+                  </p>
+                </div>
+                <div className="bg-white/10 border border-white/20 rounded-xl p-3 flex gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-white text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">3</span>
+                  <p className="text-xs text-blue-100 leading-relaxed">
+                    Cuando el instalador la pida, <strong className="text-white">pegá la API Key</strong>. Si descargás el .exe y hacés doble clic, corre en segundo plano <strong className="text-white">sin ventana visible</strong> — la vía recomendada es el instalador de PowerShell.
+                  </p>
+                </div>
+                <div className="bg-white/10 border border-white/20 rounded-xl p-3 flex gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-white text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">4</span>
+                  <p className="text-xs text-blue-100 leading-relaxed">
+                    Verificá en la tabla de abajo: estado <strong className="text-white">En línea</strong> y versión <strong className="text-white">v{release?.version ?? downloadInfo?.version ?? '—'}</strong>.
+                  </p>
                 </div>
               </div>
 
@@ -1398,7 +1487,7 @@ export default function PrintersPage() {
     try {
       // 1. Crear el job de test (via submitJob que ya valida agent_id)
       const result = await adminService.submitTestJob(p.agent_id, p.id);
-      const jobId: string | undefined = result?.data?.id ?? result?.id ?? result?.job_id;
+      const jobId: string | undefined = (result as any)?.data?.id ?? result?.id ?? result?.job_id;
 
       if (jobId) {
         toast('🖨�? Job de prueba enviado — esperando respuesta...', { duration: 2000 });
@@ -1649,11 +1738,11 @@ export default function PrintersPage() {
         </div>
       )}
 
-      {/* Sección Extensión Chrome/Edge */}
-      <ExtensionSection />
-
-      {/* Sección Agentes BullWeb */}
+      {/* Sección Agentes BullWeb — método moderno, recomendado único (Hotfix #172) */}
       <AgentsSection />
+
+      {/* Sección Extensión Chrome/Edge — método antiguo/legacy, colapsado (Hotfix #172) */}
+      <ExtensionSection />
 
       {/* Notificaciones push */}
       <NotificationSettingsPanel />

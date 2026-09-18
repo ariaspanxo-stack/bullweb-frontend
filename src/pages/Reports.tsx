@@ -96,14 +96,14 @@ function ReportsInner() {
               type="date"
               value={dateFrom}
               onChange={e => { if (e.target.value.length === 10) { applyPreset(''); setDateFrom(e.target.value); } }}
-              className="date-input-dark bg-white/10 border border-white/20 text-white text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
+              className="date-input-dark border border-white/20 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
             />
             <span className="text-white/60 text-sm select-none">—</span>
             <input
               type="date"
               value={dateTo}
               onChange={e => { if (e.target.value.length === 10) { applyPreset(''); setDateTo(e.target.value); } }}
-              className="date-input-dark bg-white/10 border border-white/20 text-white text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
+              className="date-input-dark border border-white/20 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
             />
 
             {/* Select mesero */}

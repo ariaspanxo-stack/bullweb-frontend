@@ -320,7 +320,7 @@ function RoleModal({ role, onClose, onSave }: RoleModalProps) {
               <input
                 value={name} onChange={e => setName(e.target.value)}
                 disabled={role?.is_system}
-                className="w-full bg-gray-900 border border-gray-500 rounded-lg px-3 py-2 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-indigo-400 disabled:opacity-50"
+                className="w-full border border-gray-500 rounded-lg px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:border-indigo-400 disabled:opacity-50"
                 placeholder="Ej: Cajero Nocturno"
               />
             </div>

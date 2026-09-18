@@ -249,6 +249,10 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
                         : '—'}
                     </p>
                   )}
+                  {/* Hotfix #179 — filtros del estimado comunicados (antes invisibles) */}
+                  <p className="text-[11px] text-blue-500 mt-0.5">
+                    Solo clientes activos con email registrado que aceptan novedades
+                  </p>
                   {/* Hotfix #98 — Aviso pre-envío: cuota disponible del mes */}
                   {emailUsage && (
                     <p

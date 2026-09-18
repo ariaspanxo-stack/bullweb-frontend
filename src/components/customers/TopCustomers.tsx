@@ -16,7 +16,8 @@ export default function TopCustomers() {
     <div className="bg-white rounded-lg border border-gray-200 p-6">
       <div className="flex items-center gap-2 mb-4">
         <Trophy className="w-5 h-5 text-yellow-600" />
-        <h2 className="text-lg font-semibold text-gray-900">Clientes VIP</h2>
+        {/* Hotfix #179 — honestidad UI: este panel es el top por gasto (PAID), no el segmento VIP */}
+        <h2 className="text-lg font-semibold text-gray-900">Top Clientes</h2>
       </div>
 
       <div className="space-y-3">

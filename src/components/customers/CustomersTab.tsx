@@ -310,12 +310,12 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
       </div>
       </div>
 
-      {/* Panel VIP - Sidebar derecho */}
+      {/* Panel Top Clientes - Sidebar derecho (Hotfix #179: era "Panel VIP" siendo ranking por gasto) */}
       <div className="w-96 bg-white border border-gray-200 rounded-lg flex-shrink-0">
         <div className="p-4 border-b border-gray-200">
           <h3 className="font-bold text-gray-900 flex items-center gap-2">
             <span className="text-2xl">🏆</span>
-            Clientes VIP
+            Top Clientes
           </h3>
           <p className="text-sm text-gray-500">Top clientes por gasto total</p>
         </div>

@@ -1,12 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Menu, Bell, MessageCircle, User, Settings, LogOut, ChevronRight, ShoppingBag, AlertCircle, CheckCircle, X, Package, Download, Headset } from 'lucide-react';
+import { Menu, Bell, MessageCircle, User, Settings, LogOut, ChevronRight, ShoppingBag, AlertCircle, CheckCircle, X, Package, Download, Headset, CreditCard, AlertTriangle, Loader2 } from 'lucide-react';
 import { useInstallPWA } from '@/components/pwa/InstallPWA';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
 import toast from 'react-hot-toast';
+import api from '@/services/api';
 import { notificationsService, type RecentNotification } from '@/services/notificationsService';
 
 // ============================================================================
@@ -33,6 +34,81 @@ const breadcrumbMap: Record<string, string> = {
   '/reports': 'Reportes',
   '/settings': 'Configuración'
 };
+
+// ============================================================================
+// NOTIFICACIONES DE SUSCRIPCIÓN (Hotfix #180) — avisos preventivos in-app
+// Complemento del dunning por email (#132) y del overlay al vencer (402).
+// Derivadas client-side de GET /billing/status (mismo contrato que consume
+// PaymentRequiredOverlay). SIN tiempo real: se consultan al montar y al abrir
+// la campanita. Mientras el estado persista, la notificación vive (no hay
+// estado de "vistas" persistido — decisión de simplicidad: badge = condiciones
+// activas).
+// ============================================================================
+
+interface BillingStatusResponse {
+  status?:      string;   // ACTIVE | TRIAL | PAST_DUE | SUSPENDED | CANCELLED
+  trialActive?: boolean;
+  daysLeft?:    number;
+}
+
+interface SubscriptionNotice {
+  id:       'sub-trial-info' | 'sub-trial-last-day' | 'sub-trial-expired' | 'sub-past-due';
+  severity: 'info' | 'urgent';
+  title:    string;
+  body:     string;
+  cta:      string;
+}
+
+/**
+ * Árbol de decisiones del diseño (#180) — implementado EXACTAMENTE:
+ *  (a) trialActive && 2 <= daysLeft <= 7  → informativa "termina en N días" + CTA
+ *  (b) trialActive && daysLeft <= 1       → urgente (último día) + CTA
+ *  (c) trial vencido (trialActive=false, status TRIAL) → urgente + CTA
+ *  (d) status PAST_DUE                    → urgente con CTA directo a pagar
+ *  (e) ACTIVE (y cualquier otro estado sin condición) → SIN notificación (cero ruido)
+ * Regla ABIERTA documentada: ACTIVE con renovación cercana → silencio por defecto.
+ */
+function buildSubscriptionNotices(data: BillingStatusResponse): SubscriptionNotice[] {
+  const out: SubscriptionNotice[] = [];
+  const status      = data?.status;
+  const trialActive = data?.trialActive === true;
+  const daysLeft    = data?.daysLeft ?? 0;
+
+  if (trialActive && daysLeft >= 2 && daysLeft <= 7) {
+    out.push({
+      id: 'sub-trial-info',
+      severity: 'info',
+      title: `Tu prueba gratuita termina en ${daysLeft} día${daysLeft > 1 ? 's' : ''}`,
+      body:  'Activa tu plan Starter para no perder tus ventas al terminar la prueba.',
+      cta:   'Continuar suscripción',
+    });
+  } else if (trialActive && daysLeft <= 1) {
+    out.push({
+      id: 'sub-trial-last-day',
+      severity: 'urgent',
+      title: '¡Hoy es el último día de tu prueba gratuita!',
+      body:  'Mañana tu cuenta se bloqueará. Activa tu plan ahora para no perder tus ventas.',
+      cta:   'Continuar suscripción',
+    });
+  } else if (!trialActive && status === 'TRIAL') {
+    out.push({
+      id: 'sub-trial-expired',
+      severity: 'urgent',
+      title: 'Tu prueba gratuita ha terminado',
+      body:  'Activa tu plan Starter para volver a operar con normalidad.',
+      cta:   'Continuar suscripción',
+    });
+  } else if (status === 'PAST_DUE') {
+    out.push({
+      id: 'sub-past-due',
+      severity: 'urgent',
+      title: 'Tu suscripción tiene un pago pendiente',
+      body:  'Regulariza el pago para no perder acceso al panel.',
+      cta:   'Pagar ahora',
+    });
+  }
+  return out;
+}
 
 // ============================================================================
 // HELPERS
@@ -74,10 +150,12 @@ function InstallAppButton() {
 export default function Header({ onMenuClick }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuthStore();
+  const queryClient = useQueryClient();
+  const { user, logout, isSuperAdmin } = useAuthStore();
   const [showNotif, setShowNotif]   = useState(false);
   const [dismissed, setDismissed]   = useState<Set<string>>(new Set());
   const [readIds, setReadIds]       = useState<Set<string>>(new Set());
+  const [payingSubId, setPayingSubId] = useState<string | null>(null);
   const notifRef = useRef<HTMLDivElement>(null);
 
   // Polling de notificaciones generales (30s fijo — table requests van por Socket.IO)
@@ -94,7 +172,35 @@ export default function Header({ onMenuClick }: HeaderProps) {
     .filter((n: RecentNotification) => !dismissed.has(n.id))
     .map((n: RecentNotification) => ({ ...n, read: n.read || readIds.has(n.id) }));
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  // ── Notificaciones de suscripción (#180) — consultar al MONTAR (mismo
+  // mecanismo/endpoint que usa PaymentRequiredOverlay: cliente `api` +
+  // GET /billing/status; /api/billing/ está en SKIP_PATHS → siempre 200 con
+  // el estado real en el body, incluso PAST_DUE). Sin polling: refetch al
+  // abrir la campanita. SuperAdmin: silencio (igual que el overlay).
+  const billingQ = useQuery<BillingStatusResponse>({
+    queryKey:  ['billing-status-bell'],
+    queryFn:   async () => (await api.get<BillingStatusResponse>('/billing/status')).data,
+    enabled:   !isSuperAdmin,
+    staleTime: 60_000,
+    retry:     false,
+  });
+
+  const subNotices = isSuperAdmin ? [] : buildSubscriptionNotices(billingQ.data ?? {});
+
+  // CTA de suscripción — MISMO destino que el botón del overlay:
+  // POST /payments/flow/create → redirect a flowUrl.
+  const handleSubPay = useCallback(async (noticeId: string) => {
+    try {
+      setPayingSubId(noticeId);
+      const response = await api.post<{ flowUrl: string }>('/payments/flow/create');
+      window.location.href = response.data.flowUrl;
+    } catch (err: any) {
+      toast.error(err?.message ?? 'Error al generar el link de pago. Intenta nuevamente.');
+      setPayingSubId(null);
+    }
+  }, []);
+
+  const unreadCount = notifications.filter(n => !n.read).length + subNotices.length;
 
   // Cerrar al hacer click fuera
   useEffect(() => {
@@ -197,7 +303,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
           {/* Notificaciones */}
           <div className="relative" ref={notifRef}>
             <button
-              onClick={() => setShowNotif(v => !v)}
+              onClick={() => {
+                setShowNotif(v => !v);
+                // Refrescar el estado de suscripción al abrir (#180)
+                if (!isSuperAdmin) queryClient.invalidateQueries({ queryKey: ['billing-status-bell'] });
+              }}
               className="relative p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               aria-label="Notificaciones"
             >
@@ -221,9 +331,50 @@ export default function Header({ onMenuClick }: HeaderProps) {
                   )}
                 </div>
 
-                {/* Lista */}
+                {/* Lista — avisos de suscripción (#180) primero: NO descartables
+                    mientras el estado persista (sin botón X); el badge refleja
+                    las condiciones activas. */}
                 <ul className="max-h-80 overflow-y-auto divide-y divide-white/5">
-                  {notifications.length === 0 && (
+                  {subNotices.map(n => (
+                    <li
+                      key={n.id}
+                      className={cn(
+                        'flex items-start gap-3 px-4 py-3',
+                        n.severity === 'urgent' ? 'bg-red-500/10' : 'bg-brand-500/10',
+                      )}
+                    >
+                      <div className={cn(
+                        'mt-0.5 p-1.5 rounded-lg bg-white/5 flex-shrink-0',
+                        n.severity === 'urgent' ? 'text-red-400' : 'text-brand-400',
+                      )}>
+                        {n.severity === 'urgent'
+                          ? <AlertTriangle className="w-4 h-4" />
+                          : <CreditCard className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className={cn(
+                          'text-sm font-semibold',
+                          n.severity === 'urgent' ? 'text-red-300' : 'text-white',
+                        )}>{n.title}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">{n.body}</p>
+                        <button
+                          onClick={() => handleSubPay(n.id)}
+                          disabled={payingSubId !== null}
+                          className={cn(
+                            'mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-colors disabled:opacity-60',
+                            n.severity === 'urgent'
+                              ? 'bg-red-500 hover:bg-red-600'
+                              : 'bg-brand-500 hover:bg-brand-600',
+                          )}
+                        >
+                          {payingSubId === n.id
+                            ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generando link...</>
+                            : n.cta}
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                  {notifications.length === 0 && subNotices.length === 0 && (
                     <li className="px-4 py-8 text-center text-sm text-gray-400">Sin notificaciones</li>
                   )}
                   {notifications.map(n => (

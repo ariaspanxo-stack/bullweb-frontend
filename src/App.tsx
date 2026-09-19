@@ -7,10 +7,6 @@ import { useAuthStore } from '@/store/authStore';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import Layout from '@/components/layout/Layout';
-import Login from '@/pages/auth/Login';
-import Restaurant from '@/pages/Restaurant/Restaurant';
-import Orders from '@/pages/Orders';
-import OnlineOrders from '@/pages/OnlineOrders';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 
 // ── Lazy-loaded pages (code-splitting) ──────────────────────────────────────
@@ -24,6 +20,12 @@ const Delivery        = lazy(() => import('@/pages/Delivery'));
 const DeliveryMappings = lazy(() => import('@/pages/DeliveryMappings'));
 const Reports         = lazy(() => import('@/pages/Reports'));
 const Sales           = lazy(() => import('@/pages/Sales/Sales').then(m => ({ default: m.Sales })));
+
+// H187 — E2: deferrals de rutas eager (solo App.tsx las importaba, verificado)
+const Login           = lazy(() => import('@/pages/auth/Login'));
+const Restaurant      = lazy(() => import('@/pages/Restaurant/Restaurant'));
+const Orders          = lazy(() => import('@/pages/Orders'));
+const OnlineOrders    = lazy(() => import('@/pages/OnlineOrders'));
 
 const AdminUsers      = lazy(() => import('@/pages/Admin/AdminUsers'));
 const RoleMatrix      = lazy(() => import('@/pages/Admin/RoleMatrix'));

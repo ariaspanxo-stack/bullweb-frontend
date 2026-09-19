@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 console.log(__APP_VERSION__);
 import App from './App.tsx'
+import ErrorBoundary from './components/ErrorBoundary'
 import { applyBranding } from './utils/applyBranding'
 
 Sentry.init({
@@ -35,7 +36,9 @@ if (typeof window !== 'undefined') {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
   </StrictMode>,
 )
 

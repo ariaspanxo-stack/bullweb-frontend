@@ -50,7 +50,18 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       port: 5173,
-      host: true
+      host: true,
+      // PREVIEW LOCAL #180 (SIN COMMIT): proxy same-origin → API de producción.
+      // El navegador habla con localhost (sin CORS); el proxy Node habla
+      // servidor-a-servidor. PROHIBIDO deploy/build con este bloque presente.
+      // H187: bloque COMENTADO para build/deploy conforme a esta misma regla
+      // (descomentar solo para preview local, jamás commiteado activo).
+      // proxy: {
+      //   '/api': {
+      //     target: 'https://app.bullwebchile.com',
+      //     changeOrigin: true,
+      //   },
+      // },
     },
     build: {
       outDir: 'dist',

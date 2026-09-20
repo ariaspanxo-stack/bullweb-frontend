@@ -597,11 +597,10 @@ function CartaHero({
           .bw-reveal.bw-revealed { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      {/* Gradiente hero / Banner — cinematográfico */}
+      {/* Gradiente hero / Banner — cinematográfico (Amend #197: banner inmersivo — la foto protagonista) */}
       <div
         style={{
           width: '100%',
-          minHeight: '240px',
           position: 'relative',
           overflow: 'hidden',
           backgroundImage: bannerUrl
@@ -611,10 +610,10 @@ function CartaHero({
           backgroundPosition: bannerUrl ? 'center' : undefined,
           backgroundRepeat: bannerUrl ? 'no-repeat' : undefined,
         }}
-        className="md:min-h-[340px]"
+        className="h-[clamp(280px,38vh,420px)] md:h-[400px]"
       >
-        {/* Overlay degradado 2 stops cuando hay banner — legibilidad garantizada */}
-        {bannerUrl && <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 0%, ${themeColor}22 55%, #09090b 100%)` }} />}
+        {/* Overlay degradado 2 stops cuando hay banner — legibilidad garantizada (Amend #197: recalibrado a la nueva altura, zona oscura baja antes) */}
+        {bannerUrl && <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 0%, ${themeColor}22 42%, #09090b 96%)` }} />}
         <div style={{
           position: 'absolute',
           top: '-20px',

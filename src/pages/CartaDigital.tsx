@@ -276,6 +276,10 @@ function ProductCard({
   isBusinessOpen?: boolean | null;
   index?:          number;
 }) {
+  // Hotfix #195 — ProductCard como TARJETA mobile-first (390px primero):
+  // foto superior full-width en móvil / thumbnail izquierda en desktop (sm:),
+  // placeholder elegante con emoji de la categoría cuando NO hay foto (PROHIBIDO el gris vacío).
+  // El nombre vive en la propia tarjeta para que el thumb nunca lo pise.
   const isAvailable      = product.available !== false;
   const canAdd           = isAvailable && isBusinessOpen !== false;
   const fallbackEmoji    = product.emoji ?? '🍽️';
@@ -284,7 +288,7 @@ function ProductCard({
   return (
     <div
       onClick={isAvailable && onClick ? onClick : undefined}
-      className={`bw-fade-in-up bg-white border border-gray-100 rounded-2xl p-3.5 flex items-center gap-3.5 transition-all duration-200
+      className={`bw-fade-in-up bw-item-card bg-white border border-gray-100 rounded-2xl overflow-hidden transition-all duration-200
         ${isAvailable && onClick ? 'cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]' : ''}
         ${!isAvailable ? 'opacity-80' : ''}
       `}
@@ -293,9 +297,12 @@ function ProductCard({
         ...(isAvailable ? {} : { borderColor: 'rgba(0,0,0,0.04)' }),
       }}
     >
-      {/* Imagen / emoji — solo si existe */}
-      {(product.image || product.emoji) && (
-        <div className="w-[96px] h-[96px] sm:w-[110px] sm:h-[110px] rounded-xl overflow-hidden flex-shrink-0 bg-gray-50 flex items-center justify-center relative">
+      {/* Foto: superior en móvil (mobile-first) — thumbnail izquierda en desktop */}
+      <div className="flex flex-col sm:flex-row">
+        <div
+          className="bw-item-thumb relative flex-shrink-0 flex items-center justify-center overflow-hidden"
+          style={{ backgroundColor: `${themeColor}0d` }}
+        >
           {product.image ? (
             <img
               src={product.image}
@@ -305,7 +312,8 @@ function ProductCard({
               onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
           ) : (
-            <span className={`text-4xl select-none ${!isAvailable ? 'grayscale opacity-60' : ''}`}>{fallbackEmoji}</span>
+            /* Placeholder elegante: emoji del producto sobre fondo suave del tema */
+            <span className={`bw-item-placeholder text-4xl select-none ${!isAvailable ? 'grayscale opacity-60' : ''}`}>{fallbackEmoji}</span>
           )}
           {!isAvailable && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
@@ -314,82 +322,79 @@ function ProductCard({
           )}
           {inCart && (
             <div
-              className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white"
+              className="absolute top-1.5 right-1.5 sm:-top-1 sm:-right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white"
               style={{ backgroundColor: themeColor }}
             >
               {quantity}
             </div>
           )}
         </div>
-      )}
 
-      {/* Info + Precio/Botón — proximidad semántica */}
-      <div className="flex-1 min-w-0 flex flex-col justify-between">
-        {/* Zona superior: Info */}
-        <div>
-          <p className="font-semibold text-gray-800 text-sm leading-snug">{product.name.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}</p>
+        {/* Cuerpo: nombre bold + descripción 1 línea + tags + precio/botón */}
+        <div className="flex-1 min-w-0 flex flex-col p-3.5">
+          <p className="font-bold text-gray-900 text-sm leading-snug">{product.name.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}</p>
           {product.description && (
-            <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed mt-0.5">{product.description}</p>
+            <p className="text-xs text-gray-500 truncate leading-relaxed mt-0.5">{product.description}</p>
           )}
           {product.tags && product.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1">
+            <div className="flex flex-wrap gap-1 mt-1.5">
               {product.tags.map((tag: string) => <ProductTag key={tag} tag={tag} />)}
             </div>
           )}
           {!isAvailable && (
-            <span className="inline-block mt-1 text-[10px] font-medium text-gray-400 px-2 py-0.5 rounded-full bg-gray-100">
+            <span className="inline-block mt-1.5 text-[10px] font-medium text-gray-400 px-2 py-0.5 rounded-full bg-gray-100">
               No disponible hoy
             </span>
           )}
-        </div>
 
-        {/* Zona inferior: Precio + Acción juntos */}
-        <div className="flex items-center justify-between mt-2" onClick={e => e.stopPropagation()}>
-          {!isAvailable ? (
-            <span className="font-bold text-gray-400 text-sm line-through">{fmtCLP(product.price)}</span>
-          ) : (
-            <span className="font-bold text-sm rounded-lg px-2 py-0.5" style={{ backgroundColor: `${themeColor}15`, color: themeColor }}>{fmtCLP(product.price)}</span>
-          )}
-          {isAvailable && (
-            canAdd ? (
-              inCart ? (
-                <div className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
-                  <button
-                    onClick={onRemove}
-                    className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 active:scale-95 transition-all"
-                    aria-label={`Quitar ${product.name}`}
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <span className="font-bold text-gray-900 w-5 text-center text-sm">{quantity}</span>
+          {/* Precio prominente + botón + alineados al pie de la tarjeta */}
+          <div className="flex items-center justify-between mt-2.5" onClick={e => e.stopPropagation()}>
+            {!isAvailable ? (
+              <span className="font-bold text-gray-400 text-sm line-through">{fmtCLP(product.price)}</span>
+            ) : (
+              <span className="font-extrabold text-base rounded-lg px-2 py-0.5" style={{ backgroundColor: `${themeColor}15`, color: themeColor }}>{fmtCLP(product.price)}</span>
+            )}
+            {isAvailable && (
+              canAdd ? (
+                inCart ? (
+                  <div className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
+                    <button
+                      onClick={onRemove}
+                      className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 active:scale-95 transition-all"
+                      aria-label={`Quitar ${product.name}`}
+                    >
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="font-bold text-gray-900 w-5 text-center text-sm">{quantity}</span>
+                    <button
+                      onClick={onAdd}
+                      className="bw-press w-8 h-8 rounded-full shadow-sm flex items-center justify-center text-white hover:brightness-110 active:scale-95 transition-all"
+                      style={{ backgroundColor: themeColor }}
+                      aria-label={`Agregar ${product.name}`}
+                    >
+                      <Plus className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+                ) : (
                   <button
                     onClick={onAdd}
-                    className="w-8 h-8 rounded-full shadow-sm flex items-center justify-center text-white hover:brightness-110 active:scale-95 transition-all"
-                    style={{ backgroundColor: themeColor }}
+                    className="bw-press w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex-shrink-0"
+                    style={{ backgroundColor: themeColor, boxShadow: `0 4px 14px ${themeColor}55` }}
                     aria-label={`Agregar ${product.name}`}
                   >
                     <Plus className="w-4 h-4 text-white" />
                   </button>
-                </div>
+                )
               ) : (
-                <button
-                  onClick={onAdd}
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex-shrink-0"
-                  style={{ backgroundColor: themeColor, boxShadow: `0 4px 14px ${themeColor}55` }}
-                  aria-label={`Agregar ${product.name}`}
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 opacity-40"
+                  title="Negocio cerrado"
                 >
-                  <Plus className="w-4 h-4 text-white" />
-                </button>
+                  <Plus className="w-4 h-4 text-gray-400" />
+                </div>
               )
-            ) : (
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 opacity-40"
-                title="Negocio cerrado"
-              >
-                <Plus className="w-4 h-4 text-gray-400" />
-              </div>
-            )
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -553,6 +558,21 @@ function CartaHero({
         @keyframes bwPop { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
         .bw-fade-in-up { animation: bwFadeInUp 0.3s ease both; }
         .bw-pop { animation: bwPop 0.25s ease-out; }
+        /* Hotfix #195 — micro-feedback CSS (sin librerías): press del botón + y pulso del badge del carrito */
+        @keyframes bwPress { 0% { transform: scale(1); } 40% { transform: scale(0.86); } 100% { transform: scale(1); } }
+        .bw-press:active { animation: bwPress 0.18s ease-out; }
+        @keyframes bwBadgePulse {
+          0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(0,0,0,0.35); }
+          60%  { transform: scale(1.22); box-shadow: 0 0 0 6px rgba(0,0,0,0); }
+          100% { transform: scale(1);    box-shadow: 0 0 0 0 rgba(0,0,0,0); }
+        }
+        .bw-badge-pulse { animation: bwBadgePulse 0.45s ease-out; }
+        /* Hotfix #195 — tarjeta de ítem mobile-first: foto superior full-width (390px primero),
+           thumbnail redondeado a la izquierda desde sm (desktop) */
+        .bw-item-thumb { width: 100%; height: 132px; }
+        @media (min-width: 640px) {
+          .bw-item-thumb { width: 100px; height: auto; align-self: stretch; min-height: 110px; border-radius: 0; }
+        }
       `}</style>
       {/* Gradiente hero / Banner — cinematográfico */}
       <div
@@ -695,7 +715,7 @@ function CartaFloatingCart({
       >
         <span
           key={count}
-          className="bw-pop w-7 h-7 rounded-full flex items-center justify-center text-sm font-black"
+          className="bw-pop bw-badge-pulse bw-cart-badge w-7 h-7 rounded-full flex items-center justify-center text-sm font-black"
           style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
         >
           {count}
@@ -1817,7 +1837,7 @@ export default function CartaDigital() {
               <ShoppingCart className="w-5 h-5" />
               Mi Pedido
               {totalCartQty > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full font-semibold bg-white/25 text-white backdrop-blur">
+                <span key={totalCartQty} className="bw-badge-pulse bw-cart-badge text-xs px-2 py-0.5 rounded-full font-semibold bg-white/25 text-white backdrop-blur">
                   {totalCartQty}
                 </span>
               )}

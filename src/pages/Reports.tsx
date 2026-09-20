@@ -97,6 +97,7 @@ function ReportsInner() {
               value={dateFrom}
               onChange={e => { if (e.target.value.length === 10) { applyPreset(''); setDateFrom(e.target.value); } }}
               className="date-input-dark border border-white/20 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: 'white', colorScheme: 'dark' }}
             />
             <span className="text-white/60 text-sm select-none">—</span>
             <input
@@ -104,6 +105,7 @@ function ReportsInner() {
               value={dateTo}
               onChange={e => { if (e.target.value.length === 10) { applyPreset(''); setDateTo(e.target.value); } }}
               className="date-input-dark border border-white/20 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: 'white', colorScheme: 'dark' }}
             />
 
             {/* Select mesero */}

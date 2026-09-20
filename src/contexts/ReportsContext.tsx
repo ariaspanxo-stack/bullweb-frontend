@@ -27,6 +27,7 @@ export function getPresetFrom(preset: string): string {
   }
 }
 import toast from 'react-hot-toast';
+import * as Sentry from '@sentry/react';
 
 // ============================================================================
 // CONSTANTS
@@ -341,8 +342,10 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
         dateFrom, dateTo, format: exportFmt,
       });
       toast.success('Reporte exportado');
-    } catch {
-      toast.error('Error al exportar');
+    } catch (err) {
+      console.error('Error al exportar reporte:', err);
+      Sentry.captureException(err);
+      toast.error(`Error al exportar: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setIsExporting(false);
     }

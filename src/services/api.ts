@@ -651,7 +651,11 @@ const httpClient = {
     return { data };
   },
 
-  post: async <T = any>(url: string, body?: any): Promise<{ data: T }> => {
+  post: async <T = any>(
+    url: string,
+    body?: any,
+    options?: { responseType?: 'blob' }
+  ): Promise<{ data: T }> => {
     const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
     const response = await fetchWithRefresh(() =>
       fetch(fullUrl, {
@@ -660,6 +664,11 @@ const httpClient = {
         body:    JSON.stringify(body),
       })
     );
+    if (options?.responseType === 'blob') {
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const blob = await response.blob();
+      return { data: blob as T };
+    }
     const data = await handleResponse<T>(response);
     return { data };
   },

@@ -20,19 +20,23 @@ import {
   Package,
   Users,
   Crown,
+  Share2,
 } from 'lucide-react';
 import { reportsService } from '@/services/reportsService';
 import { subDays, startOfDay, endOfDay } from 'date-fns';
 import { PrintStatusWidget } from '@/components/dashboard/PrintStatusWidget';
 import { SalesHeatmap } from '@/components/dashboard/SalesHeatmap';
 
-type TimeRange = 'today' | 'week' | 'month';
+type TimeRange = 'today' | 'yesterday' | 'week' | 'month';
 
 const getDateRange = (range: TimeRange) => {
   const now = new Date();
   switch (range) {
     case 'today':
       return { dateFrom: startOfDay(now).toISOString(), dateTo: endOfDay(now).toISOString() };
+    case 'yesterday':
+      // Hotfix #192: preset Ayer — día completo anterior (startOfDay→endOfDay de ayer)
+      return { dateFrom: startOfDay(subDays(now, 1)).toISOString(), dateTo: endOfDay(subDays(now, 1)).toISOString() };
     case 'week':
       return { dateFrom: startOfDay(subDays(now, 7)).toISOString(), dateTo: endOfDay(now).toISOString() };
     case 'month':
@@ -54,6 +58,9 @@ const DONUT_COLORS = [
 
 export const Dashboard = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('today');
+  // Hotfix #192: feedback del botón Compartir (fallback clipboard desktop)
+  const [shareCopied, setShareCopied] = useState(false);
+  const [shareFailed, setShareFailed] = useState(false);
 
   const dateRange = getDateRange(timeRange);
 
@@ -90,6 +97,47 @@ export const Dashboard = () => {
       currency: 'CLP',
       maximumFractionDigits: 0,
     }).format(value);
+  };
+
+  // Hotfix #192: texto de compartir — SOLO datos ya renderizados en el Dashboard
+  const rangeLabel = timeRange === 'today' ? 'hoy'
+    : timeRange === 'yesterday' ? 'ayer'
+    : timeRange === 'week' ? 'esta semana'
+    : 'este mes';
+
+  const buildShareText = () => {
+    const lines = [
+      `Bullweb — ${rangeLabel}:`,
+      `${formatCurrency(stats.totalSales)} en ${stats.totalOrders} órdenes ⋅ ticket ${formatCurrency(stats.avgTicket)}`,
+    ];
+    if (comparison?.growthSales != null) {
+      lines.push(`${comparison.isPositive ? '+' : ''}${comparison.growthSales}% vs período anterior`);
+    }
+    if (stats.topProduct && stats.topProduct !== '—') {
+      lines.push(`Top: ${stats.topProduct}`);
+    }
+    return lines.join('\n');
+  };
+
+  const handleShare = async () => {
+    const text = buildShareText();
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Bullweb', text });
+      } catch {
+        // Usuario canceló el share — sin efecto
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    } catch {
+      // Fallo discreto del clipboard — no rompe la pantalla
+      setShareFailed(true);
+      setTimeout(() => setShareFailed(false), 2000);
+    }
   };
 
   // Datos transformados para el BarChart de Ventas por Hora
@@ -143,7 +191,7 @@ export const Dashboard = () => {
 
       {/* Selector de rango */}
       <div className="mb-6 flex gap-2">
-        {(['today', 'week', 'month'] as TimeRange[]).map((range) => (
+        {(['today', 'yesterday', 'week', 'month'] as TimeRange[]).map((range) => (
           <button
             key={range}
             onClick={() => setTimeRange(range)}
@@ -153,7 +201,7 @@ export const Dashboard = () => {
                 : 'bg-white text-slate-700 border border-slate-100 hover:bg-slate-100'
             }`}
           >
-            {range === 'today' ? 'Hoy' : range === 'week' ? 'Esta Semana' : 'Este Mes'}
+            {range === 'today' ? 'Hoy' : range === 'yesterday' ? 'Ayer' : range === 'week' ? 'Esta Semana' : 'Este Mes'}
           </button>
         ))}
       </div>
@@ -168,9 +216,19 @@ export const Dashboard = () => {
           <div className="pointer-events-none absolute -bottom-12 left-1/3 h-40 w-40 rounded-full bg-blue-500/10 blur-2xl" />
 
           <div className="relative p-6">
-            <div className="mb-5 flex items-center gap-2 text-slate-300">
-              <Crown size={18} className="text-amber-400" />
-              <h2 className="text-sm font-semibold uppercase tracking-wide">Resumen ejecutivo</h2>
+            <div className="mb-5 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-slate-300">
+                <Crown size={18} className="text-amber-400" />
+                <h2 className="text-sm font-semibold uppercase tracking-wide">Resumen ejecutivo</h2>
+              </div>
+              {/* Hotfix #192: botón Compartir junto al bloque de KPIs */}
+              <button
+                onClick={handleShare}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-200 transition-colors hover:bg-white/10"
+              >
+                <Share2 size={14} />
+                {shareCopied ? 'Copiado' : shareFailed ? 'No se pudo copiar' : 'Compartir'}
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

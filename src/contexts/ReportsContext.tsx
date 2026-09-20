@@ -128,6 +128,9 @@ interface ReportsContextValue {
   setActivePreset:  (v: string | null) => void;
   waiterId:         string;
   setWaiterId:      (v: string) => void;
+  // Hotfix #192: filtro por canal de ventas (DINE_IN/TAKEAWAY/DELIVERY, '' = todos)
+  salesType:        string;
+  setSalesType:     (v: string) => void;
   salesPage:        number;
   setSalesPage:     (v: number | ((p: number) => number)) => void;
   stockPage:        number;
@@ -192,6 +195,7 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
   const [isExporting,    setIsExporting]    = useState(false);
   const [activePreset,   setActivePreset]   = useState<string | null>('30d');
   const [waiterId,       setWaiterId]       = useState<string>('');
+  const [salesType,      setSalesType]      = useState<string>(''); // Hotfix #192: filtro canal
   const [stockPage,      setStockPage]      = useState(1);
   const [purchasesPage,  setPurchasesPage]  = useState(1);
   const [salesPage,      setSalesPage]      = useState(1);
@@ -214,14 +218,14 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
 
   // ── Queries compartidas ─────────────────────────────────────────────────
   const { data: currSales, isLoading: salesLoading } = useQuery({
-    queryKey: ['rpt-sales-curr', dateFrom, dateTo, waiterId],
-    queryFn: () => reportsService.getSalesReport({ dateFrom, dateTo, groupBy: 'day', waiterId: waiterId || undefined }),
+    queryKey: ['rpt-sales-curr', dateFrom, dateTo, waiterId, salesType],
+    queryFn: () => reportsService.getSalesReport({ dateFrom, dateTo, groupBy: 'day', waiterId: waiterId || undefined, type: salesType || undefined }),
     staleTime: 0,
   });
 
   const { data: prevSales, isLoading: prevLoading } = useQuery({
-    queryKey: ['rpt-sales-prev', prevDates.from, prevDates.to, waiterId],
-    queryFn: () => reportsService.getSalesReport({ dateFrom: prevDates.from, dateTo: prevDates.to, groupBy: 'day', waiterId: waiterId || undefined }),
+    queryKey: ['rpt-sales-prev', prevDates.from, prevDates.to, waiterId, salesType],
+    queryFn: () => reportsService.getSalesReport({ dateFrom: prevDates.from, dateTo: prevDates.to, groupBy: 'day', waiterId: waiterId || undefined, type: salesType || undefined }),
     staleTime: 300_000,
   });
 
@@ -300,7 +304,7 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
   useEffect(() => { setWaiterId(''); },     [dateFrom, dateTo]);
   useEffect(() => { setStockPage(1); },     [dateFrom, dateTo, activeTab]);
   useEffect(() => { setPurchasesPage(1); }, [dateFrom, dateTo]);
-  useEffect(() => { setSalesPage(1); },     [dateFrom, dateTo, waiterId]);
+  useEffect(() => { setSalesPage(1); },     [dateFrom, dateTo, waiterId, salesType]); // Hotfix #192: canal también resetea página
 
   // ── Auto-refresh cada 5 min cuando hay preset activo ─────────────────────
   useEffect(() => {
@@ -372,6 +376,7 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
       dateTo, setDateTo,
       activePreset, setActivePreset,
       waiterId, setWaiterId,
+      salesType, setSalesType, // Hotfix #192
       salesPage, setSalesPage,
       stockPage, setStockPage,
       purchasesPage, setPurchasesPage,

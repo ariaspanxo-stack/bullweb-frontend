@@ -157,13 +157,16 @@ export const reportsService = {
   /**
    * Obtener reporte de ventas detallado
    */
-  async getSalesReport(filters?: ReportFilters & { groupBy?: string }): Promise<any> {
+  async getSalesReport(filters?: ReportFilters & { groupBy?: string; type?: string }): Promise<any> {
     const params = new URLSearchParams();
     
     if (filters?.dateFrom) params.append('dateFrom', filters.dateFrom);
     if (filters?.dateTo) params.append('dateTo', filters.dateTo);
     if (filters?.groupBy) params.append('groupBy', filters.groupBy);
     if (filters?.waiterId) params.append('waiterId', filters.waiterId);
+    // Hotfix #192: filtro por canal — param `type` ya aceptado por el backend
+    // (reports.validation.ts:29, enum DINE_IN/TAKEAWAY/DELIVERY)
+    if (filters?.type) params.append('type', filters.type);
     
     const { data } = await api.get<any>(
       `/reports/sales${params.toString() ? `?${params.toString()}` : ''}`

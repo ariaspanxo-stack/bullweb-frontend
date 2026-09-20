@@ -25,6 +25,7 @@ export function VentasTab() {
     salesPage, setSalesPage,
     waitersForFilter,
     dashboardData,
+    salesType, setSalesType, // Hotfix #192: filtro por canal
   } = useReports();
 
   const rawOrders: any[] = (currSales as any)?.sales ?? [];
@@ -39,6 +40,25 @@ export function VentasTab() {
 
   return (
     <div className="space-y-5">
+      {/* Hotfix #192: filtro por canal — selector Todos/Mesas/Mostrador/Delivery.
+          Mapeo según enum real OrderType del schema (DINE_IN/TAKEAWAY/DELIVERY),
+          enviado como param `type` que el backend ya acepta (reports.validation.ts:29). */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Canal</span>
+          <select
+            value={salesType}
+            onChange={(e) => setSalesType(e.target.value)}
+            className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500/40"
+          >
+            <option value="">Todos</option>
+            <option value="DINE_IN">Mesas</option>
+            <option value="TAKEAWAY">Mostrador</option>
+            <option value="DELIVERY">Delivery</option>
+          </select>
+        </div>
+      </div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiMoneyCard label="Total Ventas"    value={totalSales}    prev={prevTotalSales}

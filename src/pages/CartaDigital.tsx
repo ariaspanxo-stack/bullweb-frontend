@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { useQrOrderStatus } from '../hooks/useQrOrderStatus';
 import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail, Instagram, Facebook, Globe, MessageCircle } from 'lucide-react';
 
 const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
@@ -731,7 +732,11 @@ function CartSheet({
   const [orderType,     setOrderType]     = useState<OrderType | null>(null);
   const [submitting,    setSubmitting]    = useState(false);
   const [orderNumber,   setOrderNumber]   = useState<string | null>(null);
+  const [orderId,       setOrderId]       = useState<string | null>(null);
   const [submitError,   setSubmitError]   = useState<string | null>(null);
+  // Hotfix #194 — seguimiento vivo del pedido (polling receipt público, solo paso success)
+  const liveStatus = useQrOrderStatus(step === 'success' ? orderId : null);
+
   const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', comment: '', email: '' });
   // Hotfix #88: opt-in de marketing — DESMARCADO por defecto
   const [marketingOptIn, setMarketingOptIn] = useState(false);
@@ -797,6 +802,7 @@ function CartSheet({
       const json = await res.json();
       if (json.success) {
         setOrderNumber(json.orderNumber);
+        setOrderId(json.orderId ?? null);
         setStep('success');
         onOrderSuccess();
       } else {
@@ -824,18 +830,35 @@ function CartSheet({
               ? 'En breve salimos a tu dirección'
               : 'En breve el personal preparará tu pedido'}
           </p>
-          {orderNumber && (
-            <div
-              className="rounded-2xl px-6 py-4 mb-6 fade-up fade-up-2"
-              style={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.07)' }}
-            >
-              <div className="text-zinc-500 text-xs mb-1">Número de pedido</div>
-              <div className="text-2xl font-bold" style={{ color: themeColor }}>{orderNumber}</div>
+
+          {/* Hotfix #194 — Seguimiento vivo del pedido (polling del receipt público) */}
+          <div
+            className="w-full rounded-2xl px-5 py-4 mb-4 fade-up fade-up-2 space-y-3 text-left"
+            style={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.07)' }}
+          >
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+              <p className="text-sm text-zinc-300 font-medium">
+                Enviado{orderNumber ? ` — ${orderNumber}` : ''}{tableNumber ? ` · Mesa ${tableNumber}` : ''}
+              </p>
             </div>
-          )}
-          {tableNumber && (
-            <p className="text-zinc-500 text-sm mb-6 fade-up fade-up-2">Mesa {tableNumber}</p>
-          )}
+            <div className="flex items-center gap-3">
+              {liveStatus === 'accepted' ? (
+                <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
+              ) : (
+                <span
+                  className="w-5 h-5 shrink-0 rounded-full border-2 border-zinc-600 animate-spin inline-block"
+                  style={{ borderTopColor: themeColor }}
+                />
+              )}
+              <p className={`text-sm font-medium ${liveStatus === 'accepted' ? 'text-green-400' : 'text-zinc-400'}`}>
+                {liveStatus === 'accepted'
+                  ? 'Aceptado por el restaurante — en preparación'
+                  : 'Esperando confirmación del restaurante…'}
+              </p>
+            </div>
+          </div>
+          {/* (Hotfix #194: número de pedido y mesa ahora viven en el bloque de seguimiento vivo) */}
           <button
             onClick={onClose}
             className="w-full py-4 text-white rounded-2xl font-bold transition-all active:scale-[0.98] fade-up fade-up-3"
@@ -1917,14 +1940,25 @@ export default function CartaDigital() {
           )}
         </div>
       )}
-      <a
-        href="https://www.bullwebchile.com"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-[11px] text-white/35 hover:text-white/70 transition-colors tracking-widest uppercase"
-      >
-        Powered by <span className="font-bold">BullWeb</span>
-      </a>
+      {/* Hotfix #194 — branding visible con micro-CTA (el loop viral) */}
+      <div className="w-full flex flex-col items-center gap-1.5 pt-2">
+        <a
+          href="https://www.bullwebchile.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-white/60 hover:text-white/90 transition-colors tracking-wide"
+        >
+          Carta digital por <span className="font-bold text-white/80">BullWeb</span>
+        </a>
+        <a
+          href="https://www.bullwebchile.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-white/45 hover:text-white/75 transition-colors"
+        >
+          ¿Quieres esto en tu restaurante? <span className="underline underline-offset-2">→</span>
+        </a>
+      </div>
     </footer>
 
     {/* Botón flotante del carrito (solo mobile) */}

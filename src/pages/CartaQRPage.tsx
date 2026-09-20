@@ -13,6 +13,7 @@ import {
   Share2, Printer, LayoutGrid, Clock, Save, X,
   Palette, Smartphone as SmartphoneIcon, Monitor, Tablet,
   CheckCircle, XCircle, RefreshCw, Phone, MapPin, Upload,
+  CalendarDays, ShoppingCart as ShoppingCartIcon,
 } from 'lucide-react';
 
 type ActiveTab = 'qr' | 'preview' | 'instrucciones' | 'horarios' | 'personalizar' | 'analiticas' | 'pedidos' | 'mesas';
@@ -66,6 +67,48 @@ const DEFAULT_HOURS: Record<string, { enabled: boolean; open: string; close: str
   saturday:  { enabled: true,  open: '12:00', close: '23:00' },
   sunday:    { enabled: false, open: '12:00', close: '20:00' },
 };
+
+// ── Hotfix #194 (gated): superponer el logo del tenant al centro del QR ──────
+// Mecanismo estándar: caja blanca central (quiet-zone) + logo ~24% del ancho.
+// El QR general usa errorCorrectionLevel 'H' (30% redundancia) → escaneo seguro.
+// Fallback: si el logo no carga o el canvas queda tainted (cross-origin sin CORS),
+// se devuelve el QR original — el escaneo NUNCA se rompe.
+const loadImage = (src: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    if (!src.startsWith('data:')) img.crossOrigin = 'anonymous';
+    img.onload  = () => resolve(img);
+    img.onerror = reject;
+    img.src     = src;
+  });
+
+async function composeQrWithLogo(qrDataUrl: string, logoUrl: string | null | undefined): Promise<string> {
+  if (!logoUrl) return qrDataUrl;
+  try {
+    const [qrImg, logoImg] = await Promise.all([loadImage(qrDataUrl), loadImage(logoUrl)]);
+    const size   = qrImg.width || 512;
+    const box    = Math.round(size * 0.24);   // logo 24% del ancho
+    const pad    = Math.round(box * 0.14);    // quiet-zone blanca alrededor
+    const total  = box + pad * 2;             // caja blanca total
+    const origin = Math.round((size - total) / 2);
+    const canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return qrDataUrl;
+    ctx.drawImage(qrImg, 0, 0, size, size);
+    // Respaldo blanco centrado
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(origin, origin, total, total);
+    // Logo con recorte cuadrado centrado dentro de la caja
+    const side = Math.min(logoImg.width, logoImg.height);
+    const sx   = Math.round((logoImg.width  - side) / 2);
+    const sy   = Math.round((logoImg.height - side) / 2);
+    ctx.drawImage(logoImg, sx, sy, side, side, origin + pad, origin + pad, box, box);
+    return canvas.toDataURL('image/png');
+  } catch {
+    return qrDataUrl; // cross-origin tainted o logo roto → QR original intacto
+  }
+}
 
 export default function CartaQRPage() {
   const [activeTab,     setActiveTab]     = useState<ActiveTab>('qr');
@@ -318,7 +361,7 @@ export default function CartaQRPage() {
       });
   }, []);
 
-  // Generar QR al montar y al cambiar colores/mesa
+  // Generar QR al montar y al cambiar colores/mesa (Hotfix #194: + logo del tenant al centro)
   useEffect(() => {
     setQrLoading(true);
     QRCode.toDataURL(cartaUrl, {
@@ -327,9 +370,12 @@ export default function CartaQRPage() {
       errorCorrectionLevel: 'H',
       color: { dark: qrFgColor, light: qrBgColor },
     })
-      .then(url => { setQrDataUrl(url); setQrLoading(false); })
+      .then(async url => {
+        setQrDataUrl(await composeQrWithLogo(url, cartaLogo));
+        setQrLoading(false);
+      })
       .catch(() => setQrLoading(false));
-  }, [cartaUrl, qrFgColor, qrBgColor]);
+  }, [cartaUrl, qrFgColor, qrBgColor, cartaLogo]);
 
   // Generar QRs de mesas cuando se activa el tab
   useEffect(() => {
@@ -657,6 +703,7 @@ export default function CartaQRPage() {
           { id: 'horarios',      icon: Clock,       label: 'Horarios'      },
           { id: 'personalizar',  icon: Palette,     label: 'Personalizar'  },
           { id: 'mesas',        icon: LayoutGrid,  label: 'QR Mesas'     },
+          { id: 'analiticas',   icon: LayoutGrid,  label: 'Analíticas'    },
         ] as const).map(tab => {
           const Icon = tab.icon;
           return (
@@ -1448,6 +1495,81 @@ export default function CartaQRPage() {
               >
                 🖨️ Imprimir todos los QR de mesa ({tables.length})
               </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ─── TAB: ANALÍTICAS (Hotfix #194 — re-agregada, loaders huérfanos revividos) ── */}
+      {activeTab === 'analiticas' && (
+        <div className="space-y-4">
+          {loadingAnalytics ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
+            </div>
+          ) : !analytics ? (
+            <div className="text-center py-16 text-gray-400">
+              <LayoutGrid className="w-12 h-12 mx-auto mb-3 opacity-40" />
+              <p className="text-sm">No se pudieron cargar las analíticas. Intenta de nuevo.</p>
+            </div>
+          ) : (
+            <>
+              {/* Cards principales */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
+                  <SmartphoneIcon className="w-5 h-5 text-orange-500 mx-auto mb-2" />
+                  <div className="text-3xl font-black text-gray-900 tabular-nums">{analytics.scansToday ?? 0}</div>
+                  <div className="text-xs font-semibold text-gray-500 mt-1">Escaneos hoy</div>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
+                  <CalendarDays className="w-5 h-5 text-orange-500 mx-auto mb-2" />
+                  <div className="text-3xl font-black text-gray-900 tabular-nums">{analytics.scansWeek ?? 0}</div>
+                  <div className="text-xs font-semibold text-gray-500 mt-1">Escaneos (7 días)</div>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
+                  <ShoppingCartIcon className="w-5 h-5 text-orange-500 mx-auto mb-2" />
+                  <div className="text-3xl font-black text-gray-900 tabular-nums">{analytics.ordersFromQr ?? 0}</div>
+                  <div className="text-xs font-semibold text-gray-500 mt-1">Pedidos desde QR (30 días)</div>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 text-center">
+                  <Monitor className="w-5 h-5 text-orange-500 mx-auto mb-2" />
+                  <div className="text-2xl font-black text-gray-900 leading-tight">
+                    <span className="text-orange-600">{analytics.mobile ?? 0}%</span>
+                    <span className="text-gray-300 mx-1">·</span>
+                    <span className="text-blue-600">{analytics.tablet ?? 0}%</span>
+                    <span className="text-gray-300 mx-1">·</span>
+                    <span className="text-gray-700">{analytics.desktop ?? 0}%</span>
+                  </div>
+                  <div className="text-xs font-semibold text-gray-500 mt-1">Móvil / Tablet / Escritorio</div>
+                </div>
+              </div>
+
+              {/* Mesas top */}
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+                <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2">
+                  <LayoutGrid className="w-4 h-4 text-orange-500" />
+                  Mesas más escaneadas (30 días)
+                </h3>
+                {(analytics.topTables ?? []).length === 0 ? (
+                  <p className="text-xs text-gray-400 py-4 text-center">Sin datos aún — los escaneos se registran al abrir la carta con ?mesa=N.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {(analytics.topTables ?? []).map((t: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-semibold text-gray-700">Mesa {t.table_number}</span>
+                        <span className="text-sm font-bold text-orange-600 tabular-nums">{t.scans} escaneos</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Nota honesta */}
+              <div className="bg-amber-50 border border-amber-100 rounded-xl p-4">
+                <p className="text-xs text-amber-700">
+                  ℹ️ Los escaneos del QR general (sin mesa) aún no se registran — mejora backend en camino.
+                </p>
+              </div>
             </>
           )}
         </div>

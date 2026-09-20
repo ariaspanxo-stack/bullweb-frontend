@@ -109,6 +109,21 @@ function getEmojiForCategory(name: string): string | null {
   return hit ? CATEGORY_EMOJIS[hit] : null;
 }
 
+// ── Hotfix #197 — Nombre limpio del sufijo técnico del slug ──────────────
+// El contrato público sirve restaurantName = slug ("Tu-mejor-sabor-216e63").
+// Fix de RAÍZ (contrato sirviendo nombre limpio) → #199. Mientras tanto,
+// este strip FRONTEND aplica a TODA visualización del nombre en la carta.
+// Patrón: guion + 5-6 hex al final (216e63 de 5, 86336e de 6 — los reales).
+// Además humaniza: guiones → espacios + capitalización de palabras.
+function stripTechSuffix(raw: string): string {
+  const base = raw.replace(/-([0-9a-f]{5,6})$/i, '');
+  return base
+    .replace(/-/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
 function ProductTag({ tag }: { tag: string }) {
   const cfg = TAG_CONFIG[tag];
   if (!cfg) return null;
@@ -547,8 +562,11 @@ function CartaHero({
   tableNumber: string | null;
   bannerUrl?:  string | null;
 }) {
-  const initials = name.slice(0, 2).toUpperCase();
   const [logoError, setLogoError] = useState(false);
+  // Hotfix #197 — nombre limpio del sufijo técnico (strip frontal; raíz → #199)
+  const cleanName   = stripTechSuffix(name);
+  const displayName = cleanName || name;
+  const initials    = (cleanName || name).slice(0, 2).toUpperCase();
 
   return (
     <div className="w-full bw-fade-in-up" style={{ position: 'relative' }}>
@@ -572,6 +590,11 @@ function CartaHero({
         .bw-item-thumb { width: 100%; height: 132px; }
         @media (min-width: 640px) {
           .bw-item-thumb { width: 100px; height: auto; align-self: stretch; min-height: 110px; border-radius: 0; }
+        }
+        /* Hotfix #197 — reveal sutil al scroll (CSS only, respeta prefers-reduced-motion) */
+        @media (prefers-reduced-motion: no-preference) {
+          .bw-reveal { opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease; }
+          .bw-reveal.bw-revealed { opacity: 1; transform: translateY(0); }
         }
       `}</style>
       {/* Gradiente hero / Banner — cinematográfico */}
@@ -621,7 +644,7 @@ function CartaHero({
             >{initials}</div>
         }
         <div className="flex-1 min-w-0">
-          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight truncate" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>{name}</h1>
+          <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white leading-tight truncate" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>{displayName}</h1>
           {tagline && <span className="inline-block text-sm text-white/90 font-medium mt-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur border border-white/20" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{tagline}</span>}
           {isOpen !== null && (
             <div
@@ -635,10 +658,10 @@ function CartaHero({
               <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'animate-pulse' : ''}`} style={{ backgroundColor: isOpen ? '#22c55e' : '#ef4444' }} />
               <span style={{ color: isOpen ? '#86efac' : '#fca5a5' }}>
                 {isOpen
-                  ? `Abierto · ${nextChange}`
+                  ? `🟢 Abierto ahora`
                   : nextChange
-                    ? `Cerrado · ${nextChange}`
-                    : 'Cerrado'
+                    ? `🔴 Cerrado · ${nextChange}`
+                    : '🔴 Cerrado'
                 }
               </span>
             </div>
@@ -1483,6 +1506,27 @@ export default function CartaDigital() {
 
   const hideUnavailable = cartaSettings?.hideUnavailable ?? false;
 
+  // Hotfix #197 — reveal sutil de secciones al scroll (CSS-only via clase .bw-reveal;
+  // respeta prefers-reduced-motion en la definición CSS del CartaHero)
+  useEffect(() => {
+    const els = document.querySelectorAll('.bw-reveal:not(.bw-revealed)');
+    if (els.length === 0) return;
+    if (!('IntersectionObserver' in window)) {
+      els.forEach(el => el.classList.add('bw-revealed'));
+      return;
+    }
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('bw-revealed');
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    els.forEach(el => io.observe(el));
+    return () => io.disconnect();
+  }, [loading, categories]);
+
   // Filtro — con useMemo para evitar recalcular en cada render
   const filtered = useMemo<Category[]>(() => {
     const q = search.trim().toLowerCase();
@@ -1576,9 +1620,9 @@ export default function CartaDigital() {
   }
 
   return (
-    <div className="min-h-screen text-white" style={{ backgroundColor: '#09090b' }}>
+    <div className="min-h-screen text-white bw-reveal" style={{ backgroundColor: '#09090b' }}>
 
-      {/* ── Header con Banner integrado ──────────── */}
+      {/* ── Header con Banner integrado (Hotfix #197: nombre con sufijo técnico limpio — fix de raíz → #199) ──────────── */}
       <CartaHero
         name={cartaSettings?.restaurantName ?? 'Carta Digital'}
         tagline={cartaSettings?.tagline ?? null}
@@ -1846,10 +1890,30 @@ export default function CartaDigital() {
           {/* Items (scrollable) */}
           <div className="flex-1 overflow-y-auto p-6">
           {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center px-4">
-              <ShoppingBag className="w-10 h-10 text-gray-300 mb-2" />
-              <p className="text-gray-500 text-sm font-medium">Tu pedido está vacío</p>
-              <p className="text-gray-400 text-xs mt-1">Agrega productos para comenzar</p>
+            /* Hotfix #197 — carrito vacío como invitación cálida (CTA suave hacia las categorías) */
+            <div className="flex flex-col items-center justify-center h-full text-center px-4 py-10">
+              <div
+                className="w-16 h-16 rounded-full flex items-center justify-center mb-4 text-3xl select-none"
+                style={{ backgroundColor: `${themeColor}12`, border: `1px solid ${themeColor}2e` }}
+                aria-hidden="true"
+              >
+                🍽️
+              </div>
+              <p className="text-gray-800 text-lg font-extrabold">Aún no agregas nada…</p>
+              <p className="text-gray-500 text-sm mt-2 leading-relaxed max-w-[240px]">
+                Elige tus favoritos y nosotros nos encargamos del resto.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const first = document.querySelector<HTMLElement>('[id^="cat-"]');
+                  if (first) first.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }}
+                className="mt-5 px-6 py-3 rounded-full text-white text-sm font-bold transition-all hover:-translate-y-[1px] active:scale-[0.97]"
+                style={{ background: `linear-gradient(135deg, ${themeColor}, ${darkenColor(themeColor, 40)})`, boxShadow: `0 6px 18px ${themeColor}40` }}
+              >
+                Explora el menú 👇
+              </button>
             </div>
           ) : (
             <div className="space-y-0">

@@ -32,6 +32,7 @@ export interface Sale {
   waiterId?: string;
   customerName?: string;
   customerId?: string;
+  customerSegment?: string;    // Hotfix #200 (B1) — segmento CRM (VIP/FREQUENT/...) para el badge
   customerAddress?: string;    // delivery
   customerPhone?: string;      // delivery
   deliveryFee?: number;        // delivery — costo de despacho

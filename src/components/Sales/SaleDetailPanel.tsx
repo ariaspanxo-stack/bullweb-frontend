@@ -11,6 +11,7 @@ import { User, MapPin, FileText, Users, Calendar, X, CheckCircle, XCircle, Credi
 import toast from 'react-hot-toast';
 import salesService from '@/services/salesService';
 import { ReprintModal } from '@/components/print/ReprintModal';
+import { CustomerSegmentBadge } from '@/components/customers/CustomerSegmentBadge';
 
 interface SaleDetailPanelProps {
   sale: Sale | null;
@@ -216,19 +217,23 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
             <span>Cliente:</span>
           </div>
           {/* Mejora P4 — link al CRM si hay customerId */}
-          {sale.customerId && sale.customerName ? (
-            <button
-              onClick={() => navigate(`/customers?customerId=${sale.customerId}`)}
-              className="font-medium text-orange-600 hover:text-orange-800 hover:underline"
-              title="Ver cliente en el CRM"
-            >
-              {sale.customerName}
-            </button>
-          ) : (
-            <span className="font-medium text-gray-900">
-              {sale.customerName || 'Público'}
-            </span>
-          )}
+          <span className="flex items-center justify-end gap-1.5 min-w-0">
+            {sale.customerId && sale.customerName ? (
+              <button
+                onClick={() => navigate(`/customers?customerId=${sale.customerId}`)}
+                className="font-medium text-orange-600 hover:text-orange-800 hover:underline truncate"
+                title="Ver cliente en el CRM"
+              >
+                {sale.customerName}
+              </button>
+            ) : (
+              <span className="font-medium text-gray-900 truncate">
+                {sale.customerName || 'Público'}
+              </span>
+            )}
+            {/* Hotfix #200 (B1) — badge ⭐ VIP junto al cliente; sin segment → sin badge */}
+            <CustomerSegmentBadge segment={sale.customerSegment} />
+          </span>
         </div>
 
         <div className="flex items-center justify-between text-sm">

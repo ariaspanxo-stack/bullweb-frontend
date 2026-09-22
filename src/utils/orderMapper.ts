@@ -174,6 +174,8 @@ export function mapOrderToSale(order: BackendOrder): Sale {
     customerName: order.customers?.name ?? order.customer?.name ?? order.customerName,
     // Mejora P4 — customerId para el link al CRM (include customers: { id, name })
     customerId: (order as any).customers?.id ?? (order as any).customerId ?? undefined,
+    // Hotfix #200 (B1) — segment CRM para el badge ⭐ VIP (include backend customers.segment)
+    customerSegment: (order as any).customers?.segment ?? undefined,
     items,
     payments,
     tips,

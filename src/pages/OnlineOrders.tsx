@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { RefreshCw, ChefHat, X, CheckCircle, ShoppingBag, Phone } from 'lucide-react';
 import api from '../services/api';
+import { CustomerSegmentBadge } from '@/components/customers/CustomerSegmentBadge';
 
 // ──────────────────────────────
 // Tipos
@@ -23,6 +24,7 @@ interface QROnlineOrder {
   id:            string;
   customerName:  string | null;
   customerPhone: string | null;
+  customerSegment?: string | null;  // Hotfix #200 (B1) — badge ⭐ VIP (JOIN backend por phone)
   orderType:     string | null;
   tableNumber:   string | null;
   status:        string;
@@ -111,7 +113,10 @@ function OrderCard({ order, onPreparing, onDone, onReject, processing }: OrderCa
             {fmtMin(order.minutesAgo)}
           </p>
           {order.customerName && (
-            <p className="text-sm text-gray-700 mt-0.5 font-medium">{order.customerName}</p>
+            <p className="text-sm text-gray-700 mt-0.5 font-medium flex items-center gap-1.5">
+              {order.customerName}
+              <CustomerSegmentBadge segment={order.customerSegment} />
+            </p>
           )}
           {order.customerPhone && (
             <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
@@ -241,6 +246,7 @@ export default function OnlineOrders() {
         id:            r.id,
         customerName:  r.customerName ?? null,
         customerPhone: r.customerPhone ?? null,
+        customerSegment: r.customerSegment ?? null,
         orderType:     r.orderType ?? null,
         tableNumber:   r.tableNumber ?? null,
         status:        r.status,

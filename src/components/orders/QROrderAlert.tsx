@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Phone, MapPin, ShoppingBag, Clock, Bike } from 'lucide-react';
 import type { QROrder } from '@/hooks/useQROrderAlerts';
 import { formatCurrency } from '@/lib/utils';
+import { CustomerSegmentBadge } from '@/components/customers/CustomerSegmentBadge';
 
 const COUNTDOWN_SEC = 120;
 
@@ -139,7 +140,10 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
           <div className="bg-gray-800 rounded-xl p-3 space-y-2">
             <div className="flex items-center gap-2 text-sm">
               <span className="text-gray-400 font-medium w-16 shrink-0">Cliente</span>
+              {/* Hotfix #200 (B1) — badge ⭐ VIP junto al nombre (el dueño VE
+                  que es VIP al atender). Sin segment → sin badge. */}
               <span className="text-white font-semibold">{order.customerName}</span>
+              <CustomerSegmentBadge segment={order.customerSegment} />
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />

@@ -6,6 +6,7 @@ import { StatusBadge } from '@/components/Sales/StatusBadge';
 import { cn } from '@/lib/utils';
 import { FileDown, Clock, ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react';
 import { exportSheet, clp, fmtDateTime } from '@/utils/exportExcel';
+import { CustomerSegmentBadge } from '@/components/customers/CustomerSegmentBadge';
 
 const PAGE_SIZE = 25;
 
@@ -209,17 +210,21 @@ export const SalesTable = ({
 
                   {/* CLIENTE — Mejora P4: link al CRM si hay customerId */}
                   <td className="px-4 py-3 text-sm text-gray-700">
-                    {sale.customerId && sale.customerName ? (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); navigate(`/customers?customerId=${sale.customerId}`); }}
-                        className="text-orange-600 hover:text-orange-800 hover:underline font-medium"
-                        title="Ver cliente en el CRM"
-                      >
-                        {sale.customerName}
-                      </button>
-                    ) : sale.customerName ||
-                      <span className="text-gray-400">Público</span>
-                    }
+                    <span className="flex items-center gap-1.5">
+                      {sale.customerId && sale.customerName ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); navigate(`/customers?customerId=${sale.customerId}`); }}
+                          className="text-orange-600 hover:text-orange-800 hover:underline font-medium truncate"
+                          title="Ver cliente en el CRM"
+                        >
+                          {sale.customerName}
+                        </button>
+                      ) : sale.customerName ||
+                        <span className="text-gray-400">Público</span>
+                      }
+                      {/* Hotfix #200 (B1) — badge ⭐ VIP en filas (costo trivial: campo ya viene en el payload) */}
+                      <CustomerSegmentBadge segment={sale.customerSegment} />
+                    </span>
                   </td>
 
                   {/* ESTADO */}

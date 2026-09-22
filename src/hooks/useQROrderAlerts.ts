@@ -24,6 +24,9 @@ export interface QROrder {
    *  (viaja en el mismo payload del WS para prellenar el campo del modal). */
   deliveryFee?:         number;
   deliveryFeeDefault?:  number;
+  /** Hotfix #200 (B1) — segmento CRM del cliente (VIP/FREQUENT/...) por teléfono;
+   *  lookup backend en public/orders → badge ⭐ VIP del modal. Sin match → undefined. */
+  customerSegment?:     string;
 }
 
 /** Lee el tenantId del usuario almacenado en localStorage (mismo origen que authService).

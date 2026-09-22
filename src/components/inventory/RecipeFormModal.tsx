@@ -99,14 +99,14 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
       <div className="space-y-4">
         {/* Producto */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-300 mb-1">
             Producto
           </label>
           <select
             value={selectedProductId}
             onChange={(e) => setSelectedProductId(e.target.value)}
             disabled={isEdit}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            className="w-full px-3 py-2 border border-white/10 rounded-lg bg-white/5 !text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 [color-scheme:dark]"
           >
             <option value="">Seleccionar...</option>
             {products?.map((product: any) => (
@@ -118,7 +118,7 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
         {/* Ingredientes */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-300">
               Ingredientes
             </label>
             <Button type="button" variant="outline" size="sm" onClick={addItem}>
@@ -133,7 +133,7 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
                 <select
                   value={item.ingredientId}
                   onChange={(e) => updateItem(index, 'ingredientId', e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className="flex-1 px-3 py-2 border border-white/10 rounded-lg text-sm bg-white/5 !text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 [color-scheme:dark]"
                 >
                   <option value="">Seleccionar ingrediente...</option>
                   {ingredients?.map((ing: any) => (
@@ -148,11 +148,11 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
                   value={item.quantity}
                   onChange={(e) => updateItem(index, 'quantity', Number(e.target.value))}
                   placeholder="Cant."
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  className="w-24 px-3 py-2 border border-white/10 rounded-lg text-sm bg-white/5 !text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 [color-scheme:dark]"
                 />
                 <button
                   onClick={() => removeItem(index)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded"
+                  className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -162,10 +162,10 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
         </div>
 
         {/* Costo total */}
-        <div className="bg-gray-50 rounded-lg p-4">
+        <div className="bg-white/5 rounded-lg p-4 border border-white/10">
           <div className="flex justify-between items-center">
-            <span className="text-sm text-gray-600">Costo Total de Receta:</span>
-            <span className="text-2xl font-bold text-primary-600">
+            <span className="text-sm text-gray-300">Costo Total de Receta:</span>
+            <span className="text-2xl font-bold text-brand-500">
               {formatCurrency(totalCost || 0)}
             </span>
           </div>

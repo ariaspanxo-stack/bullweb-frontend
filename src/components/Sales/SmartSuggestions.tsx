@@ -54,9 +54,9 @@ export function SmartSuggestions({
         title: 'Sin propina registrada',
         description: 'Verificar satisfacción del cliente. Considerar seguimiento post-servicio.',
         icon: AlertTriangle,
-        color: 'text-orange-700',
-        bgColor: 'bg-orange-50',
-        borderColor: 'border-orange-200',
+        color: 'text-orange-400',
+        bgColor: 'bg-orange-500/10',
+        borderColor: 'border-orange-500/30',
         priority: 'medium'
       });
     } else if (tipPercentage > tipAlertThreshold * 100) {
@@ -66,9 +66,9 @@ export function SmartSuggestions({
         title: `Excelente propina (${tipPercentage.toFixed(1)}%)`,
         description: 'Cliente muy satisfecho. Registrar en perfil para futuras atenciones especiales.',
         icon: TrendingUp,
-        color: 'text-green-700',
-        bgColor: 'bg-green-50',
-        borderColor: 'border-green-200',
+        color: 'text-green-400',
+        bgColor: 'bg-green-500/10',
+        borderColor: 'border-green-500/30',
         priority: 'low'
       });
     }
@@ -83,9 +83,9 @@ export function SmartSuggestions({
         title: `Alto ticket per cápita ($${Math.round(ticketPerPerson).toLocaleString('es-CL')})`,
         description: 'Cliente premium. Ofrecer programa de fidelización o beneficios exclusivos.',
         icon: Target,
-        color: 'text-purple-700',
-        bgColor: 'bg-purple-50',
-        borderColor: 'border-purple-200',
+        color: 'text-purple-400',
+        bgColor: 'bg-purple-500/10',
+        borderColor: 'border-purple-500/30',
         priority: 'high'
       });
     } else if (ticketPerPerson < lowTicketThreshold && sale.numberOfPeople >= groupSizeThreshold) {
@@ -95,9 +95,9 @@ export function SmartSuggestions({
         title: 'Oportunidad de upselling',
         description: 'Grupo grande con ticket bajo. Sugerir platos para compartir o promos grupales.',
         icon: Gift,
-        color: 'text-blue-700',
-        bgColor: 'bg-blue-50',
-        borderColor: 'border-blue-200',
+        color: 'text-blue-400',
+        bgColor: 'bg-blue-500/10',
+        borderColor: 'border-blue-500/30',
         priority: 'medium'
       });
     }
@@ -113,9 +113,9 @@ export function SmartSuggestions({
           title: `Venta abierta hace ${Math.round(durationMinutes)} minutos`,
           description: 'Verificar si requiere asistencia o está listo para cerrar cuenta.',
           icon: Clock,
-          color: 'text-red-700',
-          bgColor: 'bg-red-50',
-          borderColor: 'border-red-200',
+          color: 'text-red-400',
+          bgColor: 'bg-red-500/10',
+          borderColor: 'border-red-500/30',
           priority: 'high'
         });
       } else if (durationMinutes > longSessionMinutes) {
@@ -125,9 +125,9 @@ export function SmartSuggestions({
           title: `Mesa ocupada ${longSessionMinutes}+ minutos`,
           description: 'Considerar ofrecer café/postre o preparar cuenta.',
           icon: Clock,
-          color: 'text-yellow-700',
-          bgColor: 'bg-yellow-50',
-          borderColor: 'border-yellow-200',
+          color: 'text-yellow-400',
+          bgColor: 'bg-yellow-500/10',
+          borderColor: 'border-yellow-500/30',
           priority: 'medium'
         });
       }
@@ -141,9 +141,9 @@ export function SmartSuggestions({
         title: `Grupo grande (${sale.numberOfPeople} personas)`,
         description: 'Verificar disponibilidad de menú familiar o descuentos por volumen.',
         icon: Users,
-        color: 'text-indigo-700',
-        bgColor: 'bg-indigo-50',
-        borderColor: 'border-indigo-200',
+        color: 'text-indigo-400',
+        bgColor: 'bg-indigo-500/10',
+        borderColor: 'border-indigo-500/30',
         priority: 'low'
       });
     }
@@ -158,9 +158,9 @@ export function SmartSuggestions({
         title: 'Productos premium en orden',
         description: 'Cliente con poder adquisitivo. Sugerir maridaje, postres gourmet o experiencias.',
         icon: Lightbulb,
-        color: 'text-amber-700',
-        bgColor: 'bg-amber-50',
-        borderColor: 'border-amber-200',
+        color: 'text-amber-400',
+        bgColor: 'bg-amber-500/10',
+        borderColor: 'border-amber-500/30',
         priority: 'medium'
       });
     }
@@ -175,9 +175,9 @@ export function SmartSuggestions({
         title: `${paymentMethodsCount} métodos de pago`,
         description: 'Grupo dividiendo cuenta. Verificar que todos los pagos estén correctamente asignados.',
         icon: DollarSign,
-        color: 'text-teal-700',
-        bgColor: 'bg-teal-50',
-        borderColor: 'border-teal-200',
+        color: 'text-teal-400',
+        bgColor: 'bg-teal-500/10',
+        borderColor: 'border-teal-500/30',
         priority: 'low'
       });
     }
@@ -191,9 +191,9 @@ export function SmartSuggestions({
         title: `Descuento aplicado (${discountPercentage.toFixed(1)}%)`,
         description: 'Verificar autorización y motivo del descuento en sistema.',
         icon: Gift,
-        color: 'text-pink-700',
-        bgColor: 'bg-pink-50',
-        borderColor: 'border-pink-200',
+        color: 'text-pink-400',
+        bgColor: 'bg-pink-500/10',
+        borderColor: 'border-pink-500/30',
         priority: 'low'
       });
     }
@@ -207,12 +207,12 @@ export function SmartSuggestions({
 
   if (suggestions.length === 0) {
     return (
-      <div className="p-6 bg-gray-50 rounded-lg border border-gray-200 text-center">
-        <Lightbulb className="w-10 h-10 text-gray-300 mx-auto mb-2" />
-        <p className="text-sm text-gray-500">
+      <div className="p-6 bg-gray-800/60 rounded-lg border border-white/5 text-center">
+        <Lightbulb className="w-10 h-10 text-gray-600 mx-auto mb-2" />
+        <p className="text-sm text-gray-400">
           No hay sugerencias en este momento
         </p>
-        <p className="text-xs text-gray-400 mt-1">
+        <p className="text-xs text-gray-500 mt-1">
           El análisis no detectó oportunidades
         </p>
       </div>
@@ -222,8 +222,8 @@ export function SmartSuggestions({
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
-        <Lightbulb className="w-5 h-5 text-gray-600" />
-        <h4 className="text-sm font-semibold text-gray-700">
+        <Lightbulb className="w-5 h-5 text-gray-400" />
+        <h4 className="text-sm font-semibold text-gray-300">
           Sugerencias Inteligentes
         </h4>
         <span className="text-xs text-gray-500">
@@ -255,16 +255,16 @@ export function SmartSuggestions({
                     <span
                       className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-full ${
                         suggestion.priority === 'high'
-                          ? 'bg-red-100 text-red-700'
+                          ? 'bg-red-500/20 text-red-400'
                           : suggestion.priority === 'medium'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-gray-100 text-gray-600'
+                          ? 'bg-yellow-500/20 text-yellow-400'
+                          : 'bg-gray-500/20 text-gray-400'
                       }`}
                     >
                       {suggestion.priority === 'high' ? 'Alta' : suggestion.priority === 'medium' ? 'Media' : 'Baja'}
                     </span>
                   </div>
-                  <p className="text-xs text-gray-700 leading-relaxed">
+                  <p className="text-xs text-gray-300 leading-relaxed">
                     {suggestion.description}
                   </p>
                 </div>
@@ -275,17 +275,17 @@ export function SmartSuggestions({
       </div>
 
       {/* RESUMEN */}
-      <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-        <div className="flex items-center gap-2 text-xs text-blue-800">
+      <div className="mt-4 p-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-blue-300">
           <Target className="w-4 h-4" />
           <span className="font-semibold">
             {suggestions.filter(s => s.priority === 'high').length} prioritarias
           </span>
-          <span className="text-blue-600">•</span>
+          <span className="text-blue-400">•</span>
           <span>
             {suggestions.filter(s => s.type === 'opportunity').length} oportunidades
           </span>
-          <span className="text-blue-600">•</span>
+          <span className="text-blue-400">•</span>
           <span>
             {suggestions.filter(s => s.type === 'warning').length} alertas
           </span>

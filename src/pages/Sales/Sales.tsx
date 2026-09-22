@@ -35,6 +35,9 @@ export const Sales = () => {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [previousStats, setPreviousStats] = useState<Stats | null>(null);
+  // P1 — hoy-vs-ayer: stats de AYER (rango diario) + guard de primer día
+  const [yesterdayStats, setYesterdayStats] = useState<Stats | null>(null);
+  const [isFirstDay, setIsFirstDay] = useState(false);
   const [showCashModal, setShowCashModal] = useState(false);
 
   // Estado modal apertura caja
@@ -74,8 +77,23 @@ export const Sales = () => {
           const prevEnd   = new Date(filters.endDate.getTime()   - 7 * 24 * 3600 * 1000);
           const prevSales = await salesService.getSales({ startDate: prevStart, endDate: prevEnd });
           setPreviousStats(salesService.calculateStats(prevSales));
+
+          // P1 — hoy-vs-ayer (patrón del delta vs semana, EXTENDIDO no reemplazado)
+          const yStart = new Date(filters.startDate.getTime() - 1 * 24 * 3600 * 1000);
+          const yEnd   = new Date(filters.endDate.getTime()   - 1 * 24 * 3600 * 1000);
+          const ySales = await salesService.getSales({ startDate: yStart, endDate: yEnd });
+          // GUARD: ayer sin ventas → "primer día" (sin división por cero, sin delta infinito)
+          if (ySales.length === 0) {
+            setYesterdayStats(null);
+            setIsFirstDay(true);
+          } else {
+            setYesterdayStats(salesService.calculateStats(ySales));
+            setIsFirstDay(false);
+          }
         } else {
           setPreviousStats(null);
+          setYesterdayStats(null);
+          setIsFirstDay(false);
         }
       }
     } catch (error) {
@@ -209,23 +227,23 @@ export const Sales = () => {
 
   if (loading && activeTab === 'ventas') {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando ventas...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Cargando ventas...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-950 p-3 sm:p-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-4xl font-bold text-gray-800">VENTAS</h1>
+      <div className="mb-4 sm:mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl sm:text-4xl font-bold text-white tracking-tight">VENTAS</h1>
         <button 
           onClick={handleOpenCash}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors shadow-md"
+          className="bg-brand-500 hover:bg-brand-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors shadow-lg shadow-brand-500/25"
         >
           <DollarSign size={20} />
           Abrir la caja
@@ -233,33 +251,33 @@ export const Sales = () => {
       </div>
 
       {/* Tabs de navegación */}
-      <div className="mb-6 flex gap-4 border-b border-gray-200">
+      <div className="mb-4 sm:mb-6 flex gap-2 sm:gap-4 overflow-x-auto border-b border-white/10">
         <button
           onClick={() => setActiveTab('ventas')}
-          className={`px-4 py-2 font-semibold transition-colors ${
+          className={`px-3 sm:px-4 py-2 font-semibold transition-colors whitespace-nowrap ${
             activeTab === 'ventas'
-              ? 'text-orange-600 border-b-2 border-orange-600'
-              : 'text-gray-600 hover:text-gray-800'
+              ? 'text-brand-400 border-b-2 border-brand-500'
+              : 'text-gray-400 hover:text-gray-200'
           }`}
         >
           Ventas
         </button>
         <button
           onClick={() => setActiveTab('movimientos')}
-          className={`px-4 py-2 font-semibold transition-colors ${
+          className={`px-3 sm:px-4 py-2 font-semibold transition-colors whitespace-nowrap ${
             activeTab === 'movimientos'
-              ? 'text-orange-600 border-b-2 border-orange-600'
-              : 'text-gray-600 hover:text-gray-800'
+              ? 'text-brand-400 border-b-2 border-brand-500'
+              : 'text-gray-400 hover:text-gray-200'
           }`}
         >
           Movimientos de caja
         </button>
         <button
           onClick={() => setActiveTab('arqueos')}
-          className={`px-4 py-2 font-semibold transition-colors ${
+          className={`px-3 sm:px-4 py-2 font-semibold transition-colors whitespace-nowrap ${
             activeTab === 'arqueos'
-              ? 'text-orange-600 border-b-2 border-orange-600'
-              : 'text-gray-600 hover:text-gray-800'
+              ? 'text-brand-400 border-b-2 border-brand-500'
+              : 'text-gray-400 hover:text-gray-200'
           }`}
         >
           Arqueos de Caja
@@ -267,10 +285,10 @@ export const Sales = () => {
         {canViewTips && (
         <button
           onClick={() => setActiveTab('propinas')}
-          className={`px-4 py-2 font-semibold transition-colors ${
+          className={`px-3 sm:px-4 py-2 font-semibold transition-colors whitespace-nowrap ${
             activeTab === 'propinas'
-              ? 'text-orange-600 border-b-2 border-orange-600'
-              : 'text-gray-600 hover:text-gray-800'
+              ? 'text-brand-400 border-b-2 border-brand-500'
+              : 'text-gray-400 hover:text-gray-200'
           }`}
         >
           Propinas
@@ -278,10 +296,10 @@ export const Sales = () => {
         )}
         <button
           onClick={() => setActiveTab('descuentos')}
-          className={`px-4 py-2 font-semibold transition-colors ${
+          className={`px-3 sm:px-4 py-2 font-semibold transition-colors whitespace-nowrap ${
             activeTab === 'descuentos'
-              ? 'text-orange-600 border-b-2 border-orange-600'
-              : 'text-gray-600 hover:text-gray-800'
+              ? 'text-brand-400 border-b-2 border-brand-500'
+              : 'text-gray-400 hover:text-gray-200'
           }`}
         >
           Descuentos
@@ -292,19 +310,21 @@ export const Sales = () => {
       {activeTab === 'ventas' && (
         <>
           {/* Filtros */}
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6">
             <SalesFilters onFilterChange={handleFilterChange} />
           </div>
 
           {/* Estadísticas */}
           {stats && (
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <SalesStats
                 stats={stats}
                 startDate={filters.startDate || new Date()}
                 endDate={filters.endDate || new Date()}
                 recordCount={sales.filter(s => s.status !== 'cancelled').length}
                 previousStats={previousStats}
+                yesterdayStats={yesterdayStats}
+                isFirstDay={isFirstDay}
                 isPeriodDaily={!!(filters.startDate && filters.endDate && (filters.endDate.getTime() - filters.startDate.getTime()) <= 25 * 3600 * 1000)}
                 onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
               />
@@ -313,7 +333,7 @@ export const Sales = () => {
 
           {/* Gráfico ventas por hora — Mejora #4 */}
           {sales.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <SalesHourChart sales={sales} />
             </div>
           )}
@@ -342,38 +362,38 @@ export const Sales = () => {
 
       {/* Modal Abrir Caja */}
       {showCashModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className="bg-orange-500 px-5 py-3">
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-white/10 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="bg-brand-500 px-5 py-3">
               <h2 className="text-white font-bold text-sm uppercase tracking-wide">Nuevo Arqueo de Caja</h2>
             </div>
             <div className="px-6 py-5 space-y-4">
               {/* Estado de carga de cajas */}
               {loadingRegisters && (
-                <div className="text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded px-3 py-2 flex items-center gap-2">
-                  <Loader2 size={14} className="animate-spin text-orange-400 flex-shrink-0" />
+                <div className="text-sm text-gray-300 bg-gray-800/60 border border-white/10 rounded px-3 py-2 flex items-center gap-2">
+                  <Loader2 size={14} className="animate-spin text-brand-400 flex-shrink-0" />
                   Cargando cajas disponibles...
                 </div>
               )}
               {!loadingRegisters && registerError && (
                 <div className="space-y-2">
-                  <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+                  <div className="text-sm text-red-400 bg-red-500/10 border border-red-500/30 rounded px-3 py-2">
                     {registerError}
                   </div>
-                  <button onClick={loadRegisters} className="text-xs text-orange-600 underline">
+                  <button onClick={loadRegisters} className="text-xs text-brand-400 underline hover:text-brand-300">
                     Reintentar
                   </button>
                 </div>
               )}
               {!loadingRegisters && availableRegisters.length > 1 && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Caja <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Caja <span className="text-red-400">*</span>
                   </label>
                   <select
                     value={selectedRegisterId}
                     onChange={e => setSelectedRegisterId(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="w-full bg-gray-800/60 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 [color-scheme:dark]"
                   >
                     {availableRegisters.map((r: any) => (
                       <option key={r.id} value={r.id}>{r.name}</option>
@@ -382,46 +402,46 @@ export const Sales = () => {
                 </div>
               )}
               {!loadingRegisters && availableRegisters.length === 1 && (
-                <div className="text-sm text-gray-500 bg-gray-50 rounded px-3 py-2">
-                  Caja: <span className="font-semibold text-gray-800">{availableRegisters[0].name}</span>
+                <div className="text-sm text-gray-300 bg-gray-800/60 border border-white/10 rounded px-3 py-2">
+                  Caja: <span className="font-semibold text-white">{availableRegisters[0].name}</span>
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Hora de apertura <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Hora de apertura <span className="text-red-400">*</span>
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="date"
                     value={openDate}
                     onChange={e => setOpenDate(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="flex-1 bg-gray-800/60 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 [color-scheme:dark]"
                   />
                   <input
                     type="time"
                     step="1"
                     value={openTime}
                     onChange={e => setOpenTime(e.target.value)}
-                    className="w-32 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="w-32 bg-gray-800/60 border border-white/10 rounded px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 [color-scheme:dark]"
                   />
                 </div>
-                <p className="mt-1 text-xs text-gray-400">
+                <p className="mt-1 text-xs text-gray-500">
                   Las ventas desde esta hora se sumaran al arqueo.
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Monto Inicial <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-300 mb-1">
+                  Monto Inicial <span className="text-red-400">*</span>
                 </label>
                 <div className="flex items-center gap-1">
-                  <span className="text-gray-400 text-sm">$</span>
+                  <span className="text-gray-500 text-sm">$</span>
                   <input
                     type="number"
                     min="0"
                     placeholder="0"
                     value={openMonto}
                     onChange={e => setOpenMonto(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="flex-1 bg-gray-800/60 border border-white/10 rounded px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                   />
                 </div>
               </div>
@@ -429,14 +449,14 @@ export const Sales = () => {
             <div className="px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => setShowCashModal(false)}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm rounded-lg border border-white/10 text-gray-300 hover:bg-white/5 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 disabled={openingCash || loadingRegisters || !openDate || !openTime || !selectedRegisterId}
                 onClick={handleConfirmOpenCash}
-                className="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm rounded-lg bg-brand-500 hover:bg-brand-600 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
               >
                 {openingCash ? <Loader2 className="animate-spin" size={15} /> : null}
                 Iniciar Arqueo

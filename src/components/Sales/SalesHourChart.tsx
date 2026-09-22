@@ -80,18 +80,18 @@ export const SalesHourChart = ({ sales }: Props) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
-      <h3 className="text-sm font-semibold text-gray-700 mb-3">Desglose por Medio de Pago</h3>
+    <div className="bg-gray-900 border border-white/10 rounded-lg p-4">
+      <h3 className="text-sm font-semibold text-gray-300 mb-3">Desglose por Medio de Pago</h3>
 
       {/* Resumen total */}
       <div className="grid grid-cols-2 gap-3 mb-3">
-        <div className="bg-gray-50 rounded-lg p-2 text-center">
-          <p className="text-[10px] text-gray-400 uppercase tracking-wider">Total Ventas</p>
-          <p className="text-lg font-bold text-gray-800">{totalVentas}</p>
+        <div className="bg-gray-800/60 border border-white/5 rounded-lg p-2 text-center">
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Total Ventas</p>
+          <p className="text-lg font-bold text-white tabular-nums">{totalVentas}</p>
         </div>
-        <div className="bg-gray-50 rounded-lg p-2 text-center">
-          <p className="text-[10px] text-gray-400 uppercase tracking-wider">Total Monto</p>
-          <p className="text-lg font-bold text-emerald-600">{formatCLP(totalMonto)}</p>
+        <div className="bg-gray-800/60 border border-white/5 rounded-lg p-2 text-center">
+          <p className="text-[10px] text-gray-500 uppercase tracking-wider">Total Monto</p>
+          <p className="text-lg font-bold text-emerald-400 tabular-nums">{formatCLP(totalMonto)}</p>
         </div>
       </div>
 
@@ -107,16 +107,16 @@ export const SalesHourChart = ({ sales }: Props) => {
               <div className={`w-2 h-2 rounded-full ${color} flex-shrink-0`} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-700">{label}</span>
-                  <span className="text-sm font-bold text-gray-800">{formatCLP(data.total)}</span>
+                  <span className="text-sm font-medium text-gray-300">{label}</span>
+                  <span className="text-sm font-bold text-white tabular-nums">{formatCLP(data.total)}</span>
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
-                  <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="flex-1 h-1.5 bg-gray-700/60 rounded-full overflow-hidden">
                     <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
                   </div>
-                  <span className="text-[10px] text-gray-400 w-10 text-right">{pct.toFixed(0)}%</span>
+                  <span className="text-[10px] text-gray-500 w-10 text-right">{pct.toFixed(0)}%</span>
                 </div>
-                <span className="text-[10px] text-gray-400">{data.count} venta{data.count !== 1 ? 's' : ''}</span>
+                <span className="text-[10px] text-gray-500">{data.count} venta{data.count !== 1 ? 's' : ''}</span>
               </div>
             </div>
           );

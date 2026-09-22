@@ -4,22 +4,22 @@ import { cn } from '@/lib/utils';
 const STATUS_CONFIG = {
   open: {
     label: 'En curso',
-    className: 'bg-orange-100 text-orange-700 border-orange-200',
+    className: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
     icon: '●'
   },
   paying: {
     label: 'Cobrando',
-    className: 'bg-blue-100 text-blue-700 border-blue-200',
+    className: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
     icon: '●'
   },
   closed: {
     label: 'Cerrada',
-    className: 'bg-green-100 text-green-700 border-green-200',
+    className: 'bg-green-500/15 text-green-400 border-green-500/30',
     icon: '●'
   },
   cancelled: {
     label: 'Anulada',
-    className: 'bg-red-100 text-red-700 border-red-200',
+    className: 'bg-red-500/15 text-red-400 border-red-500/30',
     icon: '●'
   }
 } as const;

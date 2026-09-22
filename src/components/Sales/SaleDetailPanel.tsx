@@ -152,8 +152,8 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
 
   if (!sale) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-8 flex items-center justify-center h-full">
-        <div className="text-center text-gray-400">
+      <div className="bg-gray-900 border border-white/10 rounded-lg p-8 flex items-center justify-center h-full">
+        <div className="text-center text-gray-500">
           <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p className="text-lg font-medium">Selecciona una venta</p>
           <p className="text-sm mt-1">para ver el detalle completo</p>
@@ -164,16 +164,16 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
 
   return (
     <>
-    <div className="bg-white rounded-lg border border-gray-200 shadow-sm h-full flex flex-col overflow-hidden">
+    <div className="bg-gray-900 border border-white/10 rounded-lg h-full flex flex-col overflow-hidden">
       {/* HEADER */}
-      <div className="p-4 border-b border-gray-200 bg-gray-50">
+      <div className="p-4 border-b border-white/10 bg-gray-800/60">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-lg font-bold text-gray-900">
+          <h3 className="text-lg font-bold text-white">
             Venta {formatSaleNumber(sale.saleNumber)}
           </h3>
           <StatusBadge status={sale.status as import('@/types/sales.types').SaleStatus} />
         </div>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-400">
           <Calendar className="w-3 h-3 inline mr-1" />
           {formatDateTime(sale.startTime)}
         </p>
@@ -187,43 +187,43 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
       />
 
       {/* METADATA */}
-      <div className="p-4 border-b border-gray-100 space-y-3">
+      <div className="p-4 border-b border-white/5 space-y-3">
         <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center text-gray-600">
+          <div className="flex items-center text-gray-400">
             <MapPin className="w-4 h-4 mr-2" />
             <span>Mesa:</span>
           </div>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-white">
             {sale.tableNumber || 'N/A'}
           </span>
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center text-gray-600">
+          <div className="flex items-center text-gray-400">
             <User className="w-4 h-4 mr-2" />
             <span>Garzón:</span>
           </div>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-white">
             {sale.waiterName}
           </span>
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center text-gray-600">
+          <div className="flex items-center text-gray-400">
             <Users className="w-4 h-4 mr-2" />
             <span>Cliente:</span>
           </div>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-white">
             {sale.customerName || 'Público'}
           </span>
         </div>
 
         <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center text-gray-600">
+          <div className="flex items-center text-gray-400">
             <Users className="w-4 h-4 mr-2" />
             <span>Personas:</span>
           </div>
-          <span className="font-medium text-gray-900">
+          <span className="font-medium text-white">
             {sale.numberOfPeople || 1}
           </span>
         </div>
@@ -231,7 +231,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
 
       {/* ÍTEMS - SCROLL INDEPENDIENTE */}
       <div className="flex-1 overflow-y-auto p-4">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+        <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
           Ítems Ordenados
         </h4>
         <div className="space-y-3">
@@ -239,12 +239,12 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
             sale.items.map((item) => (
             <div 
               key={item.id} 
-              className="border-l-3 border-l-orange-400 pl-3 pb-3 border-b border-gray-100 last:border-b-0"
+              className="border-l-3 border-l-brand-400 pl-3 pb-3 border-b border-white/5 last:border-b-0"
             >
               <div className="flex justify-between items-start mb-1">
                 <div className="flex-1">
-                  <p className="font-medium text-gray-900">
-                    <span className="inline-block w-6 text-orange-600 font-semibold">
+                  <p className="font-medium text-white">
+                    <span className="inline-block w-6 text-brand-400 font-semibold">
                       {item.quantity}x
                     </span>
                     {item.productName}
@@ -254,13 +254,13 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                   {item.modifiers && item.modifiers.length > 0 && (
                     <div className="mt-1 ml-6 space-y-0.5">
                       {item.modifiers.map((mod, idx) => (
-                        <p key={idx} className="text-xs text-orange-600">
+                        <p key={idx} className="text-xs text-brand-400">
                           • {typeof mod === 'string' ? mod : mod.name}
                         </p>
                       ))}
                     </div>
                   )}
-                  
+                   
                   {/* NOTAS */}
                   {item.notes && (
                     <p className="text-xs text-gray-500 mt-1 ml-6 italic">
@@ -269,7 +269,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                   )}
                 </div>
                 
-                <p className="font-semibold text-gray-900 ml-3 whitespace-nowrap">
+                <p className="font-semibold text-white ml-3 whitespace-nowrap tabular-nums">
                   {formatCurrency(item.total)}
                 </p>
               </div>
@@ -284,38 +284,38 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
             <>
               <div className="mb-2 flex items-center gap-2">
                 <XCircle className="w-4 h-4 text-red-400" />
-                <span className="text-xs text-red-500 font-medium">Ítems al momento de anular</span>
+                <span className="text-xs text-red-400 font-medium">Ítems al momento de anular</span>
               </div>
               {(sale as any).cancelledItems.map((item: any, i: number) => (
-                <div key={i} className="border-l-3 border-l-red-300 pl-3 pb-3 border-b border-gray-100 last:border-b-0 opacity-70">
+                <div key={i} className="border-l-3 border-l-red-500/50 pl-3 pb-3 border-b border-white/5 last:border-b-0 opacity-70">
                   <div className="flex justify-between items-start mb-1">
                     <p className="text-sm text-gray-500 line-through">
                       <span className="inline-block w-6 text-red-400 font-semibold">{item.quantity}x</span>
                       {item.name}
                     </p>
-                    <p className="text-sm text-gray-400 line-through ml-3 whitespace-nowrap">
+                    <p className="text-sm text-gray-500 line-through ml-3 whitespace-nowrap tabular-nums">
                       {formatCurrency(item.subtotal)}
                     </p>
                   </div>
-                  <p className="text-xs text-gray-400 ml-6">{formatCurrency(item.unitPrice)} c/u</p>
+                  <p className="text-xs text-gray-500 ml-6">{formatCurrency(item.unitPrice)} c/u</p>
                 </div>
               ))}
             </>
           ) : (
-            <p className="text-sm text-gray-400 italic">Sin detalle de ítems disponible</p>
+            <p className="text-sm text-gray-500 italic">Sin detalle de ítems disponible</p>
           )}
         </div>
 
         {/* PAYMENT BREAKDOWN - FASE 3 */}
         {sale.payments && sale.payments.length > 0 && (
-          <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="mt-6 pt-4 border-t border-white/10">
             <PaymentBreakdown sale={sale} />
           </div>
         )}
 
         {/* AUDIT LOG MEJORADO — Mejora #7 */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide flex items-center gap-1">
+        <div className="mt-6 pt-4 border-t border-white/10">
+          <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide flex items-center gap-1">
             <Clock className="w-4 h-4" /> Historial de Eventos
           </h4>
           {(() => {
@@ -328,7 +328,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
               label: 'Venta creada',
               detail: sale.waiterName ? `por ${sale.waiterName}` : undefined,
               time:  sale.startTime ? new Date(sale.startTime) : undefined,
-              colorClass: 'bg-blue-100 text-blue-700',
+              colorClass: 'bg-blue-500/20 text-blue-400',
             });
 
             // 2 — Pagos
@@ -338,7 +338,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                 label: `Pago registrado — ${p.method}`,
                 detail: new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(p.amount),
                 time:  p.createdAt ? new Date(p.createdAt) : undefined,
-                colorClass: 'bg-green-100 text-green-700',
+                colorClass: 'bg-green-500/20 text-green-400',
               });
             });
 
@@ -348,7 +348,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                 icon: <ChefHat className="w-3.5 h-3.5" />,
                 label: 'Enviado a cocina',
                 time:  new Date((sale as any).sentToKitchenAt),
-                colorClass: 'bg-orange-100 text-orange-700',
+                colorClass: 'bg-orange-500/20 text-orange-400',
               });
             }
 
@@ -364,7 +364,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                 time: (sale as any).discountedAt
                   ? new Date((sale as any).discountedAt)
                   : sale.startTime ? new Date(sale.startTime) : undefined,
-                colorClass: 'bg-purple-100 text-purple-700',
+                colorClass: 'bg-purple-500/20 text-purple-400',
               });
             }
 
@@ -376,7 +376,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                 label: 'Propina registrada',
                 detail: new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(tipTotal),
                 time: sale.closedAt ? new Date(sale.closedAt) : undefined,
-                colorClass: 'bg-yellow-100 text-yellow-700',
+                colorClass: 'bg-yellow-500/20 text-yellow-400',
               });
             }
 
@@ -386,7 +386,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                 icon: <CheckCircle className="w-3.5 h-3.5" />,
                 label: 'Venta cerrada / confirmada',
                 time:  new Date(sale.closedAt),
-                colorClass: 'bg-emerald-100 text-emerald-700',
+                colorClass: 'bg-emerald-500/20 text-emerald-400',
               });
             }
 
@@ -400,13 +400,13 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                   sale.cancel_reason ? `"${sale.cancel_reason}"` : null,
                 ].filter(Boolean).join(' — ') || undefined,
                 time:  sale.cancelledAt ? new Date(sale.cancelledAt) : undefined,
-                colorClass: 'bg-red-100 text-red-700',
+                colorClass: 'bg-red-500/20 text-red-400',
               });
             } else if (sale.status === 'cancelled' || sale.status === 'CANCELLED') {
               entries.push({
                 icon: <AlertCircle className="w-3.5 h-3.5" />,
                 label: 'Venta en estado CANCELADO',
-                colorClass: 'bg-red-100 text-red-700',
+                colorClass: 'bg-red-500/20 text-red-400',
               });
             }
 
@@ -421,7 +421,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
             return (
               <div className="relative pl-4">
                 {/* Línea vertical */}
-                <div className="absolute left-2 top-0 bottom-0 w-px bg-gray-200" />
+                <div className="absolute left-2 top-0 bottom-0 w-px bg-white/10" />
 
                 <div className="space-y-3">
                   {entries.map((e, i) => (
@@ -431,10 +431,10 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                         {e.icon}
                       </div>
                       <div className="flex-1 min-w-0 pt-0.5">
-                        <p className="text-sm font-medium text-gray-800">{e.label}</p>
+                        <p className="text-sm font-medium text-gray-200">{e.label}</p>
                         {e.detail && <p className="text-xs text-gray-500 mt-0.5 truncate">{e.detail}</p>}
                         {e.time && (
-                          <p className="text-xs text-gray-400 mt-0.5">
+                          <p className="text-xs text-gray-500 mt-0.5">
                             {new Intl.DateTimeFormat('es-CL', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' }).format(e.time)}
                           </p>
                         )}
@@ -449,17 +449,17 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
 
         {/* PROPINAS */}
         {sale.tips && sale.tips.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <h4 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <h4 className="text-sm font-semibold text-gray-300 mb-3 uppercase tracking-wide">
               Propinas
             </h4>
             <div className="space-y-2">
               {sale.tips.map((tip) => (
                 <div key={tip.id} className="flex justify-between text-sm">
-                  <span className="text-gray-600">
+                  <span className="text-gray-400">
                     {tip.waiterName}
                   </span>
-                  <span className="font-medium text-green-600">
+                  <span className="font-medium text-green-400 tabular-nums">
                     {formatCurrency(tip.amount)}
                   </span>
                 </div>
@@ -468,24 +468,24 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
           </div>
         )}
         {/* SMART SUGGESTIONS - FASE 4 */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="mt-6 pt-4 border-t border-white/10">
           <SmartSuggestions sale={sale} />
         </div>      </div>
 
       {/* TOTALIZADOR (FOOTER FIJO) */}
-      <div className="bg-gray-800 p-4 border-t border-gray-700">
+      <div className="bg-gray-800/80 p-4 border-t border-white/10">
         <div className="space-y-2">
           {/* Subtotal */}
           <div className="flex justify-between text-sm text-gray-300">
             <span>Subtotal:</span>
-            <span>{formatCurrency(sale.subtotal)}</span>
+            <span className="tabular-nums">{formatCurrency(sale.subtotal)}</span>
           </div>
 
           {/* Descuento */}
           {sale.discount > 0 && (
-            <div className="flex justify-between text-sm text-green-300">
+            <div className="flex justify-between text-sm text-green-400">
               <span>Descuento:</span>
-              <span>- {formatCurrency(sale.discount)}</span>
+              <span className="tabular-nums">- {formatCurrency(sale.discount)}</span>
             </div>
           )}
 
@@ -493,7 +493,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
           {sale.tax > 0 && (
             <div className="flex justify-between text-sm text-gray-300">
               <span>Impuestos:</span>
-              <span>{formatCurrency(sale.tax)}</span>
+              <span className="tabular-nums">{formatCurrency(sale.tax)}</span>
             </div>
           )}
 
@@ -502,23 +502,23 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
           {sale.type === 'delivery' && Number(sale.deliveryFee ?? 0) > 0 && (
             <div className="flex justify-between text-sm text-gray-300">
               <span>Costo de envío:</span>
-              <span>{formatCurrency(Number(sale.deliveryFee))}</span>
+              <span className="tabular-nums">{formatCurrency(Number(sale.deliveryFee))}</span>
             </div>
           )}
 
           {/* Línea divisoria */}
-          <div className="border-t border-gray-600 pt-2 mt-2">
+          <div className="border-t border-white/10 pt-2 mt-2">
             {sale.status === 'cancelled' ? (
               <div className="flex justify-between items-center">
                 <span className="text-lg font-bold text-red-400">TOTAL ANULADO:</span>
-                <span className="text-2xl font-bold text-red-400 line-through">
+                <span className="text-2xl font-bold text-red-400 line-through tabular-nums">
                   {formatCurrency((sale as any).originalTotal ?? sale.total ?? 0)}
                 </span>
               </div>
             ) : (
             <div className="flex justify-between items-center">
               <span className="text-lg font-bold text-white">TOTAL:</span>
-              <span className="text-2xl font-bold text-white">
+              <span className="text-2xl font-bold text-white tabular-nums">
                 {formatCurrency(sale.total)}
               </span>
             </div>
@@ -527,10 +527,10 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
 
           {/* Info adicional */}
           {sale.payments.length > 0 && (
-            <div className="pt-2 mt-2 border-t border-gray-700">
+            <div className="pt-2 mt-2 border-t border-white/10">
               <div className="flex justify-between text-xs text-gray-400">
                 <span>Total pagado:</span>
-                <span>
+                <span className="tabular-nums">
                   {formatCurrency(
                     sale.payments.reduce((sum, p) => sum + p.amount, 0)
                   )}
@@ -539,7 +539,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
               {sale.payments.reduce((sum, p) => sum + p.amount, 0) < sale.total && (
                 <div className="flex justify-between text-xs text-orange-300 mt-1">
                   <span>Pendiente:</span>
-                  <span className="font-semibold">
+                  <span className="font-semibold tabular-nums">
                     {formatCurrency(
                       sale.total - sale.payments.reduce((sum, p) => sum + p.amount, 0)
                     )}
@@ -554,22 +554,22 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
 
     {/* ── MODAL PAGO ──────────────────────────────────────── */}
     {showPayModal && (
-      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-gray-900 border border-white/10 rounded-xl shadow-2xl w-full max-w-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900">Registrar Pago</h3>
-            <button onClick={() => setShowPayModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
-              <X className="w-5 h-5 text-gray-500" />
+            <h3 className="text-lg font-bold text-white">Registrar Pago</h3>
+            <button onClick={() => setShowPayModal(false)} className="p-1 hover:bg-white/10 rounded-lg">
+              <X className="w-5 h-5 text-gray-400" />
             </button>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Método de pago</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Método de pago</label>
               <select
                 value={payMethod}
                 onChange={e => setPayMethod(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full bg-gray-800/60 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 [color-scheme:dark]"
               >
                 <option value="CASH">Efectivo</option>
                 <option value="DEBIT">Débito Transbank</option>
@@ -579,24 +579,24 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Monto</label>
+              <label className="block text-sm font-medium text-gray-300 mb-1">Monto</label>
               <input
                 type="number"
                 value={payAmount}
                 onChange={e => setPayAmount(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full bg-gray-800/60 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
               />
             </div>
 
             {payMethod !== 'CASH' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Referencia (opcional)</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Referencia (opcional)</label>
                 <input
                   type="text"
                   value={payReference}
                   onChange={e => setPayReference(e.target.value)}
                   placeholder="Nº boleta / comprobante"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full bg-gray-800/60 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500"
                 />
               </div>
             )}
@@ -605,14 +605,14 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
           <div className="flex gap-2 mt-6">
             <button
               onClick={() => setShowPayModal(false)}
-              className="flex-1 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="flex-1 py-2 border border-white/10 rounded-lg text-sm font-medium text-gray-300 hover:bg-white/5"
             >
               Cancelar
             </button>
             <button
               onClick={handleConfirmPay}
               disabled={payLoading}
-              className="flex-1 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-bold disabled:opacity-50"
+              className="flex-1 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg text-sm font-bold disabled:opacity-50"
             >
               {payLoading ? 'Procesando...' : 'Registrar'}
             </button>
@@ -623,17 +623,17 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
 
     {/* ── MODAL ANULACIÓN ─────────────────────────────────── */}
     {showCancelModal && (
-      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-gray-900 border border-white/10 rounded-xl shadow-2xl w-full max-w-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900">Eliminar Venta</h3>
-            <button onClick={() => setShowCancelModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
-              <X className="w-5 h-5 text-gray-500" />
+            <h3 className="text-lg font-bold text-white">Eliminar Venta</h3>
+            <button onClick={() => setShowCancelModal(false)} className="p-1 hover:bg-white/10 rounded-lg">
+              <X className="w-5 h-5 text-gray-400" />
             </button>
           </div>
 
-          <p className="text-sm text-gray-600 mb-3">
-            Indica el motivo de eliminación de la venta <strong>{formatSaleNumber(sale?.saleNumber)}</strong>:
+          <p className="text-sm text-gray-300 mb-3">
+            Indica el motivo de eliminación de la venta <strong className="text-white">{formatSaleNumber(sale?.saleNumber)}</strong>:
           </p>
 
           <textarea
@@ -641,13 +641,13 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
             onChange={e => setCancelReason(e.target.value)}
             rows={3}
               placeholder="Motivo de eliminación..."
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
+            className="w-full bg-gray-800/60 border border-white/10 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
           />
 
           <div className="flex gap-2 mt-4">
             <button
               onClick={() => setShowCancelModal(false)}
-              className="flex-1 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="flex-1 py-2 border border-white/10 rounded-lg text-sm font-medium text-gray-300 hover:bg-white/5"
             >
               Cancelar
             </button>

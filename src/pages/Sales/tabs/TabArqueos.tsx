@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Loader2, FileDown, ChevronRight, Check, PlusCircle, Trash2, TrendingUp, TrendingDown, AlertTriangle, Clock, User, Info } from 'lucide-react';
 import { exportSheet } from '@/utils/exportExcel';
@@ -36,7 +36,7 @@ const calcDuration = (openedAt: string | null | undefined, closedAt?: string | n
   return `${hours}h ${mins}m`;
 };
 
-// BUG-5: Hook para duración reactiva (sesiones OPEN)
+// BUG-5: Hook para duraciÃ³n reactiva (sesiones OPEN)
 function useElapsedDuration(openedAt: string | null | undefined, isOpen: boolean): string {
   const [dur, setDur] = useState(() => calcDuration(openedAt, null));
   useEffect(() => {
@@ -49,7 +49,7 @@ function useElapsedDuration(openedAt: string | null | undefined, isOpen: boolean
   return dur || calcDuration(openedAt, null);
 }
 
-// BUG-5: Componente LiveDuration para mostrar duración reactiva en tabla
+// BUG-5: Componente LiveDuration para mostrar duraciÃ³n reactiva en tabla
 function LiveDuration({ openedAt }: { openedAt: string }) {
   const dur = useElapsedDuration(openedAt, true);
   return <>{dur}</>;
@@ -92,7 +92,7 @@ export const TabArqueos = () => {
   const handleShowOpenModal = () => {
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
-    // Usar fecha y hora LOCAL (no UTC) para que el modal muestre el día correcto en Chile
+    // Usar fecha y hora LOCAL (no UTC) para que el modal muestre el dÃ­a correcto en Chile
     setOpenDate(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`);
     setOpenTime(`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);
     setOpenMonto('');
@@ -102,7 +102,7 @@ export const TabArqueos = () => {
   const { data: sessionsData, isLoading: loadingSessions, error: sessionsError, refetch: refetchSessions } = useQuery({
     queryKey: ['cash-sessions-all'],
     queryFn: async () => {
-      // Fix #5 — usa el servicio en lugar de api.get directo
+      // Fix #5 â€” usa el servicio en lugar de api.get directo
       const raw = await cashRegistersService.getAllSessions({ perPage: 100 });
       if (Array.isArray(raw)) return { sessions: raw };
       if (Array.isArray(raw?.sessions)) return raw;
@@ -114,7 +114,7 @@ export const TabArqueos = () => {
     refetchOnWindowFocus: true,
   });
 
-  // Cargar el register activo para poder abrir sesión aunque no haya historial de sesiones
+  // Cargar el register activo para poder abrir sesiÃ³n aunque no haya historial de sesiones
   const { data: activeRegisterRaw } = useQuery({
     queryKey: ['active-register'],
     queryFn: () => cashRegistersService.getActiveRegister(),
@@ -253,7 +253,7 @@ export const TabArqueos = () => {
 
   const handleConfirmClose = () => {
     if (needsJustification) {
-      toast.error('La diferencia supera $10.000. Debes ingresar una justificación de al menos 5 caracteres.');
+      toast.error('La diferencia supera $10.000. Debes ingresar una justificaciÃ³n de al menos 5 caracteres.');
       return;
     }
     if (diffAbsLarge && !showCloseConfirm) {
@@ -264,7 +264,7 @@ export const TabArqueos = () => {
   };
 
   const handleExport = () => {
-    // BUG-2: closingByMethod persistido en la sesión tiene prioridad
+    // BUG-2: closingByMethod persistido en la sesiÃ³n tiene prioridad
     const closingByMethod = (selectedSession as any)?.closingByMethod as Record<string, number> | null | undefined
       ?? cuadre?.closingByMethod as Record<string, number> | null | undefined;
     const rows = byMethod.map((m: any) => ({
@@ -286,18 +286,18 @@ export const TabArqueos = () => {
   };
 
   return (
-    <div className="flex bg-gray-100 -m-6" style={{ minHeight: 'calc(100vh - 160px)' }}>
+    <div className="flex bg-gray-950 -m-6" style={{ minHeight: 'calc(100vh - 160px)' }}>
 
-      {/* ── Panel izquierdo ── */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-white border-r border-gray-200">
+      {/* â”€â”€ Panel izquierdo â”€â”€ */}
+      <div className="flex-1 flex flex-col overflow-hidden bg-gray-900 border-r border-white/10">
 
-        <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
-          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Arqueos de Caja</h2>
+        <div className="px-6 py-3 border-b border-white/10 flex items-center justify-between bg-gray-900">
+          <h2 className="text-sm font-bold text-gray-300 uppercase tracking-wider">Arqueos de Caja</h2>
           <div className="flex items-center gap-2">
             {!activeSession && registerId && (
               <button
                 onClick={handleShowOpenModal}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-orange-500 rounded hover:bg-orange-600 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-orange-500/100 rounded hover:bg-orange-600 transition-colors"
               >
                 <PlusCircle size={13} />
                 Nueva Caja
@@ -306,14 +306,14 @@ export const TabArqueos = () => {
             <button
               onClick={handleExport}
               disabled={!selectedSession || byMethod.length === 0}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded hover:bg-emerald-100 transition-colors disabled:opacity-40"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded hover:bg-emerald-500/100/20 transition-colors disabled:opacity-40"
             >
               <FileDown size={13} />
               Exportar
             </button>
             <button
               onClick={() => { refetchSessions(); refetchCuadre(); }}
-              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+              className="p-1.5 text-gray-400 hover:text-gray-400 hover:bg-white/10 rounded transition-colors"
             >
               <RefreshCw size={14} />
             </button>
@@ -321,28 +321,28 @@ export const TabArqueos = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-5 border-b border-gray-200 bg-white">
+        <div className="grid grid-cols-5 border-b border-white/10 bg-gray-900">
           {[
             { label: 'Arqueos de Caja',       value: allSessions.filter((s: any) => !s.deletedAt).length + ' Cajas' },
             { label: 'Efectivo esperado',      value: liveExpectedCash > 0 ? fmt(liveExpectedCash) : '-' },
-            { label: 'Ventas sesión',          value: liveVentas > 0 ? fmt(liveVentas) : '-' },
+            { label: 'Ventas sesiÃ³n',          value: liveVentas > 0 ? fmt(liveVentas) : '-' },
             { label: 'Ingresos/Egresos',       value: (totalCashIn > 0 || totalCashOut > 0) ? `+${fmt(totalCashIn)} / -${fmt(totalCashOut)}` : '-' },
             { label: 'Cancelaciones',          value: statsCancellations?.count > 0 ? `${statsCancellations.count} pedidos` : '-' },
           ].map((s, i) => (
-            <div key={i} className={`px-4 py-3 ${i < 4 ? 'border-r border-gray-200' : ''}`}>
+            <div key={i} className={`px-4 py-3 ${i < 4 ? 'border-r border-white/10' : ''}`}>
               <p className="text-xs text-gray-400 mb-0.5 truncate">{s.label}</p>
-              <p className="text-sm font-bold text-gray-800">{s.value}</p>
+              <p className="text-sm font-bold text-white">{s.value}</p>
             </div>
           ))}
         </div>
 
         {/* Filtro */}
-        <div className="px-4 py-2 border-b border-gray-200 bg-gray-50 flex items-center gap-3">
+        <div className="px-4 py-2 border-b border-white/10 bg-gray-800/40 flex items-center gap-3">
           <span className="text-xs text-gray-400">Estado</span>
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value as any)}
-            className="text-sm border border-gray-300 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-orange-400"
+            className="text-sm border border-white/20 rounded px-2 py-1 bg-gray-900 focus:outline-none focus:ring-1 focus:ring-orange-400"
           >
             <option value="ALL">Todos</option>
             <option value="OPEN">Abierto</option>
@@ -366,7 +366,7 @@ export const TabArqueos = () => {
             <div className="text-center py-16 text-gray-400 text-sm">Sin arqueos registrados</div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="bg-gray-100 border-b border-gray-200 sticky top-0">
+              <thead className="bg-white/10 border-b border-white/10 sticky top-0">
                 <tr>
                   {['Hora apertura', 'Hora cierre', 'Duracion', 'Sistema', 'Usuario', 'Diferencia', 'Estado', ''].map(h => (
                     <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
@@ -381,11 +381,11 @@ export const TabArqueos = () => {
                   const isDeleted = !!s.deletedAt;
                   const isSelected = s.id === effectiveSelectedId;
                   // FIX (Arqueos): la diferencia debe provenir SIEMPRE del backend.
-                  // El campo `difference` se persiste al cerrar la sesión y ya considera
+                  // El campo `difference` se persiste al cerrar la sesiÃ³n y ya considera
                   // openingCash + cashSales + cash_movements (CASH_IN/CASH_OUT).
                   // Evita el bug de recalcular (closingCash - snapshotTotalSales) que
                   // ignora los movimientos manuales y produce un valor distinto.
-                  // Solo para la sesión OPEN seleccionada se calcula en vivo.
+                  // Solo para la sesiÃ³n OPEN seleccionada se calcula en vivo.
                   const sysAmt = isSelected && cuadre
                     ? sistemaTotal
                     : ((s.snapshotTotalSales ?? s.openingCash ?? 0) as number);
@@ -404,37 +404,37 @@ export const TabArqueos = () => {
                     <tr
                       key={s.id}
                       onClick={() => setSelectedSessionId(s.id)}
-                      className={`border-b border-gray-100 cursor-pointer transition-colors ${
-                        isDeleted ? 'bg-red-50' : isSelected ? (isOpen ? 'bg-amber-50' : 'bg-blue-50') : 'hover:bg-gray-50'
+                      className={`border-b border-white/10 cursor-pointer transition-colors ${
+                        isDeleted ? 'bg-red-500/10' : isSelected ? (isOpen ? 'bg-amber-500/10' : 'bg-blue-500/10') : 'hover:bg-white/5'
                       }`}
                     >
-                      <td className={`px-4 py-3 font-medium ${lineClass || 'text-gray-800'}`}>{fmtDate(s.openedAt)}</td>
+                      <td className={`px-4 py-3 font-medium ${lineClass || 'text-white'}`}>{fmtDate(s.openedAt)}</td>
                       <td className={`px-4 py-3 ${lineClass || 'text-gray-500'}`}>{s.closedAt ? fmtDate(s.closedAt) : '-'}</td>
                       <td className={`px-4 py-3 text-xs ${lineClass || 'text-gray-400'}`}>
                         {isOpen ? <span className="text-amber-500 font-medium"><LiveDuration openedAt={s.openedAt} /></span> : dur}
                       </td>
-                      <td className={`px-4 py-3 font-semibold ${lineClass || 'text-gray-800'}`}>
-                        {!isSelected && s.status === 'CLOSED' && s.snapshotTotalSales == null ? '—' : fmt(sysAmt)}
+                      <td className={`px-4 py-3 font-semibold ${lineClass || 'text-white'}`}>
+                        {!isSelected && s.status === 'CLOSED' && s.snapshotTotalSales == null ? 'â€”' : fmt(sysAmt)}
                       </td>
-                      <td className={`px-4 py-3 ${lineClass || 'text-gray-600'}`}>{userAmt != null ? fmt(userAmt) : '-'}</td>
+                      <td className={`px-4 py-3 ${lineClass || 'text-gray-400'}`}>{userAmt != null ? fmt(userAmt) : '-'}</td>
                       <td
                         className={`px-4 py-3 font-semibold ${
                           isDeleted ? lineClass
                           : diff == null ? 'text-gray-300'
                           : diff === 0  ? 'text-gray-500'
-                          : diff > 0   ? 'text-yellow-600'
-                          : 'text-red-600'
+                          : diff > 0   ? 'text-yellow-400'
+                          : 'text-red-400'
                         }`}
-                        title={diff == null ? '' : diff === 0 ? 'Cuadre exacto' : diff > 0 ? 'Sobrante: el usuario declaró más de lo esperado' : 'Faltante: el usuario declaró menos de lo esperado'}
+                        title={diff == null ? '' : diff === 0 ? 'Cuadre exacto' : diff > 0 ? 'Sobrante: el usuario declarÃ³ mÃ¡s de lo esperado' : 'Faltante: el usuario declarÃ³ menos de lo esperado'}
                       >
                         {diff == null ? '-' : `${diff > 0 ? '+' : ''}${fmt(diff)}`}
                       </td>
                       <td className="px-4 py-3">
                         {isDeleted ? (
-                          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-red-100 text-red-500">Eliminado</span>
+                          <span className="px-2 py-0.5 rounded text-xs font-semibold bg-red-500/15 text-red-500">Eliminado</span>
                         ) : (
                           <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                            isOpen ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'
+                            isOpen ? 'bg-amber-500/15 text-amber-400' : 'bg-white/10 text-gray-500'
                           }`}>
                             {isOpen ? 'Abierto' : 'Cerrado'}
                           </span>
@@ -445,7 +445,7 @@ export const TabArqueos = () => {
                           <button
                             onClick={() => setConfirmDeleteId(s.id)}
                             title="Eliminar arqueo"
-                            className="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            className="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-500/100/10 transition-colors"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -458,24 +458,24 @@ export const TabArqueos = () => {
             </table>
           )}
           {!loadingSessions && !sessionsError && sessions.length > displayLimit && (
-            <div className="py-2 text-center border-t border-gray-100">
+            <div className="py-2 text-center border-t border-white/10">
               <button
                 onClick={() => setDisplayLimit(d => d + 20)}
                 className="text-xs text-orange-500 hover:underline"
               >
-                Ver más ({sessions.length - displayLimit} restantes)
+                Ver mÃ¡s ({sessions.length - displayLimit} restantes)
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── Panel derecho ── */}
+      {/* â”€â”€ Panel derecho â”€â”€ */}
       {selectedSession ? (
-        <div className="w-[420px] flex-shrink-0 flex flex-col bg-white border-l border-gray-200 overflow-y-auto">
+        <div className="w-[420px] flex-shrink-0 flex flex-col bg-gray-900 border-l border-white/10 overflow-y-auto">
 
           {/* Header */}
-          <div className="bg-orange-500 px-5 py-3 flex items-center justify-between flex-shrink-0">
+          <div className="bg-orange-500/100 px-5 py-3 flex items-center justify-between flex-shrink-0">
             <h3 className="text-white font-bold text-sm uppercase tracking-wider">Arqueo de Caja</h3>
             <div className="flex items-center gap-2">
               {isActiveSelected && (canIncome || canExpense) && (
@@ -505,31 +505,31 @@ export const TabArqueos = () => {
           </div>
 
           {/* Info sesion */}
-          <div className="px-5 py-4 border-b border-gray-200 space-y-2 text-sm flex-shrink-0">
+          <div className="px-5 py-4 border-b border-white/10 space-y-2 text-sm flex-shrink-0">
             <div className="flex items-center justify-between">
               <span className="text-gray-500">Hora de apertura</span>
-              <span className="font-medium text-gray-800">{fmtDate(selectedSession.openedAt)}</span>
+              <span className="font-medium text-white">{fmtDate(selectedSession.openedAt)}</span>
             </div>
             {selectedSession.closedAt && (
               <div className="flex items-center justify-between">
                 <span className="text-gray-500">Hora de cierre</span>
-                <span className="font-medium text-gray-800">{fmtDate(selectedSession.closedAt)}</span>
+                <span className="font-medium text-white">{fmtDate(selectedSession.closedAt)}</span>
               </div>
             )}
             <div className="flex items-center justify-between">
               <span className="text-gray-500 flex items-center gap-1"><Clock size={12} /> Duracion</span>
-              <span className="font-medium text-gray-800">{calcDuration(selectedSession.openedAt, selectedSession.closedAt)}</span>
+              <span className="font-medium text-white">{calcDuration(selectedSession.openedAt, selectedSession.closedAt)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-500 flex items-center gap-1"><User size={12} /> Abierto por</span>
-              <span className="font-medium text-gray-800">
+              <span className="font-medium text-white">
                 {selectedSession.openedBy?.name ?? selectedSession.openedById ?? '-'}
               </span>
             </div>
             {selectedSession.closedAt && (
               <div className="flex items-center justify-between">
                 <span className="text-gray-500 flex items-center gap-1"><User size={12} /> Cerrado por</span>
-                <span className="font-medium text-gray-800">
+                <span className="font-medium text-white">
                   {selectedSession.closedBy?.name ?? selectedSession.closedById ?? '-'}
                 </span>
               </div>
@@ -537,21 +537,21 @@ export const TabArqueos = () => {
             {selectedSession?.register?.name && (
               <div className="flex items-center justify-between">
                 <span className="text-gray-500">Caja</span>
-                <span className="font-medium text-gray-800">{selectedSession.register.name}</span>
+                <span className="font-medium text-white">{selectedSession.register.name}</span>
               </div>
             )}
             <div className="flex items-center justify-between">
               <span className="text-gray-500">Estado</span>
               <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                selectedSession.status === 'OPEN' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'
+                selectedSession.status === 'OPEN' ? 'bg-amber-500/15 text-amber-400' : 'bg-white/10 text-gray-500'
               }`}>
                 {selectedSession.status === 'OPEN' ? 'Abierto' : 'Cerrado'}
               </span>
             </div>
             {cancellations?.count > 0 && (
-              <div className="flex items-center justify-between bg-orange-50 rounded px-3 py-2 border border-orange-100">
-                <span className="text-orange-700 text-xs font-medium">Cancelaciones</span>
-                <span className="text-orange-700 text-xs font-bold">
+              <div className="flex items-center justify-between bg-orange-500/10 rounded px-3 py-2 border border-orange-500/30">
+                <span className="text-orange-300 text-xs font-medium">Cancelaciones</span>
+                <span className="text-orange-300 text-xs font-bold">
                   {cancellations.count} pedidos / {fmt(cancellations.total)}
                 </span>
               </div>
@@ -569,22 +569,22 @@ export const TabArqueos = () => {
             </div>
           ) : (
             <div className="px-5 py-3 text-sm flex-shrink-0">
-              <div className="flex justify-between py-2 border-b border-gray-100">
-                <span className="text-gray-600 font-semibold uppercase text-xs tracking-wide">Monto Inicial</span>
-                <span className="font-bold text-gray-800">{fmt(sistemaInicial)}</span>
+              <div className="flex justify-between py-2 border-b border-white/10">
+                <span className="text-gray-400 font-semibold uppercase text-xs tracking-wide">Monto Inicial</span>
+                <span className="font-bold text-white">{fmt(sistemaInicial)}</span>
               </div>
               <div className="py-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 font-semibold uppercase text-xs tracking-wide flex items-center gap-1">
+                  <span className="text-gray-400 font-semibold uppercase text-xs tracking-wide flex items-center gap-1">
                     Ventas
                     <span
-                      title={`Pagos cobrados desde apertura del turno (${fmtDate(cuadre?.openedAt ?? selectedSession?.openedAt ?? '')}). Puede incluir cobros de órdenes de días anteriores.`}
-                      className="cursor-help text-gray-400 hover:text-gray-600"
+                      title={`Pagos cobrados desde apertura del turno (${fmtDate(cuadre?.openedAt ?? selectedSession?.openedAt ?? '')}). Puede incluir cobros de Ã³rdenes de dÃ­as anteriores.`}
+                      className="cursor-help text-gray-400 hover:text-gray-400"
                     >
                       <Info size={11} />
                     </span>
                   </span>
-                  <span className="font-bold text-gray-800">{fmt(sistemaIngreso)}</span>
+                  <span className="font-bold text-white">{fmt(sistemaIngreso)}</span>
                 </div>
                 {byMethod.length > 0 && (
                   <div className="ml-1 mt-2 space-y-1.5">
@@ -595,35 +595,35 @@ export const TabArqueos = () => {
                           {METHOD_LABELS[m.method] ?? m.method}
                           <span className="text-xs text-gray-400 ml-1">({m.count})</span>
                         </span>
-                        <span className="font-medium text-gray-700">{fmt(m.total)}</span>
+                        <span className="font-medium text-gray-300">{fmt(m.total)}</span>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
               {totalCashIn > 0 && (
-                <div className="flex justify-between py-1.5 border-t border-gray-100">
-                  <span className="text-green-600 text-xs font-semibold">+ Ingresos manuales</span>
-                  <span className="font-bold text-green-600">{fmt(totalCashIn)}</span>
+                <div className="flex justify-between py-1.5 border-t border-white/10">
+                  <span className="text-green-400 text-xs font-semibold">+ Ingresos manuales</span>
+                  <span className="font-bold text-green-400">{fmt(totalCashIn)}</span>
                 </div>
               )}
               {totalCashOut > 0 && (
-                <div className="flex justify-between py-1.5 border-t border-gray-100">
+                <div className="flex justify-between py-1.5 border-t border-white/10">
                   <span className="text-red-500 text-xs font-semibold">- Egresos manuales</span>
                   <span className="font-bold text-red-500">-{fmt(totalCashOut)}</span>
                 </div>
               )}
-              <div className="flex justify-between py-2 border-t-2 border-gray-300 mt-1">
-                <span className="text-gray-700 font-bold text-sm">Total</span>
-                <span className="font-black text-gray-900 text-base">{fmt(sistemaTotal)}</span>
+              <div className="flex justify-between py-2 border-t-2 border-white/20 mt-1">
+                <span className="text-gray-300 font-bold text-sm">Total</span>
+                <span className="font-black text-white text-base">{fmt(sistemaTotal)}</span>
               </div>
               {movements.length > 0 && (
-                <div className="mt-2 border-t border-gray-100 pt-2">
+                <div className="mt-2 border-t border-white/10 pt-2">
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1.5">Movimientos manuales</p>
                   <div className="space-y-1">
                     {movements.map((mov: any) => (
-                      <div key={mov.id} className="flex justify-between text-xs bg-gray-50 rounded px-2 py-1.5">
-                        <span className={`font-semibold ${mov.type === 'CASH_IN' ? 'text-green-600' : 'text-red-500'}`}>
+                      <div key={mov.id} className="flex justify-between text-xs bg-gray-800/40 rounded px-2 py-1.5">
+                        <span className={`font-semibold ${mov.type === 'CASH_IN' ? 'text-green-400' : 'text-red-500'}`}>
                           {mov.type === 'CASH_IN' ? '+ Ingreso' : '- Egreso'}: {fmt(mov.amount)}
                         </span>
                         <div className="flex flex-col items-end ml-2">
@@ -656,7 +656,7 @@ export const TabArqueos = () => {
                       .map((m: any) => ({ key: m.method, label: METHOD_LABELS[m.method] ?? m.method })),
                   ].map(({ key, label }) => (
                     <div key={key} className="flex items-center justify-between gap-3">
-                      <label className="text-sm text-gray-700 font-medium flex-1">
+                      <label className="text-sm text-gray-300 font-medium flex-1">
                         {label} <span className="text-red-400">*</span>
                       </label>
                       <div className="flex items-center gap-1">
@@ -666,7 +666,7 @@ export const TabArqueos = () => {
                           placeholder="0"
                           value={userAmounts[key] ?? ''}
                           onChange={e => setUserAmounts(prev => ({ ...prev, [key]: e.target.value }))}
-                          className="w-28 px-2 py-1.5 border border-gray-300 rounded text-right text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none"
+                          className="w-28 px-2 py-1.5 border border-white/20 bg-gray-800/60 rounded text-right text-sm !text-white [color-scheme:dark] focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none"
                         />
                       </div>
                     </div>
@@ -674,23 +674,23 @@ export const TabArqueos = () => {
                 </div>
                 {diffAbsLarge && (
                   <div className="mb-3">
-                    <label className="text-sm font-semibold text-red-600 block mb-1 flex items-center gap-1.5">
+                    <label className="text-sm font-semibold text-red-400 block mb-1 flex items-center gap-1.5">
                       <AlertTriangle size={14} />
-                      Justificación de la diferencia (Obligatorio) <span className="text-red-400">*</span>
+                      JustificaciÃ³n de la diferencia (Obligatorio) <span className="text-red-400">*</span>
                     </label>
                     <textarea
                       value={justification}
                       onChange={e => setJustification(e.target.value)}
                       rows={3}
-                      placeholder="Explica el motivo del faltante/sobrante (mín. 5 caracteres). Ej: Pago en efectivo no registrado, vuelto mal entregado..."
-                      className={`w-full px-3 py-2 border rounded text-sm focus:ring-2 focus:border-orange-400 outline-none resize-none ${
+                      placeholder="Explica el motivo del faltante/sobrante (mÃ­n. 5 caracteres). Ej: Pago en efectivo no registrado, vuelto mal entregado..."
+                      className={`w-full px-3 py-2 border rounded text-sm bg-gray-800/60 !text-white [color-scheme:dark] focus:ring-2 focus:border-orange-400 outline-none resize-none ${
                         justification.trim().length >= 5
-                          ? 'border-gray-300 focus:ring-orange-400'
-                          : 'border-red-300 bg-red-50 focus:ring-red-400'
+                          ? 'border-white/20 focus:ring-orange-400'
+                          : 'border-red-500/30 bg-red-500/10 focus:ring-red-400'
                       }`}
                     />
                     <p className="text-xs text-gray-400 mt-1">
-                      Diferencia de {fmt(Math.abs(diferencia))}. Quedará registrada en el cierre.
+                      Diferencia de {fmt(Math.abs(diferencia))}. QuedarÃ¡ registrada en el cierre.
                     </p>
                   </div>
                 )}
@@ -701,17 +701,17 @@ export const TabArqueos = () => {
                     onChange={e => setComment(e.target.value)}
                     rows={2}
                     placeholder="Observaciones del arqueo..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none resize-none"
+                    className="w-full px-3 py-2 border border-white/20 rounded text-sm focus:ring-2 focus:ring-orange-400 focus:border-orange-400 outline-none resize-none"
                   />
                 </div>
-                <div className="flex justify-between py-2 border-t-2 border-gray-300">
-                  <span className="text-gray-700 font-bold text-sm">Total declarado</span>
-                  <span className="font-black text-gray-900 text-base">{fmt(totalUsuario)}</span>
+                <div className="flex justify-between py-2 border-t-2 border-white/20">
+                  <span className="text-gray-300 font-bold text-sm">Total declarado</span>
+                  <span className="font-black text-white text-base">{fmt(totalUsuario)}</span>
                 </div>
               </div>
 
               <div className={`px-5 py-4 flex items-center justify-between flex-shrink-0 ${
-                diferencia === 0 ? 'bg-green-500' : diffAbsLarge ? 'bg-red-600' : 'bg-red-500'
+                diferencia === 0 ? 'bg-green-500/100' : diffAbsLarge ? 'bg-red-600' : 'bg-red-500/100'
               }`}>
                 <span className="text-white font-bold text-sm uppercase tracking-wide flex items-center gap-1.5">
                   {diffAbsLarge && <AlertTriangle size={15} />}
@@ -723,8 +723,8 @@ export const TabArqueos = () => {
               </div>
 
               {diffAbsLarge && (
-                <div className="px-5 py-2 bg-red-50 border-b border-red-100 flex-shrink-0">
-                  <p className="text-xs text-red-600 font-medium">
+                <div className="px-5 py-2 bg-red-500/10 border-b border-red-500/30 flex-shrink-0">
+                  <p className="text-xs text-red-400 font-medium">
                     Diferencia mayor a {fmt(DIFF_THRESHOLD)}. Verifica los montos antes de confirmar.
                   </p>
                 </div>
@@ -735,7 +735,7 @@ export const TabArqueos = () => {
                   disabled={closeMutation.isPending || needsJustification}
                   onClick={handleConfirmClose}
                   className={`w-full py-3 disabled:opacity-50 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                    diffAbsLarge ? 'bg-red-500 hover:bg-red-600' : 'bg-orange-500 hover:bg-orange-600'
+                    diffAbsLarge ? 'bg-red-500/100 hover:bg-red-600' : 'bg-orange-500/100 hover:bg-orange-600'
                   }`}
                 >
                   {closeMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
@@ -746,7 +746,7 @@ export const TabArqueos = () => {
           ) : (
             <>
               <div className="px-5 py-4 text-sm flex-shrink-0">
-                {/* BUG-2: usar closingByMethod persistido en la sesión primero */}
+                {/* BUG-2: usar closingByMethod persistido en la sesiÃ³n primero */}
                 {(() => {
                   const cbm: Record<string, number> | null =
                     (selectedSession as any).closingByMethod ?? cuadre?.closingByMethod ?? null;
@@ -755,34 +755,34 @@ export const TabArqueos = () => {
                       {Object.entries(cbm).map(([method, amount]) => (
                         <div key={method} className="flex justify-between">
                           <span className="text-gray-500">{METHOD_LABELS[method] ?? method}</span>
-                          <span className="font-medium text-gray-800">{fmt(amount)}</span>
+                          <span className="font-medium text-white">{fmt(amount)}</span>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="flex justify-between py-2">
-                      <span className="text-gray-600 font-medium">Monto de Cierre</span>
-                      <span className="font-bold text-gray-800">
+                      <span className="text-gray-400 font-medium">Monto de Cierre</span>
+                      <span className="font-bold text-white">
                         {selectedSession.closingCash != null ? fmt(selectedSession.closingCash) : '-'}
                       </span>
                     </div>
                   );
                 })()}
                 {selectedSession.notes && (
-                  <div className="mt-2 bg-gray-50 rounded-lg p-3 text-gray-500 text-xs border border-gray-100">
+                  <div className="mt-2 bg-gray-800/40 rounded-lg p-3 text-gray-500 text-xs border border-white/10">
                     {selectedSession.notes}
                   </div>
                 )}
-                <div className="flex justify-between py-2 border-t-2 border-gray-300 mt-2">
-                  <span className="text-gray-700 font-bold text-sm">Total declarado</span>
-                  <span className="font-black text-gray-900 text-base">
+                <div className="flex justify-between py-2 border-t-2 border-white/20 mt-2">
+                  <span className="text-gray-300 font-bold text-sm">Total declarado</span>
+                  <span className="font-black text-white text-base">
                     {selectedSession.closingCash != null ? fmt(selectedSession.closingCash) : '-'}
                   </span>
                 </div>
               </div>
               {selectedSession.closingCash != null && (
                 <div className={`px-5 py-4 flex items-center justify-between flex-shrink-0 ${
-                  diferencia === 0 ? 'bg-green-500' : diferencia > 0 ? 'bg-blue-500' : 'bg-red-500'
+                  diferencia === 0 ? 'bg-green-500/100' : diferencia > 0 ? 'bg-blue-500/100' : 'bg-red-500/100'
                 }`}>
                   <span className="text-white font-bold text-sm uppercase tracking-wide">Diferencia</span>
                   <span className="text-white font-black text-xl">
@@ -791,12 +791,12 @@ export const TabArqueos = () => {
                 </div>
               )}
               {selectedSession.status === 'CLOSED' && selectedSession.justification && (
-                <div className="px-5 py-3 bg-amber-50 border-t border-amber-200 flex-shrink-0">
-                  <p className="text-xs font-bold text-amber-700 uppercase tracking-wide flex items-center gap-1.5 mb-1">
+                <div className="px-5 py-3 bg-amber-500/10 border-t border-amber-500/30 flex-shrink-0">
+                  <p className="text-xs font-bold text-amber-400 uppercase tracking-wide flex items-center gap-1.5 mb-1">
                     <AlertTriangle size={13} />
-                    Justificación del cajero
+                    JustificaciÃ³n del cajero
                   </p>
-                  <p className="text-sm text-amber-900 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-sm text-amber-200 leading-relaxed whitespace-pre-wrap">
                     {selectedSession.justification}
                   </p>
                 </div>
@@ -805,20 +805,20 @@ export const TabArqueos = () => {
           )}
         </div>
       ) : (
-        <div className="w-96 flex-shrink-0 flex items-center justify-center bg-gray-50 border-l border-gray-200">
+        <div className="w-96 flex-shrink-0 flex items-center justify-center bg-gray-800/40 border-l border-white/10">
           <p className="text-gray-400 text-sm">Selecciona un arqueo para ver detalles</p>
         </div>
       )}
 
-      {/* ── Modal: Confirmar eliminacion ── */}
+      {/* â”€â”€ Modal: Confirmar eliminacion â”€â”€ */}
       {confirmDeleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className="bg-red-500 px-5 py-3">
+          <div className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="bg-red-500/100 px-5 py-3">
               <h3 className="text-white font-bold text-sm uppercase tracking-wide">Eliminar Arqueo</h3>
             </div>
             <div className="px-6 py-5">
-              <p className="text-sm text-gray-700 mb-1">
+              <p className="text-sm text-gray-300 mb-1">
                 El arqueo quedara visible como <span className="font-semibold">tachado</span> para auditoria, pero no contara como activo.
               </p>
               <p className="text-xs text-gray-400 mt-2">Esta accion no se puede deshacer.</p>
@@ -826,14 +826,14 @@ export const TabArqueos = () => {
             <div className="px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => setConfirmDeleteId(null)}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm rounded-lg border border-white/10 text-gray-400 hover:bg-white/5 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 disabled={deleteMutation.isPending}
                 onClick={() => deleteMutation.mutate(confirmDeleteId)}
-                className="px-4 py-2 text-sm rounded-lg bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm rounded-lg bg-red-500/100 hover:bg-red-600 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
               >
                 {deleteMutation.isPending ? <Loader2 className="animate-spin" size={15} /> : <Trash2 size={15} />}
                 Eliminar
@@ -843,16 +843,16 @@ export const TabArqueos = () => {
         </div>
       )}
 
-      {/* ── Modal: Nueva Caja ── */}
+      {/* â”€â”€ Modal: Nueva Caja â”€â”€ */}
       {showOpenModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className="bg-orange-500 px-5 py-3">
+          <div className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
+            <div className="bg-orange-500/100 px-5 py-3">
               <h3 className="text-white font-bold text-sm uppercase tracking-wide">Nuevo Arqueo de Caja</h3>
             </div>
             <div className="px-6 py-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Hora de apertura <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
@@ -860,20 +860,20 @@ export const TabArqueos = () => {
                     type="date"
                     value={openDate}
                     onChange={e => setOpenDate(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="flex-1 border border-white/20 bg-gray-800/60 rounded px-3 py-2 text-sm !text-white [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-orange-400"
                   />
                   <input
                     type="time"
                     step="1"
                     value={openTime}
                     onChange={e => setOpenTime(e.target.value)}
-                    className="w-32 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="w-32 border border-white/20 bg-gray-800/60 rounded px-3 py-2 text-sm !text-white [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-orange-400"
                   />
                 </div>
                 <p className="mt-1 text-xs text-gray-400">Las ventas desde esta hora se sumaran al arqueo.</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Monto Inicial <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center gap-1">
@@ -884,7 +884,7 @@ export const TabArqueos = () => {
                     placeholder="0"
                     value={openMonto}
                     onChange={e => setOpenMonto(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="flex-1 border border-white/20 bg-gray-800/60 rounded px-3 py-2 text-sm !text-white [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-orange-400"
                   />
                 </div>
               </div>
@@ -892,14 +892,14 @@ export const TabArqueos = () => {
             <div className="px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => setShowOpenModal(false)}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm rounded-lg border border-white/10 text-gray-400 hover:bg-white/5 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 disabled={openMutation.isPending || !openDate || !openTime}
                 onClick={() => openMutation.mutate()}
-                className="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm rounded-lg bg-orange-500/100 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
               >
                 {openMutation.isPending && <Loader2 className="animate-spin" size={15} />}
                 Iniciar Arqueo
@@ -909,10 +909,10 @@ export const TabArqueos = () => {
         </div>
       )}
 
-      {/* ── Modal: Movimiento manual ── */}
+      {/* â”€â”€ Modal: Movimiento manual â”€â”€ */}
       {showMovementModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
+          <div className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className={`px-5 py-3 ${movementType === 'CASH_IN' ? 'bg-green-600' : 'bg-red-600'}`}>
               <h3 className="text-white font-bold text-sm uppercase tracking-wide">
                 {movementType === 'CASH_IN' ? 'Registrar Ingreso Manual' : 'Registrar Egreso Manual'}
@@ -920,24 +920,24 @@ export const TabArqueos = () => {
             </div>
             <div className="px-6 py-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Tipo</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setMovementType('CASH_IN')}
-                    className={`flex-1 py-2 rounded text-sm font-medium transition-colors ${movementType === 'CASH_IN' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                    className={`flex-1 py-2 rounded text-sm font-medium transition-colors ${movementType === 'CASH_IN' ? 'bg-green-600 text-white' : 'bg-white/10 text-gray-500 hover:bg-white/10'}`}
                   >
                     Ingreso
                   </button>
                   <button
                     onClick={() => setMovementType('CASH_OUT')}
-                    className={`flex-1 py-2 rounded text-sm font-medium transition-colors ${movementType === 'CASH_OUT' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+                    className={`flex-1 py-2 rounded text-sm font-medium transition-colors ${movementType === 'CASH_OUT' ? 'bg-red-600 text-white' : 'bg-white/10 text-gray-500 hover:bg-white/10'}`}
                   >
                     Egreso
                   </button>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Monto <span className="text-red-500">*</span>
                 </label>
                 <div className="flex items-center gap-1">
@@ -946,12 +946,12 @@ export const TabArqueos = () => {
                     type="number" min="0" step="1" placeholder="0"
                     value={movementAmount}
                     onChange={e => setMovementAmount(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="flex-1 border border-white/20 bg-gray-800/60 rounded px-3 py-2 text-sm !text-white [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-orange-400"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Razon / Descripcion <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -959,14 +959,14 @@ export const TabArqueos = () => {
                   placeholder="Ej: Pago proveedor, cambio de caja, etc."
                   value={movementReason}
                   onChange={e => setMovementReason(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  className="w-full border border-white/20 bg-gray-800/60 rounded px-3 py-2 text-sm !text-white [color-scheme:dark] focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
               </div>
             </div>
             <div className="px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => { setShowMovementModal(false); setMovementAmount(''); setMovementReason(''); }}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm rounded-lg border border-white/10 text-gray-400 hover:bg-white/5 transition-colors"
               >
                 Cancelar
               </button>
@@ -991,26 +991,26 @@ export const TabArqueos = () => {
         </div>
       )}
 
-      {/* ── Modal: Confirmar egreso grande ── */}
+      {/* â”€â”€ Modal: Confirmar egreso grande â”€â”€ */}
       {showCashOutConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
+          <div className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="bg-red-600 px-5 py-3 flex items-center gap-2">
               <AlertTriangle size={16} className="text-white" />
               <h3 className="text-white font-bold text-sm uppercase tracking-wide">Egreso Grande</h3>
             </div>
             <div className="px-6 py-5">
-              <p className="text-sm text-gray-700 mb-2">
+              <p className="text-sm text-gray-300 mb-2">
                 El egreso de{' '}
-                <span className="font-bold text-red-600">{fmt(parseFloat(movementAmount))}</span>
+                <span className="font-bold text-red-400">{fmt(parseFloat(movementAmount))}</span>
                 {' '}supera el umbral de {fmt(CASH_OUT_THRESHOLD)}.
               </p>
-              <p className="text-xs text-gray-500">¿Confirmas que el monto es correcto?</p>
+              <p className="text-xs text-gray-500">Â¿Confirmas que el monto es correcto?</p>
             </div>
             <div className="px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => setShowCashOutConfirm(false)}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm rounded-lg border border-white/10 text-gray-400 hover:bg-white/5 transition-colors"
               >
                 Revisar monto
               </button>
@@ -1027,18 +1027,18 @@ export const TabArqueos = () => {
         </div>
       )}
 
-      {/* ── Modal: Confirmar cierre diferencia grande ── */}
+      {/* â”€â”€ Modal: Confirmar cierre diferencia grande â”€â”€ */}
       {showCloseConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
+          <div className="bg-gray-900 rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="bg-red-600 px-5 py-3 flex items-center gap-2">
               <AlertTriangle size={16} className="text-white" />
               <h3 className="text-white font-bold text-sm uppercase tracking-wide">Diferencia Grande</h3>
             </div>
             <div className="px-6 py-5">
-              <p className="text-sm text-gray-700 mb-2">
+              <p className="text-sm text-gray-300 mb-2">
                 La diferencia es de{' '}
-                <span className="font-bold text-red-600">{fmt(Math.abs(diferencia))}</span>,
+                <span className="font-bold text-red-400">{fmt(Math.abs(diferencia))}</span>,
                 {' '}lo que supera el umbral de {fmt(DIFF_THRESHOLD)}.
               </p>
               <p className="text-xs text-gray-500">Confirma que los montos son correctos antes de cerrar la caja.</p>
@@ -1046,7 +1046,7 @@ export const TabArqueos = () => {
             <div className="px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => setShowCloseConfirm(false)}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-sm rounded-lg border border-white/10 text-gray-400 hover:bg-white/5 transition-colors"
               >
                 Revisar montos
               </button>

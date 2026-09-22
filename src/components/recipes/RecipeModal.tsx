@@ -182,20 +182,20 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-gray-900 border border-white/10 rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="relative bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
-          <div className="sticky top-0 bg-gray-900 z-10 flex items-center justify-between p-6 border-b border-white/10">
+          <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-gray-200">
             <div>
-              <h2 className="text-2xl font-bold text-white">
+              <h2 className="text-2xl font-bold text-gray-900">
                 {mode === 'create' ? '📋 Nueva Ficha Técnica' : '✏️ Editar Ficha Técnica'}
               </h2>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-600 mt-1">
                 Define los ingredientes y cantidades para calcular el costo real
               </p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -208,18 +208,18 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
               <div className="lg:col-span-2 space-y-6">
                 {/* Información Básica */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-white">Información Básica</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Información Básica</h3>
 
                   {/* Producto */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Producto <span className="text-red-400">*</span>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Producto <span className="text-red-500">*</span>
                     </label>
                     <select
                       value={formData.productId}
                       onChange={(e) => handleChange('productId', e.target.value)}
-                      className={`w-full px-4 py-2 border rounded-lg bg-white/5 !text-white [color-scheme:dark] focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${
-                        errors.productId ? 'border-red-500' : 'border-white/10'
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                        errors.productId ? 'border-red-500' : 'border-gray-300'
                       }`}
                     >
                       <option value="">Selecciona un producto</option>
@@ -230,64 +230,64 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                       ))}
                     </select>
                     {errors.productId && (
-                      <p className="mt-1 text-sm text-red-400">{errors.productId}</p>
+                      <p className="mt-1 text-sm text-red-600">{errors.productId}</p>
                     )}
                   </div>
 
                   {/* Nombre */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Nombre <span className="text-red-400">*</span>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nombre <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.name}
                       onChange={(e) => handleChange('name', e.target.value)}
                       placeholder="Ej: Pizza Margarita - Receta estándar"
-                      className={`w-full px-4 py-2 border rounded-lg bg-white/5 !text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${
-                        errors.name ? 'border-red-500' : 'border-white/10'
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                        errors.name ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
                     {errors.name && (
-                      <p className="mt-1 text-sm text-red-400">{errors.name}</p>
+                      <p className="mt-1 text-sm text-red-600">{errors.name}</p>
                     )}
                   </div>
 
                   {/* Descripción */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Descripción
                     </label>
                     <textarea
                       value={formData.description}
                       onChange={(e) => handleChange('description', e.target.value)}
-                      placeholder="Ej: Receta base para 4 porciones de pizza 30cm"
+                      placeholder="Descripción de la receta..."
                       rows={2}
-                      className="w-full px-4 py-2 border border-white/10 rounded-lg bg-white/5 !text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
                   {/* Porciones y Tiempos */}
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Porciones <span className="text-red-400">*</span>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Porciones <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="number"
                         value={formData.servings}
                         onChange={(e) => handleChange('servings', parseInt(e.target.value) || 1)}
                         min="1"
-                        className={`w-full px-4 py-2 border rounded-lg bg-white/5 !text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${
-                          errors.servings ? 'border-red-500' : 'border-white/10'
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                          errors.servings ? 'border-red-500' : 'border-gray-300'
                         }`}
                       />
                       {errors.servings && (
-                        <p className="mt-1 text-sm text-red-400">{errors.servings}</p>
+                        <p className="mt-1 text-sm text-red-600">{errors.servings}</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Prep (min)
                       </label>
                       <input
@@ -295,11 +295,11 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                         value={formData.prepTime}
                         onChange={(e) => handleChange('prepTime', parseInt(e.target.value) || 0)}
                         min="0"
-                        className="w-full px-4 py-2 border border-white/10 rounded-lg bg-white/5 !text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Cocción (min)
                       </label>
                       <input
@@ -307,7 +307,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                         value={formData.cookTime}
                         onChange={(e) => handleChange('cookTime', parseInt(e.target.value) || 0)}
                         min="0"
-                        className="w-full px-4 py-2 border border-white/10 rounded-lg bg-white/5 !text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </div>
@@ -316,11 +316,11 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                 {/* Ingredientes */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-white">
-                      Ingredientes <span className="text-red-400">*</span>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      Ingredientes <span className="text-red-500">*</span>
                     </h3>
                     {(formData.ingredients || []).length > 0 && (
-                      <span className="text-sm text-gray-400">
+                      <span className="text-sm text-gray-600">
                         {(formData.ingredients || []).length} ingrediente
                         {(formData.ingredients || []).length !== 1 ? 's' : ''}
                       </span>
@@ -335,50 +335,50 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                   />
 
                   {errors.ingredients && (
-                    <p className="mt-1 text-sm text-red-400">{errors.ingredients}</p>
+                    <p className="mt-1 text-sm text-red-600">{errors.ingredients}</p>
                   )}
                 </div>
 
                 {/* Instrucciones */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Instrucciones
                   </label>
                   <textarea
                     value={formData.instructions}
                     onChange={(e) => handleChange('instructions', e.target.value)}
-                    placeholder="Ej: 1. Amasar, 2. Reposar 30 min, 3. Hornear 12 min a 220°C"
+                    placeholder="Paso a paso de la preparación..."
                     rows={4}
-                    className="w-full px-4 py-2 border border-white/10 rounded-lg bg-white/5 !text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 {/* Notas */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Notas Adicionales
                   </label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => handleChange('notes', e.target.value)}
-                    placeholder="Ej: Usar mozzarella fresca para mejor fundido"
+                    placeholder="Notas, tips, variaciones..."
                     rows={2}
-                    className="w-full px-4 py-2 border border-white/10 rounded-lg bg-white/5 !text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               {/* Columna Derecha: Cálculos */}
               <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-white">📊 Cálculos</h3>
+                <h3 className="text-lg font-semibold text-gray-900">📊 Cálculos</h3>
 
                 {/* Costo Total */}
-                <div className="bg-brand-500/10 border border-brand-500/20 rounded-lg p-4">
-                  <p className="text-sm text-brand-300 mb-1">Costo Total</p>
-                  <p className="text-3xl font-bold text-white">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 mb-1">Costo Total</p>
+                  <p className="text-3xl font-bold text-blue-900">
                     {formatCurrency(calculations.totalCost || 0)}
                   </p>
-                  <p className="text-xs text-brand-300/70 mt-1">
+                  <p className="text-xs text-blue-700 mt-1">
                     Por porción: ${(calculations.costPerServing || 0).toFixed(0)}
                   </p>
                 </div>
@@ -388,13 +388,13 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                   <div
                     className={`border rounded-lg p-4 ${
                       calculations.comparison.status === 'match'
-                        ? 'bg-green-500/10 border-green-500/20'
+                        ? 'bg-green-50 border-green-200'
                         : calculations.comparison.status === 'higher'
-                        ? 'bg-red-500/10 border-red-500/20'
-                        : 'bg-yellow-500/10 border-yellow-500/20'
+                        ? 'bg-red-50 border-red-200'
+                        : 'bg-yellow-50 border-yellow-200'
                     }`}
                   >
-                    <p className="text-sm font-semibold text-white mb-2">Comparación</p>
+                    <p className="text-sm font-semibold mb-2">Comparación</p>
                     <div className="space-y-1 text-sm">
                       <div className="flex justify-between">
                         <span>Costo estimado:</span>
@@ -408,13 +408,13 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                           {formatCurrency(calculations.comparison.realCost)}
                         </span>
                       </div>
-                      <div className="flex justify-between pt-2 border-t border-white/10">
+                      <div className="flex justify-between pt-2 border-t">
                         <span>Diferencia:</span>
                         <span
                           className={`font-mono font-bold ${
                             calculations.comparison.difference > 0
-                              ? 'text-red-400'
-                              : 'text-green-400'
+                              ? 'text-red-600'
+                              : 'text-green-600'
                           }`}
                         >
                           {calculations.comparison.difference > 0 ? '+' : ''}
@@ -427,8 +427,8 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
 
                 {/* Margen Real */}
                 {calculations.selectedProduct && (
-                  <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-                    <p className="text-sm text-gray-400 mb-2">Margen Real</p>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm text-gray-700 mb-2">Margen Real</p>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span>Precio venta:</span>
@@ -442,15 +442,15 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                           ${(calculations.totalCost || 0).toFixed(0)}
                         </span>
                       </div>
-                      <div className="flex justify-between pt-2 border-t border-white/10">
-                        <span className="font-semibold text-white">Margen:</span>
+                      <div className="flex justify-between pt-2 border-t">
+                        <span className="font-semibold">Margen:</span>
                         <span
                           className={`font-bold text-lg ${
                             calculations.realMargin >= 40
-                              ? 'text-green-400'
+                              ? 'text-green-600'
                               : calculations.realMargin >= 20
-                              ? 'text-yellow-400'
-                              : 'text-red-400'
+                              ? 'text-yellow-600'
+                              : 'text-red-600'
                           }`}
                         >
                           {(calculations.realMargin || 0).toFixed(1)}%
@@ -461,8 +461,8 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                 )}
 
                 {/* Precios Sugeridos */}
-                <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
-                  <p className="text-sm font-semibold text-purple-300 mb-2">
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <p className="text-sm font-semibold text-purple-900 mb-2">
                     💡 Precios Sugeridos
                   </p>
                   <div className="space-y-1 text-sm">
@@ -489,8 +489,8 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
 
                 {/* Tiempos */}
                 {(formData.prepTime > 0 || formData.cookTime > 0) && (
-                  <div className="bg-white/5 border border-white/10 rounded-lg p-4">
-                    <p className="text-sm font-semibold text-white mb-2">⏱️ Tiempos</p>
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <p className="text-sm font-semibold mb-2">⏱️ Tiempos</p>
                     <div className="space-y-1 text-sm">
                       {formData.prepTime > 0 && (
                         <div className="flex justify-between">
@@ -505,7 +505,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                         </div>
                       )}
                       {formData.prepTime > 0 && formData.cookTime > 0 && (
-                        <div className="flex justify-between pt-2 border-t border-white/10 font-semibold text-white">
+                        <div className="flex justify-between pt-2 border-t font-semibold">
                           <span>Total:</span>
                           <span>{formData.prepTime + formData.cookTime} min</span>
                         </div>
@@ -517,11 +517,11 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
             </div>
 
             {/* Botones */}
-            <div className="flex gap-3 pt-6 mt-6 border-t border-white/10">
+            <div className="flex gap-3 pt-6 mt-6 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 border border-white/10 text-gray-300 rounded-lg hover:bg-white/10 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
                 Cancelar
               </button>
@@ -530,8 +530,8 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                 disabled={isSubmitting}
                 className={`flex-1 px-4 py-2.5 rounded-lg transition-colors font-medium flex items-center justify-center gap-2 ${
                   isSubmitting
-                    ? 'bg-brand-500/50 cursor-not-allowed text-white'
-                    : 'bg-brand-500 hover:bg-brand-600 text-white'
+                    ? 'bg-blue-400 cursor-not-allowed text-white'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
                 }`}
               >
                 {isSubmitting ? (

@@ -41,7 +41,7 @@ function TabLoadingSpinner() {
   return (
     <div className="flex items-center justify-center py-16">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
         <p className="text-sm text-gray-400">Cargando...</p>
       </div>
     </div>
@@ -611,8 +611,18 @@ const Products = () => {
     const category = categories.find((c) => c.id === categoryId);
     if (!category) return;
 
-    // F-2: la advertencia de cascada (productos asignados) se muestra ahora en el
-    // ConfirmDialog premium — window.confirm nativo eliminado (pulido módulo)
+    const hasProducts = products.some((p) => p.categoryId === categoryId);
+
+    // F-2: advertir pero no bloquear — el backend hace soft-delete en cascada
+    if (hasProducts) {
+      const confirmed = window.confirm(
+        `La categoría "${category.name}" tiene productos asignados. ` +
+        `Al eliminarla, los productos también serán desactivados. ¿Continuar?`
+      );
+      if (!confirmed) return;
+    }
+
+    // Abrir confirmación
     setConfirmDialog({
       isOpen: true,
       productId: categoryId,
@@ -723,7 +733,7 @@ const Products = () => {
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
           <div className="bg-gray-900 rounded-lg p-6 shadow-xl border border-white/10">
             <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
               <span className="text-gray-300 font-medium">Guardando...</span>
             </div>
           </div>
@@ -936,30 +946,13 @@ const Products = () => {
         }
       />
 
-      {/* Modal de confirmación de eliminación — título/mensaje dinámico por pestaña */}
+      {/* Modal de confirmación de eliminación */}
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
         onClose={() => setConfirmDialog({ isOpen: false, productId: '', productName: '' })}
         onConfirm={confirmDeleteProduct}
-        title={
-          activeTab === 'categorias'
-            ? 'Eliminar Categoría'
-            : activeTab === 'ingredientes'
-            ? 'Eliminar Ingrediente'
-            : activeTab === 'fichas'
-            ? 'Eliminar Ficha Técnica'
-            : activeTab === 'modificadores'
-            ? confirmDialog.productId.includes(':')
-              ? 'Eliminar Opción'
-              : 'Eliminar Grupo'
-            : 'Eliminar Producto'
-        }
-        message={
-          activeTab === 'categorias' &&
-          products.some((p) => p.categoryId === confirmDialog.productId)
-            ? `La categoría "${confirmDialog.productName}" tiene productos asignados. Al eliminarla, los productos también serán desactivados. ¿Continuar?`
-            : `¿Estás seguro de eliminar "${confirmDialog.productName}"? Esta acción no se puede deshacer.`
-        }
+        title="Eliminar Producto"
+        message={`¿Estás seguro de eliminar "${confirmDialog.productName}"? Esta acción no se puede deshacer.`}
         confirmText="Eliminar"
         cancelText="Cancelar"
         variant="danger"

@@ -70,26 +70,26 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Buscar emoji..."
-          className="w-full pl-10 pr-4 py-2 border border-white/10 rounded-lg bg-white/5 !text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 text-sm"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
         />
       </div>
 
       {/* Emoji seleccionado */}
-      <div className="flex items-center gap-3 p-3 bg-brand-500/10 rounded-lg border border-brand-500/20">
+      <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
         <span className="text-3xl">{selectedEmoji || '❓'}</span>
         <div>
-          <p className="text-sm font-medium text-white">Emoji seleccionado</p>
-          <p className="text-xs text-gray-400">
+          <p className="text-sm font-medium text-gray-900">Emoji seleccionado</p>
+          <p className="text-xs text-gray-600">
             {selectedEmoji ? 'Click en otro para cambiar' : 'Selecciona un emoji'}
           </p>
         </div>
       </div>
 
       {/* Grid de emojis */}
-      <div className="max-h-64 overflow-y-auto border border-white/10 rounded-lg p-3 space-y-3">
+      <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 space-y-3">
         {filteredCategories.map((category) => (
           <div key={category.name}>
-            <p className="text-xs font-semibold text-gray-400 mb-2">
+            <p className="text-xs font-semibold text-gray-600 mb-2">
               {category.name}
             </p>
             <div className="grid grid-cols-8 gap-1">
@@ -99,8 +99,8 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
                   type="button"
                   onClick={() => onSelect(emoji)}
                   className={`
-                    text-2xl p-2 rounded hover:bg-white/10 transition-colors
-                    ${selectedEmoji === emoji ? 'bg-brand-500/20 ring-2 ring-brand-500' : ''}
+                    text-2xl p-2 rounded hover:bg-gray-100 transition-colors
+                    ${selectedEmoji === emoji ? 'bg-blue-100 ring-2 ring-blue-500' : ''}
                   `}
                 >
                   {emoji}

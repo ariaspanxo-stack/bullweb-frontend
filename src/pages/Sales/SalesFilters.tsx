@@ -143,15 +143,11 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
     onFilterChange({ startDate, endDate });
   };
 
-  // Clases base del sistema dark (inputs/selects legibles)
-  const inputDark = 'bg-gray-800/60 border border-white/10 rounded text-sm text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-brand-500/60 [color-scheme:dark]';
-  const selectDark = 'bg-gray-800/60 border border-white/10 rounded text-sm text-white cursor-pointer outline-none focus:ring-2 focus:ring-brand-500/60 [color-scheme:dark]';
-
   return (
-    <div className="bg-gray-900 border border-white/10 p-4 rounded-lg space-y-3">
+    <div className="bg-white p-4 rounded-lg shadow-sm space-y-3">
       {/* Barra de búsqueda rápida */}
-      <div className="flex items-center gap-2 bg-gray-800/60 px-4 py-2 rounded-lg border border-white/10">
-        <Search size={18} className="text-gray-500" />
+      <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+        <Search size={18} className="text-gray-400" />
         <input
           type="text"
           placeholder="Buscar por venta, cliente, mesa..."
@@ -162,12 +158,12 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
               handleApplyFilters();
             }
           }}
-          className="flex-1 bg-transparent border-none outline-none text-sm text-white placeholder-gray-500"
+          className="flex-1 bg-transparent border-none outline-none text-sm placeholder-gray-400"
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
-            className="text-gray-500 hover:text-gray-300"
+            className="text-gray-400 hover:text-gray-600"
           >
             ✕
           </button>
@@ -177,12 +173,12 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
       {/* Primera fila - Filtros de fecha */}
       <div className="flex items-center gap-3 flex-wrap">
         {/* Selector de modo */}
-        <div className="flex items-center gap-1 bg-gray-800/60 border border-white/10 rounded overflow-hidden">
-          <Calendar size={15} className="text-gray-500 ml-2" />
+        <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 rounded overflow-hidden">
+          <Calendar size={15} className="text-gray-400 ml-2" />
           <select
             value={dateMode}
             onChange={e => setDateMode(e.target.value as any)}
-            className="px-2 py-2 bg-transparent border-none outline-none text-sm cursor-pointer font-medium text-white [color-scheme:dark]"
+            className="px-2 py-2 bg-transparent border-none outline-none text-sm cursor-pointer font-medium text-gray-700"
           >
             <option value="diario">Diario</option>
             <option value="semanal">Semanal</option>
@@ -192,11 +188,11 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
         </div>
 
         {/* Turno */}
-        <div className="flex items-center gap-1 bg-gray-800/60 px-2 py-2 rounded border border-white/10">
+        <div className="flex items-center gap-1 bg-gray-50 px-2 py-2 rounded border border-gray-200">
           <select
             value={shift}
             onChange={(e) => setShift(e.target.value)}
-            className="bg-transparent border-none outline-none text-sm cursor-pointer text-gray-300 [color-scheme:dark]"
+            className="bg-transparent border-none outline-none text-sm cursor-pointer"
           >
             <option value="">Turno</option>
             <option value="morning">Mañana (08:00-14:00)</option>
@@ -209,33 +205,33 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
         {dateMode === 'rango' ? (
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-gray-400 font-medium whitespace-nowrap">Desde:</span>
+              <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Desde:</span>
               <input
                 type="date"
                 value={rangeFrom}
                 onChange={e => setRangeFrom(e.target.value)}
-                className={`px-2 py-1.5 cursor-pointer hover:bg-white/10 ${inputDark}`}
+                className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
               />
               <input
                 type="time"
                 value={rangeFromTime}
                 onChange={e => setRangeFromTime(e.target.value)}
-                className={`px-2 py-1.5 cursor-pointer hover:bg-white/10 w-24 ${inputDark}`}
+                className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100 w-24"
               />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-xs text-gray-400 font-medium whitespace-nowrap">Hasta:</span>
+              <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Hasta:</span>
               <input
                 type="date"
                 value={rangeTo}
                 onChange={e => setRangeTo(e.target.value)}
-                className={`px-2 py-1.5 cursor-pointer hover:bg-white/10 ${inputDark}`}
+                className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
               />
               <input
                 type="time"
                 value={rangeToTime}
                 onChange={e => setRangeToTime(e.target.value)}
-                className={`px-2 py-1.5 cursor-pointer hover:bg-white/10 w-24 ${inputDark}`}
+                className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100 w-24"
               />
             </div>
           </div>
@@ -249,13 +245,13 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
                   max="31"
                   value={day}
                   onChange={(e) => setDay(Math.min(31, Math.max(1, parseInt(e.target.value) || 1)))}
-                  className={`w-16 px-2 py-2 text-center cursor-pointer hover:bg-white/10 ${inputDark}`}
+                  className="w-16 px-2 py-2 bg-gray-50 border border-gray-200 rounded text-sm text-center cursor-pointer hover:bg-gray-100"
                 />
               )}
               <select
                 value={month}
                 onChange={(e) => setMonth(parseInt(e.target.value))}
-                className={`px-3 py-2 cursor-pointer hover:bg-white/10 ${selectDark}`}
+                className="px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
               >
                 <option value="1">ene</option>
                 <option value="2">feb</option>
@@ -276,12 +272,12 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
                 max="2030"
                 value={year}
                 onChange={(e) => setYear(parseInt(e.target.value) || 2026)}
-                className={`w-20 px-2 py-2 text-center cursor-pointer hover:bg-white/10 ${inputDark}`}
+                className="w-20 px-2 py-2 bg-gray-50 border border-gray-200 rounded text-sm text-center cursor-pointer hover:bg-gray-100"
               />
             </div>
             <button
               onClick={handleTodayClick}
-              className="px-3 py-2 bg-brand-500/10 text-brand-400 border border-brand-500/30 rounded text-sm font-medium hover:bg-brand-500/20"
+              className="px-3 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded text-sm font-medium hover:bg-blue-100"
             >
               Hoy
             </button>
@@ -290,23 +286,23 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
       </div>
 
       {/* Botones de acción */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex items-center gap-3">
         <button
           onClick={handleApplyFilters}
-          className="px-6 py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg font-semibold transition-colors"
+          className="px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors"
         >
           🔍 Buscar
         </button>
 
         <button
           onClick={handleReset}
-          className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 rounded-lg font-medium transition-colors"
+          className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
         >
           Limpiar
         </button>
 
         {(shift || status || type || waiter || paymentMethod || tableNumber || minAmount || maxAmount) && (
-          <div className="flex items-center gap-2 text-sm text-gray-300 bg-brand-500/10 border border-brand-500/20 px-3 py-2 rounded">
+          <div className="flex items-center gap-2 text-sm text-gray-600 bg-blue-50 px-3 py-2 rounded">
             <Filter size={14} />
             <span>Filtros activos: {[shift, status, type, waiter, paymentMethod, tableNumber, minAmount, maxAmount].filter(Boolean).length}</span>
           </div>
@@ -315,12 +311,12 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
 
       {/* Segunda fila - Filtros avanzados */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-2 bg-gray-800/60 px-3 py-2 rounded border border-white/10">
+        <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded border border-gray-200">
           <Filter size={18} className="text-gray-500" />
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="bg-transparent border-none outline-none text-sm cursor-pointer text-gray-300 [color-scheme:dark]"
+            className="bg-transparent border-none outline-none text-sm cursor-pointer"
           >
             <option value="">Estado de Venta</option>
             <option value="open">Abiertas</option>
@@ -333,7 +329,7 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
-          className={`px-3 py-2 cursor-pointer hover:bg-white/10 ${selectDark}`}
+          className="px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
         >
           <option value="">Tipo de Venta</option>
           <option value="dine_in">Mesa</option>
@@ -344,7 +340,7 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
         <select
           value={waiter}
           onChange={(e) => setWaiter(e.target.value)}
-          className={`px-3 py-2 cursor-pointer hover:bg-white/10 ${selectDark}`}
+          className="px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
         >
           <option value="">Garzón / Empleado</option>
           {employees.map(e => (
@@ -355,7 +351,7 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
         <select
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value)}
-          className={`px-3 py-2 cursor-pointer hover:bg-white/10 ${selectDark}`}
+          className="px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
         >
           <option value="">Medio de pago</option>
           {paymentMethods.map(pm => (
@@ -366,7 +362,7 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
         <select
           value={tableNumber}
           onChange={(e) => setTableNumber(e.target.value)}
-          className={`px-3 py-2 cursor-pointer hover:bg-white/10 ${selectDark}`}
+          className="px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
         >
           <option value="">Mesa</option>
           {Array.from({ length: 30 }, (_, i) => (
@@ -381,7 +377,7 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
           placeholder="Desde $"
           value={minAmount}
           onChange={e => setMinAmount(e.target.value)}
-          className={`w-28 px-3 py-2 hover:bg-white/10 ${inputDark}`}
+          className="w-28 px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm hover:bg-gray-100 outline-none focus:ring-2 focus:ring-orange-300"
         />
         <input
           type="number"
@@ -389,7 +385,7 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
           placeholder="Hasta $"
           value={maxAmount}
           onChange={e => setMaxAmount(e.target.value)}
-          className={`w-28 px-3 py-2 hover:bg-white/10 ${inputDark}`}
+          className="w-28 px-3 py-2 bg-gray-50 border border-gray-200 rounded text-sm hover:bg-gray-100 outline-none focus:ring-2 focus:ring-orange-300"
         />
 
       </div>

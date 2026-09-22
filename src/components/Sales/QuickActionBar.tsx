@@ -37,12 +37,12 @@ export function QuickActionBar({
   const canPrint  = true;
 
   return (
-    <div className="flex gap-2 p-4 bg-gray-800/40 border-b border-white/10">
+    <div className="flex gap-2 p-4 bg-white border-b border-gray-200">
       {/* IMPRIMIR */}
       {canPrint && onPrint && (
         <button
           onClick={onPrint}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10 rounded-lg font-medium transition-colors"
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
         >
           <Printer className="w-4 h-4" />
           Imprimir
@@ -53,7 +53,7 @@ export function QuickActionBar({
       {canEdit && onEdit && (
         <button
           onClick={onEdit}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg font-medium transition-colors"
+          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg font-medium transition-colors"
         >
           <Pencil className="w-4 h-4" />
           Editar

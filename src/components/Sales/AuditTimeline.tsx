@@ -1,4 +1,4 @@
-﻿import type { Sale } from '@/types/sales.types';
+import type { Sale } from '@/types/sales.types';
 import { 
   Clock, 
   ShoppingCart, 
@@ -39,8 +39,8 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
       description: `Mesa ${sale.tableNumber || 'N/A'} - ${sale.waiterName}`,
       timestamp: new Date(sale.startTime),
       icon: FileText,
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/15'
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100'
     });
 
     // 2. EVENTO: Items agregados
@@ -52,8 +52,8 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
         description: sale.items.map(item => `${item.quantity}x ${item.productName}`).join(', '),
         timestamp: new Date(sale.createdAt),
         icon: ShoppingCart,
-        color: 'text-purple-400',
-        bgColor: 'bg-purple-500/15'
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-100'
       });
     }
 
@@ -67,8 +67,8 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
           description: `$${payment.amount.toLocaleString('es-CL')} ${payment.reference ? `- Ref: ${payment.reference}` : ''}`,
           timestamp: payment.createdAt ? new Date(payment.createdAt) : new Date(),
           icon: CreditCard,
-          color: 'text-green-400',
-          bgColor: 'bg-green-500/15'
+          color: 'text-green-600',
+          bgColor: 'bg-green-100'
         });
       });
     }
@@ -83,8 +83,8 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
           description: `$${tip.amount.toLocaleString('es-CL')} - ${tip.waiterName ?? ''}`,
           timestamp: tip.createdAt ? new Date(tip.createdAt) : new Date(),
           icon: DollarSign,
-          color: 'text-yellow-400',
-          bgColor: 'bg-yellow-500/15'
+          color: 'text-yellow-600',
+          bgColor: 'bg-yellow-100'
         });
       });
     }
@@ -98,23 +98,23 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
         description: `Total: $${sale.total.toLocaleString('es-CL')}`,
         timestamp: new Date(sale.closeTime),
         icon: CheckCircle,
-        color: 'text-green-400',
-        bgColor: 'bg-green-500/15'
+        color: 'text-green-700',
+        bgColor: 'bg-green-100'
       });
     } else if (sale.status === 'cancelled') {
       events.push({
         id: 'cancelled',
         type: 'cancelled',
         title: 'Venta anulada',
-        description: 'OperaciÃ³n cancelada por el usuario',
+        description: 'Operación cancelada por el usuario',
         timestamp: new Date(sale.updatedAt),
         icon: XCircle,
-        color: 'text-red-400',
-        bgColor: 'bg-red-500/15'
+        color: 'text-red-600',
+        bgColor: 'bg-red-100'
       });
     }
 
-    // Ordenar por timestamp descendente (mÃ¡s reciente primero)
+    // Ordenar por timestamp descendente (más reciente primero)
     return events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
   };
 
@@ -127,7 +127,7 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
         locale: es 
       });
     } catch {
-      return 'fecha invÃ¡lida';
+      return 'fecha inválida';
     }
   };
 
@@ -143,9 +143,9 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
-        <Clock className="w-5 h-5 text-gray-400" />
-        <h4 className="text-sm font-semibold text-gray-300">
-          LÃ­nea de Tiempo
+        <Clock className="w-5 h-5 text-gray-600" />
+        <h4 className="text-sm font-semibold text-gray-700">
+          Línea de Tiempo
         </h4>
         <span className="text-xs text-gray-500">
           ({events.length} eventos)
@@ -153,8 +153,8 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
       </div>
 
       <div className="relative">
-        {/* LÃNEA VERTICAL */}
-        <div className="absolute left-[19px] top-2 bottom-2 w-[2px] bg-white/10" />
+        {/* LÍNEA VERTICAL */}
+        <div className="absolute left-[19px] top-2 bottom-2 w-[2px] bg-gray-200" />
 
         {/* EVENTOS */}
         <div className="space-y-4">
@@ -165,14 +165,14 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
             return (
               <div key={event.id} className="relative flex gap-3 group">
                 {/* ICONO */}
-                <div className={`relative z-10 flex-shrink-0 w-10 h-10 rounded-full ${event.bgColor} flex items-center justify-center ring-4 ring-gray-900`}>
+                <div className={`relative z-10 flex-shrink-0 w-10 h-10 rounded-full ${event.bgColor} flex items-center justify-center ring-4 ring-white`}>
                   <Icon className={`w-5 h-5 ${event.color}`} />
                 </div>
 
                 {/* CONTENIDO */}
-                <div className={`flex-1 pb-4 ${!isLast ? 'border-b border-white/10' : ''}`}>
+                <div className={`flex-1 pb-4 ${!isLast ? 'border-b border-gray-100' : ''}`}>
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="text-sm font-semibold text-white">
+                    <p className="text-sm font-semibold text-gray-900">
                       {event.title}
                     </p>
                     <time 
@@ -182,7 +182,7 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
                       {formatRelativeTime(event.timestamp)}
                     </time>
                   </div>
-                  <p className="text-xs text-gray-400 line-clamp-2">
+                  <p className="text-xs text-gray-600 line-clamp-2">
                     {event.description}
                   </p>
                 </div>
@@ -192,12 +192,12 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
         </div>
       </div>
 
-      {/* DURACIÃ“N TOTAL */}
+      {/* DURACIÓN TOTAL */}
       {sale.status === 'closed' && sale.closeTime && (
-        <div className="mt-4 p-3 bg-gray-800/40 rounded-lg border border-white/10">
+        <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-200">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-gray-400 font-medium">DuraciÃ³n total:</span>
-            <span className="text-white font-bold">
+            <span className="text-gray-600 font-medium">Duración total:</span>
+            <span className="text-gray-900 font-bold">
               {formatRelativeTime(new Date(sale.closeTime))} desde inicio
             </span>
           </div>

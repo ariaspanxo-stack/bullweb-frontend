@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { LayoutGrid, LayoutList, Filter, FileDown, DollarSign, Users, TrendingUp, Gift, RefreshCw } from 'lucide-react';
 import { exportSheet } from '@/utils/exportExcel';
 import { salesService } from '../../../services/salesService';
@@ -9,7 +9,7 @@ interface Props {
   filters: Partial<Filters>;
 }
 
-// Detecta si una venta tuvo mÃºltiples meseros diferentes en sus Ã­tems
+// Detecta si una venta tuvo múltiples meseros diferentes en sus ítems
 function hasMultipleWaiters(sale: Sale): boolean {
   const ids = new Set(
     (sale.items ?? [])
@@ -19,7 +19,7 @@ function hasMultipleWaiters(sale: Sale): boolean {
   return ids.size > 1;
 }
 
-// Calcula el rango de fechas segÃºn perÃ­odo seleccionado
+// Calcula el rango de fechas según período seleccionado
 function calcDateRange(period: string, day: number, month: number, year: number): { startDate: Date; endDate: Date } {
   if (period === 'mensual') {
     return {
@@ -54,7 +54,7 @@ export const TabPropinas = ({ filters }: Props) => {
   const [loading, setLoading] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
 
-  // Filtros fila 1 â€” fecha/tiempo
+  // Filtros fila 1 — fecha/tiempo
   const [day,    setDay]    = useState(initDay);
   const [month,  setMonth]  = useState(initMonth);
   const [year,   setYear]   = useState(initYear);
@@ -68,21 +68,21 @@ export const TabPropinas = ({ filters }: Props) => {
   const [rangeTo,       setRangeTo]       = useState(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0]; });
   const [rangeToTime,   setRangeToTime]   = useState('00:00');
 
-  // Filtros fila 2 â€” categorÃ­a
+  // Filtros fila 2 — categoría
   const [waiterFilter, setWaiterFilter]  = useState('');
   const [typeFilter,   setTypeFilter]    = useState('');
   const [customerFilter, setCustomerFilter] = useState('');
   const [pmFilter, setPmFilter]          = useState('');
 
-  // Datos dinÃ¡micos desde API
+  // Datos dinámicos desde API
   const [paymentMethods, setPaymentMethods] = useState<{ id: string; name: string }[]>([]);
   const [employees,      setEmployees]      = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
-    // Fix #5 â€” usa salesService en lugar de api.get directo
+    // Fix #5 — usa salesService en lugar de api.get directo
     salesService.getPaymentMethods()
       .then((l: any[]) => setPaymentMethods(Array.isArray(l) ? l : []))
-      .catch(e => console.warn('[TabPropinas] error cargando mÃ©todos de pago', e));
+      .catch(e => console.warn('[TabPropinas] error cargando métodos de pago', e));
     salesService.getEmployees(200)
       .then((raw: any[]) => {
         setEmployees((Array.isArray(raw) ? raw : []).map((e: any) => ({ id: e.id, name: e.name })));
@@ -108,9 +108,9 @@ export const TabPropinas = ({ filters }: Props) => {
       .finally(() => setLoading(false));
   };
 
-  // ÃšNICO effect responsable de cargar datos: al montar y ante cambios del
-  // rango global. Sincroniza TODOS los estados locales (period, dÃ­a, rango)
-  // con los filtros globales para evitar desincronizaciÃ³n de fechas en la UI.
+  // ÚNICO effect responsable de cargar datos: al montar y ante cambios del
+  // rango global. Sincroniza TODOS los estados locales (period, día, rango)
+  // con los filtros globales para evitar desincronización de fechas en la UI.
   useEffect(() => {
     if (!filters.startDate) {
       loadTips(today.getDate(), today.getMonth() + 1, today.getFullYear(), 'diario');
@@ -172,7 +172,7 @@ export const TabPropinas = ({ filters }: Props) => {
     loadTips(today.getDate(), today.getMonth() + 1, today.getFullYear(), 'diario');
   };
 
-  // Ventas con propina â€” excluir ventas anuladas/canceladas
+  // Ventas con propina — excluir ventas anuladas/canceladas
   const salesWithTip = useMemo(() =>
     sales.filter(s =>
       s.status !== 'cancelled' &&
@@ -182,7 +182,7 @@ export const TabPropinas = ({ filters }: Props) => {
     [sales]
   );
 
-  // Clientes Ãºnicos para el dropdown
+  // Clientes únicos para el dropdown
   const customers = useMemo(() => {
     const set = new Set(salesWithTip.map(s => s.customerName).filter(Boolean) as string[]);
     return Array.from(set).sort();
@@ -237,9 +237,9 @@ export const TabPropinas = ({ filters }: Props) => {
         return {
           'Venta':         s.saleNumber || '',
           'Hora':          formatTime(s.startTime),
-          'GarzÃ³n':        s.waiterName,
+          'Garzón':        s.waiterName,
           'Tipo':          s.type || '',
-          'Cliente':       s.customerName ?? 'PÃºblico',
+          'Cliente':       s.customerName ?? 'Público',
           'Medio de Pago': s.payments?.[0]?.method ?? '',
           'Total Venta':   s.total,
           'Propina (CLP)': tip,
@@ -256,17 +256,17 @@ export const TabPropinas = ({ filters }: Props) => {
     <div className="space-y-4">
 
       {/* PANEL DE FILTROS */}
-      <div className="bg-gray-900 rounded-lg shadow-sm border border-white/10">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
 
-        {/* FILA 1 â€” FECHA / TIEMPO */}
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/10 flex-wrap">
+        {/* FILA 1 — FECHA / TIEMPO */}
+        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-gray-100 flex-wrap">
           <LayoutGrid size={16} className="text-gray-400 flex-shrink-0" />
 
           {/* Hora Inicio / orden */}
           <select
             value={sortBy}
             onChange={e => setSortBy(e.target.value)}
-            className="bg-transparent border-none outline-none text-sm cursor-pointer !text-white [color-scheme:dark] font-medium"
+            className="bg-transparent border-none outline-none text-sm cursor-pointer text-gray-700 font-medium"
           >
             <option value="hora">Hora Inicio</option>
             <option value="propina">Mayor Propina</option>
@@ -277,19 +277,19 @@ export const TabPropinas = ({ filters }: Props) => {
           <select
             value={shift}
             onChange={e => setShift(e.target.value)}
-            className="px-3 py-1.5 bg-gray-800/60 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10 !text-white [color-scheme:dark]"
+            className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
           >
             <option value="">Turno</option>
-            <option value="morning">MaÃ±ana (08-14)</option>
+            <option value="morning">Mañana (08-14)</option>
             <option value="afternoon">Tarde (14-20)</option>
             <option value="night">Noche (20-02)</option>
           </select>
 
-          {/* PerÃ­odo */}
+          {/* Período */}
           <select
             value={period}
             onChange={e => setPeriod(e.target.value)}
-            className="px-3 py-1.5 bg-gray-800/60 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10 !text-white [color-scheme:dark]"
+            className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
           >
             <option value="diario">Diario</option>
             <option value="semanal">Semanal</option>
@@ -305,13 +305,13 @@ export const TabPropinas = ({ filters }: Props) => {
                   type="date"
                   value={rangeFrom}
                   onChange={e => setRangeFrom(e.target.value)}
-                  className="px-2 py-1.5 bg-gray-800/40 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10"
+                  className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
                 />
                 <input
                   type="time"
                   value={rangeFromTime}
                   onChange={e => setRangeFromTime(e.target.value)}
-                  className="px-2 py-1.5 bg-gray-800/60 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10 w-24 !text-white [color-scheme:dark]"
+                  className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100 w-24"
                 />
               </div>
               <div className="flex items-center gap-1.5">
@@ -320,24 +320,24 @@ export const TabPropinas = ({ filters }: Props) => {
                   type="date"
                   value={rangeTo}
                   onChange={e => setRangeTo(e.target.value)}
-                  className="px-2 py-1.5 bg-gray-800/40 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10"
+                  className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
                 />
                 <input
                   type="time"
                   value={rangeToTime}
                   onChange={e => setRangeToTime(e.target.value)}
-                  className="px-2 py-1.5 bg-gray-800/60 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10 w-24 !text-white [color-scheme:dark]"
+                  className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100 w-24"
                 />
               </div>
             </div>
           ) : (
             <>
-              {/* DÃ­a */}
+              {/* Día */}
               {period !== 'mensual' && (
                 <select
                   value={day}
                   onChange={e => setDay(Number(e.target.value))}
-                  className="w-16 px-2 py-1.5 bg-gray-800/60 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10 !text-white [color-scheme:dark]"
+                  className="w-16 px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
                 >
                   {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
                     <option key={d} value={d}>{d}</option>
@@ -349,18 +349,18 @@ export const TabPropinas = ({ filters }: Props) => {
               <select
                 value={month}
                 onChange={e => setMonth(Number(e.target.value))}
-                className="px-3 py-1.5 bg-gray-800/60 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10 !text-white [color-scheme:dark]"
+                className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
               >
                 {MONTHS.map((m, i) => (
                   <option key={i + 1} value={i + 1}>{m}.</option>
                 ))}
               </select>
 
-              {/* AÃ±o */}
+              {/* Año */}
               <select
                 value={year}
                 onChange={e => setYear(Number(e.target.value))}
-                className="px-3 py-1.5 bg-gray-800/60 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10 !text-white [color-scheme:dark]"
+                className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
               >
                 {[2024, 2025, 2026, 2027].map(y => (
                   <option key={y} value={y}>{y}</option>
@@ -370,17 +370,17 @@ export const TabPropinas = ({ filters }: Props) => {
           )}
         </div>
 
-        {/* FILA 2 â€” FILTROS CATEGORÃA */}
+        {/* FILA 2 — FILTROS CATEGORÍA */}
         <div className="flex items-center gap-2 px-4 py-2.5 flex-wrap">
           <Filter size={16} className="text-gray-400 flex-shrink-0" />
 
-          {/* GarzÃ³n / Empleado */}
+          {/* Garzón / Empleado */}
           <select
             value={waiterFilter}
             onChange={e => setWaiterFilter(e.target.value)}
-            className="px-3 py-1.5 bg-gray-800/60 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10 !text-white [color-scheme:dark]"
+            className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
           >
-            <option value="">GarzÃ³n / Empleado</option>
+            <option value="">Garzón / Empleado</option>
             {employees.length > 0
               ? employees.map(e => <option key={e.id} value={e.name}>{e.name}</option>)
               : Array.from(new Set(salesWithTip.map(s => s.waiterName))).sort().map(w => (
@@ -393,7 +393,7 @@ export const TabPropinas = ({ filters }: Props) => {
           <select
             value={typeFilter}
             onChange={e => setTypeFilter(e.target.value)}
-            className="px-3 py-1.5 bg-gray-800/60 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10 !text-white [color-scheme:dark]"
+            className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
           >
             <option value="">Tipo de Venta</option>
             <option value="DINE_IN">Mesa</option>
@@ -405,7 +405,7 @@ export const TabPropinas = ({ filters }: Props) => {
           <select
             value={customerFilter}
             onChange={e => setCustomerFilter(e.target.value)}
-            className="px-3 py-1.5 bg-gray-800/60 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10 !text-white [color-scheme:dark]"
+            className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
           >
             <option value="">Cliente</option>
             {customers.map(c => <option key={c} value={c}>{c}</option>)}
@@ -415,7 +415,7 @@ export const TabPropinas = ({ filters }: Props) => {
           <select
             value={pmFilter}
             onChange={e => setPmFilter(e.target.value)}
-            className="px-3 py-1.5 bg-gray-800/60 border border-white/10 rounded text-sm cursor-pointer hover:bg-white/10 !text-white [color-scheme:dark]"
+            className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100"
           >
             <option value="">Medio de pago</option>
             {paymentMethods.map(pm => (
@@ -426,14 +426,14 @@ export const TabPropinas = ({ filters }: Props) => {
           {/* Acciones al final de la fila */}
           <div className="flex items-center gap-2 ml-auto">
             {/* Toggle tabla / cards */}
-            <div className="flex rounded border border-white/10 overflow-hidden">
+            <div className="flex rounded border border-gray-200 overflow-hidden">
               <button
                 onClick={() => setViewMode('table')}
                 title="Vista tabla"
                 className={`p-1.5 transition-colors ${
                   viewMode === 'table'
-                    ? 'bg-orange-500/100 text-white'
-                    : 'bg-gray-900 text-gray-500 hover:bg-white/10'
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-white text-gray-500 hover:bg-gray-100'
                 }`}
               >
                 <LayoutList className="w-4 h-4" />
@@ -443,36 +443,36 @@ export const TabPropinas = ({ filters }: Props) => {
                 title="Vista cards"
                 className={`p-1.5 transition-colors ${
                   viewMode === 'cards'
-                    ? 'bg-orange-500/100 text-white'
-                    : 'bg-gray-900 text-gray-500 hover:bg-white/10'
+                    ? 'bg-orange-500 text-white'
+                    : 'bg-white text-gray-500 hover:bg-gray-100'
                 }`}
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
             </div>
             {activeFilters > 0 && (
-              <span className="text-xs text-blue-400 bg-blue-500/10 border border-blue-500/30 px-2 py-1 rounded">
+              <span className="text-xs text-blue-600 bg-blue-50 border border-blue-200 px-2 py-1 rounded">
                 {activeFilters} filtro{activeFilters !== 1 ? 's' : ''} activo{activeFilters !== 1 ? 's' : ''}
               </span>
             )}
             <button
               onClick={handleSearch}
               disabled={loading}
-              className="flex items-center gap-1.5 px-4 py-1.5 bg-orange-500/100 hover:bg-orange-600 text-white rounded text-sm font-medium transition-colors disabled:opacity-60"
+              className="flex items-center gap-1.5 px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded text-sm font-medium transition-colors disabled:opacity-60"
             >
               {loading ? <RefreshCw size={13} className="animate-spin" /> : null}
               Buscar
             </button>
             <button
               onClick={handleReset}
-              className="px-3 py-1.5 bg-white/10 hover:bg-white/10 text-gray-300 rounded text-sm font-medium transition-colors"
+              className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-sm font-medium transition-colors"
             >
               Limpiar
             </button>
             {canExport && (
             <button
               onClick={handleExport}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 rounded hover:bg-emerald-500/100/20 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded hover:bg-emerald-100 transition-colors"
             >
               <FileDown className="w-3.5 h-3.5" /> Excel
             </button>
@@ -483,37 +483,37 @@ export const TabPropinas = ({ filters }: Props) => {
 
       {/* STATS */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-gray-900 rounded-lg border border-white/10 shadow-sm p-4">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
           <div className="flex items-center gap-2 mb-1">
-            <Gift className="w-4 h-4 text-green-400" />
+            <Gift className="w-4 h-4 text-green-600" />
             <span className="text-xs text-gray-500 uppercase font-medium">Total Propinas</span>
           </div>
-          <p className="text-2xl font-bold text-green-400">{formatCurrency(totalTips)}</p>
+          <p className="text-2xl font-bold text-green-700">{formatCurrency(totalTips)}</p>
         </div>
-        <div className="bg-gray-900 rounded-lg border border-white/10 shadow-sm p-4">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingUp className="w-4 h-4 text-blue-400" />
+            <TrendingUp className="w-4 h-4 text-blue-600" />
             <span className="text-xs text-gray-500 uppercase font-medium">Promedio</span>
           </div>
-          <p className="text-2xl font-bold text-blue-400">{formatCurrency(avgTip)}</p>
+          <p className="text-2xl font-bold text-blue-700">{formatCurrency(avgTip)}</p>
         </div>
-        <div className="bg-gray-900 rounded-lg border border-white/10 shadow-sm p-4">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
           <div className="flex items-center gap-2 mb-1">
-            <DollarSign className="w-4 h-4 text-purple-400" />
+            <DollarSign className="w-4 h-4 text-purple-600" />
             <span className="text-xs text-gray-500 uppercase font-medium">Ventas con propina</span>
           </div>
-          <p className="text-2xl font-bold text-purple-300">{filtered.length}</p>
+          <p className="text-2xl font-bold text-purple-700">{filtered.length}</p>
         </div>
-        <div className="bg-gray-900 rounded-lg border border-white/10 shadow-sm p-4">
+        <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4">
           <div className="flex items-center gap-2 mb-1">
-            <Users className="w-4 h-4 text-orange-400" />
+            <Users className="w-4 h-4 text-orange-600" />
             <span className="text-xs text-gray-500 uppercase font-medium">Garzones</span>
           </div>
-          <p className="text-2xl font-bold text-orange-300">{Object.keys(byWaiter).length}</p>
+          <p className="text-2xl font-bold text-orange-700">{Object.keys(byWaiter).length}</p>
         </div>
       </div>
 
-      {/* RESUMEN POR GARZÃ“N */}
+      {/* RESUMEN POR GARZÓN */}
       {Object.keys(byWaiter).length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {Object.entries(byWaiter)
@@ -524,20 +524,20 @@ export const TabPropinas = ({ filters }: Props) => {
                 onClick={() => setWaiterFilter(waiterFilter === waiter ? '' : waiter)}
                 className={`cursor-pointer rounded-lg border-l-4 p-4 transition-all shadow-sm ${
                   waiterFilter === waiter
-                    ? 'border-green-500 bg-green-500/15'
-                    : 'border-green-500/50 bg-green-500/10 hover:bg-green-500/15'
+                    ? 'border-green-600 bg-green-100'
+                    : 'border-green-400 bg-green-50 hover:bg-green-100'
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
                   <div className="w-7 h-7 rounded-full bg-green-600 text-white flex items-center justify-center text-xs font-bold">
                     {waiter.charAt(0).toUpperCase()}
                   </div>
-                  <p className="text-sm font-semibold text-white truncate">{waiter}</p>
+                  <p className="text-sm font-semibold text-gray-800 truncate">{waiter}</p>
                 </div>
-                <p className="text-xl font-bold text-green-400">{formatCurrency(data.total)}</p>
+                <p className="text-xl font-bold text-green-700">{formatCurrency(data.total)}</p>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {data.count} propina{data.count !== 1 ? 's' : ''}{' '}
-                  <span className="text-gray-400">Â· Ã˜ {formatCurrency(Math.round(data.total / data.count))}</span>
+                  <span className="text-gray-400">· Ø {formatCurrency(Math.round(data.total / data.count))}</span>
                 </p>
               </div>
             ))}
@@ -545,7 +545,7 @@ export const TabPropinas = ({ filters }: Props) => {
       )}
 
       {/* TABLA / CARDS */}
-      <div className="bg-gray-900 rounded-lg shadow-sm border border-white/10 overflow-x-auto">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto">
         {loading ? (
           <div className="py-16 flex flex-col items-center gap-3 text-gray-400">
             <RefreshCw className="animate-spin w-6 h-6" />
@@ -561,35 +561,35 @@ export const TabPropinas = ({ filters }: Props) => {
                 const tipTotal = sale.tips.reduce((a, t) => a + t.amount, 0);
                 const pct = sale.total > 0 ? ((tipTotal / sale.total) * 100).toFixed(1) : '0.0';
                 return (
-                  <div key={sale.id} className="rounded-xl border border-green-500/30 bg-green-500/10 p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
+                  <div key={sale.id} className="rounded-xl border border-green-200 bg-green-50 p-4 flex flex-col gap-2 hover:shadow-md transition-shadow">
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-gray-500">{formatTime(sale.startTime)}</span>
-                      <span className="text-xs bg-green-500/15 text-green-300 px-2 py-0.5 rounded-full font-semibold">{pct}%</span>
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold">{pct}%</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-purple-500/15 text-purple-300 flex items-center justify-center text-sm font-bold">
+                      <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-bold">
                         {(sale.waiterName || '?').charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-white">{sale.waiterName || 'â€”'}</p>
+                        <p className="text-sm font-semibold text-gray-800">{sale.waiterName || '—'}</p>
                         {hasMultipleWaiters(sale) && (
                           <span
-                            title="Esta venta tuvo mÃºltiples garzones â€” propina asignada al garzÃ³n principal"
-                            className="inline-block mt-0.5 text-xs bg-yellow-500/15 text-yellow-300 px-1.5 py-0.5 rounded-full cursor-help"
+                            title="Esta venta tuvo múltiples garzones — propina asignada al garzón principal"
+                            className="inline-block mt-0.5 text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full cursor-help"
                           >
-                            âš ï¸ mÃºltiple
+                            ⚠️ múltiple
                           </span>
                         )}
-                        <p className="text-xs text-gray-500">{sale.customerName || 'PÃºblico'}</p>
+                        <p className="text-xs text-gray-500">{sale.customerName || 'Público'}</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-xs text-gray-500">Total venta</span>
-                      <span className="text-sm font-medium text-gray-300">{formatCurrency(sale.total)}</span>
+                      <span className="text-sm font-medium text-gray-700">{formatCurrency(sale.total)}</span>
                     </div>
-                    <div className="flex items-center justify-between border-t border-green-500/30 pt-2">
+                    <div className="flex items-center justify-between border-t border-green-200 pt-2">
                       <span className="text-xs text-gray-500">Propina</span>
-                      <span className="text-lg font-bold text-green-400">{formatCurrency(tipTotal)}</span>
+                      <span className="text-lg font-bold text-green-700">{formatCurrency(tipTotal)}</span>
                     </div>
                   </div>
                 );
@@ -598,56 +598,56 @@ export const TabPropinas = ({ filters }: Props) => {
           )
         ) : (
           <table className="w-full">
-            <thead className="bg-gray-800/40 border-b border-white/10">
+            <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Venta</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Fecha y Hora</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">GarzÃ³n</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Cliente</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Total Venta</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Venta</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Fecha y Hora</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Garzón</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Cliente</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Total Venta</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">%</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-green-400 uppercase tracking-wider">ðŸ’š Propina</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-green-700 uppercase tracking-wider">💚 Propina</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-gray-200">
               {filtered.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
-                    No hay propinas para mostrar en este perÃ­odo
+                    No hay propinas para mostrar en este período
                   </td>
                 </tr>
               ) : (
                 filtered.map(sale => {
                   const tipTotal = sale.tips.reduce((a, t) => a + t.amount, 0);
                   return (
-                    <tr key={sale.id} className="hover:bg-green-500/100/10 transition-colors">
-                      <td className="px-4 py-3 text-sm font-medium text-white">
+                    <tr key={sale.id} className="hover:bg-green-50 transition-colors">
+                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
                         {sale.saleNumber || sale.id.slice(-4)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-400">
-                        <div className="font-medium text-gray-300">{formatDate(sale.startTime)}</div>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        <div className="font-medium text-gray-700">{formatDate(sale.startTime)}</div>
                         <div className="text-xs text-gray-500">{formatTime(sale.startTime)}</div>
                       </td>
                       <td className="px-4 py-3 text-sm">
                         <div className="flex items-center gap-2">
-                          <div className="w-6 h-6 rounded-full bg-purple-500/15 text-purple-300 flex items-center justify-center text-xs font-semibold">
+                          <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-semibold">
                             {(sale.waiterName || '?').charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-gray-300">{sale.waiterName || 'â€”'}</span>
+                          <span className="text-gray-700">{sale.waiterName || '—'}</span>
                           {hasMultipleWaiters(sale) && (
                             <span
-                              title="Esta venta tuvo mÃºltiples garzones â€” propina asignada al garzÃ³n principal"
-                              className="text-xs bg-yellow-500/15 text-yellow-300 px-1.5 py-0.5 rounded-full cursor-help"
+                              title="Esta venta tuvo múltiples garzones — propina asignada al garzón principal"
+                              className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded-full cursor-help"
                             >
-                              âš ï¸ mÃºltiple
+                              ⚠️ múltiple
                             </span>
                           )}
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-400">
-                        {sale.customerName || <span className="text-gray-400">PÃºblico</span>}
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {sale.customerName || <span className="text-gray-400">Público</span>}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right text-gray-300">
+                      <td className="px-4 py-3 text-sm text-right text-gray-700">
                         {formatCurrency(sale.total)}
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -656,7 +656,7 @@ export const TabPropinas = ({ filters }: Props) => {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-500/15 text-green-300 rounded-full text-sm font-bold">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-bold">
                           {formatCurrency(tipTotal)}
                         </span>
                       </td>
@@ -666,12 +666,12 @@ export const TabPropinas = ({ filters }: Props) => {
               )}
             </tbody>
             {filtered.length > 0 && (
-              <tfoot className="bg-green-500/10 border-t-2 border-green-500/30">
+              <tfoot className="bg-green-50 border-t-2 border-green-200">
                 <tr>
-                  <td colSpan={4} className="px-4 py-3 text-sm font-semibold text-gray-300">
+                  <td colSpan={4} className="px-4 py-3 text-sm font-semibold text-gray-700">
                     Total ({filtered.length} ventas)
                   </td>
-                  <td className="px-4 py-3 text-sm text-right font-semibold text-gray-300">
+                  <td className="px-4 py-3 text-sm text-right font-semibold text-gray-700">
                     {formatCurrency(filtered.reduce((sum, s) => sum + s.total, 0))}
                   </td>
                   <td />

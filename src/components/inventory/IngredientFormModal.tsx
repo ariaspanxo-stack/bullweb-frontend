@@ -54,11 +54,10 @@ const commonCategories = [
   'Otros',
 ];
 
-// #125 re-skin dark (lección #121: bg-white/5 + !text-white + focus:ring-brand-500)
 const inputClass =
-  'w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 !text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors [color-scheme:dark]';
-const labelClass = 'text-sm font-medium text-gray-300 mb-1 block';
-const sectionClass = 'bg-white/5 rounded-xl p-4 border border-white/10';
+  'w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors';
+const labelClass = 'text-sm font-medium text-slate-700 mb-1 block';
+const sectionClass = 'bg-white rounded-xl p-4 shadow-sm border border-slate-100';
 
 // ─────────────────────────────────────────────────────────────
 // Componente
@@ -129,13 +128,13 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
       <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-6">
         {/* ───────────── Sección: Información Básica ───────────── */}
         <div className={sectionClass}>
-          <h3 className="text-base font-semibold text-white mb-4">Información Básica</h3>
+          <h3 className="text-base font-semibold text-slate-900 mb-4">Información Básica</h3>
 
           <div className="space-y-4">
             {/* Nombre */}
             <div>
               <label className={labelClass}>
-                Nombre del Ingrediente <span className="text-red-400">*</span>
+                Nombre del Ingrediente <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -143,14 +142,14 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
                 placeholder="Ej: Tomate, Pollo, Arroz"
                 className={`${inputClass} ${errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
               />
-              {errors.name && <p className="mt-1 text-sm text-red-400">{errors.name.message}</p>}
+              {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
             </div>
 
             {/* Categoría — input con datalist (permite crear categoría nueva) */}
             <div>
               <label className={labelClass}>
                 Categoría{' '}
-                <span className="text-gray-500 font-normal text-xs">(opcional — puedes escribir una nueva)</span>
+                <span className="text-slate-400 font-normal text-xs">(opcional — puedes escribir una nueva)</span>
               </label>
               <input
                 type="text"
@@ -164,7 +163,7 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
                   <option key={cat} value={cat} />
                 ))}
               </datalist>
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-slate-400">
                 💡 Elige una categoría existente o escribe una nueva. Si la dejas vacía, se asignará "General".
               </p>
             </div>
@@ -172,7 +171,7 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
             {/* Unidad */}
             <div>
               <label className={labelClass}>
-                Unidad de Medida <span className="text-red-400">*</span>
+                Unidad de Medida <span className="text-red-500">*</span>
               </label>
               <select
                 {...register('unit')}
@@ -185,14 +184,14 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
                   </option>
                 ))}
               </select>
-              {errors.unit && <p className="mt-1 text-sm text-red-400">{errors.unit.message}</p>}
+              {errors.unit && <p className="mt-1 text-sm text-red-600">{errors.unit.message}</p>}
             </div>
           </div>
         </div>
 
         {/* ───────────── Sección: Precios y Stock ───────────── */}
         <div className={sectionClass}>
-          <h3 className="text-base font-semibold text-white mb-4">Precios y Stock</h3>
+          <h3 className="text-base font-semibold text-slate-900 mb-4">Precios y Stock</h3>
 
           <div className="grid grid-cols-2 gap-4">
             {/* Stock Actual */}
@@ -204,10 +203,10 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
                     value={ingredient.currentStock}
                     disabled
                     type="number"
-                    className="w-full px-4 py-2.5 border border-white/10 rounded-lg bg-white/5 !text-gray-400 cursor-not-allowed [color-scheme:dark]"
+                    className="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-slate-400 cursor-not-allowed"
                   />
                 </div>
-                <p className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/30 rounded-lg px-2 py-1 mt-1">
+                <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-2 py-1 mt-1">
                   📦 Para ajustar stock ve a Inventario → Movimientos
                 </p>
               </div>
@@ -223,7 +222,7 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
                     errors.currentStock ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                   }`}
                 />
-                {errors.currentStock && <p className="mt-1 text-sm text-red-400">{errors.currentStock.message}</p>}
+                {errors.currentStock && <p className="mt-1 text-sm text-red-600">{errors.currentStock.message}</p>}
               </div>
             )}
 
@@ -239,13 +238,13 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
                   errors.minStock ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''
                 }`}
               />
-              {errors.minStock && <p className="mt-1 text-sm text-red-400">{errors.minStock.message}</p>}
+              {errors.minStock && <p className="mt-1 text-sm text-red-600">{errors.minStock.message}</p>}
             </div>
 
             {/* Costo por Unidad */}
             <div className="col-span-2">
               <label className={labelClass}>
-                {costLabel} <span className="text-red-400">*</span>
+                {costLabel} <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -254,7 +253,7 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
                 placeholder="0"
                 className={`${inputClass} ${errors.cost ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : ''}`}
               />
-              {errors.cost && <p className="mt-1 text-sm text-red-400">{errors.cost.message}</p>}
+              {errors.cost && <p className="mt-1 text-sm text-red-600">{errors.cost.message}</p>}
             </div>
           </div>
         </div>
@@ -264,14 +263,14 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 bg-white/5 border border-white/20 !text-gray-300 rounded-lg hover:bg-white/10 transition-colors font-medium"
+            className="flex-1 px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-1 px-4 py-2.5 bg-brand-500 hover:bg-brand-600 !text-white rounded-lg transition-colors font-medium shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors font-medium shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {mutation.isPending ? 'Guardando...' : isEdit ? 'Guardar Cambios' : 'Crear Ingrediente'}
           </button>

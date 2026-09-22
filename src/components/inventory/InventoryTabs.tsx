@@ -17,7 +17,7 @@ const tabs = [
 
 export default function InventoryTabs({ activeTab, onTabChange }: InventoryTabsProps) {
   return (
-    <div className="border-b border-white/10">
+    <div className="border-b border-gray-200">
       <nav className="flex gap-4">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -30,8 +30,8 @@ export default function InventoryTabs({ activeTab, onTabChange }: InventoryTabsP
               className={cn(
                 'flex items-center gap-2 px-4 py-3 border-b-2 transition-colors',
                 isActive
-                  ? 'border-brand-500 text-brand-500 font-medium'
-                  : 'border-transparent text-gray-400 hover:text-gray-200 hover:border-white/20'
+                  ? 'border-orange-500 text-orange-600 font-medium'
+                  : 'border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300'
               )}
             >
               <Icon className="w-5 h-5" />

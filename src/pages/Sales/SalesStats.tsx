@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronUp, ChevronDown, X, XCircle, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
-import type { SalesStats as Stats, SalesFilters } from '../../types/sales.types';
+import type { Sale, SalesStats as Stats, SalesFilters } from '../../types/sales.types';
 
 interface Props {
   stats: Stats;
@@ -8,7 +8,9 @@ interface Props {
   endDate: Date;
   recordCount: number;
   previousStats?: Stats | null;
+  yesterdayStats?: Stats | null;
   isPeriodDaily?: boolean;
+  sales?: Sale[];
   onNavigateToTab?: (tab: string, filters?: Partial<SalesFilters>) => void;
 }
 
@@ -25,7 +27,7 @@ function barColor(method: string): string {
   return 'bg-orange-500';
 }
 
-export const SalesStats = ({ stats, startDate, endDate, recordCount, previousStats, isPeriodDaily, onNavigateToTab }: Props) => {
+export const SalesStats = ({ stats, startDate, endDate, recordCount, previousStats, yesterdayStats, isPeriodDaily, sales = [], onNavigateToTab }: Props) => {
   const [expanded, setExpanded] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showTipsModal,   setShowTipsModal]   = useState(false);
@@ -48,8 +50,30 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
   const formatDateRange = (s: Date, e: Date) =>
     `${formatDate(s)} — ${formatDate(e)}`;
 
+  // Mejora P3 — agregado por canal desde el type de cada Sale (mismo criterio de la tabla:
+  // delivery → Delivery ; tableNumber → Mesa ; resto → Mostrador). Solo ventas PAID cuentan dinero.
+  const channelBreakdown = (() => {
+    const paid = sales.filter(s => s.status === 'closed');
+    const total = paid.reduce((sum, s) => sum + s.total, 0);
+    const buckets = { delivery: 0, mesa: 0, mostrador: 0 };
+    paid.forEach(s => {
+      if (s.type === 'delivery')      buckets.delivery += s.total;
+      else if (s.tableNumber)         buckets.mesa += s.total;
+      else                            buckets.mostrador += s.total;
+    });
+    const mk = (emoji: string, label: string, amount: number, className: string) => ({
+      emoji, label, amount, className,
+      pct: total > 0 ? Math.round((amount / total) * 100) : 0,
+    });
+    return [
+      mk('🚴', 'Delivery',  buckets.delivery,  'bg-orange-50 text-orange-700 border-orange-200'),
+      mk('👨‍🍳', 'Mesa',     buckets.mesa,      'bg-blue-50 text-blue-700 border-blue-200'),
+      mk('🛍️', 'Mostrador', buckets.mostrador, 'bg-gray-100 text-gray-600 border-gray-200'),
+    ].filter(ch => ch.amount > 0);
+  })();
+
   // Mejora #5 — delta % vs período anterior
-  const Delta = ({ current, previous }: { current: number; previous: number }) => {
+  const Delta = ({ current, previous, label = 'vs sem. ant.' }: { current: number; previous: number; label?: string }) => {
     if (!previous || previous === 0) return null;
     const diff = current - previous;
     const pct  = ((diff / previous) * 100).toFixed(1);
@@ -59,7 +83,27 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
       <span className={`flex items-center gap-0.5 text-xs font-semibold ${isUp ? 'text-green-500' : 'text-red-500'}`}>
         {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
         {isUp ? '+' : ''}{pct}%
-        <span className="font-normal text-gray-400 ml-1">vs sem. ant.</span>
+        <span className="font-normal text-gray-400 ml-1">{label}</span>
+      </span>
+    );
+  };
+
+  // Mejora P1 — chip "vs ayer" con guards (ayer sin ventas → primer día; ambos 0 → sin delta)
+  const DeltaAyer = ({ current, previous }: { current: number; previous: number }) => {
+    if (!previous || previous === 0) {
+      return current > 0
+        ? <span className="text-xs text-gray-400">primer día</span>
+        : null;
+    }
+    const diff = current - previous;
+    if (diff === 0) return null;
+    const pct  = ((diff / previous) * 100).toFixed(1);
+    const isUp = diff > 0;
+    return (
+      <span className={`flex items-center gap-0.5 text-xs font-semibold ${isUp ? 'text-green-600' : 'text-red-500'}`}>
+        {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+        {isUp ? '+' : ''}{pct}%
+        <span className="font-normal text-gray-400 ml-1">vs ayer</span>
       </span>
     );
   };
@@ -91,6 +135,9 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
             {formatCurrency(stats.averagePerSale)}
           </p>
           {previousStats && <Delta current={stats.averagePerSale} previous={previousStats.averagePerSale} />}
+          {yesterdayStats && isPeriodDaily && (
+            <DeltaAyer current={stats.averagePerSale} previous={yesterdayStats.averagePerSale} />
+          )}
         </div>
 
         {/* Personas */}
@@ -113,15 +160,44 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
 
       {/* Total general (grande, a la derecha) */}
       <div className="flex justify-end items-end gap-4">
-        {previousStats && (
-          <Delta current={stats.grandTotal} previous={previousStats.grandTotal} />
-        )}
+        <div className="flex flex-col items-end gap-1">
+          {previousStats && (
+            <Delta current={stats.grandTotal} previous={previousStats.grandTotal} />
+          )}
+          {yesterdayStats && isPeriodDaily && (
+            <DeltaAyer current={stats.grandTotal} previous={yesterdayStats.grandTotal} />
+          )}
+          {/* Semántica del dinero — ventas en curso NO suman al total */}
+          {(stats.pendingCount ?? 0) > 0 && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-full text-xs font-medium">
+              {stats.pendingCount} en curso
+            </span>
+          )}
+        </div>
         <div className="text-right">
           <p className="text-4xl font-bold text-gray-800">
             {formatCurrency(stats.grandTotal)}
           </p>
         </div>
       </div>
+
+      {/* Mejora P3 — chips por canal (monto y % del total del día, solo PAID) */}
+      {channelBreakdown.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Canales:</span>
+          {channelBreakdown.map(ch => (
+            <span
+              key={ch.label}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${ch.className}`}
+            >
+              <span>{ch.emoji}</span>
+              <span>{ch.label}</span>
+              <span className="font-bold">{formatCurrency(ch.amount)}</span>
+              <span className="opacity-70">{ch.pct}%</span>
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Botón expandir "MÁS INFO" */}
       <div className="border-t pt-4">

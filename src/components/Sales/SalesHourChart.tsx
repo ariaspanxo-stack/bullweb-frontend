@@ -42,7 +42,8 @@ const METHOD_COLORS: Record<string, string> = {
 };
 
 export const SalesHourChart = ({ sales }: Props) => {
-  const activeSales = sales.filter(s => s.status !== 'cancelled' && s.status !== 'CANCELLED');
+  // Semántica del dinero (#109): solo PAID suma — las en-curso NO inflan el desglose
+  const activeSales = sales.filter(s => s.status === 'closed');
 
   const { byMethod, totalMonto, totalVentas } = useMemo(() => {
     const map: Record<string, { count: number; total: number }> = {};

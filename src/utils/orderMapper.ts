@@ -156,8 +156,8 @@ export function mapOrderToSale(order: BackendOrder): Sale {
   const tips: Tip[] = order.tip > 0 ? [{
     id: `tip-${order.id}`,
     amount: order.tip,
-    employeeId: order.waiterId || '',
-    employeeName: order.waiter?.name || '',
+    method: 'cash' as any,
+    waiterName: order.users_orders_waiterIdTousers?.name ?? order.waiter?.name ?? '',
     createdAt: new Date(order.createdAt)
   }] : [];
 
@@ -172,6 +172,8 @@ export function mapOrderToSale(order: BackendOrder): Sale {
     tableNumber: order.tables?.number ?? order.table?.number,
     waiterName: order.users_orders_waiterIdTousers?.name ?? order.waiter?.name ?? 'Sin asignar',
     customerName: order.customers?.name ?? order.customer?.name ?? order.customerName,
+    // Mejora P4 — customerId para el link al CRM (include customers: { id, name })
+    customerId: (order as any).customers?.id ?? (order as any).customerId ?? undefined,
     items,
     payments,
     tips,

@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { SaleStatus } from '../../types/sales.types';
 import type { Sale } from '../../types/sales.types';
 import { StatusBadge } from '@/components/Sales/StatusBadge';
 import { cn } from '@/lib/utils';
@@ -46,6 +48,7 @@ export const SalesTable = ({
   totalCount 
 }: Props) => {
   const [page, setPage] = useState(1);
+  const navigate = useNavigate();
   useEffect(() => setPage(1), [sales]);
 
   const totalPages    = Math.max(1, Math.ceil(sales.length / PAGE_SIZE));
@@ -204,16 +207,24 @@ export const SalesTable = ({
                     </div>
                   </td>
 
-                  {/* CLIENTE */}
+                  {/* CLIENTE — Mejora P4: link al CRM si hay customerId */}
                   <td className="px-4 py-3 text-sm text-gray-700">
-                    {sale.customerName || 
+                    {sale.customerId && sale.customerName ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/customers?customerId=${sale.customerId}`); }}
+                        className="text-orange-600 hover:text-orange-800 hover:underline font-medium"
+                        title="Ver cliente en el CRM"
+                      >
+                        {sale.customerName}
+                      </button>
+                    ) : sale.customerName ||
                       <span className="text-gray-400">Público</span>
                     }
                   </td>
 
                   {/* ESTADO */}
                   <td className="px-4 py-3">
-                    <StatusBadge status={sale.status} />
+                    <StatusBadge status={sale.status as SaleStatus} />
                     {/* Mejora B — badge deuda para ventas abiertas sin pago completo */}
                     {sale.status === 'open' && (() => {
                       const paid = (sale.payments ?? []).reduce((s: number, p: any) => s + p.amount, 0);

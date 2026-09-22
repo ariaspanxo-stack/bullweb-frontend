@@ -149,24 +149,28 @@ class SalesService {
   }
 
   // Fix #1 — función pura, sin llamada a la API
+  // Semántica del dinero (#109): solo status closed (PAID) suma al dinero.
+  // Las PENDING/en-curso siguen visibles en la tabla + pendingCount para el contador "N en curso".
   calculateStats(sales: Sale[]): SalesStats {
     if (!sales || sales.length === 0) {
       return {
         totalSales: 0, averagePerSale: 0, totalPeople: 0, averagePerPerson: 0,
         grandTotal: 0, paymentBreakdown: [], cancellations: 0, totalTips: 0,
         cancelledCount: 0, cancelledTotal: 0, cancelReasons: [],
-        tipsCount: 0, topTipWaiters: [],
+        tipsCount: 0, topTipWaiters: [], pendingCount: 0,
       };
     }
-    // Excluir ventas anuladas/canceladas de todos los cálculos de totales
-    const activeSales      = sales.filter(s => s.status !== 'cancelled');
-    const grandTotal       = activeSales.reduce((sum, s) => sum + s.total, 0);
-    const totalPeople      = activeSales.reduce((sum, s) => sum + (s.numberOfPeople ?? 1), 0);
-    const averagePerSale   = activeSales.length > 0 ? grandTotal / activeSales.length : 0;
+    // Solo PAID (closed) suma al dinero — las anuladas excluidas, las en-curso contadas aparte
+    const paidSales        = sales.filter(s => s.status === 'closed');
+    const pendingSales     = sales.filter(s => s.status === 'open' || s.status === 'paying');
+    const grandTotal       = paidSales.reduce((sum, s) => sum + s.total, 0);
+    const totalPeople      = paidSales.reduce((sum, s) => sum + (s.numberOfPeople ?? 1), 0);
+    const averagePerSale   = paidSales.length > 0 ? grandTotal / paidSales.length : 0;
     const averagePerPerson = totalPeople > 0 ? grandTotal / totalPeople : 0;
+    const pendingCount     = pendingSales.length;
 
     const paymentTotals: Record<string, number> = {};
-    activeSales.forEach(s => {
+    paidSales.forEach(s => {
       (s.payments ?? []).forEach(p => {
         paymentTotals[p.method] = (paymentTotals[p.method] ?? 0) + p.amount;
       });
@@ -205,7 +209,8 @@ class SalesService {
       .slice(0, 3);
 
     return {
-      totalSales:      activeSales.length,
+      totalSales:      paidSales.length,
+      pendingCount,
       averagePerSale,
       totalPeople,
       averagePerPerson,

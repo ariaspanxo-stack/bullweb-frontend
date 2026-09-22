@@ -134,4 +134,6 @@ export interface SalesStats {
   cancelReasons: { reason: string; count: number }[];
   tipsCount: number;
   topTipWaiters: { name: string; total: number; count: number }[];
+  // Semántica del dinero — ventas en curso (NO suman al dinero, contador discreto)
+  pendingCount: number;
 }

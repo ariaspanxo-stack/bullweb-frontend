@@ -35,6 +35,7 @@ export const Sales = () => {
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [previousStats, setPreviousStats] = useState<Stats | null>(null);
+  const [yesterdayStats, setYesterdayStats] = useState<Stats | null>(null);
   const [showCashModal, setShowCashModal] = useState(false);
 
   // Estado modal apertura caja
@@ -74,8 +75,15 @@ export const Sales = () => {
           const prevEnd   = new Date(filters.endDate.getTime()   - 7 * 24 * 3600 * 1000);
           const prevSales = await salesService.getSales({ startDate: prevStart, endDate: prevEnd });
           setPreviousStats(salesService.calculateStats(prevSales));
+
+          // Mejora P1 — hoy vs ayer (mismo mecanismo del delta semanal)
+          const yesStart = new Date(filters.startDate.getTime() - 24 * 3600 * 1000);
+          const yesEnd   = new Date(filters.endDate.getTime()   - 24 * 3600 * 1000);
+          const yesSales = await salesService.getSales({ startDate: yesStart, endDate: yesEnd });
+          setYesterdayStats(salesService.calculateStats(yesSales));
         } else {
           setPreviousStats(null);
+          setYesterdayStats(null);
         }
       }
     } catch (error) {
@@ -305,6 +313,8 @@ export const Sales = () => {
                 endDate={filters.endDate || new Date()}
                 recordCount={sales.filter(s => s.status !== 'cancelled').length}
                 previousStats={previousStats}
+                yesterdayStats={yesterdayStats}
+                sales={sales}
                 isPeriodDaily={!!(filters.startDate && filters.endDate && (filters.endDate.getTime() - filters.startDate.getTime()) <= 25 * 3600 * 1000)}
                 onNavigateToTab={(tab) => setActiveTab(tab as TabType)}
               />

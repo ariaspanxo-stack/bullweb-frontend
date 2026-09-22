@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Users, Plus, Search, Eye, Edit2, Trash2, Download, DollarSign,
   ShoppingBag, Award, MessageCircle, RefreshCw, Archive, Info,
@@ -44,10 +45,24 @@ export default function Customers() {
   // const [riskFilter, setRiskFilter] = useState<boolean>(false); // Niveles desactivado
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Mejora P4 — recibir ?customerId= desde Ventas (link al CRM) y abrir su detalle
+  const [searchParams, setSearchParams] = useSearchParams();
+
   useEffect(() => {
     loadData();
     loadTiers();
   }, []);
+
+  useEffect(() => {
+    const cid = searchParams.get('customerId');
+    if (!cid) return;
+    const match = customers.find(c => c.id === cid);
+    if (match) {
+      setSelectedCustomer(match);
+      setShowDetailModal(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, customers]);
 
   const loadData = async () => {
     try {

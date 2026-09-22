@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { formatSaleNumber } from '@/utils/formatSaleNumber';
 import type { Sale } from '@/types/sales.types';
 import { QuickActionBar } from './QuickActionBar';
@@ -17,6 +18,7 @@ interface SaleDetailPanelProps {
 }
 
 export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
+  const navigate = useNavigate();
   // Estado modales inline
   const [showPayModal, setShowPayModal] = useState(false);
   const [payAmount, setPayAmount] = useState('');
@@ -213,9 +215,20 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
             <Users className="w-4 h-4 mr-2" />
             <span>Cliente:</span>
           </div>
-          <span className="font-medium text-gray-900">
-            {sale.customerName || 'Público'}
-          </span>
+          {/* Mejora P4 — link al CRM si hay customerId */}
+          {sale.customerId && sale.customerName ? (
+            <button
+              onClick={() => navigate(`/customers?customerId=${sale.customerId}`)}
+              className="font-medium text-orange-600 hover:text-orange-800 hover:underline"
+              title="Ver cliente en el CRM"
+            >
+              {sale.customerName}
+            </button>
+          ) : (
+            <span className="font-medium text-gray-900">
+              {sale.customerName || 'Público'}
+            </span>
+          )}
         </div>
 
         <div className="flex items-center justify-between text-sm">

@@ -150,14 +150,14 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="relative bg-gray-900 border border-white/10 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
-          <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="sticky top-0 bg-gray-900 z-10 flex items-center justify-between p-6 border-b border-white/10">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className="text-2xl font-bold text-white">
                 {mode === 'create' ? '🔧 Nuevo Grupo de Modificadores' : '✏️ Editar Grupo'}
               </h2>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 {mode === 'create'
                   ? 'Crea un nuevo grupo de opciones para personalizar productos'
                   : 'Modifica el grupo de modificadores'}
@@ -165,7 +165,7 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -175,43 +175,43 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Información Básica */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">Información Básica</h3>
+              <h3 className="text-lg font-semibold text-white">Información Básica</h3>
 
               {/* Nombre */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Nombre <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleChange('name', e.target.value)}
                   placeholder="Ej: Tamaño, Ingredientes Extra, Tipo de Masa..."
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                    errors.name ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-2 border rounded-lg bg-white/5 !text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${
+                    errors.name ? 'border-red-500' : 'border-white/10'
                   }`}
                 />
-                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                {errors.name && <p className="mt-1 text-sm text-red-400">{errors.name}</p>}
               </div>
 
               {/* Descripción */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Descripción
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => handleChange('description', e.target.value)}
-                  placeholder="Descripción para el cliente..."
+                  placeholder="Ej: ¿En qué tamaño lo quieres?"
                   rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-white/10 rounded-lg bg-white/5 !text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 />
               </div>
 
               {/* Tipo de Selección */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tipo de Selección <span className="text-red-500">*</span>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Tipo de Selección <span className="text-red-400">*</span>
                 </label>
                 <div className="grid grid-cols-2 gap-4">
                   <button
@@ -219,13 +219,13 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                     onClick={() => handleChange('selectionType', 'single')}
                     className={`p-4 border-2 rounded-lg transition-all ${
                       formData.selectionType === 'single'
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-300 hover:border-gray-400'
+                        ? 'border-brand-500 bg-brand-500/10'
+                        : 'border-white/10 hover:border-white/30 bg-white/5'
                     }`}
                   >
                     <div className="text-center">
-                      <p className="font-semibold text-gray-900 mb-1">Una Opción</p>
-                      <p className="text-xs text-gray-600">
+                      <p className="font-semibold text-white mb-1">Una Opción</p>
+                      <p className="text-xs text-gray-400">
                         El cliente elige solo una (radio button)
                       </p>
                     </div>
@@ -235,13 +235,13 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                     onClick={() => handleChange('selectionType', 'multiple')}
                     className={`p-4 border-2 rounded-lg transition-all ${
                       formData.selectionType === 'multiple'
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-300 hover:border-gray-400'
+                        ? 'border-brand-500 bg-brand-500/10'
+                        : 'border-white/10 hover:border-white/30 bg-white/5'
                     }`}
                   >
                     <div className="text-center">
-                      <p className="font-semibold text-gray-900 mb-1">Múltiples</p>
-                      <p className="text-xs text-gray-600">
+                      <p className="font-semibold text-white mb-1">Múltiples</p>
+                      <p className="text-xs text-gray-400">
                         El cliente puede elegir varias (checkbox)
                       </p>
                     </div>
@@ -256,9 +256,9 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                   id="isRequired"
                   checked={formData.isRequired}
                   onChange={(e) => handleChange('isRequired', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-brand-500 border-white/20 rounded focus:ring-brand-500 [color-scheme:dark]"
                 />
-                <label htmlFor="isRequired" className="text-sm font-medium text-gray-700">
+                <label htmlFor="isRequired" className="text-sm font-medium text-gray-300">
                   Es obligatorio seleccionar una opción
                 </label>
               </div>
@@ -267,7 +267,7 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
               {formData.selectionType === 'multiple' && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Mínimo de Selecciones
                     </label>
                     <input
@@ -277,16 +277,16 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                         handleChange('minSelections', parseInt(e.target.value) || 0)
                       }
                       min="0"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                        errors.minSelections ? 'border-red-500' : 'border-gray-300'
+                      className={`w-full px-4 py-2 border rounded-lg bg-white/5 !text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${
+                        errors.minSelections ? 'border-red-500' : 'border-white/10'
                       }`}
                     />
                     {errors.minSelections && (
-                      <p className="mt-1 text-sm text-red-600">{errors.minSelections}</p>
+                      <p className="mt-1 text-sm text-red-400">{errors.minSelections}</p>
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
                       Máximo de Selecciones
                     </label>
                     <input
@@ -296,12 +296,12 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                         handleChange('maxSelections', parseInt(e.target.value) || 1)
                       }
                       min="1"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
-                        errors.maxSelections ? 'border-red-500' : 'border-gray-300'
+                      className={`w-full px-4 py-2 border rounded-lg bg-white/5 !text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${
+                        errors.maxSelections ? 'border-red-500' : 'border-white/10'
                       }`}
                     />
                     {errors.maxSelections && (
-                      <p className="mt-1 text-sm text-red-600">{errors.maxSelections}</p>
+                      <p className="mt-1 text-sm text-red-400">{errors.maxSelections}</p>
                     )}
                   </div>
                 </div>
@@ -310,28 +310,28 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
 
             {/* Productos */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Aplica a Productos <span className="text-red-500">*</span>
+              <h3 className="text-lg font-semibold text-white">
+                Aplica a Productos <span className="text-red-400">*</span>
               </h3>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-400">
                 Selecciona los productos a los que se aplicará este grupo de modificadores
               </p>
 
-              <div className="border border-gray-300 rounded-lg max-h-48 overflow-y-auto">
+              <div className="border border-white/10 rounded-lg max-h-48 overflow-y-auto">
                 {products.map((product) => (
                   <label
                     key={product.id}
-                    className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-200 last:border-b-0"
+                    className="flex items-center gap-3 p-3 hover:bg-white/5 cursor-pointer border-b border-white/5 last:border-b-0"
                   >
                     <input
                       type="checkbox"
                       checked={formData.productIds.includes(product.id)}
                       onChange={() => handleProductToggle(product.id)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-brand-500 border-white/20 rounded focus:ring-brand-500 [color-scheme:dark]"
                     />
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{product.name}</p>
-                      <p className="text-xs text-gray-600">
+                      <p className="text-sm font-medium text-white">{product.name}</p>
+                      <p className="text-xs text-gray-400">
                         {formatCurrency(product.price)}
                       </p>
                     </div>
@@ -340,32 +340,32 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
               </div>
 
               {errors.productIds && (
-                <p className="mt-1 text-sm text-red-600">{errors.productIds}</p>
+                <p className="mt-1 text-sm text-red-400">{errors.productIds}</p>
               )}
             </div>
 
             {/* Preview */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
-              <p className="text-sm font-semibold text-gray-800 mb-3">👁️ Vista Previa</p>
-              <div className="bg-white rounded-lg p-4 border border-gray-200">
-                <p className="font-semibold text-gray-900 mb-1">
+            <div className="bg-gradient-to-br from-brand-500/10 to-brand-500/5 rounded-lg p-4 border border-brand-500/20">
+              <p className="text-sm font-semibold text-white mb-3">👁️ Vista Previa</p>
+              <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                <p className="font-semibold text-white mb-1">
                   {formData.name || 'Nombre del grupo'}
                 </p>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-gray-400 mb-2">
                   {formData.description || 'Descripción del grupo'}
                 </p>
                 <div className="flex gap-2 text-xs">
                   <span
                     className={`px-2 py-1 rounded ${
                       formData.selectionType === 'single'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-purple-100 text-purple-800'
+                        ? 'bg-brand-500/15 text-brand-300'
+                        : 'bg-purple-500/15 text-purple-300'
                     }`}
                   >
                     {formData.selectionType === 'single' ? 'Una opción' : 'Múltiples opciones'}
                   </span>
                   {formData.isRequired && (
-                    <span className="px-2 py-1 rounded bg-red-100 text-red-800">
+                    <span className="px-2 py-1 rounded bg-red-500/15 text-red-300">
                       Requerido
                     </span>
                   )}
@@ -378,13 +378,13 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 border border-white/10 text-gray-300 rounded-lg hover:bg-white/10 transition-colors font-medium"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium"
               >
                 {mode === 'create' ? 'Crear Grupo' : 'Guardar Cambios'}
               </button>

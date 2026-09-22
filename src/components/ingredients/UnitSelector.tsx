@@ -27,14 +27,14 @@ export const UnitSelector: React.FC<UnitSelectorProps> = ({
 }) => {
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        Unidad de Medida <span className="text-red-500">*</span>
+      <label className="block text-sm font-medium text-gray-300 mb-2">
+        Unidad de Medida <span className="text-red-400">*</span>
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as UnitOfMeasure)}
-        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-          error ? 'border-red-500' : 'border-gray-300'
+        className={`w-full px-4 py-2 border rounded-lg bg-white/5 !text-white [color-scheme:dark] focus:ring-2 focus:ring-brand-500 focus:border-brand-500 ${
+          error ? 'border-red-500' : 'border-white/10'
         }`}
       >
         <option value="">Selecciona una unidad</option>
@@ -44,7 +44,7 @@ export const UnitSelector: React.FC<UnitSelectorProps> = ({
           </option>
         ))}
       </select>
-      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-1 text-sm text-red-400">{error}</p>}
       <p className="mt-1 text-xs text-gray-500">
         Define cómo se medirá este ingrediente (kg, litros, unidades, etc.)
       </p>

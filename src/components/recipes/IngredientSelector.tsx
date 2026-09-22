@@ -142,7 +142,7 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
             return (
               <div
                 key={index}
-                className="bg-gray-50 rounded-lg p-3 border border-gray-200"
+                className="bg-white/5 rounded-lg p-3 border border-white/10"
               >
                 <div className="flex items-start gap-3">
                   {ingredient && (
@@ -152,13 +152,13 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                   )}
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-gray-900">
+                      <h4 className="font-medium text-white">
                         {getIngredientName(recipeIng.ingredientId)}
                       </h4>
                       <button
                         type="button"
                         onClick={() => handleRemoveIngredient(index)}
-                        className="text-red-600 hover:bg-red-50 p-1 rounded"
+                        className="text-red-400 hover:bg-red-500/10 p-1 rounded"
                       >
                         <TrashIcon className="w-4 h-4" />
                       </button>
@@ -166,7 +166,7 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">
+                        <label className="block text-xs text-gray-400 mb-1">
                           Cantidad
                         </label>
                         <input
@@ -177,24 +177,24 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                           }
                           min="0"
                           step="0.001"
-                          className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm"
+                          className="w-full px-3 py-1.5 border border-white/10 rounded text-sm bg-white/5 !text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-600 mb-1">
+                        <label className="block text-xs text-gray-400 mb-1">
                           Unidad
                         </label>
                         <input
                           type="text"
                           value={recipeIng.unit}
                           disabled
-                          className="w-full px-3 py-1.5 border border-gray-200 rounded text-sm bg-gray-100 text-gray-600"
+                          className="w-full px-3 py-1.5 border border-white/10 rounded text-sm bg-white/5 !text-white opacity-70"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-xs text-gray-600 mb-1">
+                      <label className="block text-xs text-gray-400 mb-1">
                         Notas (opcional)
                       </label>
                       <input
@@ -202,13 +202,13 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                         value={recipeIng.notes || ''}
                         onChange={(e) => handleUpdateNotes(index, e.target.value)}
                         placeholder="Ej: bien picado, cocido..."
-                        className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm"
+                        className="w-full px-3 py-1.5 border border-white/10 rounded text-sm bg-white/5 !text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                       />
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                      <span className="text-xs text-gray-600">Costo:</span>
-                      <span className="text-sm font-bold text-gray-900">
+                    <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                      <span className="text-xs text-gray-400">Costo:</span>
+                      <span className="text-sm font-bold text-white">
                         {formatCurrency(recipeIng.cost || 0)}
                       </span>
                     </div>
@@ -225,15 +225,15 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
         <button
           type="button"
           onClick={() => setShowSelector(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-white/20 rounded-lg text-gray-400 hover:border-brand-500 hover:text-brand-400 transition-colors"
         >
           <PlusIcon className="w-5 h-5" />
           Agregar Ingrediente
         </button>
       ) : (
-        <div className="border border-gray-300 rounded-lg p-4">
+        <div className="border border-white/10 rounded-lg p-4 bg-white/5">
           <div className="flex items-center justify-between mb-3">
-            <h4 className="font-medium text-gray-900">Selecciona un ingrediente</h4>
+            <h4 className="font-medium text-white">Selecciona un ingrediente</h4>
             <button
               type="button"
               onClick={() => {
@@ -241,7 +241,7 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                 setSearchQuery('');
                 setActiveCategory('all');
               }}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-400 hover:text-white"
             >
               Cancelar
             </button>
@@ -256,7 +256,7 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar ingrediente por nombre..."
               autoFocus
-              className="bg-slate-100 rounded-lg p-2 pl-9 w-full text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="bg-gray-800 border border-white/10 rounded-lg p-2 pl-9 w-full text-sm !text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
             />
           </div>
 
@@ -268,8 +268,8 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                 onClick={() => setActiveCategory('all')}
                 className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   activeCategory === 'all'
-                    ? 'bg-amber-500 text-white'
-                    : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                    ? 'bg-brand-500 text-white'
+                    : 'bg-white/10 text-gray-300 hover:bg-white/20'
                 }`}
               >
                 Todos
@@ -281,8 +281,8 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                   onClick={() => setActiveCategory(cat.id)}
                   className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     activeCategory === cat.id
-                      ? 'bg-amber-500 text-white'
-                      : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
+                      ? 'bg-brand-500 text-white'
+                      : 'bg-white/10 text-gray-300 hover:bg-white/20'
                   }`}
                 >
                   <span className="mr-1">{cat.icon}</span>
@@ -295,11 +295,11 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
           {/* Lista filtrada + PASO 3: Empty state */}
           {filteredAvailable.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 text-center">
-              <PackageSearch className="w-10 h-10 text-gray-300 mb-2" />
-              <p className="text-sm text-gray-500 font-medium">
+              <PackageSearch className="w-10 h-10 text-gray-600 mb-2" />
+              <p className="text-sm text-gray-400 font-medium">
                 No se encontraron ingredientes
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 {searchQuery.trim()
                   ? `Sin resultados para "${searchQuery}"`
                   : 'Intenta cambiar el filtro de categoría'}
@@ -312,16 +312,16 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                   key={ingredient.id}
                   type="button"
                   onClick={() => handleAddIngredient(ingredient.id)}
-                  className="w-full text-left px-3 py-2 hover:bg-blue-50 rounded flex items-center gap-2"
+                  className="w-full text-left px-3 py-2 hover:bg-white/5 rounded flex items-center gap-2"
                 >
                   <span className="text-xl">
                     {getCategoryIcon(ingredient.categoryId)}
                   </span>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-white">
                       {ingredient.name}
                     </p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-gray-400">
                       {formatCurrency(ingredient.pricePerUnit)}/
                       {ingredient.unit}
                     </p>

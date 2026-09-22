@@ -4,6 +4,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, Pencil, X } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
+import { ConfirmDialog } from '../common/ConfirmDialog';
 
 interface Props {
   recipes: any[];
@@ -43,6 +44,8 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
   const [localRecipes, setLocalRecipes] = useState<RecipeRow[]>([]);
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // ConfirmDialog premium en vez de window.confirm nativo (pulido módulo)
+  const [confirmDeleteRecipe, setConfirmDeleteRecipe] = useState<RecipeRow | null>(null);
 
   // H128: la prop recipes del padre es la fuente inicial; el re-fetch local la mantiene viva tras crear/editar/eliminar
   useEffect(() => {
@@ -95,21 +98,23 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
     setItems([{ ingredientId: '', quantity: 1 }]);
   };
 
-  // H128: botón 🗑️ — confirmación + DELETE vía servicio directo + refresco
-  const handleDelete = async (recipe: RecipeRow) => {
-    const productName = recipe.products?.name ?? 'este producto';
-    if (!window.confirm(`¿Eliminar la ficha técnica de "${productName}"? El stock dejará de descontarse al venderlo.`)) {
-      return;
-    }
-    setDeletingId(recipe.id);
+  // H128: botón 🗑️ — abre el ConfirmDialog premium (el DELETE real va en confirmDelete)
+  const handleDelete = (recipe: RecipeRow) => {
+    setConfirmDeleteRecipe(recipe);
+  };
+
+  const confirmDelete = async () => {
+    if (!confirmDeleteRecipe) return;
+    setDeletingId(confirmDeleteRecipe.id);
     try {
-      await api.recipes.delete(recipe.id);
+      await api.recipes.delete(confirmDeleteRecipe.id);
       toast.success('Ficha técnica eliminada');
       await loadRecipes();
     } catch (e: any) {
       toast.error(e?.message || e?.response?.data?.error || 'Error al eliminar la ficha');
     } finally {
       setDeletingId(null);
+      setConfirmDeleteRecipe(null);
     }
   };
 
@@ -153,18 +158,18 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
 
   return (
     <div className="p-6 space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Vincular Inventario</h2>
-      <p className="text-gray-600">Selecciona un producto y agrega los ingredientes que se descontarán al venderlo.</p>
+      <h2 className="text-2xl font-bold text-white">Vincular Inventario</h2>
+      <p className="text-gray-400">Selecciona un producto y agrega los ingredientes que se descontarán al venderlo.</p>
 
-      <div className="bg-white p-6 rounded-xl border border-gray-200 space-y-4">
+      <div className="bg-gray-900 p-6 rounded-xl border border-white/10 space-y-4">
         {editingRecipeId && (
-          <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
-            <span className="text-sm font-medium text-blue-900">
+          <div className="flex items-center justify-between bg-brand-500/10 border border-brand-500/20 rounded-lg px-4 py-2">
+            <span className="text-sm font-medium text-brand-300">
               Editando ficha — el producto no se puede cambiar
             </span>
             <button
               onClick={handleCancelEdit}
-              className="flex items-center gap-1 text-sm font-medium text-blue-700 hover:text-blue-900"
+              className="flex items-center gap-1 text-sm font-medium text-brand-400 hover:text-brand-300"
               title="Cancelar edición"
               aria-label="Cancelar edición"
             >
@@ -174,12 +179,12 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Producto a vincular</label>
+          <label className="block text-sm font-medium text-gray-300 mb-1">Producto a vincular</label>
           <select
             value={selectedProduct}
             onChange={e => setSelectedProduct(e.target.value)}
             disabled={!!editingRecipeId}
-            className="w-full border rounded-lg p-2 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+            className="w-full border border-white/10 rounded-lg p-2 bg-white/5 !text-white [color-scheme:dark] focus:ring-2 focus:ring-brand-500 focus:border-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <option value="">Seleccionar producto...</option>
             {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -187,16 +192,16 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
         </div>
 
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700">Ingredientes a descontar</label>
+          <label className="block text-sm font-medium text-gray-300">Ingredientes a descontar</label>
           {items.map((item, index) => {
             const selectedIngredientData = ingredients.find(i => i.id === item.ingredientId);
             const ingredientUnit = selectedIngredientData?.unit || '';
             return (
               <div key={index} className="flex items-center gap-2">
-                <select 
-                  value={item.ingredientId} 
-                  onChange={e => handleItemChange(index, 'ingredientId', e.target.value)} 
-                  className="flex-1 border rounded-lg p-2"
+                <select
+                  value={item.ingredientId}
+                  onChange={e => handleItemChange(index, 'ingredientId', e.target.value)}
+                  className="flex-1 border border-white/10 rounded-lg p-2 bg-white/5 !text-white [color-scheme:dark] focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                 >
                   <option value="">Seleccionar ingrediente...</option>
                   {ingredients.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
@@ -207,10 +212,10 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                   step="0.001"
                   value={item.quantity}
                   onChange={e => handleItemChange(index, 'quantity', Number(e.target.value))}
-                  className="w-24 border rounded-lg p-2"
+                  className="w-24 border border-white/10 rounded-lg p-2 bg-white/5 !text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
                   placeholder="Cant."
                 />
-                <span className="bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg p-2 text-gray-600 text-sm font-medium w-14 text-center">
+                <span className="bg-white/5 border border-l-0 border-white/10 rounded-r-lg p-2 text-gray-400 text-sm font-medium w-14 text-center">
                   {ingredientUnit}
                 </span>
                 {/* H126: hint de equivalencia — la celda descuenta en la unidad del ingrediente (0.12 kg = 120 gr) */}
@@ -229,9 +234,9 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                     unidades
                   </span>
                 )}
-                <button 
-                  onClick={() => handleRemoveItem(index)} 
-                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
+                <button
+                  onClick={() => handleRemoveItem(index)}
+                  className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg"
                   disabled={items.length === 1}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -241,12 +246,12 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
           })}
         </div>
 
-        <button onClick={handleAddItem} className="text-sm text-orange-600 font-medium flex items-center gap-1">
+        <button onClick={handleAddItem} className="text-sm text-brand-400 font-medium flex items-center gap-1">
           <Plus className="w-4 h-4" /> Agregar otro ingrediente
         </button>
 
-        <div className="pt-4 border-t">
-          <button onClick={handleLink} disabled={loading} className="bg-orange-500 text-white px-6 py-2.5 rounded-lg font-medium disabled:opacity-50">
+        <div className="pt-4 border-t border-white/10">
+          <button onClick={handleLink} disabled={loading} className="bg-brand-500 text-white px-6 py-2.5 rounded-lg font-medium hover:bg-brand-600 transition-colors disabled:opacity-50">
             {loading ? 'Guardando...' : editingRecipeId ? 'Actualizar ficha' : 'Guardar Vinculación'}
           </button>
         </div>
@@ -254,16 +259,16 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
 
       {/* H128: LA LISTA — las fichas creadas, con costo total del backend, editar y eliminar */}
       <div>
-        <h3 className="text-lg font-bold text-gray-900 mb-1">Fichas técnicas creadas</h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <h3 className="text-lg font-bold text-white mb-1">Fichas técnicas creadas</h3>
+        <p className="text-sm text-gray-400 mb-4">
           {localRecipes.length} ficha{localRecipes.length !== 1 ? 's' : ''} — el costo total lo calcula el sistema con los costos de los ingredientes.
         </p>
 
         {localRecipes.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+          <div className="text-center py-12 bg-gray-900 rounded-xl border border-white/10">
             <div className="text-5xl mb-3">📋</div>
-            <h4 className="text-base font-semibold text-gray-900 mb-1">Aún no hay fichas técnicas</h4>
-            <p className="text-sm text-gray-600">Crea la primera con el formulario de arriba</p>
+            <h4 className="text-base font-semibold text-white mb-1">Aún no hay fichas técnicas</h4>
+            <p className="text-sm text-gray-400">Crea la primera con el formulario de arriba</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -275,16 +280,16 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
               return (
                 <div
                   key={recipe.id}
-                  className={`bg-white rounded-xl border overflow-hidden transition-all ${
+                  className={`bg-gray-900 rounded-xl border overflow-hidden transition-all ${
                     editingRecipeId === recipe.id
-                      ? 'border-blue-500 ring-2 ring-blue-200'
-                      : 'border-gray-200 hover:shadow-lg'
+                      ? 'border-brand-500 ring-2 ring-brand-500/30'
+                      : 'border-white/10 hover:border-white/20'
                   }`}
                 >
                   <div className="p-4 space-y-3">
                     <div>
-                      <h4 className="font-semibold text-gray-900 leading-tight">{productName}</h4>
-                      <p className="text-xs text-gray-600 mt-0.5">
+                      <h4 className="font-semibold text-white leading-tight">{productName}</h4>
+                      <p className="text-xs text-gray-400 mt-0.5">
                         {itemCount} ingrediente{itemCount !== 1 ? 's' : ''}
                       </p>
                     </div>
@@ -292,7 +297,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                     {/* Items resumidos */}
                     <div className="space-y-1">
                       {recipe.recipe_items?.slice(0, 3).map((ri) => (
-                        <p key={ri.id} className="text-xs text-gray-600 truncate">
+                        <p key={ri.id} className="text-xs text-gray-400 truncate">
                           • {ri.ingredients?.name ?? 'Ingrediente'} — {ri.quantity} {ri.ingredients?.unit ?? ri.unit ?? ''}
                         </p>
                       ))}
@@ -302,16 +307,16 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                     </div>
 
                     {/* Costo total (del GET — tal cual llega del backend, sin adornos) */}
-                    <div className="bg-gray-50 rounded-lg p-2.5">
-                      <p className="text-xs text-gray-600">Costo total</p>
-                      <p className="text-lg font-bold text-gray-900 tabular-nums">
+                    <div className="bg-white/5 rounded-lg p-2.5">
+                      <p className="text-xs text-gray-400">Costo total</p>
+                      <p className="text-lg font-bold text-white tabular-nums">
                         {formatCurrency(Number(recipe.totalCost ?? 0))}
                       </p>
                     </div>
 
                     {/* Notas (solo si el GET las trae) */}
                     {recipe.notes && (
-                      <p className="text-xs text-gray-600 line-clamp-1">{recipe.notes}</p>
+                      <p className="text-xs text-gray-400 line-clamp-1">{recipe.notes}</p>
                     )}
 
                     {/* Acciones */}
@@ -319,7 +324,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                       <button
                         onClick={() => handleEdit(recipe)}
                         disabled={editingRecipeId !== null || deletingId !== null}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-brand-500 text-white rounded-lg hover:bg-brand-600 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Editar ficha"
                         aria-label={`Editar ficha de ${productName}`}
                       >
@@ -342,6 +347,18 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
           </div>
         )}
       </div>
+
+      {/* ConfirmDialog premium — reemplazo del window.confirm nativo */}
+      <ConfirmDialog
+        isOpen={confirmDeleteRecipe !== null}
+        onClose={() => setConfirmDeleteRecipe(null)}
+        onConfirm={confirmDelete}
+        title="Eliminar Ficha Técnica"
+        message={`¿Eliminar la ficha técnica de "${confirmDeleteRecipe?.products?.name ?? 'este producto'}"? El stock dejará de descontarse al venderlo.`}
+        confirmText="Eliminar"
+        cancelText="Cancelar"
+        variant="danger"
+      />
     </div>
   );
 };

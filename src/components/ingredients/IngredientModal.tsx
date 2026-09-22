@@ -12,8 +12,8 @@ interface IngredientModalProps {
 }
 
 const inputBaseClass =
-  'w-full bg-slate-50 border rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors';
-const labelClass = 'text-sm font-medium text-slate-700 mb-1 block';
+  'w-full bg-white/5 border rounded-lg px-4 py-2.5 !text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition-colors';
+const labelClass = 'text-sm font-medium text-gray-300 mb-1 block';
 
 // H126: parseo robusto chileno — acepta "8000", "8.000" (miles) y "14.5" (decimal).
 // El viejo parseFloat("8.000") devolvía 8 y el stock quedaba dividido por 1000.
@@ -158,14 +158,14 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto transform transition-all">
+        <div className="relative bg-gray-900 border border-white/10 rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto transform transition-all">
           {/* Header */}
-          <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-slate-200">
+          <div className="sticky top-0 bg-gray-900 z-10 flex items-center justify-between p-6 border-b border-white/10">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">
+              <h2 className="text-2xl font-bold text-white">
                 {mode === 'create' ? '🥕 Nuevo Ingrediente' : '✏️ Editar Ingrediente'}
               </h2>
-              <p className="text-sm text-slate-500 mt-1">
+              <p className="text-sm text-gray-400 mt-1">
                 {mode === 'create'
                   ? 'Registra un nuevo ingrediente en tu inventario'
                   : 'Modifica la información del ingrediente'}
@@ -173,7 +173,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 transition-colors"
+              className="text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -182,14 +182,14 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
           {/* Form */}
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             {/* Información Básica */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Información Básica</h3>
+            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+              <h3 className="text-lg font-semibold text-white mb-4">Información Básica</h3>
 
               <div className="space-y-4">
                 {/* Nombre */}
                 <div>
                   <label className={labelClass}>
-                    Nombre <span className="text-red-500">*</span>
+                    Nombre <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -200,7 +200,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                       errors.name ? 'border-red-500' : 'border-slate-200'
                     }`}
                   />
-                  {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                  {errors.name && <p className="mt-1 text-sm text-red-400">{errors.name}</p>}
                 </div>
 
                 {/* Descripción */}
@@ -211,7 +211,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                     onChange={(e) => handleChange('description', e.target.value)}
                     placeholder="Descripción detallada del ingrediente..."
                     rows={2}
-                    className={`${inputBaseClass} border-slate-200`}
+                    className={`${inputBaseClass} border-white/10`}
                   />
                 </div>
 
@@ -225,14 +225,14 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
             </div>
 
             {/* Precios y Stock */}
-            <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100">
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Precios y Stock</h3>
+            <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+              <h3 className="text-lg font-semibold text-white mb-4">Precios y Stock</h3>
 
               <div className="grid grid-cols-2 gap-4">
                 {/* Precio por Unidad */}
                 <div>
                   <label className={labelClass}>
-                    Precio por {formData.unit || 'unidad'} <span className="text-red-500">*</span>
+                    Precio por {formData.unit || 'unidad'} <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -244,18 +244,18 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                       errors.pricePerUnit ? 'border-red-500' : 'border-slate-200'
                     }`}
                   />
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-gray-500">
                     Acepta 8000 o 8.000 — se guarda 8000
                   </p>
                   {errors.pricePerUnit && (
-                    <p className="mt-1 text-sm text-red-600">{errors.pricePerUnit}</p>
+                    <p className="mt-1 text-sm text-red-400">{errors.pricePerUnit}</p>
                   )}
                 </div>
 
                 {/* Stock Actual */}
                 <div>
                   <label className={labelClass}>
-                    Stock Actual <span className="text-red-500">*</span>
+                    Stock Actual <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -267,18 +267,18 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                       errors.currentStock ? 'border-red-500' : 'border-slate-200'
                     }`}
                   />
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-gray-500">
                     Cantidad en {formData.unit || 'la unidad elegida'} — acepta 8000 o 8.000
                   </p>
                   {errors.currentStock && (
-                    <p className="mt-1 text-sm text-red-600">{errors.currentStock}</p>
+                    <p className="mt-1 text-sm text-red-400">{errors.currentStock}</p>
                   )}
                 </div>
 
                 {/* Stock Mínimo */}
                 <div>
                   <label className={labelClass}>
-                    Stock Mínimo <span className="text-red-500">*</span>
+                    Stock Mínimo <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -291,9 +291,9 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                     }`}
                   />
                   {errors.minStock && (
-                    <p className="mt-1 text-sm text-red-600">{errors.minStock}</p>
+                    <p className="mt-1 text-sm text-red-400">{errors.minStock}</p>
                   )}
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="mt-1 text-xs text-gray-500">
                     Alerta si el stock cae por debajo de este valor
                   </p>
                 </div>
@@ -304,10 +304,10 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
             <div
               className={`rounded-lg p-4 border ${
                 stockAlert.type === 'critical'
-                  ? 'bg-red-50 border-red-200'
+                  ? 'bg-red-500/10 border-red-500/30'
                   : stockAlert.type === 'warning'
-                  ? 'bg-yellow-50 border-yellow-200'
-                  : 'bg-green-50 border-green-200'
+                  ? 'bg-yellow-500/10 border-yellow-500/30'
+                  : 'bg-green-500/10 border-green-500/30'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -319,8 +319,8 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                     : '✅'}
                 </span>
                 <div>
-                  <p className="font-semibold text-slate-900">Estado de Stock</p>
-                  <p className="text-sm text-slate-600">
+                  <p className="font-semibold text-white">Estado de Stock</p>
+                  <p className="text-sm text-gray-400">
                     {stockAlert.message} - {formData.currentStock} {formData.unit} disponibles
                     {formData.minStock > 0 && ` (mínimo: ${formData.minStock} ${formData.unit})`}
                   </p>
@@ -333,13 +333,13 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 bg-transparent border border-white/10 text-gray-300 rounded-lg hover:bg-white/10 transition-colors font-medium"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium shadow-sm"
+                className="flex-1 px-4 py-2.5 bg-brand-500 text-white rounded-lg hover:bg-brand-600 transition-colors font-medium shadow-sm"
               >
                 {mode === 'create' ? 'Crear Ingrediente' : 'Guardar Cambios'}
               </button>

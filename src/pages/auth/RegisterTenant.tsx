@@ -5,7 +5,7 @@ import { zodResolver }                     from '@hookform/resolvers/zod';
 import { z }                               from 'zod';
 import {
   Zap, User, Mail, Phone, Lock, Eye, EyeOff,
-  ArrowRight, Loader2, Check, AlertCircle, Copy, CheckCircle2,
+  ArrowRight, Loader2, Check, AlertCircle, Copy, CheckCircle2, Rocket,
 } from 'lucide-react';
 import toast                               from 'react-hot-toast';
 import { useAuthStore }                    from '@/store/authStore';
@@ -45,6 +45,11 @@ export default function RegisterTenant() {
   const navigate = useNavigate();
   const { login: loginStore } = useAuthStore();
 
+  // GATING FASE D2 — elección de plan en el registro (BASICO | TODO).
+  // Default 'TODO' (el DTO de D1: los leads que no eligen nacen TODO —
+  // el flujo de ads sigue igual). Viaja en el request del register.
+  const [plan,            setPlan]            = useState<'TODO' | 'BASICO'>('TODO');
+
   const [isLoading,      setIsLoading]      = useState(false);
   const [apiError,       setApiError]       = useState('');
   const [showPass,       setShowPass]       = useState(false);
@@ -70,6 +75,7 @@ export default function RegisterTenant() {
         adminEmail:     data.email,
         adminPhone:     data.phone,
         password:       data.password,
+        plan, // Fase D2: BASICO | TODO — la ficha nace de plan_config (D1)
       });
       const { token, user, credentials: creds } = res.data.data ?? res.data ?? res;
       // Guardar en el store y en localStorage (mismo patrón que Login)
@@ -221,6 +227,79 @@ export default function RegisterTenant() {
 
           <h2 className="text-2xl font-black text-slate-800 mb-1">Crear cuenta gratis</h2>
           <p className="text-slate-400 text-sm mb-6">Sin tarjeta de crédito · 7 días gratis</p>
+
+          {/* ── GATING FASE D2: LAS DOS TARJETAS DE VENDEDOR ───────────────────
+              TODO $34.000/mes (todo incluido — DEFAULT) / BÁSICO $19.900/mes.
+              Cada tarjeta con su valor claro. La elección viaja al register API. */}
+          <div className="mb-6">
+            <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">
+              Elige tu plan <span className="text-orange-500">*</span>
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+              {/* Tarjeta TODO — la default, la estrella */}
+              <button
+                type="button"
+                onClick={() => setPlan('TODO')}
+                className={`relative text-left p-4 rounded-2xl border-2 transition-all ${
+                  plan === 'TODO'
+                    ? 'border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100'
+                    : 'border-slate-200 bg-white hover:border-indigo-200'
+                }`}
+              >
+                <span className={`absolute -top-2.5 right-3 px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wide ${
+                  plan === 'TODO' ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-500'
+                }`}>
+                  Recomendado
+                </span>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Rocket className="w-4 h-4 text-indigo-500" />
+                  <span className="font-black text-slate-800">TODO</span>
+                </div>
+                <p className="text-lg font-black text-slate-800 leading-none mb-1.5">
+                  $34.000<span className="text-xs font-semibold text-slate-400">/mes</span>
+                </p>
+                <ul className="space-y-0.5">
+                  {['POS + tienda online + carta QR', 'Boletas electrónicas SII', 'KDS cocina + App Mesero', 'Inventario y fidelización'].map(f => (
+                    <li key={f} className="flex items-center gap-1.5 text-[11px] text-slate-600">
+                      <Check className="w-3 h-3 text-indigo-500 flex-shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </button>
+
+              {/* Tarjeta BÁSICO */}
+              <button
+                type="button"
+                onClick={() => setPlan('BASICO')}
+                className={`text-left p-4 rounded-2xl border-2 transition-all ${
+                  plan === 'BASICO'
+                    ? 'border-orange-500 bg-orange-50 shadow-md shadow-orange-100'
+                    : 'border-slate-200 bg-white hover:border-orange-200'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Zap className="w-4 h-4 text-orange-500" />
+                  <span className="font-black text-slate-800">BÁSICO</span>
+                </div>
+                <p className="text-lg font-black text-slate-800 leading-none mb-1.5">
+                  $19.900<span className="text-xs font-semibold text-slate-400">/mes</span>
+                </p>
+                <ul className="space-y-0.5">
+                  {['POS, tienda online y carta visual', 'Reportes básicos de venta', 'División de cuenta y promos', 'Sin boletas SII · sin KDS · sin mesas'].map(f => (
+                    <li key={f} className="flex items-center gap-1.5 text-[11px] text-slate-600">
+                      <Check className="w-3 h-3 text-orange-500 flex-shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+              </button>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-2">
+              Empiezas con 7 días de prueba gratis. Puedes cambiar de plan cuando quieras.
+            </p>
+          </div>
 
           {/* Error global */}
           {apiError && (

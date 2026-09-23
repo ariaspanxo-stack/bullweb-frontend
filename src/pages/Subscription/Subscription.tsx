@@ -12,6 +12,9 @@ interface BillingStatus {
   trialActive:  boolean;
   daysLeft:     number;
   trialEndsAt:  string | null;
+  // Hotfix #199-1: precio EFECTIVO plano (ficha con fallback 34.000) — el mismo
+  // criterio del cobro (/flow/create). DISPLAY = COBRO.
+  priceCLP?:    number;
   subscription: {
     flowSubscriptionId: string | null;
     plan:               string;
@@ -165,7 +168,12 @@ export default function Subscription() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold">Plan Starter</h3>
-                  <p className="text-indigo-100 text-sm">$29.000 CLP/mes</p>
+                  {/* Hotfix #199-1: precio de la FICHA del tenant (API) — el mismo del cobro. */}
+                  <p className="text-indigo-100 text-sm">
+                    {billingStatus?.priceCLP
+                      ? `$${billingStatus.priceCLP.toLocaleString('es-CL')} CLP/mes`
+                      : '$34.000 CLP/mes'}
+                  </p>
                   <p className="text-indigo-100 text-xs">Todo incluido — sin IVA extra</p>
                 </div>
               </div>

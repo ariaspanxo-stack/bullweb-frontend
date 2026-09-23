@@ -23,6 +23,10 @@ export default function PaymentRequiredOverlay() {
   const [paying,    setPaying]    = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [error,     setError]     = useState<string | null>(null);
+  // Hotfix #199-1 — DISPLAY DINÁMICO: el precio de la FICHA del tenant
+  // (priceCLP de /billing/status, mismo criterio del cobro — DISPLAY = COBRO).
+  const [priceCLP,  setPriceCLP]  = useState<number | null>(null);
+  const priceFmt = priceCLP ? `$${priceCLP.toLocaleString('es-CL')}` : '';
 
   // ── Escuchar evento 'billing:payment_required' ──────────────────────────────
   useEffect(() => {
@@ -37,7 +41,11 @@ export default function PaymentRequiredOverlay() {
   const checkStatus = useCallback(async () => {
     setVerifying(true);
     try {
-      const res = await api.get<{ status: string }>('/billing/status');
+      const res = await api.get<{ status: string; priceCLP?: number }>('/billing/status');
+      // Hotfix #199-1: capturar el precio de la ficha en cada verificación.
+      if (typeof res.data?.priceCLP === 'number' && res.data.priceCLP > 0) {
+        setPriceCLP(res.data.priceCLP);
+      }
       if (res.data?.status === 'ACTIVE' || res.data?.status === 'TRIAL') {
         setOpen(false);
         setError(null);
@@ -54,6 +62,8 @@ export default function PaymentRequiredOverlay() {
 
   useEffect(() => {
     if (!open) return;
+    // Hotfix #199-1: carga inmediata del precio al abrir (reactivación sigue a 30s).
+    checkStatus();
     const interval = setInterval(checkStatus, 30_000);
     return () => clearInterval(interval);
   }, [open, checkStatus]);
@@ -96,7 +106,7 @@ export default function PaymentRequiredOverlay() {
 
           {/* Descripción */}
           <p className="text-gray-500 text-sm mb-6">
-            Para continuar operando y no perder tus ventas, activa tu plan Starter ($29.000/mes).
+            Para continuar operando y no perder tus ventas, activa tu plan Starter{priceFmt ? ` (${priceFmt}/mes)` : ''}.
           </p>
 
           {/* Error */}
@@ -118,7 +128,7 @@ export default function PaymentRequiredOverlay() {
                 Generando link...
               </>
             ) : (
-              'Pagar $29.000 / mes'
+              priceFmt ? `Pagar ${priceFmt} / mes` : 'Pagar suscripción'
             )}
           </button>
 

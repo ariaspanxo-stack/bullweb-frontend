@@ -16,8 +16,11 @@ import { EmptyState } from '@/components/ui/superadmin/emptyState';
 
 const PAGE_SIZE = 20;
 
-const MRR_BY_PLAN: Record<string, number> = {
-  STARTER: 29000, PRO: 40000, ENTERPRISE: 80000,
+// GATING FASE D1 (deuda #96): MRR_BY_PLAN hardcodeado MURIÓ como fuente — el
+// precio sale de plan_config (tabla) vía getPlans(). Este mapa es SOLO el
+// fallback de red si la tabla no responde (paridad con billing.service).
+const MRR_BY_PLAN_FALLBACK: Record<string, number> = {
+  BASICO: 19900, TODO: 34000,
 };
 
 const SEMAFORO_ORDER: Record<string, number> = { red: 0, yellow: 1, green: 2 };
@@ -92,13 +95,17 @@ function normalizeWaNumber(raw: string): string {
   return digits.startsWith('56') && digits.length > 9 ? digits : `56${digits}`;
 }
 
-function getMrr(t: any): number {
+// GATING FASE D1 (deuda #96): el precio de fallback sale de plan_config (tabla,
+// vía getPlans — cache de React Query) — el diccionario hardcodeado murió.
+function getMrr(t: any, planPrices?: Record<string, number>): number {
   if (t.status === 'SUSPENDED' || t.status === 'CANCELLED' || t.status === 'TRIAL') return 0;
   // Precio real de la suscripción del tenant (listTenants incluye subscriptions);
-  // fallback al mapa corregido si priceCLP viene 0/undefined (Hotfix #96).
+  // fallback a plan_config si priceCLP viene 0/undefined (Hotfix #96 → Fase D1).
   const subPrice = t.subscriptions?.priceCLP;
   if (subPrice && subPrice > 0) return subPrice;
-  return MRR_BY_PLAN[t.plan?.toUpperCase() ?? ''] ?? 0;
+  const fromTable = planPrices?.[t.plan?.toUpperCase() ?? ''];
+  if (fromTable && fromTable > 0) return fromTable;
+  return MRR_BY_PLAN_FALLBACK[t.plan?.toUpperCase() ?? ''] ?? 0;
 }
 
 function fmt$(n: number) { return '$' + n.toLocaleString('es-CL'); }
@@ -124,6 +131,19 @@ export default function SuperAdminTenants() {
     queryFn:  () => superadminService.listTenants({ limit: 500, archived: archivedFilter }),
   });
   const tenants: any[] = (tenantsResp as any)?.tenants ?? (Array.isArray(tenantsResp) ? tenantsResp : []);
+
+  // GATING FASE D1 (deuda #96): precios de plan desde plan_config (tabla) —
+  // misma fuente que el backend. Fallback local solo si la query falla.
+  const { data: plansCfg } = useQuery({
+    queryKey: ['superadmin', 'plan-config'],
+    queryFn:  () => superadminService.getPlans(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const planPrices: Record<string, number> = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const p of (plansCfg as any[] | undefined) ?? []) m[String(p.plan).toUpperCase()] = Number(p.priceCLP);
+    return m;
+  }, [plansCfg]);
 
   const suspendMut = useMutation({
     mutationFn: (id: string) => superadminService.suspendTenant(id),
@@ -189,7 +209,7 @@ export default function SuperAdminTenants() {
     const headers = ['Nombre','Slug','Plan','Estado','MRR','Usuarios','Registro','Último acceso','Trial vence','isTest'];
     const rows = filtered.map(t => [
       t.name ?? '', t.slug ?? '', t.plan?.toUpperCase() ?? '', t.status ?? '',
-      getMrr(t), t._count?.users ?? 0,
+      getMrr(t, planPrices), t._count?.users ?? 0,
       t.created_at ? new Date(t.created_at).toLocaleDateString('es-CL') : '',
       fmtRelative(t.lastLogin).text,
       t.trialEndsAt ? new Date(t.trialEndsAt).toLocaleDateString('es-CL') : '',
@@ -400,7 +420,7 @@ export default function SuperAdminTenants() {
                     const semInfo = getSemaforoInfo(t);
                     const sem = semInfo.color;
                     const { text: lastAccess, isOld, isOnline } = fmtRelative(t.lastLogin);
-                    const mrr = getMrr(t);
+                    const mrr = getMrr(t, planPrices);
                     const phone = t.contact_phone ?? t.contactPhone;
                     const email = t.contact_email ?? t.contactEmail;
                     const waNumber = phone ? normalizeWaNumber(phone) : null;

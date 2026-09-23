@@ -6,6 +6,7 @@ import { useEffect, lazy, Suspense } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PermissionGuard } from '@/components/PermissionGuard';
+import { PlanGuard } from '@/components/PlanGuard';
 import Layout from '@/components/layout/Layout';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 
@@ -246,19 +247,19 @@ function AppContent() {
               
               {/* Operaciones */}
     
-              <Route path="kds"    element={<PermissionGuard permission="kds.view"><KDS /></PermissionGuard>} />
+              <Route path="kds"    element={<PermissionGuard permission="kds.view"><PlanGuard><KDS /></PlanGuard></PermissionGuard>} />
               
               {/* Gestión */}
               <Route path="menu"           element={<Navigate to="/products" replace />} />
               <Route path="products"       element={<PermissionGuard permission="products.view"><Products /></PermissionGuard>} />
-              <Route path="inventory"      element={<PermissionGuard permission="inventory.view"><Inventory /></PermissionGuard>} />
+              <Route path="inventory"      element={<PermissionGuard permission="inventory.view"><PlanGuard><Inventory /></PlanGuard></PermissionGuard>} />
               <Route path="cash-registers" element={<PermissionGuard permission="cash.view"><CashRegisters /></PermissionGuard>} />
               <Route path="caja"           element={<PermissionGuard permission="pos.access"><CashPage /></PermissionGuard>} />
-              <Route path="customers"      element={<PermissionGuard permission="customers.view"><Customers /></PermissionGuard>} />
-              <Route path="campaigns"      element={<PermissionGuard permission="marketing.view"><Campaigns /></PermissionGuard>} />
+              <Route path="customers"      element={<PermissionGuard permission="customers.view"><PlanGuard><Customers /></PlanGuard></PermissionGuard>} />
+              <Route path="campaigns"      element={<PermissionGuard permission="marketing.view"><PlanGuard><Campaigns /></PlanGuard></PermissionGuard>} />
               <Route path="carta-qr"       element={<PermissionGuard permission="marketing.view"><CartaQRPage /></PermissionGuard>} />
               <Route path="delivery"       element={<PermissionGuard permission="delivery.view"><Delivery /></PermissionGuard>} />
-              <Route path="delivery/mappings" element={<PermissionGuard permission="delivery.view"><DeliveryMappings /></PermissionGuard>} />
+              <Route path="delivery/mappings" element={<PermissionGuard permission="delivery.view"><PlanGuard><DeliveryMappings /></PlanGuard></PermissionGuard>} />
               <Route path="employees"      element={<PermissionGuard permission="employees.view"><Employees /></PermissionGuard>} />
               
               {/* Reportes */}
@@ -271,10 +272,10 @@ function AppContent() {
               <Route path="settings/print" element={<PrintSettingsPage />} />
               <Route path="profile"  element={<Profile />} />
               <Route path="profile/restaurant" element={<RestaurantProfilePage />} />
-              <Route path="apps/dte" element={<PermissionGuard permission="billing.config"><DteConfigPage /></PermissionGuard>} />
+              <Route path="apps/dte" element={<PermissionGuard permission="billing.config"><PlanGuard><DteConfigPage /></PlanGuard></PermissionGuard>} />
               <Route path="apps" element={<PermissionGuard permission="apps.view"><AppsPage /></PermissionGuard>} />
-              <Route path="dte/documentos" element={<PermissionGuard permission="billing.view"><DteDocumentsPage /></PermissionGuard>} />
-              <Route path="coupons" element={<PermissionGuard permission="coupons.view"><CouponsPage /></PermissionGuard>} />
+              <Route path="dte/documentos" element={<PermissionGuard permission="billing.view"><PlanGuard><DteDocumentsPage /></PlanGuard></PermissionGuard>} />
+              <Route path="coupons" element={<PermissionGuard permission="coupons.view"><PlanGuard><CouponsPage /></PlanGuard></PermissionGuard>} />
               <Route path="promotions" element={<PermissionGuard permission="products.view"><PromotionsPage /></PermissionGuard>} />
 
             {/* Administración — usa el Layout principal con Sidebar.tsx */}
@@ -296,7 +297,7 @@ function AppContent() {
               <Route path="printers"        element={<PrintersPage />} />
               <Route path="payment-methods" element={<PaymentMethodsPage />} />
               <Route path="propina"         element={<TipSettingsPanel />} />
-              <Route path="mesero-app"      element={<MeseroAppPage />} />
+              <Route path="mesero-app"      element={<PlanGuard><MeseroAppPage /></PlanGuard>} />
               {/* ── Rutas exclusivas SuperAdmin ─────────────────────────────────── */}
               <Route path="audit"           element={<PermissionGuard permission="audit.view"><AuditLogPanel /></PermissionGuard>} />
               <Route path="branches"        element={<SuperAdminRoute><Branches /></SuperAdminRoute>} />

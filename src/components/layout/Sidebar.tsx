@@ -56,6 +56,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin';
+import { usePlan } from '@/hooks/usePlan';
 
 // ============================================================================
 // TIPOS
@@ -67,6 +68,8 @@ interface SubItem {
   path: string;
   permission?: string | string[];
   openExternal?: boolean;
+  /** GATING FASE C — módulo exclusivo del plan TODO ($34.000). */
+  planRequired?: 'TODO';
 }
 
 interface MenuItem {
@@ -77,6 +80,14 @@ interface MenuItem {
   badge?: string;
   subItems?: SubItem[];
   superAdminOnly?: boolean;
+  /** GATING FASE C — módulo exclusivo del plan TODO ($34.000). */
+  planRequired?: 'TODO';
+  /**
+   * GATING FASE C (decisión #3) — el item BLOQUEADO-VISIBLE: con plan BASICO
+   * el item NO se oculta, se muestra con candado 🔒 y lleva al PlanGuard
+   * (la pantalla que VENDE el upgrade — el tab bloqueado es el vendedor).
+   */
+  visibleLocked?: boolean;
 }
 
 interface MenuSection {
@@ -104,7 +115,7 @@ const menuSections: MenuSection[] = [
       { name: 'Órdenes',          icon: Receipt,         path: '/orders',        permission: 'pos.access'   },
       { name: 'Pedidos Online',   icon: ShoppingBag,     path: '/online-orders', permission: 'pos.access'   },
       { name: 'Ventas',           icon: TrendingUp,      path: '/sales',         permission: 'sales.view'   },
-      { name: 'KDS',              icon: Tv,              path: '/kds',           permission: 'kds.view'     },
+      { name: 'KDS',              icon: Tv,              path: '/kds',           permission: 'kds.view', planRequired: 'TODO' },
     ]
   },
   {
@@ -114,14 +125,14 @@ const menuSections: MenuSection[] = [
       {
         name: 'Productos', icon: Package,    path: '/products', permission: 'products.view',
         subItems: [
-          { name: 'Inventario', icon: Warehouse, path: '/inventory', permission: 'inventory.view' },
+          { name: 'Inventario', icon: Warehouse, path: '/inventory', permission: 'inventory.view', planRequired: 'TODO' },
         ]
       },
-      { name: 'Clientes',  icon: Users,     path: '/customers', permission: 'customers.view' },
+      { name: 'Clientes',  icon: Users,     path: '/customers', permission: 'customers.view', planRequired: 'TODO' },
       {
         name: 'Empleados', icon: UserCheck, path: '/employees', permission: 'employees.view',
         subItems: [
-          { name: 'Asistencia', icon: Clock, path: '/kiosk/__TENANT__', openExternal: true, permission: 'employees.view' },
+          { name: 'Asistencia', icon: Clock, path: '/kiosk/__TENANT__', openExternal: true, permission: 'employees.view', planRequired: 'TODO' },
         ]
       },
     ]
@@ -133,11 +144,11 @@ const menuSections: MenuSection[] = [
       // Apps de delivery (Uber Eats, PedidosYa, etc.) ocultas temporalmente del menú.
       // El acceso directo a Facturación SII (DTE) se mantiene en la sección "Análisis".
       // { name: 'Apps',         icon: Smartphone,        path: '/apps',             permission: 'apps.view'      },
-      { name: 'App Mesero',      icon: MonitorSmartphone, path: '/admin/mesero-app', permission: 'apps.view', badge: 'Nuevo' },
-      { name: 'Mapeo Delivery',  icon: Truck,             path: '/delivery/mappings', permission: 'delivery.view' },
-      { name: 'Fidelización', icon: Heart,             path: '/campaigns',        permission: 'marketing.view' },
+      { name: 'App Mesero',      icon: MonitorSmartphone, path: '/admin/mesero-app', permission: 'apps.view', badge: 'Nuevo', planRequired: 'TODO' },
+      { name: 'Mapeo Delivery',  icon: Truck,             path: '/delivery/mappings', permission: 'delivery.view', planRequired: 'TODO' },
+      { name: 'Fidelización', icon: Heart,             path: '/campaigns',        permission: 'marketing.view', planRequired: 'TODO', visibleLocked: true },
       { name: 'Carta QR',    icon: QrCode,            path: '/carta-qr',         permission: 'marketing.view' },
-      { name: 'Cupones',     icon: Tag,               path: '/coupons',          permission: 'coupons.view'   },
+      { name: 'Cupones',     icon: Tag,               path: '/coupons',          permission: 'coupons.view', planRequired: 'TODO' },
       { name: 'Promociones', icon: Percent,           path: '/promotions',       permission: 'products.view', badge: 'Nuevo' },
     ]
   },
@@ -146,8 +157,8 @@ const menuSections: MenuSection[] = [
     colorClass: 'text-orange-400',
     items: [
       { name: 'Reportes',       icon: BarChart3,    path: '/reports',        permission: 'reports.view'   },
-      { name: 'Boletas DTE',    icon: ReceiptIcon,  path: '/dte/documentos', permission: 'billing.view'   },
-      { name: 'Facturación SII', icon: FileText,    path: '/apps/dte',       permission: 'billing.config' },
+      { name: 'Boletas DTE',    icon: ReceiptIcon,  path: '/dte/documentos', permission: 'billing.view', planRequired: 'TODO' },
+      { name: 'Facturación SII', icon: FileText,    path: '/apps/dte',       permission: 'billing.config', planRequired: 'TODO' },
     ]
   },
   {
@@ -298,15 +309,24 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     return userPermissions.includes(permission);
   };
 
-  /** Filtra las secciones del menú según los permisos del usuario */
+  // ── GATING FASE C — el plan del tenant filtra los ítems TODO-only ──────────
+  // Grandfathered (STARTER/PRO/ENTERPRISE/null → TODO) no notan nada.
+  const { isBasico } = usePlan();
+
+  /** true si el plan del usuario permite el item (BASICO no ve planRequired:'TODO') */
+  const planAllows = (item: { planRequired?: 'TODO' }): boolean =>
+    !isBasico || item.planRequired !== 'TODO';
+
+  /** Filtra las secciones del menú según los permisos y el plan del usuario.
+   *  Excepción vendedor (decisión #3): visibleLocked se mantiene con candado 🔒. */
   const visibleSections = menuSections
     .map(section => ({
       ...section,
       items: section.items
-        .filter(item => canSee(item.permission))
+        .filter(item => canSee(item.permission) && (planAllows(item) || item.visibleLocked === true))
         .map(item => ({
           ...item,
-          subItems: item.subItems?.filter(sub => canSee(sub.permission)),
+          subItems: item.subItems?.filter(sub => canSee(sub.permission) && planAllows(sub)),
         })),
     }))
     .filter(section => section.items.length > 0);
@@ -482,6 +502,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             <span className="bg-brand-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold leading-none flex-shrink-0">
                               {item.badge}
                             </span>
+                          )}
+                          {/* GATING FASE C — candado vendedor del item bloqueado-visible */}
+                          {isBasico && item.visibleLocked && (
+                            <Lock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" aria-label="Disponible en plan TODO" />
                           )}
                           {item.path === '/online-orders' && pendingQrCount > 0 && (
                             <span className="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 animate-pulse">

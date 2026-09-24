@@ -10,6 +10,9 @@ import { usePlan } from '@/hooks/usePlan';
  *   - plan BASICO  → pantalla premium "Mejora a TODO" (el vendedor del upgrade).
  *   - plan TODO / grandfathered (STARTER/PRO/ENTERPRISE/null) → guard
  *     TRANSPARENTE: no notan nada.
+ *   - Mesas vive en el POS y desde el hotfix mesas-básico es parte del plan
+ *     BÁSICO (Básico = mostrador + mesas desde el POS) — el ancla "Mesas" salió
+ *     de la lista de desbloqueos TODO.
  *
  * Fail-open client-side: si /billing/status aún carga o falla, se asume TODO
  * (el bloqueo restrictivo real vive en el backend — Fases A/B).
@@ -23,7 +26,7 @@ interface PlanGuardProps {
 
 const TODO_UNLOCKS: string[] = [
   'Boletas y Facturación electrónica SII',
-  'Pedidos desde la carta QR y Mesas',
+  'Pedidos desde la carta QR',
   'KDS — pantalla de cocina',
   'App Mesero con PIN',
   'Inventario y alertas de stock',

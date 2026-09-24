@@ -54,7 +54,7 @@ const UPGRADE_FLAG = 'subscription_upgrade_pending';
 
 const TODO_UNLOCKS: { icon: 'check' | 'star'; text: string }[] = [
   { icon: 'star', text: 'Boletas electrónicas al SII — $0 por documento' },
-  { icon: 'check', text: 'Pedidos desde la carta QR y Mesas' },
+  { icon: 'check', text: 'Pedidos desde la carta QR' },
   { icon: 'check', text: 'KDS — pantalla de cocina en tiempo real' },
   { icon: 'check', text: 'App Mesero: pedidos desde el celular' },
   { icon: 'check', text: 'Inventario con alertas de stock' },

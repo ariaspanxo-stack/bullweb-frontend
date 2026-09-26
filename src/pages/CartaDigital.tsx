@@ -1503,6 +1503,45 @@ export default function CartaDigital() {
     return () => { cancelled = true; };
   }, [retryCount, mesaNumber, tenantSlug]);
 
+  // ── Hotfix #204 — scroll y descubribilidad de tabs de categorías ──
+  const tabsRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const updateTabScrollState = () => {
+    const el = tabsRef.current;
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 1);
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1);
+  };
+
+  useEffect(() => {
+    updateTabScrollState();
+  }, [categories]);
+
+  useEffect(() => {
+    const onResize = () => updateTabScrollState();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    const el = tabsRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      const delta = Math.abs(e.deltaY) > Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+      if (delta === 0) return;
+      const atStart = el.scrollLeft <= 0;
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 1;
+      if ((delta < 0 && !atStart) || (delta > 0 && !atEnd)) {
+        e.preventDefault();
+        el.scrollBy({ left: delta, behavior: 'auto' });
+        updateTabScrollState();
+      }
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [categories]);
+
   const hideUnavailable = cartaSettings?.hideUnavailable ?? false;
 
   // Hotfix #197 — reveal sutil de secciones al scroll (CSS-only via clase .bw-reveal;
@@ -1718,7 +1757,7 @@ export default function CartaDigital() {
       )}
 
       {/* ── 3. Barra de búsqueda + Categorías (full-width sticky) */}
-      <div className="sticky top-0 z-40 shadow-sm border-b border-gray-200/80" style={{ backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(24px) saturate(1.5)', WebkitBackdropFilter: 'blur(24px) saturate(1.5)' }}>
+      <div className="sticky top-0 z-40 relative shadow-sm border-b border-gray-200/80" style={{ backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(24px) saturate(1.5)', WebkitBackdropFilter: 'blur(24px) saturate(1.5)' }}>
         <CartaNavbar
           searchQuery={search}
           onSearchChange={setSearch}
@@ -1728,7 +1767,8 @@ export default function CartaDigital() {
           themeColor={themeColor}
         />
         {categories.length > 1 && (
-          <div className="w-full px-6 py-3 overflow-x-auto scrollbar-hide scroll-smooth flex gap-2" style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}>
+          <>
+          <div ref={tabsRef} onScroll={updateTabScrollState} className="w-full px-6 py-3 overflow-x-auto scrollbar-none scroll-smooth flex gap-2" style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}>
             {categories.map(cat => {
               const catThumb = cat.image ?? null;
               // Hotfix #140 — jerarquía: imagen → emoji por nombre → emoji derivado de producto → default
@@ -1748,8 +1788,8 @@ export default function CartaDigital() {
                     : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
                 }`}
                 style={activeTab === cat.id
-                  ? { backgroundColor: themeColor, boxShadow: `0 4px 14px ${themeColor}66`, transform: 'scale(1.02)' }
-                  : undefined}
+                  ? { backgroundColor: themeColor, boxShadow: `0 4px 14px ${themeColor}66`, transform: 'scale(1.02)', scrollSnapAlign: 'start' }
+                  : { scrollSnapAlign: 'start' }}
               >
                 {(catThumb || catEmoji) && (
                   <span className={`w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 transition-all ${activeTab === cat.id ? 'ring-2 ring-white/60' : 'bg-gray-100'}`}>
@@ -1764,6 +1804,13 @@ export default function CartaDigital() {
               );
             })}
           </div>
+          {canScrollLeft && (
+            <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-10 bg-gradient-to-r from-white to-transparent z-10" />
+          )}
+          {canScrollRight && (
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white to-transparent z-10" />
+          )}
+          </>
         )}
       </div>
 

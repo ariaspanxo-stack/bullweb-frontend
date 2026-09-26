@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
 import { useQrOrderStatus } from '../hooks/useQrOrderStatus';
 import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail, Instagram, Facebook, Globe, MessageCircle } from 'lucide-react';
 
@@ -591,10 +592,19 @@ function CartaHero({
         @media (min-width: 640px) {
           .bw-item-thumb { width: 100px; height: auto; align-self: stretch; min-height: 110px; border-radius: 0; }
         }
-        /* Hotfix #197 — reveal sutil al scroll (CSS only, respeta prefers-reduced-motion) */
+        /* Hotfix #197/#206 — reveal AUTOMÁTICO por animación CSS (bwRevealSafe): el contenido
+           se revela solo, sin depender del IntersectionObserver (pantalla negra móvil #205/#206) */
         @media (prefers-reduced-motion: no-preference) {
-          .bw-reveal { opacity: 0; transform: translateY(10px); transition: opacity 0.4s ease, transform 0.4s ease; }
+          .bw-reveal { animation: bwRevealSafe 0.45s ease forwards; }
           .bw-reveal.bw-revealed { opacity: 1; transform: translateY(0); }
+          @keyframes bwRevealSafe {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: none; }
+          }
+        }
+        /* Hotfix #206 — respaldo seguro: reduced-motion = contenido visible estático */
+        @media (prefers-reduced-motion: reduce) {
+          .bw-reveal { opacity: 1; transform: none; }
         }
       `}</style>
       {/* Gradiente hero / Banner — cinematográfico (Amend #197: banner inmersivo — la foto protagonista) */}
@@ -1525,6 +1535,36 @@ export default function CartaDigital() {
     els.forEach(el => io.observe(el));
     return () => io.disconnect();
   }, [loading, categories]);
+
+  // Hotfix #206 — RED DE SEGURIDAD: barrido a los 1500ms + listener 'load'. Si el revelado
+  // quedó atascado (observer no dispara o un re-render resetea la visibilidad), se revela
+  // todo y el detector lo reporta a Sentry UNA sola vez (flag local anti-duplicado).
+  useEffect(() => {
+    let fallbackSent = false;
+    const sweep = () => {
+      try {
+        const pending = document.querySelectorAll('.bw-reveal:not(.bw-revealed)');
+        if (pending.length > 0) {
+          pending.forEach(el => el.classList.add('bw-revealed'));
+          if (!fallbackSent) {
+            fallbackSent = true;
+            try {
+              Sentry.captureMessage(
+                'BW-REVEAL-FALLBACK: ' + pending.length + ' elementos sin revelar tras 1500ms en carta ' + (slugFromPath ?? '(sin slug)'),
+                { level: 'warning' }
+              );
+            } catch { /* Sentry no disponible — el reveal de respaldo ya aplicó */ }
+          }
+        }
+      } catch { /* no-op */ }
+    };
+    const timer = window.setTimeout(sweep, 1500);
+    window.addEventListener('load', sweep);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('load', sweep);
+    };
+  }, [loading, categories, slugFromPath]);
 
   // Filtro — con useMemo para evitar recalcular en cada render
   const filtered = useMemo<Category[]>(() => {

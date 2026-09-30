@@ -59,9 +59,13 @@ function QuickPayModal({ tenantId, tenantName, plan, onClose }: {
   tenantId: string; tenantName: string; plan: string; onClose: () => void;
 }) {
   const queryClient = useQueryClient();
-  const PLAN_PRICES: Record<string, number> = { STARTER: 28_000, PRO: 40_000, ENTERPRISE: 80_000 };
+  // Hotfix #209: FIN de los precios hardcodeados legacy ({STARTER: 28_000,
+  // PRO: 40_000, ENTERPRISE: 80_000}). El monto pre-llenado sale de
+  // plan_config según el plan REAL del tenant (mismo mecanismo que el modal
+  // de SuperAdminPayments — getPlans(), fuente única #199-1). Plan sin fila
+  // en plan_config → campo VACÍO para edición manual (sin default inventado).
   const [form, setForm] = useState({
-    amount:        String(PLAN_PRICES[plan?.toUpperCase()] ?? ''),
+    amount:        '',
     status:        'PAID',
     method:        'transferencia',
     concept:       '',
@@ -69,13 +73,28 @@ function QuickPayModal({ tenantId, tenantName, plan, onClose }: {
     notes:         '',
   });
   const [submitting, setSubmitting] = useState(false);
+  const [amountSeeded, setAmountSeeded] = useState(false);
+
+  const { data: plansCfg } = useQuery({
+    queryKey: ['superadmin', 'plan-config'],
+    queryFn:  () => superadminService.getPlans(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Pre-llenar UNA vez cuando llega plan_config (no pisa edición manual)
+  useEffect(() => {
+    if (amountSeeded || !plansCfg) return;
+    const pc = plansCfg.find((p: any) => p.plan.toUpperCase() === (plan ?? '').toUpperCase());
+    setForm(f => ({ ...f, amount: f.amount || String(pc?.priceCLP ?? '') }));
+    setAmountSeeded(true);
+  }, [plansCfg, plan, amountSeeded]);
 
   async function handleSubmit() {
     if (!form.amount) return;
     setSubmitting(true);
     try {
       await superadminService.createSubscriptionPayment({
-        tenantId, amount: form.amount, plan, ...form,
+        tenantId, plan, ...form,
       });
       queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenant-detail', tenantId] });
       toast.success('Pago registrado');
@@ -91,7 +110,7 @@ function QuickPayModal({ tenantId, tenantName, plan, onClose }: {
     <Modal open onClose={onClose} title={`Registrar pago · ${tenantName}`}>
         <div className="space-y-3">
           {[
-            { label: 'Monto CLP *', key: 'amount', type: 'number', placeholder: '28000' },
+            { label: 'Monto CLP *', key: 'amount', type: 'number', placeholder: 'Monto de plan_config' },
             { label: 'Concepto',    key: 'concept', type: 'text',   placeholder: 'Suscripción mayo 2026' },
             { label: 'N° Factura',  key: 'invoiceNumber', type: 'text', placeholder: 'FAC-001' },
           ].map(f => (
@@ -159,6 +178,19 @@ export default function SuperAdminTenantDetail() {
     queryFn:  () => superadminService.getTenantPayments(id!),
     enabled:  !!id,
   });
+
+  // Hotfix #209: planes del dropdown desde plan_config (fuente única — NO
+  // hardcodeados). Fallback: enum completo TenantPlan si el endpoint no
+  // entrega lista.
+  const { data: plansCfg } = useQuery({
+    queryKey: ['superadmin', 'plan-config'],
+    queryFn:  () => superadminService.getPlans(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const planOptions = useMemo(
+    () => (plansCfg ?? []).map((p: any) => String(p.plan).toUpperCase()),
+    [plansCfg],
+  );
 
   const tenant  = data?.tenant;
   const kpis    = data?.kpis ?? {};
@@ -366,7 +398,7 @@ export default function SuperAdminTenantDetail() {
                 <Settings className="w-4 h-4" />Plan <ChevronDown className="w-3 h-3" />
               </Button>
               <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-white/10 rounded-xl shadow-2xl min-w-[140px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                {['STARTER', 'PRO', 'ENTERPRISE'].map(p => (
+                {(planOptions.length > 0 ? planOptions : ['STARTER', 'PRO', 'ENTERPRISE', 'BULLWEB_COMPLETO_INICIO', 'BASICO', 'TODO']).map(p => (
                   <button key={p} onClick={() => handleChangePlan(p)}
                     className={`w-full text-left px-4 py-2.5 text-sm hover:bg-white/5 transition-colors ${tenant.plan?.toUpperCase() === p ? 'text-brand-400 font-semibold' : 'text-gray-300'} first:rounded-t-xl last:rounded-b-xl`}>
                     {p}

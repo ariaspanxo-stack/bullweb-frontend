@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useNavigate } from 'react-router-dom';
-import { Building2, LayoutDashboard, LogOut, CreditCard, Settings, Activity, ShieldCheck, Clock } from 'lucide-react';
+import { Building2, LayoutDashboard, LogOut, CreditCard, Activity, ShieldCheck, Clock, UserCircle, Tag } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import superadminService from '@/services/superadmin/superadminService';
@@ -47,7 +47,8 @@ const NAV_SECTIONS = [
     label: 'Sistema',
     items: [
       { to: '/superadmin/audit',  label: 'Auditoría',     icon: ShieldCheck },
-      { to: '/superadmin/config', label: 'Configuración', icon: Settings },
+      { to: '/superadmin/config', label: 'Mi cuenta',     icon: UserCircle },
+      { to: '/superadmin/planes', label: 'Planes',        icon: Tag },
     ],
   },
 ];

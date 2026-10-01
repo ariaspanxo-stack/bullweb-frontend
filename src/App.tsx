@@ -94,6 +94,7 @@ const SuperAdminNewTenant    = lazy(() => import('@/pages/superadmin/SuperAdminN
 const SuperAdminLogin        = lazy(() => import('@/pages/superadmin/SuperAdminLogin'));
 const SuperAdminPayments     = lazy(() => import('@/pages/superadmin/SuperAdminPayments'));
 const SuperAdminConfig      = lazy(() => import('@/pages/superadmin/SuperAdminConfig'));
+const SuperAdminPlans       = lazy(() => import('@/pages/superadmin/SuperAdminPlans'));
 const SuperAdminActivity    = lazy(() => import('@/pages/superadmin/SuperAdminActivity'));
 const SuperAdminAudit       = lazy(() => import('@/pages/superadmin/SuperAdminAudit'));
 const SuperAdminTenantDetail = lazy(() => import('@/pages/superadmin/SuperAdminTenantDetail'));
@@ -335,6 +336,7 @@ function AppContent() {
               <Route path="payments"       element={<SuperAdminPayments />} />
               <Route path="audit"          element={<SuperAdminAudit />} />
               <Route path="config"         element={<SuperAdminConfig />} />
+              <Route path="planes"         element={<SuperAdminPlans />} />
             </Route>
 
             {/* 404 */}

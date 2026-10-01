@@ -95,6 +95,43 @@
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+/* Hotfix #217 — par fondo+texto completo para TODOS los campos de la superficie
+   superadmin (tema oscuro global). La regla global clara de arriba pinta el texto
+   #1f2937 (negro) con !important; este scope (mayor especificidad, patrón #121)
+   restaura el texto claro (gray-200) + placeholder (gray-600) + autofill + options. */
+[data-superadmin] input,
+[data-superadmin] textarea,
+[data-superadmin] select {
+  color: #e5e7eb !important;
+}
+
+[data-superadmin] input::placeholder,
+[data-superadmin] textarea::placeholder {
+  color: #4b5563 !important;
+}
+
+/* Autofill: el navegador pinta fondo azul/amarillo — texto claro sobre gray-950 */
+[data-superadmin] input:-webkit-autofill,
+[data-superadmin] textarea:-webkit-autofill,
+[data-superadmin] select:-webkit-autofill {
+  -webkit-text-fill-color: #e5e7eb;
+  -webkit-box-shadow: 0 0 0 1000px #030712 inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
+/* Dropdown nativo de selects: fondo oscuro coherente */
+[data-superadmin] select option,
+[data-superadmin] select optgroup {
+  background-color: #111827;
+  color: #e5e7eb;
+}
+
+/* Checkbox con acento de marca */
+[data-superadmin] input[type="checkbox"],
+[data-superadmin] input[type="radio"] {
+  accent-color: #ff6b35;
+}
+
 [data-superadmin] ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

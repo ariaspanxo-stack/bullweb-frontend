@@ -84,7 +84,7 @@ function ChangePasswordSection() {
             onChange={e => setCurrentPassword(e.target.value)}
             required
             autoComplete="current-password"
-            className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors"
+            className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2.5 text-gray-200 text-sm placeholder:text-gray-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
           />
         </div>
         <div>
@@ -95,7 +95,7 @@ function ChangePasswordSection() {
             onChange={e => setNewPassword(e.target.value)}
             required
             autoComplete="new-password"
-            className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors"
+            className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2.5 text-gray-200 text-sm placeholder:text-gray-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
           />
           {newPassword && validarNuevaClave(newPassword) && (
             <p className="text-xs text-amber-400 mt-1">{validarNuevaClave(newPassword)}</p>
@@ -109,7 +109,7 @@ function ChangePasswordSection() {
             onChange={e => setConfirmPassword(e.target.value)}
             required
             autoComplete="new-password"
-            className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors"
+            className="w-full bg-gray-950 border border-white/10 rounded-lg px-3 py-2.5 text-gray-200 text-sm placeholder:text-gray-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
           />
           {confirmPassword && newPassword !== confirmPassword && (
             <p className="text-xs text-amber-400 mt-1">Las contraseñas nuevas no coinciden</p>
@@ -249,7 +249,7 @@ function TwoFASection() {
               value={code}
               onChange={e => setCode(e.target.value.replace(/\D/g, ''))}
               placeholder="123456"
-              className="flex-1 bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-gray-200 text-center text-lg tracking-widest focus:border-brand-500 focus:ring-1 focus:ring-brand-500 focus:outline-none transition-colors"
+              className="flex-1 bg-gray-950 border border-white/10 rounded-lg px-3 py-2.5 text-gray-200 text-center text-lg tracking-widest placeholder:text-gray-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-colors"
             />
             <Button variant="primary" onClick={handleVerify} disabled={busy || code.length !== 6}>
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Activar'}

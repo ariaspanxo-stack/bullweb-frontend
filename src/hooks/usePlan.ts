@@ -1,7 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
-import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin';
+// HOTfix #218 (P0-1): consume la query COMPARTIDA ['billing','status'] —
+// sin queryKey propia (antes ['billing-status-plan'], parte de la tormenta).
+import { useBillingStatus } from '@/hooks/useBillingStatus';
 
 /**
  * GATING FASE C — El plan del tenant en el frontend.
@@ -32,16 +33,10 @@ interface BillingStatusPlan {
 }
 
 export function usePlan(): { plan: TenantPlanFE; isBasico: boolean } {
-  const user         = useAuthStore(s => s.user);
   const isSuperAdmin = useIsSuperAdmin();
 
-  const billingQ = useQuery<BillingStatusPlan>({
-    queryKey: ['billing-status-plan'],
-    queryFn:  async () => (await api.get<BillingStatusPlan>('/billing/status')).data,
-    enabled:  !!user && !isSuperAdmin,
-    staleTime: 60_000,
-    retry:     false,
-  });
+  // (P0-1) lector pasivo del orquestador compartido — sin polling propio.
+  const billingQ = useBillingStatus({ poll: false });
 
   if (isSuperAdmin) return { plan: 'TODO', isBasico: false };
 

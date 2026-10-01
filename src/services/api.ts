@@ -558,11 +558,24 @@ function getAuthHeaders(): HeadersInit {
 // petición falla en a lo más 10s.
 const DEFAULT_TIMEOUT_MS = 10_000;
 
+// HOTFIX #218 (P0-3) — TIMEOUT HONESTO PARA EL PAGO: el POST /payments/flow/create
+// crea el PENDING en ~450ms pero la respuesta de Flow (flowUrl) puede tardar
+// >10s → el AbortController abortaba la petición DESPUÉS de crearla (499,
+// incidente hamachi-nikkei 01-oct: PENDING creado + usuario sin link + 6
+// reintentos que murieron en 429). El camino de pago usa 60s; TODO LO DEMÁS
+// MANTIENE los 10s (protegen el resto de la app — prohibido subir el global).
+const PAYMENT_TIMEOUT_MS = 60_000;
+
+function isPaymentCreateUrl(url: string): boolean {
+  return url.includes('/payments/flow/create');
+}
+
 async function fetchWithRefresh(
   fetchFn: (init?: RequestInit) => Promise<Response>,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
 ): Promise<Response> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   const runWithSignal = () => fetchFn({ signal: controller.signal });
 
   try {
@@ -617,7 +630,7 @@ async function fetchWithRefresh(
     // Esto evita que loadUser() (y otros callers) se queden esperando indefinidamente.
     if (error?.name === 'AbortError') {
       const timeoutErr = new Error(
-        `Request timeout: el servidor tardó más de ${DEFAULT_TIMEOUT_MS / 1000}s en responder`,
+        `Request timeout: el servidor tardó más de ${timeoutMs / 1000}s en responder`,
       ) as any;
       timeoutErr.name = 'NetworkTimeout';
       timeoutErr.isTimeout = true;
@@ -657,12 +670,15 @@ const httpClient = {
     options?: { responseType?: 'blob' }
   ): Promise<{ data: T }> => {
     const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+    // P0-3: el POST de pago viaja con 60s (flujo Flow); el resto, 10s.
+    const timeoutMs = isPaymentCreateUrl(fullUrl) ? PAYMENT_TIMEOUT_MS : DEFAULT_TIMEOUT_MS;
     const response = await fetchWithRefresh(() =>
       fetch(fullUrl, {
         method:  'POST',
         headers: getAuthHeaders(),
         body:    JSON.stringify(body),
-      })
+      }),
+      timeoutMs
     );
     if (options?.responseType === 'blob') {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);

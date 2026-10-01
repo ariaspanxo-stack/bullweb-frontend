@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+// HOTFIX #218 (P0-1): campanita consume la query COMPARTIDA ['billing','status'].
+import { useBillingStatus } from '@/hooks/useBillingStatus';
 import { useNavigate, useLocation } from 'react-router-dom';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { Menu, Bell, MessageCircle, User, Settings, LogOut, ChevronRight, ShoppingBag, AlertCircle, CheckCircle, X, Package, Download, Headset, CreditCard, AlertTriangle, Loader2 } from 'lucide-react';
@@ -172,18 +174,12 @@ export default function Header({ onMenuClick }: HeaderProps) {
     .filter((n: RecentNotification) => !dismissed.has(n.id))
     .map((n: RecentNotification) => ({ ...n, read: n.read || readIds.has(n.id) }));
 
-  // ── Notificaciones de suscripción (#180) — consultar al MONTAR (mismo
-  // mecanismo/endpoint que usa PaymentRequiredOverlay: cliente `api` +
-  // GET /billing/status; /api/billing/ está en SKIP_PATHS → siempre 200 con
-  // el estado real en el body, incluso PAST_DUE). Sin polling: refetch al
-  // abrir la campanita. SuperAdmin: silencio (igual que el overlay).
-  const billingQ = useQuery<BillingStatusResponse>({
-    queryKey:  ['billing-status-bell'],
-    queryFn:   async () => (await api.get<BillingStatusResponse>('/billing/status')).data,
-    enabled:   !isSuperAdmin,
-    staleTime: 60_000,
-    retry:     false,
-  });
+  // ── Notificaciones de suscripción (#180 + #218 P0-1) — la campanita lee la
+  // query COMPARTIDA ['billing','status'] (lector pasivo, sin queryKey propia
+  // ['billing-status-bell']: fin de la tormenta de pollers del 01-oct).
+  // /api/billing/ está en SKIP_PATHS → siempre 200 con el estado real en el
+  // body, incluso PAST_DUE. SuperAdmin: silencio (igual que el overlay).
+  const billingQ = useBillingStatus({ poll: false });
 
   const subNotices = isSuperAdmin ? [] : buildSubscriptionNotices(billingQ.data ?? {});
 

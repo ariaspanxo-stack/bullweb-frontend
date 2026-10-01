@@ -1,17 +1,26 @@
-import { useEffect, useState, useCallback } from 'react';
-import api from '@/services/api';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { useBillingStatus } from '@/hooks/useBillingStatus';
 
 /**
  * SuspendedOverlay
  * Se muestra cuando el backend responde 403 TENANT_SUSPENDED o TENANT_CANCELLED.
- * Hace polling cada 30s para detectar reactivación sin recargar página.
+ * Detecta la reactivación sin recargar página.
  * El SuperAdmin nunca ve este overlay.
+ *
+ * HOTFIX #218 (P0-1): cero polling propio — consume la query COMPARTIDA
+ * ['billing','status']. Mientras el banner está visible, ESTE hook sostiene
+ * la única instancia del ciclo de 30s (poll:true); si otros componentes
+ * también lo piden, react-query los une al MISMO ciclo (no lo duplica).
  */
 export default function SuspendedOverlay() {
   const { isSuperAdmin } = useAuthStore();
   const [suspended, setSuspended] = useState(false);
   const [reason, setReason] = useState<'TENANT_SUSPENDED' | 'TENANT_CANCELLED'>('TENANT_SUSPENDED');
+
+  // (P0-1) query compartida — sostenemos el ciclo SOLO mientras está suspendido.
+  const billingQ = useBillingStatus({ poll: suspended });
+  const status   = billingQ.data?.status;
 
   // ── Escuchar evento disparado desde api.ts ─────────────────────────────
   useEffect(() => {
@@ -25,26 +34,15 @@ export default function SuspendedOverlay() {
     return () => window.removeEventListener('tenant:suspended', handler);
   }, []);
 
-  // ── Polling cada 30s para detectar reactivación ─────────────────────────
+  // ── Reactivación vía la query compartida ────────────────────────────────
   // Nota: /billing/status responde 200 con el estado real en el body.
   // Solo consideramos reactivado si el campo status es ACTIVE o TRIAL.
-  const checkStatus = useCallback(async () => {
-    try {
-      const res = await api.get<{ status: string }>('/billing/status');
-      if (res.data?.status === 'ACTIVE' || res.data?.status === 'TRIAL') {
-        setSuspended(false);
-        window.location.reload();
-      }
-    } catch {
-      // si sigue suspendido, el backend devolverá 403 y no hacemos nada
-    }
-  }, []);
-
   useEffect(() => {
-    if (!suspended) return;
-    const interval = setInterval(checkStatus, 30_000);
-    return () => clearInterval(interval);
-  }, [suspended, checkStatus]);
+    if (suspended && (status === 'ACTIVE' || status === 'TRIAL')) {
+      setSuspended(false);
+      window.location.reload();
+    }
+  }, [suspended, status]);
 
   if (!suspended || isSuperAdmin) return null;
 
@@ -99,10 +97,11 @@ export default function SuspendedOverlay() {
               💳 Realiza tu pago aquí
             </a>
             <button
-              onClick={checkStatus}
-              className="text-gray-400 hover:text-gray-600 text-sm py-2 underline underline-offset-2 transition-colors"
+              onClick={() => billingQ.refetch()}
+              disabled={billingQ.isFetching}
+              className="text-gray-400 hover:text-gray-600 text-sm py-2 underline underline-offset-2 transition-colors disabled:opacity-60"
             >
-              Verificar ahora
+              {billingQ.isFetching ? 'Verificando…' : 'Verificar ahora'}
             </button>
           </div>
         </div>

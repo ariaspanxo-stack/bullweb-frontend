@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
+import { useBillingStatus } from '@/hooks/useBillingStatus';
 
 /**
  * PaymentRequiredOverlay
@@ -12,10 +13,18 @@ import { useAuthStore } from '@/store/authStore';
  *
  * - Escucha el evento global 'billing:payment_required' (disparado por api.ts).
  * - El SuperAdmin nunca ve este overlay.
- * - Botón "Pagar $29.000 / mes" replica el flujo de Subscription.tsx:
- *     POST /payments/flow/create → redirect a flowUrl.
- * - Polling cada 30s a /billing/status para ocultar el modal si el estado
- *   del tenant vuelve a ACTIVE/TRIAL (pago confirmado vía webhook).
+ * - Botón "Pagar $XX.XXX / mes" replica el flujo de Subscription.tsx:
+ *     POST /payments/flow/create → redirect a flowUrl (60s de timeout — P0-3).
+ *
+ * HOTFIX #218:
+ *   (P0-1) CERO polling propio: consume la query COMPARTIDA ['billing','status']
+ *          (useBillingStatus) — la única instancia de polling de la app. Al
+ *          abrirse NO lanza checkStatus: lee el cache y se une al ciclo de 30s.
+ *          Fin de la tormenta de pollers del incidente hamachi-nikkei (848 GET/2h).
+ *   (P1-5) COPY DINÁMICO: plan y priceCLP de la respuesta de /billing/status
+ *          (nunca más "Starter" hardcodeado).
+ *   (P2-6) 429 HUMANO: si una llamada cae en 429, mensaje con countdown del
+ *          retryAfter (el backend lo expone en el body) — no más clicks ciegos.
  */
 export default function PaymentRequiredOverlay() {
   const { isSuperAdmin } = useAuthStore();
@@ -23,9 +32,23 @@ export default function PaymentRequiredOverlay() {
   const [paying,    setPaying]    = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [error,     setError]     = useState<string | null>(null);
-  // Hotfix #199-1 — DISPLAY DINÁMICO: el precio de la FICHA del tenant
-  // (priceCLP de /billing/status, mismo criterio del cobro — DISPLAY = COBRO).
-  const [priceCLP,  setPriceCLP]  = useState<number | null>(null);
+  // (P2-6) countdown del retryAfter cuando el backend responde 429.
+  const [rateLimitSecs, setRateLimitSecs] = useState<number | null>(null);
+  const rateLimitTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // (P0-1) LA query compartida — el overlay sostiene el ciclo de 30s SOLO
+  // mientras está abierto (el usuario vencido necesita detectar la
+  // reactivación); cerrado = lector pasivo. Una queryKey = un ciclo.
+  const billingQ = useBillingStatus({ poll: open });
+  const status   = billingQ.data?.status;
+  const priceCLP = billingQ.data?.priceCLP;
+  const planRaw  = billingQ.data?.subscription?.plan ?? billingQ.data?.plan;
+  // (P1-5) copy dinámico del plan (label amigable; fallback neutro).
+  const planLabel = planRaw === 'BASICO' ? 'Básico'
+    : planRaw === 'TODO'   ? 'Todo'
+    : planRaw === 'PRO' || planRaw === 'ENTERPRISE' ? planRaw
+    : planRaw ? planRaw.charAt(0).toUpperCase() + planRaw.slice(1).toLowerCase()
+    : 'tu plan';
   const priceFmt = priceCLP ? `$${priceCLP.toLocaleString('es-CL')}` : '';
 
   // ── Escuchar evento 'billing:payment_required' ──────────────────────────────
@@ -35,48 +58,71 @@ export default function PaymentRequiredOverlay() {
     return () => window.removeEventListener('billing:payment_required', handler);
   }, []);
 
-  // ── Polling cada 30s para detectar reactivación ─────────────────────────────
-  // Nota: /billing/status responde 200 con el estado real en el body.
-  // Solo consideramos reactivado si el campo status es ACTIVE o TRIAL.
+  // ── Reactivación detectada vía la query COMPARTIDA (cero polling propio) ────
+  // Si el estado vuelve a ACTIVE/TRIAL (pago confirmado vía webhook), cerrar
+  // y recargar. El ciclo de 30s que sostiene otro consumidor nos avisa.
+  useEffect(() => {
+    if (open && (status === 'ACTIVE' || status === 'TRIAL')) {
+      setOpen(false);
+      setError(null);
+      window.location.reload();
+    }
+  }, [open, status]);
+
+  // ── (P2-6) Countdown del retryAfter ─────────────────────────────────────────
+  useEffect(() => {
+    if (rateLimitSecs === null) {
+      if (rateLimitTimer.current) { clearInterval(rateLimitTimer.current); rateLimitTimer.current = null; }
+      return;
+    }
+    rateLimitTimer.current = setInterval(() => {
+      setRateLimitSecs(prev => (prev !== null && prev > 1 ? prev - 1 : null));
+    }, 1000);
+    return () => { if (rateLimitTimer.current) clearInterval(rateLimitTimer.current); };
+  }, [rateLimitSecs !== null]);
+
+  /** Clasifica un error: 429 → mensaje humano con countdown; otro → genérico. */
+  const humanError = (err: any, fallback: string): string => {
+    if (err?.status === 429 || err?.data?.retryAfter !== undefined) {
+      const secs = Number(err?.data?.retryAfter ?? 30) || 30;
+      setRateLimitSecs(secs);
+      return 'Demasiados intentos — espera un momento y reintenta.';
+    }
+    setRateLimitSecs(null);
+    return err?.message ?? fallback;
+  };
+
+  // ── Verificación manual ("Ya pagué") — refetch EXPLÍCITO de la query ────────
   const checkStatus = useCallback(async () => {
-    setVerifying(true);
     try {
-      const res = await api.get<{ status: string; priceCLP?: number }>('/billing/status');
-      // Hotfix #199-1: capturar el precio de la ficha en cada verificación.
-      if (typeof res.data?.priceCLP === 'number' && res.data.priceCLP > 0) {
-        setPriceCLP(res.data.priceCLP);
-      }
-      if (res.data?.status === 'ACTIVE' || res.data?.status === 'TRIAL') {
+      setVerifying(true);
+      setError(null);
+      const fresh = await billingQ.refetch();
+      const s = fresh.data?.status;
+      if (s === 'ACTIVE' || s === 'TRIAL') {
         setOpen(false);
-        setError(null);
         window.location.reload();
       } else {
         setError('El pago aún no se confirma. Intenta en unos minutos.');
       }
-    } catch {
-      // Si sigue vencido, el backend devolverá 402 y no hacemos nada.
+    } catch (err: any) {
+      setError(humanError(err, 'No pudimos verificar el estado. Intenta nuevamente.'));
     } finally {
       setVerifying(false);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [billingQ.refetch]);
 
-  useEffect(() => {
-    if (!open) return;
-    // Hotfix #199-1: carga inmediata del precio al abrir (reactivación sigue a 30s).
-    checkStatus();
-    const interval = setInterval(checkStatus, 30_000);
-    return () => clearInterval(interval);
-  }, [open, checkStatus]);
-
-  // ── Pagar suscripción (mismo flujo que Subscription.tsx) ─────────────────────
+  // ── Pagar suscripción (mismo flujo que Subscription.tsx, 60s — P0-3) ────────
   const handlePay = useCallback(async () => {
     try {
       setError(null);
+      setRateLimitSecs(null);
       setPaying(true);
       const response = await api.post<{ flowUrl: string }>('/payments/flow/create');
       window.location.href = response.data.flowUrl;
     } catch (err: any) {
-      setError(err?.message ?? 'Error al generar el link de pago. Intenta nuevamente.');
+      setError(humanError(err, 'Error al generar el link de pago. Intenta nuevamente.'));
       setPaying(false);
     }
   }, []);
@@ -104,22 +150,28 @@ export default function PaymentRequiredOverlay() {
             Tu período de prueba ha terminado
           </h2>
 
-          {/* Descripción */}
+          {/* Descripción — (P1-5) plan y precio dinámicos de la ficha */}
           <p className="text-gray-500 text-sm mb-6">
-            Para continuar operando y no perder tus ventas, activa tu plan Starter{priceFmt ? ` (${priceFmt}/mes)` : ''}.
+            Para continuar operando y no perder tus ventas, activa tu plan {planLabel}{priceFmt ? ` (${priceFmt}/mes)` : ''}.
           </p>
 
           {/* Error */}
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs">
               {error}
+              {/* (P2-6) countdown visible del retryAfter */}
+              {rateLimitSecs !== null && (
+                <span className="block mt-1 font-semibold tabular-nums">
+                  Reintenta en {rateLimitSecs}s…
+                </span>
+              )}
             </div>
           )}
 
-          {/* Botón principal */}
+          {/* Botón principal — deshabilitado mientras corre el countdown 429 */}
           <button
             onClick={handlePay}
-            disabled={paying}
+            disabled={paying || rateLimitSecs !== null}
             className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors mb-3"
           >
             {paying ? (
@@ -148,7 +200,7 @@ export default function PaymentRequiredOverlay() {
             )}
           </button>
 
-          {/* Indicador de polling */}
+          {/* Indicador del ciclo compartido (P0-1) */}
           <p className="text-gray-300 text-xs mt-5 italic">
             Verificando estado cada 30 segundos…
           </p>

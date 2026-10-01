@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   CheckCircle, AlertTriangle, Loader2, ArrowLeft,
-  Sparkles, Rocket, XCircle, CreditCard, PartyPopper,
+  Sparkles, Rocket, XCircle, CreditCard, PartyPopper, RefreshCw,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { usePlan } from '@/hooks/usePlan';
+// HOTFIX #218 (P0-1): la ficha consume la query COMPARTIDA ['billing','status']
+// — sin loadStatus propio (antes: fetch al montar + polling 30s duplicado).
+import { useBillingStatus } from '@/hooks/useBillingStatus';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -36,11 +39,16 @@ interface BillingStatus {
  *   - El plan: usePlan() de la Fase C (misma fuente del gate — subscriptions.plan).
  *   - El pago: api.post('/payments/flow/create') — el MISMO service del overlay
  *     (PaymentRequiredOverlay/Header), con targetPlan:'TODO' para el upgrade.
- *   - El polling: 30s a /billing/status (el patrón existente del overlay).
+ *   - El estado: query COMPARTIDA ['billing','status'] (#218 P0-1) — mientras
+ *     hay viaje a Flow pendiente (upgrade o retorno de pago), ESTA página
+ *     sostiene el ciclo de 30s; sin viaje, lector pasivo.
  *
  * Estados:
  *   - BÁSICO        → LA TARJETA DE UPGRADE (los desbloqueos + CTA vendedor).
  *   - PAST_DUE      → CTA "Pagar ahora" (flujo EXISTENTE del overlay, sin targetPlan).
+ *   - TRIAL VENCIDO → CTA "Pagar ahora" TAMBIÉN (HOTFIX #218 P1-4: el limbo
+ *                     entre la expiración y el tick PAST_DUE del dunning ya no
+ *                     existe — status TRIAL + trialActive false = vencido).
  *   - TODO/legacy   → su plan y fecha, SIN CTA de upgrade (nada que venderles).
  *   - Upgrade listo → "¡Ya eres TODO!" con CTA al POS (la venta cerrada).
  *
@@ -65,72 +73,48 @@ const TODO_UNLOCKS: { icon: 'check' | 'star'; text: string }[] = [
 // ─── Componente ───────────────────────────────────────────────────────────────
 
 export default function Subscription() {
-  const tenantId = useAuthStore(s => s.user?.tenantId);
   const { isBasico } = usePlan();
 
-  const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null);
-  const [loading,       setLoading]       = useState(true);
-  const [paying,        setPaying]        = useState<'upgrade' | 'renewal' | null>(null);
-  const [upgraded,      setUpgraded]      = useState(false);
-  const [error,         setError]         = useState<string | null>(null);
+  // (P0-1) La única fuente: la query compartida. Esta página sostiene el ciclo
+  // de 30s SOLO mientras espera confirmación de un pago (flag de upgrade o
+  // retorno de Flow); en visita normal es lectora pasiva del cache global.
+  const awaitingUpgrade =
+    typeof window !== 'undefined' && sessionStorage.getItem(UPGRADE_FLAG) === '1';
+  const retornoPago =
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('success') === 'true';
 
-  const loadStatus = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await api.get<BillingStatus>('/billing/status');
-      setBillingStatus(response.data);
-    } catch {
-      // Si no hay tenant, mostramos el estado igualmente
-      setBillingStatus(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const billingQ = useBillingStatus({ poll: isBasico || awaitingUpgrade || retornoPago });
+  const billingStatus = (billingQ.data ?? null) as BillingStatus | null;
+  const loading = billingQ.isLoading;
+  const loadError = billingQ.isError;
 
+  const [paying,   setPaying]   = useState<'upgrade' | 'renewal' | null>(null);
+  const [upgraded, setUpgraded] = useState(false);
+  const [error,    setError]    = useState<string | null>(null);
+
+  // ── Verificación del upgrade desde el cache compartido (cero fetch propio) ──
   useEffect(() => {
-    loadStatus();
-    // Leer query params para mostrar mensajes de éxito/cancelación
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('success') === 'true') {
-      setError(null);
+    if (!billingStatus) return;
+    const plan   = billingStatus.subscription?.plan ?? billingStatus.plan;
+    const status = billingStatus.status;
+    if (plan === 'TODO' && (status === 'ACTIVE' || status === 'TRIAL')) {
+      sessionStorage.removeItem(UPGRADE_FLAG);
+      setUpgraded(true);
     }
+  }, [billingStatus]);
+
+  // Mensajes de retorno de Flow (query params) — solo al montar.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
     if (params.get('cancelled') === 'true') {
       setError('Proceso de pago cancelado. Puedes intentarlo nuevamente cuando quieras.');
     }
-  }, [loadStatus]);
-
-  // ── POLLING 30s post-click (patrón del overlay): plan=TODO + ACTIVE/TRIAL →
-  // "¡Ya eres TODO!". Corre mientras el BÁSICO espera el upgrade (flag del viaje
-  // a Flow incluido — la vuelta de Flow verifica inmediato al montar).
-  const checkUpgrade = useCallback(async () => {
-    try {
-      const res = await api.get<BillingStatus>('/billing/status');
-      const plan   = res.data?.subscription?.plan ?? res.data?.plan;
-      const status = res.data?.status;
-      setBillingStatus(res.data);
-      if (plan === 'TODO' && (status === 'ACTIVE' || status === 'TRIAL')) {
-        sessionStorage.removeItem(UPGRADE_FLAG);
-        setUpgraded(true);
-      }
-    } catch {
-      // Seguimos polleando — el webhook puede tardar (patrón del overlay).
-    }
   }, []);
-
-  const awaitingUpgrade =
-    typeof window !== 'undefined' && sessionStorage.getItem(UPGRADE_FLAG) === '1';
-
-  useEffect(() => {
-    if (!isBasico && !awaitingUpgrade) return;
-    checkUpgrade();
-    const interval = setInterval(checkUpgrade, 30_000);
-    return () => clearInterval(interval);
-  }, [isBasico, awaitingUpgrade, checkUpgrade]);
 
   // ── UPGRADE BÁSICO→TODO (Fase D1 viva): el MISMO service del overlay con
   // targetPlan — PENDING 34.000 concept 'UPGRADE_PLAN:TODO', webhook aplica
   // TODO +30 días (V1 sin prorrateo, sellado en D1).
-  async function handleUpgrade() {
+  const handleUpgrade = useCallback(async () => {
     try {
       setError(null);
       setPaying('upgrade');
@@ -145,11 +129,12 @@ export default function Subscription() {
       setError(err.message ?? 'Error al generar el link de pago. Intenta nuevamente.');
       setPaying(null);
     }
-  }
+  }, []);
 
   // ── Renovación/reactivación: el flujo EXISTENTE del overlay (SIN targetPlan
   // → cobra la ficha del tenant). Reutilizado tal cual — cero duplicación.
-  async function handlePayRenewal() {
+  // #218 P0-3: viaja con timeout honesto de 60s (api.ts).
+  const handlePayRenewal = useCallback(async () => {
     try {
       setError(null);
       setPaying('renewal');
@@ -159,19 +144,19 @@ export default function Subscription() {
       setError(err.message ?? 'Error al generar el link de pago. Intenta nuevamente.');
       setPaying(null);
     }
-  }
+  }, []);
 
   const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
 
-  async function handleCancel() {
+  const handleCancel = useCallback(async () => {
     try {
       setError(null);
       await api.post('/billing/cancel', {});
-      await loadStatus();
+      billingQ.refetch();
     } catch (err: any) {
       setError(err.message ?? 'Error cancelando suscripción.');
     }
-  }
+  }, [billingQ]);
 
   // ── Helpers de display ──────────────────────────────────────────────────────
 
@@ -181,6 +166,14 @@ export default function Subscription() {
     ? `$${billingStatus.priceCLP.toLocaleString('es-CL')}`
     : null;
   const periodEnd = billingStatus?.subscription?.currentPeriodEnd;
+
+  // HOTFIX #218 (P1-4) — EL LIMBO CERRADO: TRIAL con trialActive=false es un
+  // trial VENCIDO (entre la expiración y el tick PAST_DUE del dunning de 6h).
+  const trialVencido =
+    billingStatus?.status === 'TRIAL' && billingStatus?.trialActive === false;
+  // El CTA de pago vive en PAST_DUE **y** en el limbo del trial vencido.
+  const debePagar =
+    billingStatus?.status === 'PAST_DUE' || trialVencido;
 
   // ─── Render ─────────────────────────────────────────────────────────────────
 
@@ -226,8 +219,36 @@ export default function Subscription() {
           </div>
         )}
 
+        {/* ══ (P1-4c) ERROR HONESTO — la ficha NUNCA desaparece silenciosamente ══ */}
+        {!loading && loadError && !billingStatus && (
+          <div className="mb-8 p-6 bg-white border border-red-200 rounded-2xl shadow-sm">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="text-red-500 flex-shrink-0" size={22} />
+                <div>
+                  <p className="font-semibold text-red-800">
+                    No pudimos cargar tu estado de suscripción
+                  </p>
+                  <p className="text-sm text-red-700">
+                    Tu plan sigue activo — es un problema temporal de conexión.
+                    Reintenta en un momento.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => billingQ.refetch()}
+                disabled={billingQ.isFetching}
+                className="px-5 py-2.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-60 flex items-center gap-2 transition-colors"
+              >
+                <RefreshCw size={16} className={billingQ.isFetching ? 'animate-spin' : ''} />
+                Reintentar
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ══ ESTADO ACTUAL — el plan efectivo, el precio, el período ══ */}
-        {!loading && (
+        {!loading && billingStatus && (
           <div className="mb-8 p-6 bg-white border border-gray-200 rounded-2xl shadow-sm">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-4">
@@ -244,17 +265,24 @@ export default function Subscription() {
                       Plan {planDisplay}
                     </h3>
                     {/* Estado del período */}
-                    {billingStatus?.status === 'ACTIVE' && (
+                    {billingStatus.status === 'ACTIVE' && (
                       <span className="px-2 py-0.5 rounded-full bg-emerald-100 border border-emerald-200 text-[11px] font-bold text-emerald-700 uppercase tracking-wide">
                         Activo
                       </span>
                     )}
-                    {billingStatus?.status === 'TRIAL' && (
+                    {billingStatus.status === 'TRIAL' && !trialVencido && (
                       <span className="px-2 py-0.5 rounded-full bg-amber-100 border border-amber-200 text-[11px] font-bold text-amber-700 uppercase tracking-wide">
                         Prueba · {billingStatus.daysLeft}d
                       </span>
                     )}
-                    {billingStatus?.status === 'PAST_DUE' && (
+                    {/* (P1-4b) EL LIMBO YA NO MIENTE: badge Vencido con color
+                        de alerta — jamás "Prueba · 0d" para un trial vencido. */}
+                    {trialVencido && (
+                      <span className="px-2 py-0.5 rounded-full bg-red-100 border border-red-200 text-[11px] font-bold text-red-700 uppercase tracking-wide">
+                        Vencido
+                      </span>
+                    )}
+                    {billingStatus.status === 'PAST_DUE' && (
                       <span className="px-2 py-0.5 rounded-full bg-red-100 border border-red-200 text-[11px] font-bold text-red-700 uppercase tracking-wide">
                         Pago pendiente
                       </span>
@@ -262,7 +290,7 @@ export default function Subscription() {
                   </div>
                   <p className="text-sm text-gray-500">
                     {priceFmt ? `${priceFmt} CLP/mes` : '—'}
-                    {billingStatus?.status === 'TRIAL' && billingStatus?.trialEndsAt
+                    {billingStatus.status === 'TRIAL' && billingStatus.trialEndsAt && !trialVencido
                       ? ` · Prueba gratis hasta el ${new Date(billingStatus.trialEndsAt).toLocaleDateString('es-CL')}`
                       : periodEnd
                         ? ` · Próxima renovación: ${new Date(periodEnd).toLocaleDateString('es-CL')}`
@@ -271,7 +299,7 @@ export default function Subscription() {
                 </div>
               </div>
 
-              {billingStatus?.status === 'ACTIVE' && billingStatus.subscription && (
+              {billingStatus.status === 'ACTIVE' && billingStatus.subscription && (
                 <button
                   onClick={() => setCancelConfirmOpen(true)}
                   className="text-sm text-red-600 hover:text-red-800 underline"
@@ -282,7 +310,7 @@ export default function Subscription() {
             </div>
 
             {/* Trial: aviso preventivo (banner existente, conservado) */}
-            {billingStatus?.trialActive && (
+            {billingStatus.trialActive && (
               <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
                 <AlertTriangle className="text-amber-500 flex-shrink-0" size={18} />
                 <p className="text-sm text-amber-800">
@@ -296,15 +324,17 @@ export default function Subscription() {
           </div>
         )}
 
-        {/* ══ PAST_DUE — el CTA "Pagar" (flujo EXISTENTE del overlay) ══ */}
-        {!loading && billingStatus?.status === 'PAST_DUE' && !upgraded && (
+        {/* ══ (P1-4a) PAGAR — PAST_DUE **y** el limbo del trial vencido ══ */}
+        {!loading && debePagar && !upgraded && (
           <div className="mb-8 p-5 bg-red-50 border border-red-200 rounded-2xl">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-3">
                 <AlertTriangle className="text-red-500 flex-shrink-0" size={22} />
                 <div>
                   <p className="font-semibold text-red-800">
-                    Tu suscripción está vencida
+                    {trialVencido
+                      ? 'Tu período de prueba ha terminado'
+                      : 'Tu suscripción está vencida'}
                   </p>
                   <p className="text-sm text-red-700">
                     Paga ahora y recupera el acceso completo en segundos — tus datos
@@ -390,7 +420,7 @@ export default function Subscription() {
         )}
 
         {/* ══ TODO / grandfathered — su plan y fecha, SIN CTA de upgrade ══ */}
-        {!loading && !isBasico && billingStatus?.status !== 'PAST_DUE' && !upgraded && (
+        {!loading && !isBasico && billingStatus?.status !== 'PAST_DUE' && !trialVencido && !upgraded && (
           <div className="mb-8 p-5 bg-green-50 border border-green-200 rounded-2xl flex items-center gap-3">
             <CheckCircle className="text-green-500 flex-shrink-0" size={20} />
             <p className="text-sm text-green-800">
@@ -404,8 +434,8 @@ export default function Subscription() {
           </div>
         )}
 
-        {/* Trial TODO/legacy que quiere pagar ya — el flujo existente, discreto */}
-        {!loading && !isBasico && billingStatus?.status === 'TRIAL' && (
+        {/* Trial TODO/legacy VIGENTE que quiere pagar ya — el flujo existente, discreto */}
+        {!loading && !isBasico && billingStatus?.status === 'TRIAL' && !trialVencido && (
           <div className="mb-8 text-center">
             <button
               onClick={handlePayRenewal}

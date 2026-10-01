@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { CheckCircle, Loader2 } from 'lucide-react';
 import api from '@/services/api';
+// HOTFIX #218 (P0-1): la MISMA queryKey compartida ['billing','status'] —
+// un solo cache/una sola fuente (los refetch aquí alimentan el mismo entry
+// que consumen overlay/campanita/usePlan; react-query deduplica en vuelo).
+import { BILLING_STATUS_KEY } from '@/hooks/useBillingStatus';
 
 /**
  * PagoResultado — Hotfix #92
@@ -27,6 +32,19 @@ export default function PagoResultado() {
   const timerRef                  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const intentosRef               = useRef(0);
   const fallosAuthRef             = useRef(0);
+
+  // (P0-1) Query compartida. Página PÚBLICA: sin intervalo automático — el
+  // bucle escalonado de abajo (#143, 5s→30s) la refetcha explícitamente.
+  // Sin gate de usuario: el retorno de Flow puede llegar con sesión muerta
+  // (el 401/403/404 cuenta como fallo de auth, como siempre).
+  const billingQ = useQuery<{ status?: string }>({
+    queryKey: BILLING_STATUS_KEY,
+    queryFn:  async () => (await api.get<{ status: string }>('/billing/status')).data,
+    refetchInterval:       false,
+    refetchOnWindowFocus:  false,
+    staleTime: 0,
+    retry: false,
+  });
 
   useEffect(() => {
     const inicio = Date.now(); // #143: ancla del schedule escalonado (5s → 30s a los 90s)
@@ -58,25 +76,22 @@ export default function PagoResultado() {
         }
 
         try {
-          // Mismo patrón que PaymentRequiredOverlay: GET /billing/status vía `api`
-          const res = await api.get<{ status: string }>('/billing/status');
-          fallosAuthRef.current = 0;
+          // (P0-1) refetch de la query COMPARTIDA — mismo cache que el resto
+          // de la app; devuelve el resultado fresco sin duplicar requests.
+          const fresh = await billingQ.refetch();
+          const s     = (fresh.data as any)?.status;
 
-          // Misma condición que el overlay: éxito si status es ACTIVE o TRIAL
-          if (res.data?.status === 'ACTIVE' || res.data?.status === 'TRIAL') {
+          if (s === 'ACTIVE' || s === 'TRIAL') {
+            fallosAuthRef.current = 0;
             sessionStorage.removeItem('pago_resultado_poll');
             parar();
             setEstado('exito');
             return;
           }
-        } catch (err: any) {
-          // HUECO A (#129): la api es fetch-based y lanza err.status PLANO — la
-          // condición original (err?.response?.status, formato axios) era inalcanzable
-          // por construcción. El 404 del tenantMiddleware con JWT muerto tras Flow
-          // = sesión rota en este flujo.
-          const s = err?.status ?? err?.response?.status;
-
-          if (s === 401 || s === 403 || s === 404) {
+          // HUECO A (#129) — el error llega plano en err.status (fetch-based):
+          // 401/403/404 = sesión rota tras Flow (JWT muerto / tenantMiddleware).
+          const es = (fresh.error as any)?.status ?? (fresh.error as any)?.data?.status;
+          if (es === 401 || es === 403 || es === 404) {
             fallosAuthRef.current += 1;
             if (fallosAuthRef.current >= MAX_FALLOS_AUTH) {
               parar();
@@ -84,7 +99,9 @@ export default function PagoResultado() {
               return;
             }
           }
-          // Otros errores (red, 402 aún vencido): seguir polleando hasta el límite
+          // Otros errores (red, aún vencido): seguir polleando hasta el límite
+        } catch {
+          // refetch no lanza (devuelve error en el resultado) — red de seguridad.
         }
 
         // HUECO C (#129): bucle setTimeout encadenado — verificar() se agenda a sí

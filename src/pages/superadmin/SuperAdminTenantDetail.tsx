@@ -6,9 +6,9 @@ import {
 } from 'recharts';
 import {
   ArrowLeft, Building2, Users, ShoppingBag, CreditCard, Calendar,
-  Clock, TrendingUp, Printer, FileText, Plus, Trash2, RefreshCw,
+  CalendarDays, Clock, TrendingUp, Printer, FileText, Plus, Trash2, RefreshCw,
   ExternalLink, MessageCircle, Settings, AlertTriangle, CheckCircle,
-  XCircle, ChevronDown,
+  XCircle, ChevronDown, Hourglass,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import superadminService from '@/services/superadmin/superadminService';
@@ -153,6 +153,84 @@ function QuickPayModal({ tenantId, tenantName, plan, onClose }: {
   );
 }
 
+// ─── Subcomponente: Modal de confirmación de prórroga (Hotfix #219) ───────────
+// Patrón QuickPay (modal + confirmación + toast). PROHIBIDO extender sin
+// confirmación explícita: la prórroga queda auditada (EXTEND_PERIOD).
+
+interface ExtendConfirmState {
+  days: number;
+  isTrialRestart: boolean; // "Reiniciar trial (7 días)" — mismo endpoint, label demo/prospecto
+}
+
+function ExtendPeriodModal({ tenantId, tenantName, currentPeriodEnd, state, onClose }: {
+  tenantId: string; tenantName: string; currentPeriodEnd?: string | null;
+  state: ExtendConfirmState; onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [submitting, setSubmitting] = useState(false);
+
+  const { days, isTrialRestart } = state;
+
+  async function handleConfirm() {
+    setSubmitting(true);
+    try {
+      const r = await superadminService.extendPeriod(tenantId, days);
+      queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenant-detail', tenantId] });
+      toast.success(`Período extendido a ${fmtDate(r.newPeriodEnd, { day: '2-digit', month: 'long', year: 'numeric' })}`);
+      onClose();
+    } catch (err: any) {
+      // Lección #218: el 429 viaja con retryAfter humano — el backend ya lo calcula.
+      if (err?.status === 429 && err?.retryAfter != null) {
+        toast.error(`Demasiadas solicitudes — reintenta en ${err.retryAfter}s`);
+      } else {
+        toast.error(err?.message ?? 'Error al extender el período');
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <Modal open onClose={onClose} title={isTrialRestart ? `Reiniciar trial · ${tenantName}` : `Extender período · ${tenantName}`}>
+      <div className="space-y-3">
+        {isTrialRestart ? (
+          <p className="text-sm text-gray-300 leading-relaxed">
+            ¿Reiniciar el trial de <span className="text-white font-semibold">{tenantName}</span> con 7 días?
+            <span className="block text-xs text-gray-500 mt-1">
+              (para cuentas demo/prospecto — el trial corre desde la entrega al cliente)
+            </span>
+          </p>
+        ) : (
+          <p className="text-sm text-gray-300 leading-relaxed">
+            ¿Extender el período de <span className="text-white font-semibold">{tenantName}</span>{' '}
+            <span className="text-white font-semibold">+{days} días</span>?
+          </p>
+        )}
+        <div className="bg-gray-950 border border-white/10 rounded-lg px-4 py-3 space-y-1.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-gray-500">Período actual</span>
+            <span className="text-gray-200 font-medium">{fmtDate(currentPeriodEnd, { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+          </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-gray-500">Acción</span>
+            <span className="text-brand-400 font-semibold">{isTrialRestart ? 'Reiniciar trial (+7 días)' : `+${days} días`}</span>
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 flex items-center gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+          Esta acción queda registrada en auditoría.
+        </p>
+      </div>
+      <div className="flex gap-3 mt-5">
+        <Button variant="secondary" className="flex-1" onClick={onClose} disabled={submitting}>Cancelar</Button>
+        <Button variant="primary" className="flex-1" onClick={handleConfirm} loading={submitting}>
+          {submitting ? 'Aplicando…' : '✅ Confirmar'}
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export default function SuperAdminTenantDetail() {
@@ -166,6 +244,10 @@ export default function SuperAdminTenantDetail() {
   const [changingPlan,   setChangingPlan]   = useState(false);
   const [changingStatus, setChangingStatus] = useState(false);
   const [modules, setModules] = useState<Record<string, boolean>>({});
+  // Hotfix #219 — Administración de período
+  const [extendConfirm, setExtendConfirm] = useState<ExtendConfirmState | null>(null);
+  const [customDays, setCustomDays]     = useState('');
+  const [customError, setCustomError]   = useState('');
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['superadmin', 'tenant-detail', id],
@@ -194,6 +276,10 @@ export default function SuperAdminTenantDetail() {
 
   const tenant  = data?.tenant;
   const kpis    = data?.kpis ?? {};
+  // Hotfix #219: suscripción REAL del tenant (include subscriptions del /detail) —
+  // NO plan_config: cierra el gap de observabilidad de la auditoría (el KPI MRR
+  // usa plan_config; aquí se muestra lo que la sub dice).
+  const sub = tenant?.subscriptions;
 
   // Cargar módulos premium desde settings del tenant
   useEffect(() => {
@@ -319,6 +405,31 @@ export default function SuperAdminTenantDetail() {
 
   const isSuspended = tenant.status === 'SUSPENDED' || tenant.status === 'CANCELLED';
 
+  // Hotfix #219: la sección de período SOLO existe para tenants operables —
+  // CANCELLED/archived los rechaza el backend (400); la UI no ofrece botones
+  // que van a fallar.
+  const periodAdminVisible = tenant.status !== 'CANCELLED' && !tenant.isArchived;
+
+  function requestExtend(days: number) {
+    setCustomError('');
+    setExtendConfirm({ days, isTrialRestart: false });
+  }
+
+  function requestTrialRestart() {
+    setCustomError('');
+    setExtendConfirm({ days: 7, isTrialRestart: true });
+  }
+
+  function requestCustomExtend() {
+    const n = Number(customDays);
+    if (!Number.isInteger(n) || n < 1 || n > 90) {
+      setCustomError('Los días deben ser un entero entre 1 y 90');
+      return; // validación visible SIN llamada
+    }
+    setCustomError('');
+    setExtendConfirm({ days: n, isTrialRestart: false });
+  }
+
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 pb-20">
       {showPayModal && (
@@ -327,6 +438,15 @@ export default function SuperAdminTenantDetail() {
           tenantName={tenant.name}
           plan={tenant.plan}
           onClose={() => setShowPayModal(false)}
+        />
+      )}
+      {extendConfirm && (
+        <ExtendPeriodModal
+          tenantId={id!}
+          tenantName={tenant.name}
+          currentPeriodEnd={sub?.currentPeriodEnd}
+          state={extendConfirm}
+          onClose={() => setExtendConfirm(null)}
         />
       )}
 
@@ -608,7 +728,76 @@ export default function SuperAdminTenantDetail() {
         )}
       </div>
 
-      {/* ══ BLOQUE 7 — Notas internas ════════════════════════════════════════ */}
+      {/* ══ BLOQUE 6.5 — Administración de período (Hotfix #219) ═════════════════ */}
+      {periodAdminVisible && (
+        <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-5">
+          <h2 className="text-sm font-semibold text-gray-300 flex items-center gap-2 mb-4">
+            <CalendarDays className="w-4 h-4 text-brand-400" />Administración de período
+            <span className="text-xs text-gray-600 font-normal ml-1">Suscripción real · queda en auditoría (EXTEND_PERIOD)</span>
+          </h2>
+
+          {/* (a) Datos REALES de la suscripción (NO plan_config — gap de la auditoría) */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            {[
+              { label: 'Plan (suscripción)', value: sub ? String(sub.plan).toUpperCase() : '—' },
+              { label: 'Precio real',        value: sub?.priceCLP != null ? `${fmtCLP(sub.priceCLP)}/mes` : '—' },
+              { label: 'Estado suscripción', value: sub?.status ?? '—' },
+              { label: 'Período hasta',      value: fmtDate(sub?.currentPeriodEnd, { day: '2-digit', month: 'long', year: 'numeric' }) },
+            ].map(c => (
+              <div key={c.label} className="bg-gray-950 border border-white/10 rounded-xl p-3">
+                <p className="text-[11px] text-gray-500 uppercase tracking-wide mb-1">{c.label}</p>
+                <p className="text-sm font-bold text-white">{c.value}</p>
+              </div>
+            ))}
+          </div>
+
+          {sub ? (
+            <>
+              {/* (b) Extensión rápida + custom 1-90 */}
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                <span className="text-xs text-gray-500 mr-1">Extender:</span>
+                {[7, 14, 30].map(d => (
+                  <Button key={d} variant="secondary" size="sm" onClick={() => requestExtend(d)}>
+                    <Plus className="w-3.5 h-3.5" />+{d} días
+                  </Button>
+                ))}
+                <div className="flex items-center gap-2 ml-2">
+                  <input
+                    type="number" min={1} max={90}
+                    value={customDays}
+                    onChange={e => { setCustomDays(e.target.value); setCustomError(''); }}
+                    placeholder="1–90"
+                    className="w-24 bg-gray-950 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-gray-200 placeholder:text-gray-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
+                  />
+                  <Button variant="primary" size="sm" onClick={requestCustomExtend}>
+                    <Hourglass className="w-3.5 h-3.5" />Extender
+                  </Button>
+                </div>
+              </div>
+              {customError && (
+                <p className="text-xs text-rose-400 mb-3 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0" />{customError}
+                </p>
+              )}
+
+              {/* (c) Acción rápida demo/prospecto (política del ADN: trial desde la entrega) */}
+              <div className="flex flex-wrap items-center gap-3">
+                <Button variant="primary" size="sm" onClick={requestTrialRestart} className="!bg-amber-600 hover:!bg-amber-700">
+                  <RefreshCw className="w-3.5 h-3.5" />Reiniciar trial (7 días)
+                </Button>
+                <span className="text-xs text-gray-600">Cuentas demo/prospecto — el trial corre desde la entrega al cliente</span>
+              </div>
+            </>
+          ) : (
+            <p className="text-xs text-gray-500 flex items-center gap-1.5">
+              <AlertTriangle className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+              Tenant sin suscripción — no hay período que extender (el backend rechazaría la operación).
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* ══ BLOQUE 7 — Notas internas (Hotfix #219: sección de período arriba) ══ */}
       <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-5">
         <h2 className="text-sm font-semibold text-gray-300 flex items-center gap-2 mb-4">
           <FileText className="w-4 h-4 text-amber-400" />Notas internas del SuperAdmin

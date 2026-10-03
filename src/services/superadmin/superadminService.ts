@@ -11,7 +11,14 @@ async function saFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${SA_API}${path}`, { ...init, headers: saHeaders() });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error || err?.message || `HTTP ${res.status}`);
+    // Hotfix #219 (lección #218): propagar status y retryAfter del 429 para
+    // que la UI pueda mostrar "reintenta en {N}s" — el mensaje solo no basta.
+    const e = new Error(err?.error || err?.message || `HTTP ${res.status}`) as Error & {
+      status?: number; retryAfter?: number;
+    };
+    e.status = res.status;
+    if (err?.retryAfter != null) e.retryAfter = Number(err.retryAfter);
+    throw e;
   }
   const body = await res.json();
   return (body?.data ?? body) as T;
@@ -48,6 +55,14 @@ export interface Subscription {
   status: string;
   currentPeriodEnd: string;
   flowSubscriptionId?: string | null;
+}
+
+/** Respuesta del endpoint PATCH /superadmin/tenants/:id/extend-period (Hotfix #208) */
+export interface ExtendPeriodResult {
+  ok:               boolean;
+  newPeriodEnd:     string;
+  previousPeriodEnd: string | null;
+  plan:             string;
 }
 
 export interface SuperAdminMetrics {
@@ -205,6 +220,12 @@ const superadminService = {
   }),
   extendTrial:    (id: string, days: number) => saFetch<{ newTrialEndsAt: string }>(`/superadmin/tenants/${id}/extend-trial`, {
     method: 'PUT',
+    body: JSON.stringify({ days }),
+  }),
+  // Hotfix #219: prórroga de período de SUSCRIPCIÓN (cortesía, sin cobro) sobre
+  // el endpoint oficial del #208 — audit EXTEND_PERIOD, base = max(now, periodEnd).
+  extendPeriod:   (id: string, days: number) => saFetch<ExtendPeriodResult>(`/superadmin/tenants/${id}/extend-period`, {
+    method: 'PATCH',
     body: JSON.stringify({ days }),
   }),
 

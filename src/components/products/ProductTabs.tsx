@@ -25,11 +25,11 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({
   stationCount = 0,
 }) => {
   // ═══════════════════════════════════════════════════════════════
-  // SOFT-HIDE: Módulo de Modificadores desactivado temporalmente.
-  // El negocio decidió no usar modificadores por ahora.
-  // Para reactivar: cambiar a `true` y la pestaña volverá a aparecer.
+  // F1a PROYECTO MODIFICADORES: pestaña reactivada con backend de grupos
+  // tipo Rappi (modifier_groups / modifier_options / product_modifier_groups).
+  // Para desactivar: cambiar a `false` y la pestaña desaparecerá.
   // ═══════════════════════════════════════════════════════════════
-  const MODIFIERS_ENABLED = false;
+  const MODIFIERS_ENABLED = true;
 
   const tabs = [
     {

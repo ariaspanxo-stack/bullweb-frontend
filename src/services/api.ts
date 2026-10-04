@@ -376,26 +376,106 @@ export const modifiersApi = {
     return handleResponse(response);
   },
 
-  // Alias para compatibilidad con Products.tsx (que lo usaba vacío antes)
+  // ── F1a PROYECTO MODIFICADORES: grupos tipo Rappi (2 niveles) ──────────────
+  // GET/POST /menu/modifier-groups, GET/PUT/DELETE /menu/modifier-groups/:id,
+  // PUT /menu/products/:id/modifier-groups — opciones via PUT del grupo (TX).
   getAllGroups: async () => {
-    const response = await fetch(`${API_BASE_URL}/menu/modifiers`, {
+    const response = await fetch(`${API_BASE_URL}/menu/modifier-groups`, {
       headers: getAuthHeaders()
     });
     const data = await handleResponse<any[]>(response);
-    // Mapear cada modificador plano como un 'grupo con una opción'
-    return (Array.isArray(data) ? data : (data as any)?.data ?? []).map((m: any) => ({
-      id: m.id,
-      name: m.name,
-      description: m.description ?? '',
-      selectionType: m.type === 'SINGLE' ? 'single' : 'multiple',
-      isRequired: false,
-      minSelections: 0,
-      maxSelections: m.type === 'SINGLE' ? 1 : 10,
-      options: Array.isArray(m.options)
-        ? m.options.map((o: any) => ({ id: o.id, name: o.name, priceAdjustment: o.price ?? o.priceAdjustment ?? 0, isDefault: o.isDefault ?? false }))
-        : [{ id: m.id, name: m.name, priceAdjustment: m.price ?? 0, isDefault: false }],
-      productIds: Array.isArray(m.productIds) ? m.productIds : [],
+    return (Array.isArray(data) ? data : (data as any)?.data ?? []).map((g: any) => ({
+      id: g.id,
+      name: g.name,
+      description: g.description ?? '',
+      selectionType: g.selectionType,
+      isRequired: g.isRequired ?? false,
+      minSelections: g.minSelections ?? 0,
+      maxSelections: g.maxSelections ?? 1,
+      sortOrder: g.sortOrder ?? 0,
+      status: g.status ?? 'active',
+      createdAt: g.createdAt,
+      updatedAt: g.updatedAt,
+      options: (g.options ?? []).map((o: any) => ({
+        id: o.id,
+        name: o.name,
+        priceAdjustment: o.priceAdjustment ?? 0,
+        isDefault: o.isDefault ?? false,
+        status: o.status ?? 'active',
+      })),
+      productIds: g.productIds ?? [],
     }));
+  },
+
+  createGroup: async (data: any) => {
+    const response = await fetch(`${API_BASE_URL}/menu/modifier-groups`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(response);
+  },
+
+  updateGroup: async (id: string, data: any) => {
+    const response = await fetch(`${API_BASE_URL}/menu/modifier-groups/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(response);
+  },
+
+  deleteGroup: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/menu/modifier-groups/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+  },
+
+  // Opciones: gestionadas vía PUT del grupo (reemplazo de options en TX) — diseño F1a
+  createOption: async (groupId: string, data: any) => {
+    const group: any = await modifiersApi.getGroupForSync(groupId);
+    const updated: any = await modifiersApi.updateGroup(groupId, {
+      options: [...(group.options ?? []), { ...data, sortOrder: (group.options ?? []).length }]
+    });
+    const newOption = (updated.options ?? []).find(
+      (o: any) => !(group.options ?? []).some((p: any) => p.id === o.id)
+    );
+    return newOption ?? updated.options[updated.options.length - 1];
+  },
+
+  updateOption: async (groupId: string, optionId: string, data: any) => {
+    const group: any = await modifiersApi.getGroupForSync(groupId);
+    const updated: any = await modifiersApi.updateGroup(groupId, {
+      options: (group.options ?? []).map((o: any) =>
+        o.id === optionId ? { ...o, ...data } : o
+      )
+    });
+    return (updated.options ?? []).find((o: any) => o.id === optionId);
+  },
+
+  deleteOption: async (groupId: string, optionId: string) => {
+    const group: any = await modifiersApi.getGroupForSync(groupId);
+    return modifiersApi.updateGroup(groupId, {
+      options: (group.options ?? []).filter((o: any) => o.id !== optionId)
+    });
+  },
+
+  getGroupForSync: async (groupId: string): Promise<any> => {
+    const response = await fetch(`${API_BASE_URL}/menu/modifier-groups/${groupId}`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+  },
+
+  syncProductGroups: async (productId: string, groupIds: string[]) => {
+    const response = await fetch(`${API_BASE_URL}/menu/products/${productId}/modifier-groups`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ groupIds })
+    });
+    return handleResponse(response);
   },
 };
 

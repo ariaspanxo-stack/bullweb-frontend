@@ -6,11 +6,24 @@ import type { Product, Table } from '@/types';
 // TIPOS
 // ============================================================================
 
+// ── F2 PROYECTO MODIFICADORES ──
+// Modificador seleccionado desde los grupos nuevos (modifier_groups/options).
+// En el payload de la orden se mapea a { modifierId, optionId, name, price, quantity }.
+export interface CartModifier {
+  groupId: string;
+  groupName: string;
+  optionId: string;
+  optionName: string;
+  price: number; // priceAdjustment desde la BD (el server re-verifica)
+  quantity: number;
+}
+
 export interface CartItem {
   id: string; // temporal ID
   product: Product;
   quantity: number;
-  modifiers: string[];
+  // F2: puede ser string[] (legacy, tags simples) o CartModifier[] (grupos nuevos)
+  modifiers: (string | CartModifier)[];
   notes?: string;
   subtotal: number;
 }
@@ -34,16 +47,25 @@ export interface ActivePromotion {
  *
  * Esto garantiza que el total mostrado en el POS coincida con el cobrado.
  *
- * NOTA: En este store del POS los `modifiers` son strings sin precio propio,
- * por lo que `basePrice = product.price` (equivale a `modifierPriceTotal = 0`
- * en el backend).
+ * NOTA (F2): los items pueden traer `modifiers` estructurados (CartModifier[]) con
+ * priceAdjustment propio. El basePrice replica la fórmula del backend:
+ * unitPrice = product.price + Σ(priceAdjustment × quantity) — misma regla de
+ * _createOrderTx, y las promos se aplican sobre ese basePrice.
  */
+export function _cartModifiersTotal(modifiers: (string | CartModifier)[]): number {
+  return modifiers.reduce((sum, m) => {
+    if (typeof m === 'string') return sum;
+    return sum + (Number(m.price) || 0) * (m.quantity || 1);
+  }, 0);
+}
+
 function _calculateItemSubtotal(
   product: Product,
   quantity: number,
-  activePromotions: ActivePromotion[]
+  activePromotions: ActivePromotion[],
+  modifiers: (string | CartModifier)[] = []
 ): number {
-  const basePrice = product.price;
+  const basePrice = product.price + _cartModifiersTotal(modifiers);
   console.log('[DEBUG PROMO] Evaluando product.id:', product.id, '| Array activePromotions:', JSON.stringify(activePromotions));
   const promo = activePromotions.find((p) => p.productIds?.includes(product.id));
 
@@ -98,7 +120,13 @@ interface PosState {
 
   // Items del carrito
   cartItems: CartItem[];
-  addToCart: (product: Product, quantity: number, modifiers?: string[], notes?: string) => void;
+  // F2: firma de combinación (productId + opciones ordenadas + notes)
+  _cartFingerprint: (
+    product: Product | { id: string },
+    modifiers: (string | CartModifier)[],
+    notes?: string
+  ) => string;
+  addToCart: (product: Product, quantity: number, modifiers?: (string | CartModifier)[], notes?: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
   removeFromCart: (itemId: string) => void;
   clearCart: () => void;
@@ -144,14 +172,31 @@ export const usePosStore = create<PosState>()(
   // Items del carrito
   cartItems: [],
   
+  // ── F2: firma de combinación del carrito ──
+  // El mismo producto con distinta combinación de opciones (ej: Doble+tocino vs
+  // Simple) son DOS líneas separadas, no una acumulada (el bug latente de la carta,
+  // aplicado aquí también). La firma es determinística: productId + optionIds
+  // ordenados + cantidad por opción + notes.
+  _cartFingerprint(product: Product | { id: string }, modifiers: (string | CartModifier)[], notes?: string): string {
+    const stringMods = modifiers
+      .filter((m): m is string => typeof m === 'string')
+      .sort()
+      .join('|');
+    const structMods = modifiers
+      .filter((m): m is CartModifier => typeof m !== 'string')
+      .map((m) => `${m.optionId}x${m.quantity || 1}`)
+      .sort()
+      .join('|');
+    return [product.id, stringMods, structMods, notes ?? ''].join('::');
+  },
+
   addToCart: (product, quantity, modifiers = [], notes) => {
     const cartItems = get().cartItems;
-    
-    // Buscar si existe un item idéntico (mismo producto y mismos modificadores)
+    const fingerprint = get()._cartFingerprint(product, modifiers, notes);
+
+    // Buscar si existe un item idéntico (mismo producto y MISMA combinación de opciones)
     const existingItem = cartItems.find(
-      item => item.product.id === product.id && 
-      JSON.stringify(item.modifiers.sort()) === JSON.stringify(modifiers.sort()) &&
-      item.notes === notes
+      item => get()._cartFingerprint(item.product, item.modifiers, item.notes) === fingerprint
     );
 
     if (existingItem) {
@@ -162,7 +207,7 @@ export const usePosStore = create<PosState>()(
             ? {
                 ...item,
                 quantity: item.quantity + quantity,
-                subtotal: _calculateItemSubtotal(item.product, item.quantity + quantity, get().activePromotions)
+                subtotal: _calculateItemSubtotal(item.product, item.quantity + quantity, get().activePromotions, item.modifiers)
               }
             : item
         )
@@ -175,7 +220,7 @@ export const usePosStore = create<PosState>()(
         quantity,
         modifiers,
         notes,
-        subtotal: _calculateItemSubtotal(product, quantity, get().activePromotions)
+        subtotal: _calculateItemSubtotal(product, quantity, get().activePromotions, modifiers)
       };
       set({ cartItems: [...cartItems, newItem] });
     }
@@ -196,7 +241,7 @@ export const usePosStore = create<PosState>()(
           ? {
               ...item,
               quantity,
-              subtotal: _calculateItemSubtotal(item.product, quantity, activePromotions)
+              subtotal: _calculateItemSubtotal(item.product, quantity, activePromotions, item.modifiers)
             }
           : item
       )
@@ -243,7 +288,7 @@ export const usePosStore = create<PosState>()(
     set({
       cartItems: get().cartItems.map(item => ({
         ...item,
-        subtotal: _calculateItemSubtotal(item.product, item.quantity, activePromotions)
+        subtotal: _calculateItemSubtotal(item.product, item.quantity, activePromotions, item.modifiers)
       }))
     });
     get().calculateTotals();

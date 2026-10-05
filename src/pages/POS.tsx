@@ -17,6 +17,10 @@ import {
 import tablesService from '@/services/tablesService';
 import { menuService } from '@/services/menuService';
 import { posService } from '@/services/posService';
+import { modifiersApi } from '@/services/api';
+import ModifierModal from '@/components/pos/ModifierModal';
+import type { ModifierGroup } from '@/types/modifier.types';
+import type { CartModifier } from '@/store/posStore';
 import { usePosStore } from '@/store/posStore';
 import { toast } from 'react-hot-toast';
 import Spinner from '@/components/ui/Spinner';
@@ -37,6 +41,9 @@ export default function POS() {
   // Estados para configuración de mesa
   const [guestCount, setGuestCount] = useState<number>(0);
   const [selectedWaiter, setSelectedWaiter] = useState<string>('');
+
+  // ── F2 PROYECTO MODIFICADORES: modal de personalización ──
+  const [pendingModifierProduct, setPendingModifierProduct] = useState<any | null>(null);
 
   // ── Store global del POS (reemplaza al antiguo carrito local useState) ──
   // El store centraliza carrito, promociones y cálculo de totales.
@@ -65,6 +72,20 @@ export default function POS() {
     queryFn: () => posService.getOrders({ status: 'PENDING' }),
     enabled: mode !== 'mesas',
   });
+
+  // ── F2: grupos de modificadores nuevos (F1a) — se filtran client-side por
+  // asociación producto↔grupo (productIds planos del shape GET /menu/modifier-groups)
+  const { data: modifierGroups = [] } = useQuery({
+    queryKey: ['modifier-groups'],
+    queryFn: () => modifiersApi.getAllGroups(),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Grupos activos asociados a un producto dado
+  const groupsForProduct = (product: any): ModifierGroup[] =>
+    (modifierGroups as ModifierGroup[]).filter(
+      (g) => g.status === 'active' && g.productIds?.includes(product.id)
+    );
 
   // Query para obtener empleados/garzones
   const { data: employees = [] } = useQuery({
@@ -139,9 +160,35 @@ export default function POS() {
 
   // Wrappers del carrito sobre el store global (usePosStore).
   // Mantienen la misma firma que usaba la UI para no romper los onClick.
-  const addToCart = (product: any) => {
-    storeAddToCart(product, 1);
-    toast.success(`${product.name} agregado`);
+  const addToCart = (product: any, cartModifiers: CartModifier[] = []) => {
+    storeAddToCart(product, 1, cartModifiers);
+    const combo = cartModifiers.map((m) => m.optionName).join(', ');
+    toast.success(`${product.name}${combo ? ` (${combo})` : ''} agregado`);
+  };
+
+  // F2: click en producto — si tiene grupos asociados abre el modal (para elegir
+  // tamaño/extras y ver el precio total en vivo); si no, flujo directo de siempre.
+  const handleProductClick = (product: any) => {
+    if (groupsForProduct(product).length > 0) {
+      setPendingModifierProduct(product);
+    } else {
+      addToCart(product);
+    }
+  };
+
+  // F2: confirmación del modal → CartModifier[] al carrito (línea por combinación)
+  const handleModifiersConfirm = (selected: any[]) => {
+    if (!pendingModifierProduct) return;
+    const cartModifiers: CartModifier[] = selected.map((s) => ({
+      groupId: s.groupId,
+      groupName: s.groupName,
+      optionId: s.optionId,
+      optionName: s.optionName,
+      price: s.priceAdjustment ?? 0,
+      quantity: 1,
+    }));
+    addToCart(pendingModifierProduct, cartModifiers);
+    setPendingModifierProduct(null);
   };
 
   const updateQuantity = (itemId: string, delta: number) => {
@@ -273,6 +320,7 @@ export default function POS() {
   }
 
   return (
+    <>
     <div className="flex flex-col h-screen bg-zinc-950">
       {/* ZONA A: Selectores de Flujo */}
       <div className="flex gap-4 p-6 bg-zinc-900/50 border-b border-zinc-800">
@@ -600,7 +648,7 @@ export default function POS() {
                     filteredProducts.map((product: any) => (
                       <button
                         key={product.id}
-                        onClick={() => addToCart(product)}
+                        onClick={() => handleProductClick(product)}
                         className="relative bg-gradient-to-br from-zinc-800 to-zinc-900 border border-zinc-700 
                                  rounded-xl p-4 text-left transition-all duration-300 
                                  hover:scale-105 hover:shadow-lg hover:shadow-blue-500/20 
@@ -645,8 +693,30 @@ ${formatCurrency(product.price ?? 0)}
                               <div className="text-sm font-semibold text-zinc-100 truncate">
                                 {item.product.name}
                               </div>
+                              {/* F2: combinación de modificadores visible en la línea */}
+                              {(item.modifiers ?? []).filter((m: any) => typeof m !== 'string').length > 0 && (
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {(item.modifiers ?? [])
+                                    .filter((m: any) => typeof m !== 'string')
+                                    .map((m: any, idx: number) => (
+                                      <span
+                                        key={idx}
+                                        className="inline-block px-2 py-0.5 bg-amber-500/15 text-amber-300 text-[11px] rounded border border-amber-500/30"
+                                      >
+                                        {m.optionName}
+                                        {m.price ? ` +${formatCurrency(m.price)}` : ''}
+                                      </span>
+                                    ))}
+                                </div>
+                              )}
                               <div className="text-xs text-zinc-400">
-${formatCurrency(item.product.price)} c/u
+                                ${formatCurrency(
+                                  item.product.price +
+                                  (item.modifiers ?? []).reduce(
+                                    (s: number, m: any) => s + (typeof m !== 'string' ? (m.price || 0) * (m.quantity || 1) : 0),
+                                    0
+                                  )
+                                )} c/u
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -759,5 +829,15 @@ ${formatCurrency(total)}
         </div>
       </div>
     </div>
+
+    {/* F2 PROYECTO MODIFICADORES — modal de personalización (grupos nuevos F1a) */}
+    <ModifierModal
+      isOpen={!!pendingModifierProduct}
+      onClose={() => setPendingModifierProduct(null)}
+      product={pendingModifierProduct}
+      modifierGroups={groupsForProduct(pendingModifierProduct ?? {})}
+      onConfirm={handleModifiersConfirm}
+    />
+    </>
   );
 }

@@ -93,16 +93,18 @@ export default function OrderCart({ onCheckout, onApplyDiscount }: OrderCartProp
                   <p className="text-xs text-gray-500 mt-0.5">
                     {formatCurrency(item.product.price)} × {item.quantity}
                   </p>
-                  
-                  {/* Modificadores */}
+
+                  {/* Modificadores — F2: string[] legacy o CartModifier[] (grupos nuevos) */}
                   {item.modifiers.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-1">
                       {item.modifiers.map((modifier, idx) => (
-                        <span 
+                        <span
                           key={idx}
                           className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded"
                         >
-                          {modifier}
+                          {typeof modifier === 'string'
+                            ? modifier
+                            : `${modifier.optionName}${modifier.price ? ` +${formatCurrency(modifier.price)}` : ''}`}
                         </span>
                       ))}
                     </div>

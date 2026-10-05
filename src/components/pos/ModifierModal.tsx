@@ -24,8 +24,13 @@ const ModifierModal: React.FC<ModifierModalProps> = ({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   // Obtener grupos de modificadores del producto
+  // F2: doble match — (a) shape nuevo F1a: group.productIds incluye product.id
+  // (b) shape legacy: product.modifierGroups con groupId/id. Los grupos inactivos
+  // no se ofrecen en POS.
   const productModifierGroups = modifierGroups.filter(group =>
-    product.modifierGroups?.some(pm => pm.groupId === group.id || pm.id === group.id)
+    group.status === 'active' &&
+    (group.productIds?.includes(product.id) ||
+      (product as any).modifierGroups?.some((pm: any) => pm.groupId === group.id || pm.id === group.id))
   );
 
   useEffect(() => {

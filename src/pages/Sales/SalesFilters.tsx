@@ -12,9 +12,10 @@ const tomorrowStr = () => { const d = new Date(); d.setDate(d.getDate() + 1); re
 
 export const SalesFilters = ({ onFilterChange }: Props) => {
   const [dateMode, setDateMode] = useState<'diario' | 'semanal' | 'mensual' | 'rango'>('diario');
-  const [day, setDay] = useState(new Date().getDate());
+  // Hotfix #222: estado crudo string en edición (sin parse/clamp en vivo — el input muestra EXACTAMENTE lo que se teclea)
+  const [day, setDay] = useState(String(new Date().getDate()));
   const [month, setMonth] = useState(new Date().getMonth() + 1);
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [year, setYear] = useState(String(new Date().getFullYear()));
   // Estado para modo Rango
   const [rangeFrom,     setRangeFrom]     = useState(todayStr);
   const [rangeFromTime, setRangeFromTime] = useState('00:00');
@@ -53,30 +54,44 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
   }, []);
 
   // FUNCIÓN PARA APLICAR FILTROS MANUALMENTE
+  // Hotfix #222: normalización SOLO al aplicar (fallback HOY + clamp por mes real). El estado crudo NO se toca.
   const handleApplyFilters = () => {
     let startDate: Date;
     let endDate: Date;
 
+    // Normalización de día/año: vacío/NaN → HOY; día clampeado al último día real del mes
+    const now = new Date();
+    const y = parseInt(String(year).trim(), 10);
+    const m = month;
+    const normY = Number.isFinite(y) ? y : now.getFullYear();
+    const parsedD = parseInt(String(day).trim(), 10);
+    const lastDayOfMonth = new Date(normY, m, 0).getDate();
+    const normD = Number.isFinite(parsedD) ? Math.min(31, Math.max(1, parsedD)) : now.getDate();
+    const finalD = Math.min(normD, lastDayOfMonth);
+
     if (dateMode === 'rango') {
+      // Dates vacíos al aplicar → fallback HOY (fin = fin de hoy, inicio = inicio de hoy)
+      const fromStr = rangeFrom || todayStr();
+      const toStr = rangeTo || todayStr();
       const [fH, fMin] = rangeFromTime.split(':').map(Number);
       const [tH, tMin] = rangeToTime.split(':').map(Number);
-      startDate = new Date(`${rangeFrom}T${rangeFromTime}:00`);
-      endDate   = new Date(`${rangeTo}T${rangeToTime}:59`);
+      startDate = new Date(`${fromStr}T${rangeFromTime}:00`);
+      endDate   = new Date(`${toStr}T${rangeToTime}:59`);
       // Ajustar horas manualmente para evitar problemas de timezone local
       startDate.setHours(fH, fMin, 0, 0);
       endDate.setHours(tH, tMin, 59, 999);
     } else if (dateMode === 'semanal') {
-      const base = new Date(year, month - 1, day);
+      const base = new Date(normY, m - 1, finalD);
       const dow = base.getDay();
       const mon = new Date(base); mon.setDate(base.getDate() - ((dow + 6) % 7)); mon.setHours(0, 0, 0, 0);
       const sun = new Date(mon);  sun.setDate(mon.getDate() + 6); sun.setHours(23, 59, 59, 999);
       startDate = mon; endDate = sun;
     } else if (dateMode === 'mensual') {
-      startDate = new Date(year, month - 1, 1, 0, 0, 0);
-      endDate   = new Date(year, month, 0, 23, 59, 59);
+      startDate = new Date(normY, m - 1, 1, 0, 0, 0);
+      endDate   = new Date(normY, m, 0, 23, 59, 59);
     } else {
-      startDate = new Date(year, month - 1, day, 0, 0, 0);
-      endDate   = new Date(year, month - 1, day, 23, 59, 59);
+      startDate = new Date(normY, m - 1, finalD, 0, 0, 0);
+      endDate   = new Date(normY, m - 1, finalD, 23, 59, 59);
     }
 
     const filters: Partial<Filters> = {
@@ -110,9 +125,9 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
 
   const handleReset = () => {
     const today = new Date();
-    setDay(today.getDate());
+    setDay(String(today.getDate()));
     setMonth(today.getMonth() + 1);
-    setYear(today.getFullYear());
+    setYear(String(today.getFullYear()));
     setShift('');
     setStatus('');
     setType('');
@@ -133,9 +148,9 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
   // Aplicar filtros de hoy al cargar (SOLO UNA VEZ)
   const handleTodayClick = () => {
     const today = new Date();
-    setDay(today.getDate());
+    setDay(String(today.getDate()));
     setMonth(today.getMonth() + 1);
-    setYear(today.getFullYear());
+    setYear(String(today.getFullYear()));
     
     const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0);
     const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
@@ -240,11 +255,11 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
             <div className="flex items-center gap-2">
               {dateMode !== 'mensual' && (
                 <input
-                  type="number"
-                  min="1"
-                  max="31"
+                  type="text"
+                  inputMode="numeric"
+                  placeholder={String(new Date().getDate())}
                   value={day}
-                  onChange={(e) => setDay(Math.min(31, Math.max(1, parseInt(e.target.value) || 1)))}
+                  onChange={(e) => setDay(e.target.value)}
                   className="w-16 px-2 py-2 bg-gray-50 border border-gray-200 rounded text-sm text-center cursor-pointer hover:bg-gray-100"
                 />
               )}
@@ -267,11 +282,11 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
                 <option value="12">dic</option>
               </select>
               <input
-                type="number"
-                min="2020"
-                max="2030"
+                type="text"
+                inputMode="numeric"
+                placeholder={String(new Date().getFullYear())}
                 value={year}
-                onChange={(e) => setYear(parseInt(e.target.value) || 2026)}
+                onChange={(e) => setYear(e.target.value)}
                 className="w-20 px-2 py-2 bg-gray-50 border border-gray-200 rounded text-sm text-center cursor-pointer hover:bg-gray-100"
               />
             </div>

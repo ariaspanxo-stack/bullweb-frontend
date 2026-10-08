@@ -28,7 +28,7 @@ const TODO_UNLOCKS: string[] = [
   'Boletas y Facturación electrónica SII',
   'Pedidos desde la carta QR',
   'KDS — pantalla de cocina',
-  'App Mesero con PIN',
+  // HOTFIX #230: 'App Mesero con PIN' salió de la lista — incluida en BASICO (#229).
   'Inventario y alertas de stock',
   'Fidelización, Campañas y Cupones',
   'Mapeo de Delivery (Uber Eats, PedidosYa)',

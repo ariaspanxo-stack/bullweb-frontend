@@ -298,7 +298,10 @@ function AppContent() {
               <Route path="printers"        element={<PrintersPage />} />
               <Route path="payment-methods" element={<PaymentMethodsPage />} />
               <Route path="propina"         element={<TipSettingsPanel />} />
-              <Route path="mesero-app"      element={<PlanGuard><MeseroAppPage /></PlanGuard>} />
+              {/* HOTFIX #230: App Mesero incluida en BASICO — sin PlanGuard (la
+                  visibilidad del ítem la resuelve hasFeature('waiter') en el
+                  Sidebar; el gate backend ya pasó en #229). */}
+              <Route path="mesero-app"      element={<MeseroAppPage />} />
               {/* ── Rutas exclusivas SuperAdmin ─────────────────────────────────── */}
               <Route path="audit"           element={<PermissionGuard permission="audit.view"><AuditLogPanel /></PermissionGuard>} />
               <Route path="branches"        element={<SuperAdminRoute><Branches /></SuperAdminRoute>} />

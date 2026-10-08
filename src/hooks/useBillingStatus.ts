@@ -29,6 +29,9 @@ export interface BillingStatusData {
   trialEndsAt?:  string | null;
   /** Hotfix #199-1: precio EFECTIVO de la ficha (DISPLAY = COBRO). */
   priceCLP?:     number;
+  /** HOTFIX #230: features del plan EFECTIVO (plan_config via getStatus) —
+   *  las consume hasFeature() de usePlan. null si el backend aún no las sirve. */
+  features?:     string[] | null;
   subscription?: {
     flowSubscriptionId?: string | null;
     plan?:               string | null;

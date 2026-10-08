@@ -82,6 +82,8 @@ interface MenuItem {
   superAdminOnly?: boolean;
   /** GATING FASE C — módulo exclusivo del plan TODO ($34.000). */
   planRequired?: 'TODO';
+  /** HOTFIX #230 — gate por feature de plan_config (hasFeature). Solo App Mesero. */
+  featureRequired?: string;
   /**
    * GATING FASE C (decisión #3) — el item BLOQUEADO-VISIBLE: con plan BASICO
    * el item NO se oculta, se muestra con candado 🔒 y lleva al PlanGuard
@@ -144,7 +146,9 @@ const menuSections: MenuSection[] = [
       // Apps de delivery (Uber Eats, PedidosYa, etc.) ocultas temporalmente del menú.
       // El acceso directo a Facturación SII (DTE) se mantiene en la sección "Análisis".
       // { name: 'Apps',         icon: Smartphone,        path: '/apps',             permission: 'apps.view'      },
-      { name: 'App Mesero',      icon: MonitorSmartphone, path: '/admin/mesero-app', permission: 'apps.view', badge: 'Nuevo', planRequired: 'TODO' },
+      // HOTFIX #230: App Mesero incluida en BASICO — gate por feature plan_config
+      // (hasFeature('waiter'), decisión #229) en vez del plan-string TODO.
+      { name: 'App Mesero',      icon: MonitorSmartphone, path: '/admin/mesero-app', permission: 'apps.view', badge: 'Nuevo', featureRequired: 'waiter' },
       { name: 'Mapeo Delivery',  icon: Truck,             path: '/delivery/mappings', permission: 'delivery.view', planRequired: 'TODO' },
       { name: 'Fidelización', icon: Heart,             path: '/campaigns',        permission: 'marketing.view', planRequired: 'TODO', visibleLocked: true },
       { name: 'Carta QR',    icon: QrCode,            path: '/carta-qr',         permission: 'marketing.view' },
@@ -311,11 +315,17 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   // ── GATING FASE C — el plan del tenant filtra los ítems TODO-only ──────────
   // Grandfathered (STARTER/PRO/ENTERPRISE/null → TODO) no notan nada.
-  const { isBasico } = usePlan();
+  // HOTFIX #230: además hasFeature — gate por feature de plan_config para los
+  // ítems migrados (SOLO App Mesero en este hotfix; el resto sigue plan-string).
+  const { isBasico, hasFeature } = usePlan();
 
   /** true si el plan del usuario permite el item (BASICO no ve planRequired:'TODO') */
-  const planAllows = (item: { planRequired?: 'TODO' }): boolean =>
-    !isBasico || item.planRequired !== 'TODO';
+  const planAllows = (item: { planRequired?: 'TODO'; featureRequired?: string }): boolean => {
+    // HOTFIX #230: item con gate por feature (plan_config) — visible si el plan
+    // incluye la feature (TODO/grandfathered siempre true por el fallback del hook).
+    if (item.featureRequired) return hasFeature(item.featureRequired);
+    return !isBasico || item.planRequired !== 'TODO';
+  };
 
   /** Filtra las secciones del menú según los permisos y el plan del usuario.
    *  Excepción vendedor (decisión #3): visibleLocked se mantiene con candado 🔒. */

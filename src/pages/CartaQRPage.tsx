@@ -299,8 +299,8 @@ export default function CartaQRPage() {
 
   // URL dinámica según slug + mesa seleccionada
   const baseCartaUrl = resolvedSlug
-    ? `${window.location.origin}/carta/${resolvedSlug}`
-    : `${window.location.origin}/carta`;
+    ? `https://app.bullwebchile.com/carta/${resolvedSlug}`
+    : `https://app.bullwebchile.com/carta`;
   const cartaUrl = selectedTable
     ? `${baseCartaUrl}?mesa=${selectedTable}`
     : baseCartaUrl;

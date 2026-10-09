@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import * as Sentry from '@sentry/react';
 import { useQrOrderStatus } from '../hooks/useQrOrderStatus';
 import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail, Instagram, Facebook, Globe, MessageCircle } from 'lucide-react';
@@ -779,6 +780,82 @@ function CartaFloatingCart({
         <span className="font-black">{fmtCLP(total)}</span>
       </button>
     </div>
+  );
+}
+
+// ── HOTFIX #239 — Barra flotante "Ver pedido" full-width, SIEMPRE visible ──
+// Causa raíz de la barra previa (#194): el div raíz de la carta lleva .bw-reveal
+// y, tras el reveal (#197 + red de seguridad #206), computa
+// transform: translateY(0) ≠ none → se vuelve containing block de los
+// position:fixed → la barra quedaba anclada al FINAL del documento (invisible
+// con cartas de 100+ productos). Fix 100% aditivo: esta barra se monta vía
+// portal en document.body (fuera de todo ancestro con transform) → fixed
+// vuelve a referirse al viewport → siempre visible. Reutiliza SIN recalcular:
+// el handler setShowCart del botón previo, totalCartQty/totalCartAmt, fmtCLP,
+// themeColor/darkenColor (tokens previos) y .safe-area-bottom (index.css).
+function CartaFloatingBar({
+  count,
+  total,
+  themeColor,
+  onClick,
+}: {
+  count:      number;
+  total:      number;
+  themeColor: string;
+  onClick:    () => void;
+}) {
+  // Pulso breve (1.5 s) cuando el contador INCREMENTA — state efímero con
+  // timeout; compara el count previo con el actual y limpia al desmontar.
+  const [pulse, setPulse] = useState(false);
+  const prevCount = useRef(count);
+  useEffect(() => {
+    let t = 0;
+    if (count > prevCount.current) {
+      setPulse(true);
+      t = window.setTimeout(() => setPulse(false), 1500);
+    }
+    prevCount.current = count;
+    return () => window.clearTimeout(t);
+  }, [count]);
+
+  if (count === 0) return null;
+
+  return createPortal(
+    <>
+      <style>{`
+        @keyframes bwFloatIn { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+        .bw-float-in { animation: bwFloatIn 0.3s ease-out; }
+        @keyframes bwBarPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+        .bw-bar-pulse { animation: bwBarPulse 0.75s ease-in-out 2; }
+      `}</style>
+      <div
+        className="lg:hidden fixed bottom-0 inset-x-0 z-[60] bw-float-in safe-area-bottom"
+        style={{
+          background: `linear-gradient(135deg, ${themeColor}, ${darkenColor(themeColor, 40)})`,
+          boxShadow: '0 -4px 20px rgba(0,0,0,0.18)',
+        }}
+      >
+        <button
+          onClick={onClick}
+          className="w-full flex items-center justify-between gap-3 px-5 py-4 active:scale-[0.99] transition-transform"
+          aria-label="Ver pedido"
+        >
+          <span className="flex items-center gap-2.5 min-w-0">
+            <span
+              key={count}
+              className={`bw-pop bw-badge-pulse bw-cart-badge w-7 h-7 rounded-full flex items-center justify-center text-sm font-black shrink-0 ${pulse ? 'bw-bar-pulse' : ''}`}
+              style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
+            >
+              {count}
+            </span>
+            <ShoppingCart className="w-4 h-4 shrink-0" />
+            <span className="font-bold truncate">Ver pedido</span>
+          </span>
+          <span className="font-black shrink-0">{fmtCLP(total)}</span>
+        </button>
+      </div>
+    </>,
+    document.body
   );
 }
 
@@ -1908,7 +1985,10 @@ export default function CartaDigital() {
       <div className="w-full flex flex-col lg:flex-row min-h-screen">
 
         {/* ── Columna izquierda: Productos ── */}
-        <div className="w-full lg:w-[65%] xl:w-[70%] p-4 md:p-6 space-y-4 bg-gray-50">
+        {/* HOTFIX #239 — pb-24 condicional cuando la barra flotante está
+            visible (carrito ≥ 1) para que no tape el último producto ni su
+            botón +; en desktop (sin barra) se restaura el padding base. */}
+        <div className={`w-full lg:w-[65%] xl:w-[70%] p-4 md:p-6 space-y-4 bg-gray-50 ${totalCartQty > 0 ? 'pb-24 lg:pb-6' : ''}`}>
 
         {/* Chips de filtro por etiqueta */}
         {availableTags.length > 0 && (
@@ -2184,6 +2264,20 @@ export default function CartaDigital() {
         />
       )}
       </div>
+
+      {/* HOTFIX #239 — barra flotante full-width SIEMPRE visible al agregar
+          ítems (portal a document.body: inmune al containing-block que el
+          reveal #197/#206 impone sobre los fixed dentro del árbol de la
+          carta). Reutiliza el handler setShowCart y los cálculos previos
+          (totalCartQty / totalCartAmt) — cero lógica nueva de pedido. */}
+      {!showCart && (
+        <CartaFloatingBar
+          count={totalCartQty}
+          total={totalCartAmt}
+          themeColor={themeColor}
+          onClick={() => setShowCart(true)}
+        />
+      )}
 
       {/* Cart Sheet */}
       {showCart && (

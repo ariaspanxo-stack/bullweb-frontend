@@ -7,7 +7,7 @@ import { usePlan } from '@/hooks/usePlan';
  *
  * Clon estructural de PermissionGuard (mismo contrato de guard de ruta), pero
  * el gate es el PLAN del tenant, no el permiso del usuario:
- *   - plan BASICO  → pantalla premium "Mejora a TODO" (el vendedor del upgrade).
+ *   - plan BASICO  → pantalla premium "Mejora a Full" (el vendedor del upgrade).
  *   - plan TODO / grandfathered (STARTER/PRO/ENTERPRISE/null) → guard
  *     TRANSPARENTE: no notan nada.
  *   - Mesas vive en el POS y desde el hotfix mesas-básico es parte del plan
@@ -54,10 +54,10 @@ export function PlanGuard({ children }: PlanGuardProps) {
             Plan Básico
           </p>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Mejora a TODO
+            Mejora a Full
           </h2>
           <p className="text-sm text-gray-500 leading-relaxed max-w-sm mx-auto">
-            Este módulo está incluido en el plan TODO. Desbloquéalo junto a todo
+            Este módulo está incluido en el plan Full. Desbloquéalo junto a todo
             el resto de BullWeb y lleva tu restaurante al siguiente nivel.
           </p>
         </div>
@@ -65,7 +65,7 @@ export function PlanGuard({ children }: PlanGuardProps) {
         {/* Lista de desbloqueos */}
         <div className="px-8 py-7">
           <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-4">
-            Con TODO desbloqueas
+            Con Full desbloqueas
           </p>
           <ul className="space-y-3">
             {TODO_UNLOCKS.map(feature => (
@@ -86,7 +86,7 @@ export function PlanGuard({ children }: PlanGuardProps) {
             className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gray-900 text-white text-sm font-bold hover:bg-gray-800 active:bg-gray-950 transition-colors"
           >
             <Sparkles className="w-4 h-4" />
-            Mejorar a TODO $34.000/mes
+            Mejorar a Full $34.000/mes
             <ArrowRight className="w-4 h-4" />
           </Link>
           <p className="mt-3 text-center text-[11px] text-gray-400">

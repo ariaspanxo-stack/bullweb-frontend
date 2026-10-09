@@ -7,6 +7,9 @@ console.log(__APP_VERSION__);
 import App from './App.tsx'
 import ErrorBoundary from './components/ErrorBoundary'
 import { applyBranding } from './utils/applyBranding'
+// #237 - FASE B: medicion APP-SIDE armada sin activar (placeholders PENDING
+// en src/lib/measurement.ts; con 'PENDING' MeasurementScripts no inyecta NADA).
+import MeasurementScripts from './components/MeasurementScripts'
 
 // ── Hotfix #202: auto-sanación de sesiones tras deploy ────────────────────
 // Un deploy reemplaza el build en el servidor; una sesión con el entry viejo
@@ -53,6 +56,8 @@ if (typeof window !== 'undefined') {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
+      {/* #237 - montaje condicional: null mientras los IDs sean 'PENDING' */}
+      <MeasurementScripts />
       <App />
     </ErrorBoundary>
   </StrictMode>,

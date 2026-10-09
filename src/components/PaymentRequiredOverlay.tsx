@@ -45,7 +45,7 @@ export default function PaymentRequiredOverlay() {
   const planRaw  = billingQ.data?.subscription?.plan ?? billingQ.data?.plan;
   // (P1-5) copy dinámico del plan (label amigable; fallback neutro).
   const planLabel = planRaw === 'BASICO' ? 'Básico'
-    : planRaw === 'TODO'   ? 'Todo'
+    : planRaw === 'TODO'   ? 'Full'
     : planRaw === 'PRO' || planRaw === 'ENTERPRISE' ? planRaw
     : planRaw ? planRaw.charAt(0).toUpperCase() + planRaw.slice(1).toLowerCase()
     : 'tu plan';

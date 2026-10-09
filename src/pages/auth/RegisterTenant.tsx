@@ -1,4 +1,4 @@
-import { useState }                        from 'react';
+import { useState, useEffect, useRef }     from 'react';
 import { useNavigate, Link }               from 'react-router-dom';
 import { useForm }                         from 'react-hook-form';
 import { zodResolver }                     from '@hookform/resolvers/zod';
@@ -10,6 +10,8 @@ import {
 import toast                               from 'react-hot-toast';
 import { useAuthStore }                    from '@/store/authStore';
 import api                                 from '@/services/api';
+// #237 - FASE B: medicion no-op (IDs 'PENDING' = console.debug, cero red).
+import { track, utmCapture }               from '@/lib/measurement';
 
 // ============================================================================
 // VALIDACIÓN (espejo del schema Zod del backend)
@@ -50,6 +52,14 @@ export default function RegisterTenant() {
   // el flujo de ads sigue igual). Viaja en el request del register.
   const [plan,            setPlan]            = useState<'TODO' | 'BASICO'>('TODO');
 
+  // #237 - FASE B: captura de UTMs de la URL al montar /register (TTL 7 dias
+  // en localStorage) + evento begin_registration (una sola vez, no-op hoy).
+  const utmsRef = useRef<Record<string, unknown> | null>(null);
+  useEffect(() => {
+    utmsRef.current = utmCapture() as Record<string, unknown> | null;
+    track('begin_registration', utmsRef.current ?? {});
+  }, []);
+
   const [isLoading,      setIsLoading]      = useState(false);
   const [apiError,       setApiError]       = useState('');
   const [showPass,       setShowPass]       = useState(false);
@@ -78,6 +88,8 @@ export default function RegisterTenant() {
         plan, // Fase D2: BASICO | TODO — la ficha nace de plan_config (D1)
       });
       const { token, user, credentials: creds } = res.data.data ?? res.data ?? res;
+      // #237 - FASE B: evento de exito (observacion pura, no-op hoy).
+      track('complete_registration', { plan, ...utmsRef.current });
       // Guardar en el store y en localStorage (mismo patrón que Login)
       loginStore(token, user);
       localStorage.setItem('bullweb_token', token);
@@ -240,7 +252,7 @@ export default function RegisterTenant() {
               {/* Tarjeta TODO — la default, la estrella */}
               <button
                 type="button"
-                onClick={() => setPlan('TODO')}
+                onClick={() => { setPlan('TODO'); track('plan_selected', { plan: 'TODO' }); }}
                 className={`relative text-left p-4 rounded-2xl border-2 transition-all ${
                   plan === 'TODO'
                     ? 'border-indigo-500 bg-indigo-50 shadow-md shadow-indigo-100'
@@ -254,7 +266,7 @@ export default function RegisterTenant() {
                 </span>
                 <div className="flex items-center gap-2 mb-1.5">
                   <Rocket className="w-4 h-4 text-indigo-500" />
-                  <span className="font-black text-slate-800">TODO</span>
+                  <span className="font-black text-slate-800">Full</span>
                 </div>
                 <p className="text-lg font-black text-slate-800 leading-none mb-1.5">
                   $34.000<span className="text-xs font-semibold text-slate-400">/mes</span>
@@ -272,7 +284,7 @@ export default function RegisterTenant() {
               {/* Tarjeta BÁSICO */}
               <button
                 type="button"
-                onClick={() => setPlan('BASICO')}
+                onClick={() => { setPlan('BASICO'); track('plan_selected', { plan: 'BASICO' }); }}
                 className={`text-left p-4 rounded-2xl border-2 transition-all ${
                   plan === 'BASICO'
                     ? 'border-orange-500 bg-orange-50 shadow-md shadow-orange-100'

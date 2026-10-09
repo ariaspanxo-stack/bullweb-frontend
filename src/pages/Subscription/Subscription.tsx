@@ -50,7 +50,7 @@ interface BillingStatus {
  *                     entre la expiración y el tick PAST_DUE del dunning ya no
  *                     existe — status TRIAL + trialActive false = vencido).
  *   - TODO/legacy   → su plan y fecha, SIN CTA de upgrade (nada que venderles).
- *   - Upgrade listo → "¡Ya eres TODO!" con CTA al POS (la venta cerrada).
+ *   - Upgrade listo → "¡Ya eres Full!" con CTA al POS (la venta cerrada).
  *
  * ESTILO CLARO PERMANENTE — prohibido dark (regla de la fase).
  */
@@ -161,7 +161,7 @@ export default function Subscription() {
   // ── Helpers de display ──────────────────────────────────────────────────────
 
   // STARTER→TODO como el backend lo resuelve (normalizePlan de la Fase A).
-  const planDisplay = isBasico ? 'Básico' : 'Todo';
+  const planDisplay = isBasico ? 'Básico' : 'Full';
   const priceFmt    = billingStatus?.priceCLP
     ? `$${billingStatus.priceCLP.toLocaleString('es-CL')}`
     : null;
@@ -195,14 +195,14 @@ export default function Subscription() {
           </p>
         </div>
 
-        {/* ══ LA VENTA CERRADA — "¡Ya eres TODO!" (polling confirmó el upgrade) ══ */}
+        {/* ══ LA VENTA CERRADA — "¡Ya eres Full!" (polling confirmó el upgrade) ══ */}
         {upgraded && (
           <div className="mb-8 p-8 bg-white border border-emerald-200 rounded-2xl shadow-sm text-center">
             <div className="mx-auto mb-5 w-16 h-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center">
               <PartyPopper className="w-8 h-8 text-emerald-600" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              ¡Ya eres TODO!
+              ¡Ya eres Full!
             </h2>
             <p className="text-gray-600 max-w-md mx-auto mb-6">
               Tu upgrade está confirmado. Todos los módulos de BullWeb quedaron
@@ -372,9 +372,9 @@ export default function Subscription() {
                   <Rocket size={28} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Desbloquea el plan TODO</h3>
+                  <h3 className="text-xl font-bold">Desbloquea el plan Full</h3>
                   <p className="text-indigo-100 text-sm">
-                    Tu Básico funciona. El TODO lo multiplica — todo BullWeb por $34.000/mes.
+                    Tu Básico funciona. El Full lo multiplica — todo BullWeb por $34.000/mes.
                   </p>
                 </div>
               </div>
@@ -403,7 +403,7 @@ export default function Subscription() {
                 ) : (
                   <>
                     <Sparkles size={18} />
-                    Mejorar a TODO $34.000/mes
+                    Mejorar a Full $34.000/mes
                   </>
                 )}
               </button>
@@ -413,7 +413,7 @@ export default function Subscription() {
             </div>
             {awaitingUpgrade && (
               <p className="mt-3 text-indigo-100 text-xs italic">
-                Verificando tu pago cada 30 segundos… al confirmarse, esta pantalla se convertirá en tu bienvenida al plan TODO.
+                Verificando tu pago cada 30 segundos… al confirmarse, esta pantalla se convertirá en tu bienvenida al plan Full.
               </p>
             )}
           </div>

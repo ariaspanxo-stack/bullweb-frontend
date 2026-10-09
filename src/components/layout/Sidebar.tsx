@@ -515,7 +515,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                           )}
                           {/* GATING FASE C — candado vendedor del item bloqueado-visible */}
                           {isBasico && item.visibleLocked && (
-                            <Lock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" aria-label="Disponible en plan TODO" />
+                            <Lock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" aria-label="Disponible en plan Full" />
                           )}
                           {item.path === '/online-orders' && pendingQrCount > 0 && (
                             <span className="bg-red-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-full leading-none flex-shrink-0 animate-pulse">

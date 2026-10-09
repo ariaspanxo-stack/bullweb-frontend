@@ -17,6 +17,20 @@ const darkenColor = (hex: string, amt = 40) => {
   return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
 };
 
+// ── HOTFIX #233 (F3) — Grupos de modificadores en la carta pública ──
+interface ModifierOption {
+  id: string;
+  name: string;
+  priceAdjustment: number;
+}
+interface ModifierGroup {
+  id: string;
+  name: string;
+  required: boolean;
+  minSelect: number;
+  maxSelect: number;
+  options: ModifierOption[];
+}
 interface Product {
   id: string;
   name: string;
@@ -26,6 +40,9 @@ interface Product {
   emoji?: string | null;
   available?: boolean;
   tags?: string[];
+  // HOTFIX #233 (F3) — OPCIONAL: solo presente si el producto tiene grupos
+  // activos vinculados. La UI debe tolerar campo ausente o vacío.
+  modifierGroups?: ModifierGroup[];
 }
 interface Category {
   id: string;
@@ -54,6 +71,10 @@ interface CartaSettings {
 interface CartItem {
   product:  Product;
   quantity: number;
+  // HOTFIX #233 (F3) — selección del cliente para ESTE ítem (con el precio
+  // del payload solo para display; el servidor recalcula y manda).
+  modifiers?: Array<{ groupId: string; optionId: string; name: string; priceAdjustment: number }>;
+  notes?:    string;
 }
 
 // ── TAG config ─────────────────────────────────────────────────
@@ -799,7 +820,11 @@ function CartSheet({
   const stepNumber: Record<OrderStep, number> = { cart: 1, type: 2, form: 3, payment: 4, success: 5 };
   const sn = stepNumber[step];
 
-  const total    = cart.reduce((s, i) => s + i.product.price * i.quantity, 0);
+  // HOTFIX #233 (F3) — total de display con el delta de modifiers (solo
+  // display; el precio de verdad lo recalcula el servidor BD-manda)
+  const itemUnitPrice = (i: CartItem) =>
+    i.product.price + (i.modifiers ?? []).reduce((s, m) => s + m.priceAdjustment, 0);
+  const total    = cart.reduce((s, i) => s + itemUnitPrice(i) * i.quantity, 0);
   const totalQty = cart.reduce((s, i) => s + i.quantity, 0);
 
   const setField = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -846,8 +871,14 @@ function CartSheet({
           items: cart.map(i => ({
             productId: i.product.id,
             name:      i.product.name,
-            price:     i.product.price,
+            price:     itemUnitPrice(i), // con delta; el servidor recalcula y manda
             quantity:  i.quantity,
+            // HOTFIX #233 (F3) — SOLO si el ítem tiene modifiers (payload
+            // retrocompatible: producto sin grupos = ítem IGUAL al de hoy)
+            ...(i.modifiers && i.modifiers.length > 0
+              ? { modifiers: i.modifiers.map(m => ({ groupId: m.groupId, optionId: m.optionId })) }
+              : {}),
+            ...(i.notes ? { notes: i.notes } : {}),
           })),
         }),
       });
@@ -1437,6 +1468,24 @@ export default function CartaDigital() {
   const [activeTag,     setActiveTag]     = useState<string | null>(null);
   const [modalQty,     setModalQty]     = useState(1);
   const [showHours,    setShowHours]    = useState(false); // Hotfix #139 — horario semanal expandible
+  // ── HOTFIX #233 (F3) — estado del selector de modificadores del modal ──
+  // groupId → optionIds seleccionadas; se resetea al abrir/cerrar el modal.
+  const [selectedModOptions, setSelectedModOptions] = useState<Record<string, string[]>>({});
+  const [itemNote, setItemNote] = useState('');
+  const [modsError, setModsError] = useState<string | null>(null);
+
+  // Toggle de una opción dentro de un grupo respetando maxSelect:
+  // maxSelect=1 → radio (seleccionar otra deselecciona la previa);
+  // maxSelect>1 → checkboxes con tope. minSelect/required se validan al Agregar.
+  const toggleModOption = useCallback((group: ModifierGroup, option: ModifierOption) => {
+    setSelectedModOptions(prev => {
+      const cur = prev[group.id] ?? [];
+      if (cur.includes(option.id)) return { ...prev, [group.id]: cur.filter(id => id !== option.id) };
+      if (group.maxSelect <= 1) return { ...prev, [group.id]: [option.id] };
+      if (cur.length >= group.maxSelect) return prev; // tope alcanzado
+      return { ...prev, [group.id]: [...cur, option.id] };
+    });
+  }, []);
 
   // ── Cart state (persistido en localStorage por restaurante + mesa) ──
   const cartKey = `bullweb:cart:${tenantSlug ?? 'default'}:${mesaNumber ?? 'generico'}`;
@@ -1455,20 +1504,47 @@ export default function CartaDigital() {
     } catch { /* ignore quota errors */ }
   }, [cart, cartKey]);
 
-  const addToCart = useCallback((product: Product) => {
+  // HOTFIX #233 (F3) — el carrito agrupa SOLO ítems con la MISMA selección de
+  // modifiers (misma firma productId + optionIds ordenadas). Sin modifiers,
+  // agrupa por productId igual que hoy (comportamiento exacto previo).
+  const modsSignature = (mods?: CartItem['modifiers']) =>
+    (mods ?? []).map(m => m.optionId).sort().join('|');
+  const addToCart = useCallback((product: Product, selectedMods?: CartItem['modifiers'], itemNotes?: string, qty = 1) => {
     setCart(prev => {
-      const existing = prev.find(i => i.product.id === product.id);
-      if (existing) return prev.map(i => i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
-      return [...prev, { product, quantity: 1 }];
+      const sig = modsSignature(selectedMods);
+      const existing = prev.find(i => i.product.id === product.id && modsSignature(i.modifiers) === sig);
+      if (existing) return prev.map(i =>
+        (i.product.id === product.id && modsSignature(i.modifiers) === sig)
+          ? { ...i, quantity: i.quantity + qty }
+          : i
+      );
+      const entry: CartItem = { product, quantity: qty };
+      if (selectedMods && selectedMods.length > 0) entry.modifiers = selectedMods;
+      if (itemNotes && itemNotes.trim()) entry.notes = itemNotes.trim();
+      return [...prev, entry];
     });
   }, []);
 
+  // HOTFIX #233 (F3) — con modifiers puede haber VARIAS entradas del mismo
+  // productId (selecciones distintas): el delta aplica SOLO a la primera
+  // coincidencia (comportamiento idéntico al de hoy cuando hay una sola).
   const updateCartItem = useCallback((productId: string, delta: number) => {
-    setCart(prev => prev.map(i => i.product.id === productId ? { ...i, quantity: i.quantity + delta } : i).filter(i => i.quantity > 0));
+    setCart(prev => {
+      const idx = prev.findIndex(i => i.product.id === productId);
+      if (idx < 0) return prev;
+      const updated = [...prev];
+      const q = updated[idx].quantity + delta;
+      if (q <= 0) updated.splice(idx, 1);
+      else updated[idx] = { ...updated[idx], quantity: q };
+      return updated;
+    });
   }, []);
 
   const totalCartQty = cart.reduce((s, i) => s + i.quantity, 0);
-  const totalCartAmt = cart.reduce((s, i) => s + i.product.price * i.quantity, 0);
+  // HOTFIX #233 (F3) — total del carrito con delta de modifiers (display)
+  const cartUnitPrice = (i: CartItem) =>
+    i.product.price + (i.modifiers ?? []).reduce((s, m) => s + m.priceAdjustment, 0);
+  const totalCartAmt = cart.reduce((s, i) => s + cartUnitPrice(i) * i.quantity, 0);
   const cartQtyMap   = useMemo<Record<string, number>>(() => {
     const m: Record<string, number> = {};
     for (const i of cart) m[i.product.id] = i.quantity;
@@ -1957,7 +2033,7 @@ export default function CartaDigital() {
           ) : (
             <div className="space-y-0">
               {cart.map((item, idx) => (
-                <div key={item.product.id} className={`flex items-center gap-3 py-3 rounded-xl px-2 -mx-2 transition-colors hover:bg-gray-50 ${idx < cart.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                <div key={`${item.product.id}-${idx}`} className={`flex items-center gap-3 py-3 rounded-xl px-2 -mx-2 transition-colors hover:bg-gray-50 ${idx < cart.length - 1 ? 'border-b border-gray-100' : ''}`}>
                   <div className="w-10 h-10 rounded-lg bg-gray-100 shrink-0 flex items-center justify-center overflow-hidden">
                     {item.product.image
                       ? <img src={item.product.image} alt="" className="w-full h-full object-cover" />
@@ -1966,7 +2042,20 @@ export default function CartaDigital() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold text-gray-900 truncate">{item.product.name}</p>
-                    <p className="text-xs text-gray-500" style={{ color: themeColor }}>{fmtCLP(item.product.price)} c/u</p>
+                    {/* HOTFIX #233 (F3) — modifiers seleccionados con su delta */}
+                    {(item.modifiers?.length ?? 0) > 0 && (
+                      <div className="mt-0.5">
+                        {item.modifiers!.map(m => (
+                          <p key={`${item.product.id}-${m.optionId}`} className="text-[11px] leading-tight text-gray-500">
+                            · {m.name}{m.priceAdjustment !== 0 ? ` (+${fmtCLP(m.priceAdjustment)})` : ''}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {item.notes && (
+                      <p className="text-[11px] italic text-gray-400 truncate">✎ {item.notes}</p>
+                    )}
+                    <p className="text-xs text-gray-500" style={{ color: themeColor }}>{fmtCLP(cartUnitPrice(item))} c/u</p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button
@@ -1988,7 +2077,7 @@ export default function CartaDigital() {
                     </button>
                   </div>
                   <span className="text-sm font-bold text-gray-900 shrink-0 w-16 text-right">
-                    {fmtCLP(item.product.price * item.quantity)}
+                    {fmtCLP(cartUnitPrice(item) * item.quantity)}
                   </span>
                 </div>
               ))}
@@ -2115,7 +2204,31 @@ export default function CartaDigital() {
 
       {/* Modal detalle producto — estilo premium Rappi/UberEats */}
       {selected && (() => {
-        const resetAndClose = () => { setSelected(null); setModalQty(1); };
+        // HOTFIX #233 (F3) — resetea también el selector de modifiers al cerrar
+        const resetAndClose = () => { setSelected(null); setModalQty(1); setSelectedModOptions({}); setItemNote(''); setModsError(null); };
+        // Grupos del producto presente (tolera campo ausente)
+        const modGroups = selected.modifierGroups ?? [];
+        // Valida required/minSelect por grupo; devuelve el primer mensaje de error
+        const validateGroups = (): string | null => {
+          for (const g of modGroups) {
+            const selCount = (selectedModOptions[g.id] ?? []).length;
+            const min = g.required ? Math.max(1, g.minSelect) : g.minSelect;
+            if (selCount < min) {
+              return min <= 1
+                ? `Elige una opción en "${g.name}"`
+                : `Elige al menos ${min} opciones en "${g.name}"`;
+            }
+          }
+          return null;
+        };
+        // Selección aplanada → formato CartItem.modifiers (delta solo display)
+        const currentMods = modGroups.flatMap(g =>
+          (selectedModOptions[g.id] ?? []).map(oid => {
+            const opt = g.options.find(o => o.id === oid)!;
+            return { groupId: g.id, optionId: opt.id, name: opt.name, priceAdjustment: opt.priceAdjustment };
+          })
+        );
+        const modsDelta = currentMods.reduce((s, m) => s + m.priceAdjustment, 0);
         return (
           <div
             className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end md:items-center justify-center"
@@ -2174,6 +2287,70 @@ export default function CartaDigital() {
                 >
                   {fmtCLP(selected.price)}
                 </p>
+
+                {/* ── HOTFIX #233 (F3) — Selector de modificadores ── */}
+                {(selected.modifierGroups?.length ?? 0) > 0 && (
+                  <div className="mt-5 space-y-5 text-left">
+                    {selected.modifierGroups!.map(g => {
+                      const selCount = selectedModOptions[g.id]?.length ?? 0;
+                      const atMax = selCount >= Math.max(1, g.maxSelect);
+                      return (
+                        <div key={g.id}>
+                          <div className="flex items-baseline justify-between gap-2">
+                            <h3 className="font-bold text-gray-900">{g.name}</h3>
+                            <span className="text-xs text-gray-500">
+                              {g.required ? 'Obligatorio' : 'Opcional'}
+                              {g.maxSelect > 1 ? ` · máx ${g.maxSelect}` : ''}
+                            </span>
+                          </div>
+                          <div className="mt-2 grid gap-2">
+                            {g.options.map(o => {
+                              const isSel = (selectedModOptions[g.id] ?? []).includes(o.id);
+                              return (
+                                <button
+                                  key={o.id}
+                                  type="button"
+                                  disabled={!isSel && atMax}
+                                  onClick={() => toggleModOption(g, o)}
+                                  className={`flex items-center justify-between w-full px-3 py-2.5 rounded-xl border text-sm font-medium transition-colors ${
+                                    isSel
+                                      ? 'border-transparent text-white'
+                                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed'
+                                  }`}
+                                  style={isSel ? { backgroundColor: themeColor } : undefined}
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span className={`w-4 h-4 rounded-${g.maxSelect > 1 ? 'md' : 'full'} border flex items-center justify-center text-[10px] ${isSel ? 'border-white bg-white/20' : 'border-gray-300'}`}>
+                                      {isSel ? '✓' : ''}
+                                    </span>
+                                    {o.name}
+                                  </span>
+                                  {o.priceAdjustment !== 0 && (
+                                    <span className={isSel ? 'font-bold' : 'text-gray-500 font-semibold'}>
+                                      {o.priceAdjustment > 0 ? '+' : ''}{fmtCLP(o.priceAdjustment)}
+                                    </span>
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {/* Nota por ítem (opcional) */}
+                    <div>
+                      <h3 className="font-bold text-gray-900 mb-2">Nota para la cocina</h3>
+                      <input
+                        type="text"
+                        value={itemNote}
+                        onChange={e => setItemNote(e.target.value)}
+                        maxLength={300}
+                        placeholder="Ej: sin cebolla, término medio…"
+                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-700 focus:outline-none focus:border-gray-400"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* ── Barra de acción inferior ── */}
@@ -2198,17 +2375,24 @@ export default function CartaDigital() {
                         <Plus className="w-5 h-5" />
                       </button>
                     </div>
-                    {/* Botón Agregar */}
+                    {/* Botón Agregar — HOTFIX #233 (F3): valida obligatorios y
+                        muestra el precio con el delta de las opciones elegidas
+                        (solo display; el precio de verdad lo fija el servidor) */}
                     <button
                       onClick={() => {
-                        for (let i = 0; i < modalQty; i++) addToCart(selected);
+                        const err = validateGroups();
+                        if (err) { setModsError(err); return; }
+                        addToCart(selected, currentMods.length > 0 ? currentMods : undefined, itemNote, modalQty);
                         resetAndClose();
                       }}
                       className="flex-1 py-3 rounded-xl text-white font-extrabold text-lg hover:scale-[1.02] transition-all duration-200"
                       style={{ background: `linear-gradient(135deg, ${themeColor}, ${darkenColor(themeColor, 40)})`, boxShadow: `0 8px 24px ${themeColor}55` }}
                     >
-                      Agregar {fmtCLP(selected.price * modalQty)}
+                      Agregar {fmtCLP((selected.price + modsDelta) * modalQty)}
                     </button>
+                    {modsError && (
+                      <p className="text-red-500 text-xs font-semibold text-center -mb-2">{modsError}</p>
+                    )}
                   </div>
                 ) : isOpen === false ? (
                   <div

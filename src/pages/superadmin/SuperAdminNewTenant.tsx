@@ -1,17 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Building2, Copy, Eye, EyeOff } from 'lucide-react';
 import superadminService, { type CreateTenantDTO } from '@/services/superadmin/superadminService';
 import { Button } from '@/components/ui/superadmin/button';
 import { PageHeader } from '@/components/ui/superadmin/pageHeader';
-
-const PLANS = [
-  { value: 'STARTER',    label: 'Starter',    price: '$29.990 CLP/mes' },
-  { value: 'PRO',        label: 'Pro',         price: '$59.990 CLP/mes' },
-  { value: 'ENTERPRISE', label: 'Enterprise',  price: '$99.990 CLP/mes' },
-];
 
 interface CreatedResult {
   tempPassword: string;
@@ -25,8 +19,19 @@ export default function SuperAdminNewTenant() {
   const [created, setCreated] = useState<CreatedResult | null>(null);
   const [showPass, setShowPass] = useState(false);
 
+  // Hotfix #234: opciones de plan desde plan_config (fuente única, patrón #209
+  // de QuickPayModal). Adiós al PLANS hardcodeado con planes deprecados y
+  // precios falsos. Solo se muestran planes isActive.
+  const { data: plansCfg, isLoading: plansLoading, isError: plansError } = useQuery({
+    queryKey: ['superadmin', 'plan-config'],
+    queryFn:  () => superadminService.getPlans(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const activePlans = (plansCfg ?? []).filter((p: any) => p.isActive);
+  const fmt = (n: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(n);
+
   const [form, setForm] = useState<CreateTenantDTO>({
-    name: '', slug: '', plan: 'PRO', adminEmail: '', adminName: '',
+    name: '', slug: '', plan: 'TODO', adminEmail: '', adminName: '',
   });
 
   const set = (field: keyof CreateTenantDTO) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -143,17 +148,28 @@ export default function SuperAdminNewTenant() {
 
           <div>
             <label className="block text-sm text-gray-400 mb-1.5">Plan *</label>
-            <div className="grid grid-cols-3 gap-2">
-              {PLANS.map(p => (
-                <button type="button" key={p.value} onClick={() => setForm(prev => ({ ...prev, plan: p.value }))}
-                  className={`border rounded-lg p-3 text-left transition-colors ${
-                    form.plan === p.value ? 'border-brand-500 bg-brand-500/10' : 'border-white/10 bg-gray-950 hover:border-white/20'
-                  }`}>
-                  <p className="text-sm font-semibold text-white">{p.label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5 tabular-nums">{p.price}</p>
-                </button>
-              ))}
-            </div>
+            {plansError ? (
+              <p className="text-sm text-red-400 border border-red-500/20 bg-red-500/10 rounded-lg p-3">
+                No se pudo cargar la lista de planes desde plan_config. Reintenta más tarde.
+              </p>
+            ) : plansLoading ? (
+              <div className="grid grid-cols-2 gap-2" aria-busy="true">
+                <div className="h-[62px] rounded-lg border border-white/10 bg-gray-950 animate-pulse" />
+                <div className="h-[62px] rounded-lg border border-white/10 bg-gray-950 animate-pulse" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {activePlans.map((p: any) => (
+                  <button type="button" key={p.plan} onClick={() => setForm(prev => ({ ...prev, plan: p.plan }))}
+                    className={`border rounded-lg p-3 text-left transition-colors ${
+                      form.plan === p.plan ? 'border-brand-500 bg-brand-500/10' : 'border-white/10 bg-gray-950 hover:border-white/20'
+                    }`}>
+                    <p className="text-sm font-semibold text-white">{p.displayName ?? p.plan}</p>
+                    <p className="text-xs text-gray-500 mt-0.5 tabular-nums">{fmt(p.priceCLP)} /mes IVA incluido</p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

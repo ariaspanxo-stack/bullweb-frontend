@@ -26,12 +26,14 @@ interface RecipeItem {
 interface RecipeRow {
   id: string;
   productId: string;
-  products?: { id: string; name: string } | null;
+  products?: { id: string; name: string; price?: number | null } | null; // H235: price para el margen de la card
   recipe_items?: RecipeItem[];
   totalCost?: number;
   notes?: string | null;
   instructions?: string | null;
   createdAt?: string;
+  yield?: number | null; // H235: columnas implícitas del findMany — rinde condicional en la card
+  yieldUnit?: string | null;
 }
 
 export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [], recipes = [] }) => {
@@ -50,12 +52,18 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
   }, [recipes]);
 
   // H128: re-fetch de la lista (vía servicio directo — wiring CERO padre)
+  // H235: flag de re-fetch — texto breve sobre la lista mientras refresca (el catch silencioso se mantiene)
+  const [refreshing, setRefreshing] = useState(false);
+
   const loadRecipes = async () => {
+    setRefreshing(true);
     try {
       const recs = await api.recipes.getAll();
       setLocalRecipes(Array.isArray(recs) ? (recs as RecipeRow[]) : []);
     } catch {
       // silencioso: la lista existente sigue visible; el toast de la mutación ya informó el resultado
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -229,8 +237,14 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                     unidades
                   </span>
                 )}
-                <button 
-                  onClick={() => handleRemoveItem(index)} 
+                {/* H235: costo en vivo de la línea — qty × unitCost del ingrediente seleccionado */}
+                {selectedIngredientData?.unitCost != null && (
+                  <span className="text-xs text-gray-600 tabular-nums w-24 flex-shrink-0">
+                    {formatCurrency(item.quantity * selectedIngredientData.unitCost)}
+                  </span>
+                )}
+                <button
+                  onClick={() => handleRemoveItem(index)}
                   className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
                   disabled={items.length === 1}
                 >
@@ -245,6 +259,20 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
           <Plus className="w-4 h-4" /> Agregar otro ingrediente
         </button>
 
+        {/* H235: costo estimado en vivo — Σ de líneas válidas (ingredientId + quantity > 0), se confirma al guardar */}
+        <div className="bg-gray-50 rounded-lg p-3">
+          <p className="font-bold text-gray-900 tabular-nums">
+            Costo estimado: {formatCurrency(
+              items.reduce((sum, it) => {
+                const ing = ingredients.find(i => i.id === it.ingredientId);
+                if (it.ingredientId && it.quantity > 0 && ing?.unitCost != null) return sum + it.quantity * ing.unitCost;
+                return sum;
+              }, 0)
+            )}
+          </p>
+          <p className="text-xs text-gray-500 mt-0.5">se confirma al guardar</p>
+        </div>
+
         <div className="pt-4 border-t">
           <button onClick={handleLink} disabled={loading} className="bg-orange-500 text-white px-6 py-2.5 rounded-lg font-medium disabled:opacity-50">
             {loading ? 'Guardando...' : editingRecipeId ? 'Actualizar ficha' : 'Guardar Vinculación'}
@@ -257,6 +285,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
         <h3 className="text-lg font-bold text-gray-900 mb-1">Fichas técnicas creadas</h3>
         <p className="text-sm text-gray-600 mb-4">
           {localRecipes.length} ficha{localRecipes.length !== 1 ? 's' : ''} — el costo total lo calcula el sistema con los costos de los ingredientes.
+          {refreshing && <span className="ml-2 text-xs text-gray-400">Actualizando lista…</span>}
         </p>
 
         {localRecipes.length === 0 ? (
@@ -308,6 +337,28 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                         {formatCurrency(Number(recipe.totalCost ?? 0))}
                       </p>
                     </div>
+
+                    {/* H235: margen — venta del payload (con fallback a la prop products) menos costo total */}
+                    {(() => {
+                      const venta = recipe.products?.price ?? products.find(p => p.id === recipe.productId)?.price;
+                      if (venta != null && venta > 0) {
+                        const margen = venta - Number(recipe.totalCost ?? 0);
+                        const pct = Math.round((margen / venta) * 100);
+                        return (
+                          <p className={`text-xs font-medium tabular-nums ${margen > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            Venta {formatCurrency(venta)} · Margen {formatCurrency(margen)} ({pct}%)
+                          </p>
+                        );
+                      }
+                      return <p className="text-xs text-gray-400">Sin precio de venta</p>;
+                    })()}
+
+                    {/* H235: rinde condicional — solo si el GET trae yield > 1, sin ceros ni guiones */}
+                    {Number(recipe.yield) > 1 && (
+                      <p className="text-xs text-gray-600">
+                        Rinde {recipe.yield} {recipe.yieldUnit ?? ''}
+                      </p>
+                    )}
 
                     {/* Notas (solo si el GET las trae) */}
                     {recipe.notes && (

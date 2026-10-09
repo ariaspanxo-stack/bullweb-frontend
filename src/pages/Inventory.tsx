@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inventoryService } from '@/services/inventoryService';
 import InventoryTabs from '@/components/inventory/InventoryTabs';
@@ -600,8 +600,16 @@ function PurchaseModal({
   isSubmitting: boolean;
 }) {
   const [supplier, setSupplier] = useState('');
+  const [supplierNames, setSupplierNames] = useState<string[]>([]); // H235: typeahead — sugerencias, texto libre sigue válido
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState([{ ingredientId: '', quantity: '', cost: '' }]);
+
+  // H235: cargar proveedores al abrir el modal (catch silencioso → lista vacía)
+  useEffect(() => {
+    inventoryService.getSuppliers({ perPage: 100 })
+      .then((res: any) => setSupplierNames(((res?.suppliers ?? []) as any[]).map((s) => s.name).filter(Boolean)))
+      .catch(() => setSupplierNames([]));
+  }, []);
 
   const addItem = () => setItems((prev) => [...prev, { ingredientId: '', quantity: '', cost: '' }]);
   const removeItem = (i: number) => setItems((prev) => prev.filter((_, idx) => idx !== i));
@@ -654,9 +662,15 @@ function PurchaseModal({
               type="text"
               value={supplier}
               onChange={(e) => setSupplier(e.target.value)}
+              list="suppliers-datalist"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="Nombre del proveedor (opcional)"
             />
+            <datalist id="suppliers-datalist">
+              {supplierNames.map((name) => (
+                <option key={name} value={name} />
+              ))}
+            </datalist>
           </div>
 
           <div>

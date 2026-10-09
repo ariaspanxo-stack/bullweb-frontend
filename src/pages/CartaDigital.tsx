@@ -509,6 +509,18 @@ const PAYMENT_DESC: Record<string, string> = {
 
 // ── Definidos FUERA de CartSheet para evitar que React los destruya
 // en cada re-render, causando pérdida de foco en inputs ─────────────
+// HOTFIX #240 — Sheet delimitado al VIEWPORT real (segundo reo del
+// containing block de #239): el div raíz de la carta lleva .bw-reveal y
+// computa transform ≠ none → TODO position:fixed dentro de él (incluido
+// este sheet "Tu pedido") quedaba anclado al FINAL del documento con la
+// lista congelada detrás. Cura idéntica a #239: montar vía createPortal
+// a document.body (fuera de todo ancestro con transform) → fixed vuelve
+// a referirse al viewport real. El panel queda bottom-sheet en móvil y
+// modal centrado en desktop; overlay oscuro fijo al viewport con cierre
+// por click intacto (mismo handler onClose). CERO cambios de lógica de
+// pedido: solo la jaula y la posición. Los pasos internos (carrito,
+// entrega, datos, pago, éxito) heredan del padre — sin fixed propio, se
+// corrigen solos al liberar esta jaula.
 function SheetWrap({
   children,
   onClose,
@@ -518,20 +530,29 @@ function SheetWrap({
   onClose:        () => void;
   noOverlayClose?: boolean;
 }) {
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
-      style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}
-      onClick={noOverlayClose ? undefined : onClose}
-    >
+  return createPortal(
+    <>
+      <style>{`
+        @keyframes bwSheetIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+        .bw-sheet-in { animation: bwSheetIn 0.3s ease-out; }
+        .bw-sheet-safe { padding-bottom: env(safe-area-inset-bottom); }
+        @media (min-width: 768px) { .bw-sheet-safe { padding-bottom: 0; } }
+      `}</style>
       <div
-        className="rounded-t-3xl w-full max-w-xl flex flex-col max-h-[92vh] overflow-hidden"
-        style={{ backgroundColor: '#0d0d14', border: '1px solid rgba(255,255,255,0.07)', borderBottom: 'none' }}
-        onClick={e => e.stopPropagation()}
+        className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
+        style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}
+        onClick={noOverlayClose ? undefined : onClose}
       >
-        {children}
+        <div
+          className="bw-sheet-in bw-sheet-safe rounded-t-3xl md:rounded-3xl w-full max-w-xl flex flex-col max-h-[92vh] overflow-hidden"
+          style={{ backgroundColor: '#0d0d14', border: '1px solid rgba(255,255,255,0.07)', borderBottom: 'none' }}
+          onClick={e => e.stopPropagation()}
+        >
+          {children}
+        </div>
       </div>
-    </div>
+    </>,
+    document.body
   );
 }
 

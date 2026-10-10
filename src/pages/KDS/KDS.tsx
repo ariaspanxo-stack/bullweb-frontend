@@ -509,7 +509,15 @@ export default function KDS() {
                       </span>
                       {order.type !== 'DINE_IN' && (
                         <span className="text-xs bg-white/10 text-white/70 px-2 py-0.5 rounded-full shrink-0">
-                          {order.type === 'TAKEAWAY' ? 'Para llevar' : 'Delivery'}
+                          {/* HOTFIX #241 — pedidos QR "Servir en mi mesa" viajan
+                              como TAKEAWAY; si la orden tiene mesa (tables por
+                              tableId, o "Mesa N" preservada en notes), el badge
+                              la muestra en vez de "Para llevar". */}
+                          {order.type === 'TAKEAWAY'
+                            ? ((order.tables || order.tableNumber)
+                                ? `Mesa ${order.tableNumber ?? order.tables?.number}`
+                                : 'Para llevar')
+                            : 'Delivery'}
                         </span>
                       )}
                     </div>

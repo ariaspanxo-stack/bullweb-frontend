@@ -116,6 +116,17 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
                 >
                   {isDelivery ? '🛵 Delivery' : '🏪 Mostrador'}
                 </span>
+                {/* Hotfix #242 — la mesa del pedido ("Servir en mi mesa" del QR
+                    por mesa; el WS la envía desde #241). Sin mesa (retiro en
+                    mostrador/delivery) NO se renderiza: sin fila vacía. */}
+                {order.tableNumber && (
+                  <span
+                    className="text-xs font-bold px-2 py-0.5 rounded-full"
+                    style={{ background: '#166534', color: 'white' }}
+                  >
+                    🧉 Mesa {order.tableNumber}
+                  </span>
+                )}
               </div>
               <p className="text-orange-400 font-mono font-bold">{order.orderNumber}</p>
             </div>

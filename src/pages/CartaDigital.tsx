@@ -901,15 +901,15 @@ function CartSheet({
 }) {
   const [step,          setStep]          = useState<OrderStep>('cart');
   const [orderType,     setOrderType]     = useState<OrderType | null>(null);
-  // ── HOTFIX #241 — "Servir en mi mesa" ──
-  // Intención separada de "Retiro en mostrador". La mesa del QR (?mesa=N) es
-  // FIJA (chip, no se pregunta); sin QR por mesa, input manual obligatorio 1-99.
+  // ── HOTFIX #241/#242 — "Servir en mi mesa" ──
+  // Intención separada de "Retiro en mostrador". HOTFIX #242 (modelo
+  // McDonald's): la opción SOLO existe con QR por mesa (?mesa=N) — el número
+  // lo pone el QR físico pegado en la mesa, no el cliente (error-proof). El
+  // input manual de #241 fue ELIMINADO (riesgo de mesa equivocada/ocupada).
   // orderType se mantiene 'mostrador' en el POST (decisión semántica del
   // Comandante): 'mostrador' + tableNumber presente = servir en mesa. PROHIBIDO
   // inventar un tercer valor del enum OrderType (solo 'mostrador'|'delivery').
   const [serveAtTable,  setServeAtTable]  = useState(false);
-  const [manualMesa,    setManualMesa]    = useState('');
-  const [mesaError,     setMesaError]     = useState<string | null>(null);
   const [submitting,    setSubmitting]    = useState(false);
   const [orderNumber,   setOrderNumber]   = useState<string | null>(null);
   const [orderId,       setOrderId]       = useState<string | null>(null);
@@ -958,10 +958,11 @@ function CartSheet({
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          // HOTFIX #241 — la mesa que viaja al POST: la fija del QR (?mesa=N)
-          // manda; si no hay QR por mesa, la del input manual ("Servir en mi
-          // mesa"). 'mostrador' + tableNumber presente = servir en mesa.
-          tableNumber:     tableNumber ?? ((serveAtTable ? manualMesa.trim() : '') || null),
+          // HOTFIX #241/#242 — la mesa que viaja al POST: SOLO la fija del QR
+          // por mesa (?mesa=N). El input manual de #241 fue eliminado; el QR
+          // general (mostrador/delivery) NO envía mesa. 'mostrador' +
+          // tableNumber presente = servir en mesa.
+          tableNumber:     tableNumber ?? null,
           tenantSlug:      tenantSlug  ?? null,
           orderType:       orderType,
           customerName:    form.name.trim(),
@@ -1441,9 +1442,10 @@ function CartSheet({
         </div>
 
         <div className="flex-1 p-6 flex flex-col justify-center gap-4">
-          {/* HOTFIX #241 — el botón "Mostrador / Mesa" se DIVIDE en dos
-              intenciones: retiro en mostrador vs servir en la mesa. Delivery
-              queda INTACTO como tercera opción. */}
+          {/* HOTFIX #241/#242 — "Mostrador / Mesa" son dos intenciones, pero
+              "Servir en mi mesa" SOLO existe con QR por mesa (tableNumber de
+              la URL): el QR general es mostrador/delivery SIN preguntas
+              (modelo McDonald's). Delivery queda INTACTO. */}
           <div className="flex gap-3">
             <button
               className="flex-1 flex flex-col items-center gap-2 p-4 border-2 rounded-xl transition-all duration-200 active:scale-[0.97]"
@@ -1451,24 +1453,26 @@ function CartSheet({
                 borderColor: orderType === 'mostrador' && !serveAtTable ? themeColor : 'rgba(255,255,255,0.1)',
                 backgroundColor: orderType === 'mostrador' && !serveAtTable ? `${themeColor}15` : 'rgba(255,255,255,0.04)'
               }}
-              onClick={() => { setOrderType('mostrador'); setServeAtTable(false); setMesaError(null); setStep('form'); }}
+              onClick={() => { setOrderType('mostrador'); setServeAtTable(false); setStep('form'); }}
             >
               <span className="text-3xl">🏪</span>
               <span className="font-semibold text-white text-sm">Retiro en mostrador</span>
               <span className="text-xs text-gray-400 text-center">Lo retiras tú en el local</span>
             </button>
-            <button
-              className="flex-1 flex flex-col items-center gap-2 p-4 border-2 rounded-xl transition-all duration-200 active:scale-[0.97]"
-              style={{
-                borderColor: orderType === 'mostrador' && serveAtTable ? themeColor : 'rgba(255,255,255,0.1)',
-                backgroundColor: orderType === 'mostrador' && serveAtTable ? `${themeColor}15` : 'rgba(255,255,255,0.04)'
-              }}
-              onClick={() => { setOrderType('mostrador'); setServeAtTable(true); }}
-            >
-              <span className="text-3xl">🍽️</span>
-              <span className="font-semibold text-white text-sm">Servir en mi mesa</span>
-              <span className="text-xs text-gray-400 text-center">Te lo llevamos a tu mesa</span>
-            </button>
+            {tableNumber && (
+              <button
+                className="flex-1 flex flex-col items-center gap-2 p-4 border-2 rounded-xl transition-all duration-200 active:scale-[0.97]"
+                style={{
+                  borderColor: orderType === 'mostrador' && serveAtTable ? themeColor : 'rgba(255,255,255,0.1)',
+                  backgroundColor: orderType === 'mostrador' && serveAtTable ? `${themeColor}15` : 'rgba(255,255,255,0.04)'
+                }}
+                onClick={() => { setOrderType('mostrador'); setServeAtTable(true); setStep('form'); }}
+              >
+                <span className="text-3xl">🍽️</span>
+                <span className="font-semibold text-white text-sm">Servir en mi mesa</span>
+                <span className="text-xs text-gray-400 text-center">Te lo llevamos a tu mesa</span>
+              </button>
+            )}
           </div>
           <button
             className="w-full flex flex-col items-center gap-1 p-4 border-2 rounded-xl transition-all duration-200 active:scale-[0.97]"
@@ -1476,55 +1480,25 @@ function CartSheet({
               borderColor: orderType === 'delivery' ? themeColor : 'rgba(255,255,255,0.1)',
               backgroundColor: orderType === 'delivery' ? `${themeColor}15` : 'rgba(255,255,255,0.04)'
             }}
-            onClick={() => { setOrderType('delivery'); setServeAtTable(false); setMesaError(null); setStep('form'); }}
+            onClick={() => { setOrderType('delivery'); setServeAtTable(false); setStep('form'); }}
           >
             <span className="text-3xl">🛵</span>
             <span className="font-semibold text-white text-sm">Delivery</span>
             <span className="text-xs text-gray-400 text-center">Te lo llevamos a tu domicilio</span>
           </button>
 
-          {/* HOTFIX #241 — mesa de "Servir en mi mesa" */}
-          {orderType === 'mostrador' && serveAtTable && (
-            tableNumber ? (
-              <div
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2"
-                style={{ borderColor: themeColor, backgroundColor: `${themeColor}15` }}
-              >
-                <span className="text-2xl">🧉</span>
-                <span className="font-bold text-white text-lg">Mesa {tableNumber}</span>
-                <span className="text-xs text-gray-400">(del QR — fija)</span>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-semibold text-gray-300">¿En qué mesa estás?</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={99}
-                  inputMode="numeric"
-                  value={manualMesa}
-                  onChange={(e) => { setManualMesa(e.target.value); setMesaError(null); }}
-                  placeholder="Número de mesa (1-99)"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border-2 text-white text-lg font-bold text-center focus:outline-none transition-colors"
-                  style={{ borderColor: mesaError ? '#ef4444' : 'rgba(255,255,255,0.1)' }}
-                />
-                {mesaError && <span className="text-xs text-red-400 text-center">{mesaError}</span>}
-                <button
-                  className="w-full py-3 rounded-xl font-bold text-white transition-all duration-200 active:scale-[0.97]"
-                  style={{ backgroundColor: themeColor }}
-                  onClick={() => {
-                    const n = parseInt(manualMesa, 10);
-                    if (!manualMesa.trim() || Number.isNaN(n) || n < 1 || n > 99) {
-                      setMesaError('Ingresa un número de mesa entre 1 y 99');
-                      return;
-                    }
-                    setStep('form');
-                  }}
-                >
-                  Confirmar mesa {manualMesa ? manualMesa : ''} y continuar →
-                </button>
-              </div>
-            )
+          {/* HOTFIX #241/#242 — mesa fija del QR por mesa (chip, NO input:
+              error-proof — el número lo pone el QR físico pegado en la mesa).
+              El input manual de #241 fue ELIMINADO en #242. */}
+          {orderType === 'mostrador' && serveAtTable && tableNumber && (
+            <div
+              className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2"
+              style={{ borderColor: themeColor, backgroundColor: `${themeColor}15` }}
+            >
+              <span className="text-2xl">🧉</span>
+              <span className="font-bold text-white text-lg">Mesa {tableNumber}</span>
+              <span className="text-xs text-gray-400">(del QR — fija)</span>
+            </div>
           )}
           <p className="text-center text-gray-500 text-sm">
             Total: <span className="text-orange-400 font-semibold">{fmtCLP(total)}</span>

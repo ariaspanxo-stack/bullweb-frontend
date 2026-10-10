@@ -27,6 +27,10 @@ export interface QROrder {
   /** Hotfix #200 (B1) — segmento CRM del cliente (VIP/FREQUENT/...) por teléfono;
    *  lookup backend en public/orders → badge ⭐ VIP del modal. Sin match → undefined. */
   customerSegment?:     string;
+  /** Hotfix #242 — mesa del pedido ("Servir en mi mesa" del QR por mesa).
+   *  El WS new_qr_order la envía desde #241; el modal del panel la muestra.
+   *  Sin mesa (retiro en mostrador/delivery) → null: NO se renderiza fila. */
+  tableNumber?:         string | null;
 }
 
 /** Lee el tenantId del usuario almacenado en localStorage (mismo origen que authService).

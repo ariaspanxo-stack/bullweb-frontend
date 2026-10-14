@@ -172,6 +172,29 @@ export function DeliveryOrderModal({
     return matchCat && matchSearch && p.available;
   });
 
+  // ── Hotfix #243: icono por categoría — emoji por nombre → emoji del primer
+  // producto con emoji → default 🍽️ (jerarquía del patrón CartaDigital :1994-1996;
+  // la imagen del chip se sirve aparte como object-cover chico)
+  function emojiForCategory(cat: ProductCategory): string {
+    const n = String(cat.name ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const table: Record<string, string> = {
+      pizza: '🍕', sushi: '🍣', burger: '🍔', hamburguesa: '🍔', taco: '🌮', ensalada: '🥗',
+      bebida: '🥤', cafe: '☕', postre: '🍰', pastel: '🎂', helado: '🍦', vino: '🍷',
+      cerveza: '🍺', pescado: '🐟', marisco: '🦐', carne: '🥩', pollo: '🍗', pasta: '🍝',
+      sandwich: '🥪', sopa: '🍲', desayuno: '🥐', infantil: '🧒', comida: '🍔',
+      promocion: '🔥', combo: '🔥',
+    };
+    const hit = Object.keys(table).find(k => n.includes(k));
+    if (hit) return table[hit];
+    const fp = products.find(p => p.categoryId === cat.id && (p as any).emoji);
+    return (fp as any)?.emoji ?? '🍽️';
+  }
+
+  // Hotfix #243: label "Sin Categoria" → "Otros" (decisión del estratega)
+  function categoryLabel(cat: ProductCategory): string {
+    return String(cat.name ?? '').toLowerCase() === 'sin categoria' ? 'Otros' : cat.name;
+  }
+
   // ── Handlers ─────────────────────────────────────────────────
 
   /** Click sobre un producto */
@@ -476,13 +499,19 @@ export function DeliveryOrderModal({
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors ${
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors flex items-center gap-1.5 ${
                       selectedCategory === cat.id
                         ? `${isDelivery ? 'bg-purple-600' : 'bg-blue-600'} text-white`
                         : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
                     }`}
                   >
-                    {cat.name}
+                    {/* Hotfix #243: icono del chip — imagen → emoji → default */}
+                    {(cat as any).image ? (
+                      <img src={(cat as any).image} alt="" className="w-4 h-4 rounded-full object-cover" loading="lazy" />
+                    ) : (
+                      <span className="text-xs leading-none">{emojiForCategory(cat)}</span>
+                    )}
+                    {categoryLabel(cat)}
                   </button>
                 ))}
               </div>
@@ -500,6 +529,16 @@ export function DeliveryOrderModal({
                         disabled={submitting}
                         className={`text-left p-2.5 bg-white rounded-xl border border-gray-100 hover:border-gray-300 hover:shadow-sm transition-all group disabled:opacity-60 disabled:cursor-not-allowed ring-0 focus:ring-2 ${accentRing}`}
                       >
+                        {/* Hotfix #243: visual de la tarjeta — imagen object-cover chica → emoji grande */}
+                        {(product as any).image ? (
+                          <div className="w-full h-16 mb-1.5 rounded-lg overflow-hidden bg-gray-100">
+                            <img src={(product as any).image} alt="" className="w-full h-full object-cover" loading="lazy" />
+                          </div>
+                        ) : (
+                          <div className="w-full h-16 mb-1.5 flex items-center justify-center rounded-lg bg-gray-50">
+                            <span className="text-3xl leading-none">{(product as any).emoji || '🍽️'}</span>
+                          </div>
+                        )}
                         <p className="text-xs font-semibold text-gray-800 leading-tight line-clamp-2">
                           {product.name}
                         </p>

@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   Search, 
@@ -25,8 +26,9 @@ import {
   Printer,
   LayoutGrid
 } from 'lucide-react';
-import { emojiForCategory, categoryLabel } from '../../../lib/categoryHelpers';
+import { emojiForCategory, categoryLabel, colorForCategory } from '../../../lib/categoryHelpers';
 import { PrintControlModal } from '../../../components/print/PrintControlModal';
+import { OrderTicket } from '../../../components/restaurant/shared/OrderTicket';
 import type { PrintControlItem } from '../../../components/print/PrintControlModal';
 import type { 
   Product, 
@@ -72,10 +74,13 @@ export const NewMostradorModal = ({
   const [saveToCustomers, setSaveToCustomers] = useState(true);
   // pickupTime removed
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  // Hotfix 245 C3: null = nivel 1 (baldosas de categorías); id = nivel 2
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  // Hotfix 245 C4: animación de tap (~120ms, clase CSS scale, estado local puro)
+  const [tappedProductId, setTappedProductId] = useState<string | null>(null);
   // Hotfix #244: toggle búsqueda↔grilla, preferencia persistida por dispositivo
   const [viewMode, setViewMode] = useState<'search' | 'grid'>(() =>
-    (localStorage.getItem('bullweb_pos_viewmode_mostrador') as 'search' | 'grid') || 'search'
+    (localStorage.getItem('bullweb_pos_viewmode_mostrador') as 'search' | 'grid') || 'grid'
   );
   const toggleViewMode = (mode: 'search' | 'grid') => {
     setViewMode(mode);
@@ -245,6 +250,19 @@ export const NewMostradorModal = ({
     return matchesCategory && matchesSearch && p.available;
   });
 
+  // Hotfix 245 C4: categoría activa (nivel 2) y su color de banda
+  const activeCat = categories.find(c => c.id === selectedCategory) ?? null;
+  const activeCatColor = activeCat ? colorForCategory(categories, activeCat.id) : '#3B82F6';
+
+  // Hotfix 245 C6: búsqueda global en TODA la carta (ignora selectedCategory)
+  // con el MISMO criterio del filtro actual (matchesSearch + available)
+  const searchResults = searchQuery
+    ? products.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      ).filter(p => p.available)
+    : [];
+
   // ========== CÁLCULOS ==========
   const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
   const tax = 0;
@@ -338,15 +356,15 @@ export const NewMostradorModal = ({
     onClose();
   };
 
-  return (
+  return createPortal(
     <>
       {/* Overlay — sin onClick para no cerrar al hacer click fuera */}
       <div 
         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
       />
 
-      {/* Modal lateral */}
-      <div className="fixed right-0 top-0 h-full w-full sm:w-[520px] bg-white shadow-2xl z-50 flex flex-col overflow-hidden">
+      {/* Modal fullscreen — Hotfix 245 C1 */}
+      <div className="fixed inset-0 bg-white shadow-2xl z-50 flex flex-col overflow-hidden">
         
         {/* ========== HEADER ========== */}
         <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-500 text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
@@ -405,7 +423,9 @@ export const NewMostradorModal = ({
 
         {/* ========== FORMULARIO DEL CLIENTE (paso 1) ========== */}
         {step === 'client' && (
-        <div className="flex-1 overflow-y-auto bg-[#f4f6fb] px-4 py-5 space-y-3 min-h-0">
+        <div className="flex-1 overflow-y-auto bg-[#f4f6fb] px-4 py-5 min-h-0">
+        {/* Hotfix 245 C1: tarjeta centrada max-w-lg — campos y validaciones idénticos */}
+        <div className="mx-auto w-full max-w-lg space-y-3">
           {/* ── Card: Datos del cliente ── */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 space-y-3.5">
             <p className="flex items-center gap-1.5 text-xs font-bold text-gray-400 uppercase tracking-wider pb-2 border-b border-gray-100">
@@ -541,25 +561,14 @@ export const NewMostradorModal = ({
             </div>
           )}
         </div>
+        </div>
         )}
 
-        {/* ====== RESUMEN CLIENTE (paso 2) ====== */}
+        {/* ====== PASO 2 · DOS COLUMNAS (catálogo · ticket) — Hotfix 245 C1 ====== */}
         {step === 'order' && (
-          <div className="bg-blue-50 border-b-2 border-blue-100 px-4 py-2.5 flex-shrink-0">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-blue-200 flex items-center justify-center flex-shrink-0">
-                <User size={13} className="text-blue-700" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-blue-900 truncate">{customerName}</p>
-                <p className="text-xs text-blue-600 truncate">{deliveryPhone}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ====== BÚSQL + CARRITO (paso 2) ====== */}
-        {step === 'order' && (<>
+        <div className="flex-1 flex min-h-0 overflow-hidden">
+        {/* ── Columna catálogo ── */}
+        <div className="flex-1 min-w-0 flex flex-col min-h-0">
         {/* ========== BÚSQUEDA ========== */}
         <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
           <div className="relative">
@@ -602,10 +611,11 @@ export const NewMostradorModal = ({
               </button>
             )}
 
-            {/* Dropdown de resultados de búsqueda */}
-            {viewMode === 'search' && searchQuery && filteredProducts.length > 0 && (
+            {/* Dropdown de resultados de búsqueda — Hotfix 245 C6: visible en
+                AMBOS modos; busca en toda la carta ignorando selectedCategory */}
+            {searchQuery && searchResults.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-blue-500 rounded-lg shadow-xl max-h-[300px] overflow-y-auto z-50">
-                {filteredProducts.map((product) => (
+                {searchResults.map((product) => (
                   <button
                     key={product.id}
                     onClick={() => handleProductClick(product)}
@@ -651,7 +661,7 @@ export const NewMostradorModal = ({
             )}
 
             {/* Mensaje cuando no hay resultados */}
-            {viewMode === 'search' && searchQuery && filteredProducts.length === 0 && (
+            {searchQuery && searchResults.length === 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg p-4 text-center z-50">
                 <Search size={24} className="mx-auto text-gray-400 mb-2" />
                 <p className="text-sm text-gray-600">No se encontraron productos</p>
@@ -659,230 +669,218 @@ export const NewMostradorModal = ({
             )}
           </div>
 
-          {/* Categorías — Hotfix #244: chips con icono imagen→emoji→default (patrón #243),
-              visibles SOLO en modo grid */}
-          {viewMode === 'grid' && (
-          <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
-            <button
-              onClick={() => setSelectedCategory('')}
-              className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                !selectedCategory
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              Todos
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
-                  selectedCategory === cat.id
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {(cat as any).image ? (
-                  <img src={(cat as any).image} alt="" className="w-4 h-4 rounded-full object-cover" loading="lazy" />
-                ) : (
-                  <span className="text-xs leading-none">{emojiForCategory(cat, products)}</span>
-                )}
-                {categoryLabel(cat)}
-              </button>
-            ))}
-          </div>
-          )}
         </div>
 
-        {/* ── Hotfix #244: grilla visual por categoría (patrón #243), visible SOLO
-            en modo grid; la selección LLAMA al handler existente handleProductClick ── */}
+        {/* ── Hotfix 245 C3: nivel 1 = baldosas de categorías · nivel 2 = grilla
+            de productos de la categoría (la selección LLAMA al handler existente
+            handleProductClick) ── */}
         {viewMode === 'grid' && !searchQuery && (
-          <div className="border-b border-gray-200 bg-white overflow-y-auto flex-shrink-0" style={{ maxHeight: 300 }}>
-            {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2 p-3">
-                {filteredProducts.map((product) => (
+          selectedCategory === null ? (
+          <div className="flex-1 overflow-y-auto min-h-0 bg-white flex-shrink-0 border-b border-gray-200">
+            <div className="grid gap-3 p-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
+              {categories.map((cat, i) => {
+                const prevColor = i > 0 ? colorForCategory(categories, categories[i - 1].id) : undefined;
+                const color = colorForCategory(categories, cat.id, prevColor);
+                const count = products.filter(p => p.categoryId === cat.id && p.available).length;
+                return (
                   <button
-                    key={product.id}
-                    onClick={() => handleProductClick(product)}
-                    className="text-left p-2.5 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-xl transition-all"
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id)}
+                    className="text-left rounded-2xl overflow-hidden border border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50 transition-all min-h-[120px] flex flex-col"
                   >
-                    {(product as any).image ? (
-                      <div className="w-full h-16 mb-1.5 rounded-lg overflow-hidden bg-gray-100">
-                        <img src={(product as any).image} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    {(cat as any).image ? (
+                      <div className="h-16 w-full overflow-hidden bg-gray-100">
+                        <img src={(cat as any).image} alt="" className="w-full h-full object-cover" loading="lazy" />
                       </div>
                     ) : (
-                      <div className="w-full h-16 mb-1.5 flex items-center justify-center rounded-lg bg-gray-100">
-                        <span className="text-3xl leading-none">{(product as any).emoji || '🍽️'}</span>
+                      <div className="h-16 w-full flex items-center justify-center" style={{ backgroundColor: color }}>
+                        <span className="text-4xl leading-none">{emojiForCategory(cat, products)}</span>
                       </div>
                     )}
-                    <p className="text-xs font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</p>
-                    <p className="text-sm font-bold text-blue-600">${fmt(product.price)}</p>
-                    {product.modifiers && product.modifiers.length > 0 && (
-                      <p className="text-[10px] text-gray-400 mt-0.5">Con opciones</p>
-                    )}
+                    <div className="p-2.5 flex-1">
+                      <p className="text-[15px] font-semibold text-gray-900 line-clamp-2">{categoryLabel(cat)}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{count} {count === 1 ? 'producto' : 'productos'}</p>
+                    </div>
                   </button>
-                ))}
+                );
+              })}
+            </div>
+          </div>
+          ) : (
+          <div className="flex-1 overflow-y-auto min-h-0 bg-white flex-shrink-0 border-b border-gray-200">
+            {/* ── Hotfix 245 C4: cabecera del nivel 2 ── */}
+            <div className="px-3 pt-3 flex items-center gap-2.5">
+              <button
+                onClick={() => setSelectedCategory(null)}
+                className="h-11 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+              >
+                <ArrowLeft size={16} />
+                Categorías
+              </button>
+              <div className="min-w-0 flex items-center gap-2">
+                <p className="text-sm font-bold text-gray-900 truncate">{activeCat ? categoryLabel(activeCat) : ''}</p>
+                <span className="text-xs text-gray-400 whitespace-nowrap">
+                  {products.filter(p => p.categoryId === selectedCategory && p.available).length} disponibles
+                </span>
+              </div>
+            </div>
+            {/* ── Hotfix 245 C4: chips de TODAS las categorías (flex-wrap, activo naranja) ── */}
+            <div className="flex flex-wrap gap-2 px-3 py-2.5">
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+                    selectedCategory === cat.id
+                      ? 'bg-[#F97316] text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {(cat as any).image ? (
+                    <img src={(cat as any).image} alt="" className="w-4 h-4 rounded-full object-cover" loading="lazy" />
+                  ) : (
+                    <span className="text-xs leading-none">{emojiForCategory(cat, products)}</span>
+                  )}
+                  {categoryLabel(cat)}
+                </button>
+              ))}
+            </div>
+            {/* ── Hotfix 245 C4: grilla de productos de la categoría (auto-fill 160px) ── */}
+            {filteredProducts.length > 0 ? (
+              <div className="grid gap-2.5 p-3 pt-0" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+                {filteredProducts.map((product) => {
+                  const qtyInCart = cart.filter(i => i.productId === product.id).reduce((s, i) => s + i.quantity, 0);
+                  return (
+                    <button
+                      key={product.id}
+                      onClick={() => {
+                        setTappedProductId(product.id);
+                        setTimeout(() => setTappedProductId(null), 120);
+                        handleProductClick(product);
+                      }}
+                      className={`relative text-left p-2.5 bg-gray-50 hover:bg-blue-50 border border-gray-200 hover:border-blue-300 rounded-xl transition-all duration-100 ${tappedProductId === product.id ? 'scale-95' : 'scale-100'}`}
+                    >
+                      {qtyInCart > 0 && (
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center z-10">{qtyInCart}</span>
+                      )}
+                      {(product as any).image ? (
+                        <div className="w-full h-16 mb-1.5 rounded-lg overflow-hidden bg-gray-100">
+                          <img src={(product as any).image} alt="" className="w-full h-full object-cover" loading="lazy" />
+                        </div>
+                      ) : (
+                        <div className="w-full h-16 mb-1.5 rounded-lg flex items-center justify-center" style={{ backgroundColor: activeCatColor }}>
+                          <span className="text-3xl leading-none">{activeCat ? emojiForCategory(activeCat, products) : '🍽️'}</span>
+                        </div>
+                      )}
+                      <p className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</p>
+                      <p className="text-sm font-bold text-blue-600">${fmt(product.price)}</p>
+                      {product.modifiers && product.modifiers.length > 0 && (
+                        <p className="text-[10px] text-gray-400 mt-0.5">Con opciones</p>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             ) : (
               <p className="text-center text-sm text-gray-400 py-6">Sin productos en esta categoría</p>
             )}
           </div>
+          )
         )}
 
-        {/* ========== CONTENIDO - SOLO CARRITO ========== */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          
-          {/* CARRITO (100% altura) */}
-            <div className="flex-1 bg-gray-50 flex flex-col min-h-0 overflow-hidden">
-            {cart.length === 0 ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="text-center">
-                  <ShoppingBag size={32} className="mx-auto text-gray-400 mb-2" />
-                  <p className="text-gray-600 text-sm font-medium">Carrito vacío</p>
-                  <p className="text-gray-400 text-xs">Agrega productos arriba</p>
-                </div>
-              </div>
-            ) : (
-              <>
-                {/* Items */}
-                <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                  {cart.map((item) => (
-                    <div
-                      key={item.id}
-                      className="bg-yellow-50 rounded-lg border border-yellow-200 overflow-hidden"
-                    >
-                      {/* Fila principal: qty + nombre + precio + botones */}
-                      <div className="flex items-center gap-1.5 px-2 py-1.5">
-                        {/* Controles de cantidad */}
-                        <button
-                          onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
-                          className="w-5 h-5 bg-yellow-200 hover:bg-yellow-300 rounded flex items-center justify-center transition-colors"
-                        >
-                          <Minus size={10} />
-                        </button>
-                        <span className="w-5 text-center text-sm font-bold text-gray-800">
-                          {item.quantity}
-                        </span>
-                        <button
-                          onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                          className="w-5 h-5 bg-yellow-200 hover:bg-yellow-300 rounded flex items-center justify-center transition-colors"
-                        >
-                          <Plus size={10} />
-                        </button>
-
-                        {/* Nombre del producto */}
-                        <span className="flex-1 font-semibold text-sm text-gray-900 truncate">
-                          {item.productName}
-                        </span>
-
-                        {/* Precio */}
-                        <span className="text-sm font-bold text-gray-800 whitespace-nowrap">
-                          $ {fmt(item.subtotal)}
-                        </span>
-
-                        {/* Botón eliminar */}
-                        <button
-                          onClick={() => handleRemoveItem(item.id)}
-                          className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
-
-                      {/* Nota: boton o textarea */}
-                      {(expandedNotes[item.id] || (item.notes && item.notes.trim().length > 0)) ? (
-                        <div className="border-t border-yellow-200 bg-white">
-                          <textarea
-                            placeholder="Escribe la nota..."
-                            value={item.notes || ''}
-                            onChange={(e) => handleUpdateNotes(item.id, e.target.value)}
-                            rows={2}
-                            className="w-full text-xs px-3 py-2 resize-none focus:outline-none placeholder-gray-400 bg-white"
-                            autoFocus
-                          />
-                        </div>
-                      ) : (
-                        <div className="border-t border-yellow-200 bg-white px-2 py-1.5">
-                          <button
-                            onClick={() => setExpandedNotes(prev => ({ ...prev, [item.id]: true }))}
-                            className="w-full py-2 rounded-lg border-2 border-dashed border-yellow-300 bg-yellow-50 hover:bg-yellow-100 hover:border-yellow-400 text-yellow-700 text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-1.5"
-                          >
-                            <MessageSquare size={13} />
-                            AGREGAR NOTA
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Totales y botón — fijo abajo */}
-                <div className="border-t-2 border-gray-300 bg-white p-3 flex-shrink-0">
-                  <div className="space-y-1 mb-3">
-                    <div className="flex justify-between text-sm text-gray-600">
-                      <span>Subtotal</span>
-                      <span className="font-medium">${fmt(subtotal)}</span>
-                    </div>
-                    <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t border-gray-200">
-                      <span>Total</span>
-                      <span className="text-blue-500">${fmt(total)}</span>
-                    </div>
-                  </div>
-
-                  {/* Error visible en paso 2 */}
-                  {error && (
-                    <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-3 py-2 mb-2">
-                      <AlertCircle size={14} className="flex-shrink-0" />
-                      <span className="text-xs font-medium">{error}</span>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={handleConfirm}
-                    disabled={loading || cart.length === 0}
-                    className="w-full py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-bold hover:from-green-600 hover:to-green-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                        Creando...
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard size={18} />
-                        Crear Orden ${fmt(total)}
-                      </>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => setShowPrintControl(true)}
-                    disabled={cart.length === 0}
-                    className="w-full py-2 border-2 border-indigo-400 text-indigo-600 rounded-lg font-bold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <Printer size={17} />
-                    Imprimir control de mesa
-                  </button>
-                </div>
-              </>
-            )}
-                  {/* Guardar sin productos — siempre visible en paso order */}
-                  {step === 'order' && (
-                  <button
-                    onClick={handleSaveEmpty}
-                    disabled={loading || !customerName.trim()}
-                    className="w-full border border-gray-300 text-gray-600 rounded-lg py-2 text-sm hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-                  >
-                    💾 Guardar sin productos
-                  </button>
-                  )}
-          </div>
         </div>
-        </>)}
+
+        {/* ── Columna ticket — Hotfix 245 C1 + C5 (OrderTicket compartido) ====== */}
+        <div className="w-[420px] xl:w-[480px] shrink-0 border-l border-gray-200 flex flex-col min-h-0 overflow-hidden">
+          <OrderTicket
+            accent="blue"
+            emptyIcon="bag"
+            items={cart}
+            onIncreaseQuantity={(itemId) => {
+              const it = cart.find(i => i.id === itemId);
+              if (it) handleUpdateQuantity(itemId, it.quantity + 1);
+            }}
+            onDecreaseQuantity={(itemId) => {
+              const it = cart.find(i => i.id === itemId);
+              if (it) handleUpdateQuantity(itemId, it.quantity - 1);
+            }}
+            onRemoveItem={handleRemoveItem}
+            renderItemExtras={(item) =>
+              (expandedNotes[item.id] || (item.notes && item.notes.trim().length > 0)) ? (
+                <div className="border-t border-yellow-200 bg-white">
+                  <textarea
+                    placeholder="Escribe la nota..."
+                    value={item.notes || ''}
+                    onChange={(e) => handleUpdateNotes(item.id, e.target.value)}
+                    rows={2}
+                    className="w-full text-xs px-3 py-2 resize-none focus:outline-none placeholder-gray-400 bg-white"
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <div className="border-t border-yellow-200 bg-white px-2 py-1.5">
+                  <button
+                    onClick={() => setExpandedNotes(prev => ({ ...prev, [item.id]: true }))}
+                    className="w-full py-2 rounded-lg border-2 border-dashed border-yellow-300 bg-yellow-50 hover:bg-yellow-100 hover:border-yellow-400 text-yellow-700 text-xs font-bold tracking-wide transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <MessageSquare size={13} />
+                    AGREGAR NOTA
+                  </button>
+                </div>
+              )
+            }
+            formatPrice={fmt}
+            subtotal={subtotal}
+            total={total}
+            customerChip={
+              /* ====== RESUMEN CLIENTE (paso 2) — chip editable en 1 tap ====== */
+              <button
+                onClick={() => { setStep('client'); setError(''); }}
+                className="w-full text-left bg-blue-50 border-b-2 border-blue-100 px-4 py-2.5 flex-shrink-0 hover:bg-blue-100 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-blue-200 flex items-center justify-center flex-shrink-0">
+                    <User size={13} className="text-blue-700" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-blue-900 truncate">{customerName}</p>
+                    <p className="text-xs text-blue-600 truncate">{deliveryPhone}</p>
+                  </div>
+                </div>
+              </button>
+            }
+            errorNode={
+              error ? (
+                <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-3 py-2 mb-2">
+                  <AlertCircle size={14} className="flex-shrink-0" />
+                  <span className="text-xs font-medium">{error}</span>
+                </div>
+              ) : undefined
+            }
+            footerExtra={
+              <button
+                onClick={() => setShowPrintControl(true)}
+                disabled={cart.length === 0}
+                className="w-full mt-2 py-2 border-2 border-indigo-400 text-indigo-600 rounded-lg font-bold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Printer size={17} />
+                Imprimir control de mesa
+              </button>
+            }
+            onConfirm={handleConfirm}
+            saving={loading}
+            onGuardarSinProductos={handleSaveEmpty}
+            canSaveEmpty={customerName.trim().length > 0}
+            confirmLabel={`Crear Orden $${fmt(total)}`}
+          />
+        </div>
+        </div>
+        )}
 
         {/* Botón continuar - solo paso 1 */}
         {step === 'client' && (
           <div className="border-t border-gray-200 bg-white px-4 py-4 flex-shrink-0">
+            <div className="mx-auto w-full max-w-lg">
             <button
               onClick={() => { if (validateClient()) { setStep('order'); setTimeout(() => searchInputRef.current?.focus(), 100); } }}
               className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-xl text-base font-bold hover:from-blue-700 hover:to-blue-600 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2 group"
@@ -890,6 +888,7 @@ export const NewMostradorModal = ({
               <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
               Continuar — Elegir productos
             </button>
+            </div>
           </div>
         )}
       </div>
@@ -909,7 +908,8 @@ export const NewMostradorModal = ({
         tax={tax}
         total={total}
       />
-    </>
+    </>,
+    document.body
   );
 };
 

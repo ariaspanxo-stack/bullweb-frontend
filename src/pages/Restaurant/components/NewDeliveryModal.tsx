@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   X, 
   Search, 
@@ -25,8 +26,9 @@ import {
   Trash2,
   LayoutGrid
 } from 'lucide-react';
-import { emojiForCategory, categoryLabel } from '../../../lib/categoryHelpers';
+import { emojiForCategory, categoryLabel, colorForCategory } from '../../../lib/categoryHelpers';
 import { PrintControlModal } from '../../../components/print/PrintControlModal';
+import { OrderTicket } from '../../../components/restaurant/shared/OrderTicket';
 import type { PrintControlItem } from '../../../components/print/PrintControlModal';
 import type { 
   Product, 
@@ -85,10 +87,13 @@ export const NewDeliveryModal = ({
 
   const [saveToCustomers, setSaveToCustomers] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('');
+  // Hotfix 245 C3: null = nivel 1 (baldosas de categorías); id = nivel 2
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  // Hotfix 245 C4: animación de tap (~120ms, clase CSS scale, estado local puro)
+  const [tappedProductId, setTappedProductId] = useState<string | null>(null);
   // Hotfix #244: toggle búsqueda↔grilla, preferencia persistida por dispositivo
   const [viewMode, setViewMode] = useState<'search' | 'grid'>(() =>
-    (localStorage.getItem('bullweb_pos_viewmode_delivery') as 'search' | 'grid') || 'search'
+    (localStorage.getItem('bullweb_pos_viewmode_delivery') as 'search' | 'grid') || 'grid'
   );
   const toggleViewMode = (mode: 'search' | 'grid') => {
     setViewMode(mode);
@@ -245,6 +250,19 @@ export const NewDeliveryModal = ({
     return matchesCategory && matchesSearch && p.available;
   });
 
+  // Hotfix 245 C4: categoría activa (nivel 2) y su color de banda
+  const activeCat = categories.find(c => c.id === selectedCategory) ?? null;
+  const activeCatColor = activeCat ? colorForCategory(categories, activeCat.id) : '#8B5CF6';
+
+  // Hotfix 245 C6: búsqueda global en TODA la carta (ignora selectedCategory)
+  // con el MISMO criterio del filtro actual (matchesSearch + available)
+  const searchResults = searchQuery
+    ? products.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      ).filter(p => p.available)
+    : [];
+
   // ========== CÁLCULOS ==========
   const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
   const tax = 0;
@@ -370,15 +388,15 @@ export const NewDeliveryModal = ({
     onClose();
   };
 
-  return (
+  return createPortal(
     <>
       {/* Overlay — sin onClick para no cerrar al hacer click fuera */}
       <div 
         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
       />
 
-      {/* Modal lateral */}
-      <div className="fixed right-0 top-0 h-screen w-full sm:w-[520px] bg-white shadow-2xl z-50 flex flex-col overflow-hidden">
+      {/* Modal fullscreen — Hotfix 245 C1 */}
+      <div className="fixed inset-0 bg-white shadow-2xl z-50 flex flex-col overflow-hidden">
         
         {/* ========== HEADER ========== */}
         <div className="bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
@@ -435,12 +453,11 @@ export const NewDeliveryModal = ({
           </div>
         </div>
 
-        {/* ========== CONTENIDO SCROLLEABLE ========== */}
-        <div className="flex-1 overflow-y-auto min-h-0">
-
-          {/* ====== FORMULARIO DEL CLIENTE (paso 1) ====== */}
-          {step === 'client' && (
-          <div className="bg-[#f4f6fb] px-4 py-5 space-y-3">
+        {/* ========== CONTENIDO (Hotfix 245 C1: client centrado · order dos columnas) ========== */}
+        {step === 'client' ? (
+        <div className="flex-1 overflow-y-auto bg-[#f4f6fb] px-4 py-5 min-h-0">
+          {/* Hotfix 245 C1: tarjeta centrada max-w-lg — campos y validaciones idénticos */}
+          <div className="mx-auto w-full max-w-lg space-y-3">
             {/* ── Card: Datos del cliente ── */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 space-y-3.5">
               <p className="flex items-center gap-1.5 text-xs font-bold text-gray-400 uppercase tracking-wider pb-2 border-b border-gray-100">
@@ -629,27 +646,12 @@ export const NewDeliveryModal = ({
               </button>
             )}
           </div>
-          )}
-
-          {/* ====== RESUMEN CLIENTE (paso 2) ====== */}
-          {step === 'order' && (
-            <div className="bg-purple-50 border-b-2 border-purple-100 px-4 py-2.5">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-purple-200 flex items-center justify-center flex-shrink-0">
-                  <User size={13} className="text-purple-700" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-purple-900 truncate">{customerName}</p>
-                  <p className="text-xs text-purple-600 truncate">{customerPhone} · {customerAddress}, {deliveryCity}</p>
-                  {deliveryNotes && <p className="text-xs text-purple-500 italic truncate">{deliveryNotes}</p>}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ====== BÚSQL + CARRITO (paso 2) ====== */}
-          {step === 'order' && (<>
-          <div className="p-4 border-b border-gray-200 bg-white">
+        </div>
+        ) : (
+        <div className="flex-1 flex min-h-0 overflow-hidden">
+          {/* ── Columna catálogo ── */}
+          <div className="flex-1 min-w-0 flex flex-col min-h-0">
+          <div className="p-4 border-b border-gray-200 bg-white flex-shrink-0">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
               <input
@@ -690,10 +692,11 @@ export const NewDeliveryModal = ({
                 </button>
               )}
 
-              {/* Dropdown de resultados */}
-              {viewMode === 'search' && searchQuery && filteredProducts.length > 0 && (
+              {/* Dropdown de resultados — Hotfix 245 C6: visible en AMBOS modos;
+                  busca en toda la carta ignorando selectedCategory */}
+              {searchQuery && searchResults.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-purple-500 rounded-lg shadow-xl max-h-[300px] overflow-y-auto z-50">
-                  {filteredProducts.map((product) => (
+                  {searchResults.map((product) => (
                     <button
                       key={product.id}
                       onClick={() => {
@@ -724,185 +727,265 @@ export const NewDeliveryModal = ({
                 </div>
               )}
 
-              {viewMode === 'search' && searchQuery && filteredProducts.length === 0 && (
+              {searchQuery && searchResults.length === 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg p-4 text-center z-50">
                   <Search size={24} className="mx-auto text-gray-400 mb-2" />
                   <p className="text-sm text-gray-600">No se encontraron productos</p>
                 </div>
               )}
             </div>
-{/* Categorías — Hotfix #244: chips con icono imagen→emoji→default (patrón #243),
-    visibles SOLO en modo grid */}
-{viewMode === 'grid' && (
-<div className="flex gap-2 mt-3 overflow-x-auto pb-2">
-  <button
-    onClick={() => setSelectedCategory('')}
-    className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-      !selectedCategory
-        ? 'bg-purple-500 text-white'
-        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-    }`}
-  >
-    Todos
-  </button>
-  {categories.map((cat) => (
-    <button
-      key={cat.id}
-      onClick={() => setSelectedCategory(cat.id)}
-      className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
-        selectedCategory === cat.id ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-      }`}
-    >
-      {(cat as any).image ? (
-        <img src={(cat as any).image} alt="" className="w-4 h-4 rounded-full object-cover" loading="lazy" />
-      ) : (
-        <span className="text-xs leading-none">{emojiForCategory(cat, products)}</span>
-      )}
-      {categoryLabel(cat)}
-    </button>
-  ))}
-</div>
-)}
 </div>
 
-{/* ── Hotfix #244: grilla visual por categoría (patrón #243), visible SOLO
-  en modo grid; la selección LLAMA al handler existente handleAddProduct ── */}
+{/* ── Hotfix 245 C3: nivel 1 = baldosas de categorías · nivel 2 = grilla de
+    productos de la categoría (selección LLAMA al handler existente handleAddProduct) ── */}
 {viewMode === 'grid' && !searchQuery && (
-<div className="border-b border-gray-200 bg-white overflow-y-auto flex-shrink-0" style={{ maxHeight: 300 }}>
-  {filteredProducts.length > 0 ? (
-    <div className="grid grid-cols-2 gap-2 p-3">
-      {filteredProducts.map((product) => (
+  selectedCategory === null ? (
+  <div className="flex-1 overflow-y-auto min-h-0 bg-white flex-shrink-0 border-b border-gray-200">
+    <div className="grid gap-3 p-3" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))' }}>
+      {categories.map((cat, i) => {
+        const prevColor = i > 0 ? colorForCategory(categories, categories[i - 1].id) : undefined;
+        const color = colorForCategory(categories, cat.id, prevColor);
+        const count = products.filter(p => p.categoryId === cat.id && p.available).length;
+        return (
+          <button
+            key={cat.id}
+            onClick={() => setSelectedCategory(cat.id)}
+            className="text-left rounded-2xl overflow-hidden border border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50 transition-all min-h-[120px] flex flex-col"
+          >
+            {(cat as any).image ? (
+              <div className="h-16 w-full overflow-hidden bg-gray-100">
+                <img src={(cat as any).image} alt="" className="w-full h-full object-cover" loading="lazy" />
+              </div>
+            ) : (
+              <div className="h-16 w-full flex items-center justify-center" style={{ backgroundColor: color }}>
+                <span className="text-4xl leading-none">{emojiForCategory(cat, products)}</span>
+              </div>
+            )}
+            <div className="p-2.5 flex-1">
+              <p className="text-[15px] font-semibold text-gray-900 line-clamp-2">{categoryLabel(cat)}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{count} {count === 1 ? 'producto' : 'productos'}</p>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  </div>
+  ) : (
+  <div className="flex-1 overflow-y-auto min-h-0 bg-white flex-shrink-0 border-b border-gray-200">
+    {/* ── Hotfix 245 C4: cabecera del nivel 2 ── */}
+    <div className="px-3 pt-3 flex items-center gap-2.5">
+      <button
+        onClick={() => setSelectedCategory(null)}
+        className="h-11 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+      >
+        <ArrowLeft size={16} />
+        Categorías
+      </button>
+      <div className="min-w-0 flex items-center gap-2">
+        <p className="text-sm font-bold text-gray-900 truncate">{activeCat ? categoryLabel(activeCat) : ''}</p>
+        <span className="text-xs text-gray-400 whitespace-nowrap">
+          {products.filter(p => p.categoryId === selectedCategory && p.available).length} disponibles
+        </span>
+      </div>
+    </div>
+    {/* ── Hotfix 245 C4: chips de TODAS las categorías (flex-wrap, activo naranja) ── */}
+    <div className="flex flex-wrap gap-2 px-3 py-2.5">
+      {categories.map((cat) => (
         <button
-          key={product.id}
-          onClick={() => { handleAddProduct(product); }}
-          className="text-left p-2.5 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-300 rounded-xl transition-all"
+          key={cat.id}
+          onClick={() => setSelectedCategory(cat.id)}
+          className={`px-3 py-1 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+            selectedCategory === cat.id
+              ? 'bg-[#F97316] text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
         >
-          {(product as any).image ? (
-            <div className="w-full h-16 mb-1.5 rounded-lg overflow-hidden bg-gray-100">
-              <img src={(product as any).image} alt="" className="w-full h-full object-cover" loading="lazy" />
-            </div>
+          {(cat as any).image ? (
+            <img src={(cat as any).image} alt="" className="w-4 h-4 rounded-full object-cover" loading="lazy" />
           ) : (
-            <div className="w-full h-16 mb-1.5 flex items-center justify-center rounded-lg bg-gray-100">
-              <span className="text-3xl leading-none">{(product as any).emoji || '🍽️'}</span>
-            </div>
+            <span className="text-xs leading-none">{emojiForCategory(cat, products)}</span>
           )}
-          <p className="text-xs font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</p>
-          <p className="text-sm font-bold text-purple-600">${fmt(product.price)}</p>
+          {categoryLabel(cat)}
         </button>
       ))}
     </div>
-  ) : (
-    <p className="text-center text-sm text-gray-400 py-6">Sin productos en esta categoría</p>
-  )}
+    {/* ── Hotfix 245 C4: grilla de productos de la categoría (auto-fill 160px) ── */}
+    {filteredProducts.length > 0 ? (
+      <div className="grid gap-2.5 p-3 pt-0" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))' }}>
+        {filteredProducts.map((product) => {
+          const qtyInCart = cart.filter(i => i.productId === product.id).reduce((s, i) => s + i.quantity, 0);
+          return (
+            <button
+              key={product.id}
+              onClick={() => {
+                setTappedProductId(product.id);
+                setTimeout(() => setTappedProductId(null), 120);
+                handleAddProduct(product);
+              }}
+              className={`relative text-left p-2.5 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-300 rounded-xl transition-all duration-100 ${tappedProductId === product.id ? 'scale-95' : 'scale-100'}`}
+            >
+              {qtyInCart > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center z-10">{qtyInCart}</span>
+              )}
+              {(product as any).image ? (
+                <div className="w-full h-16 mb-1.5 rounded-lg overflow-hidden bg-gray-100">
+                  <img src={(product as any).image} alt="" className="w-full h-full object-cover" loading="lazy" />
+                </div>
+              ) : (
+                <div className="w-full h-16 mb-1.5 rounded-lg flex items-center justify-center" style={{ backgroundColor: activeCatColor }}>
+                  <span className="text-3xl leading-none">{activeCat ? emojiForCategory(activeCat, products) : '🍽️'}</span>
+                </div>
+              )}
+              <p className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</p>
+              <p className="text-sm font-bold text-purple-600">${fmt(product.price)}</p>
+            </button>
+          );
+        })}
+      </div>
+    ) : (
+      <p className="text-center text-sm text-gray-400 py-6">Sin productos en esta categoría</p>
+    )}
 </div>
+  )
 )}
-          {/* ====== CARRITO ====== */}
-          <div className={`bg-gray-50 ${cart.length === 0 ? 'pb-2' : ''}`}>
-            {cart.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-center">
-                <Truck size={32} className="mx-auto text-gray-400 mb-2" />
-                <p className="text-gray-600 text-sm font-medium">Carrito vacío</p>
-                <p className="text-gray-400 text-xs">Agrega productos arriba</p>
+          </div>
+
+          {/* ── Columna ticket — Hotfix 245 C1 + C5 (OrderTicket compartido) ====== */}
+          <div className="w-[420px] xl:w-[480px] shrink-0 border-l border-gray-200 flex flex-col min-h-0 overflow-hidden">
+          <OrderTicket
+            accent="purple"
+            emptyIcon="truck"
+            items={cart}
+            onIncreaseQuantity={(itemId) => {
+              const it = cart.find(i => i.id === itemId);
+              if (it) handleUpdateQuantity(itemId, it.quantity + 1);
+            }}
+            onDecreaseQuantity={(itemId) => {
+              const it = cart.find(i => i.id === itemId);
+              if (it) handleUpdateQuantity(itemId, it.quantity - 1);
+            }}
+            onRemoveItem={handleRemoveItem}
+            renderItemExtras={(item) => (
+              <div className="border-t border-yellow-200 bg-white">
+                <textarea
+                  placeholder="Agrega un comentario aquí..."
+                  value={(item as any).notes || ''}
+                  onChange={(e) => {
+                    const notes = e.target.value;
+                    setCart(cart.map(i =>
+                      i.id === item.id ? { ...i, notes: notes || undefined } as any : i
+                    ));
+                  }}
+                  rows={2}
+                  className="w-full text-xs px-3 py-2 resize-none focus:outline-none placeholder-gray-400 bg-white"
+                />
               </div>
-            ) : (
-              <div className="p-3 space-y-2">
-                {cart.map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-yellow-50 rounded-xl border border-yellow-200 overflow-hidden"
-                  >
-                    <div className="flex items-center gap-1.5 px-2 py-1.5">
-                      <button
-                        onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
-                        className="w-5 h-5 bg-yellow-200 hover:bg-yellow-300 rounded flex items-center justify-center transition-colors"
-                      >
-                        <Minus size={10} />
-                      </button>
-                      <span className="w-5 text-center text-sm font-bold text-gray-800">{item.quantity}</span>
-                      <button
-                        onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                        className="w-5 h-5 bg-yellow-200 hover:bg-yellow-300 rounded flex items-center justify-center transition-colors"
-                      >
-                        <Plus size={10} />
-                      </button>
-                      <span className="flex-1 font-semibold text-sm text-gray-900 truncate">{item.productName}</span>
-                      <span className="text-sm font-bold text-gray-800 whitespace-nowrap">$ {fmt(item.subtotal)}</span>
-                      <button
-                        onClick={() => handleRemoveItem(item.id)}
-                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                      >
-                        <X size={14} />
-                      </button>
+            )}
+            formatPrice={fmt}
+            subtotal={subtotal}
+            total={total}
+            extraTotals={
+              <div className="flex justify-between text-sm text-purple-600">
+                <span>Delivery</span>
+                <span className="font-medium">${fmt(deliveryFeeValue)}</span>
+              </div>
+            }
+            customerChip={
+              /* ====== RESUMEN CLIENTE (paso 2) — chip editable en 1 tap ====== */
+              <button
+                onClick={() => { setStep('client'); setErrors([]); }}
+                className="w-full text-left bg-purple-50 border-b-2 border-purple-100 px-4 py-2.5 flex-shrink-0 hover:bg-purple-100 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-full bg-purple-200 flex items-center justify-center flex-shrink-0">
+                    <User size={13} className="text-purple-700" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-purple-900 truncate">{customerName}</p>
+                    <p className="text-xs text-purple-600 truncate">{customerPhone} · {customerAddress}, {deliveryCity}</p>
+                    {deliveryNotes && <p className="text-xs text-purple-500 italic truncate">{deliveryNotes}</p>}
+                  </div>
+                </div>
+              </button>
+            }
+            errorNode={
+              errors.length > 0 ? (
+                <div className="mb-3 bg-red-50 border border-red-200 rounded-xl p-3">
+                  {errors.map((error, index) => (
+                    <div key={index} className="flex items-start gap-2 text-xs text-red-700">
+                      <AlertCircle size={12} className="mt-0.5 flex-shrink-0" />
+                      <span>{error}</span>
                     </div>
-                    <div className="border-t border-yellow-200 bg-white">
-                      <textarea
-                        placeholder="Agrega un comentario aquí..."
-                        value={(item as any).notes || ''}
-                        onChange={(e) => {
-                          const notes = e.target.value;
-                          setCart(cart.map(i =>
-                            i.id === item.id ? { ...i, notes: notes || undefined } as any : i
-                          ));
-                        }}
-                        rows={2}
-                        className="w-full text-xs px-3 py-2 resize-none focus:outline-none placeholder-gray-400 bg-white"
-                      />
+                  ))}
+                </div>
+              ) : undefined
+            }
+            footerExtra={
+              <>
+                {/* ====== MEDIO DE PAGO (paso 2) ====== */}
+                <div className="mt-3">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-indigo-400 uppercase tracking-wider pb-2 mb-2 border-b border-indigo-100">
+                    <CreditCard size={12} />Medio de pago
+                  </p>
+                  {paymentMethods.length === 0 ? (
+                    <p className="text-xs text-gray-400">No hay medios de pago configurados.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {paymentMethods.map((m) => {
+                        const selected = paymentMethodId === m.id;
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setPaymentMethodId(m.id)}
+                            className={`px-3 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
+                              selected
+                                ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                                : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-indigo-300'
+                            }`}
+                          >
+                            <CreditCard size={11} className="inline mr-1 -mt-0.5" />
+                            {m.name}
+                          </button>
+                        );
+                      })}
                     </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setShowPrintControl(true)}
+                  disabled={cart.length === 0}
+                  className="w-full mt-2 py-2 border-2 border-indigo-400 text-indigo-600 rounded-lg font-bold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Printer size={17} />
+                  Imprimir control de mesa
+                </button>
+              </>
+            }
+            onConfirm={handleConfirm}
+            saving={loading}
+            onGuardarSinProductos={handleSaveEmpty}
+            canSaveEmpty={customerName.trim().length > 0}
+            confirmLabel={cart.length === 0 ? 'Crear Delivery' : `Crear Delivery $${fmt(total)}`}
+          />
+          </div>
+        </div>
+        )}
+
+        {/* ========== FOOTER SOLO PASO 1 — Hotfix 245 C1 ========== */}
+        {step === 'client' && (
+        <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4">
+          <div className="mx-auto w-full max-w-lg">
+            {errors.length > 0 && (
+              <div className="mb-3 bg-red-50 border border-red-200 rounded-xl p-3">
+                {errors.map((error, index) => (
+                  <div key={index} className="flex items-start gap-2 text-xs text-red-700">
+                    <AlertCircle size={12} className="mt-0.5 flex-shrink-0" />
+                    <span>{error}</span>
                   </div>
                 ))}
               </div>
             )}
-          </div>
-
-          {/* ====== MEDIO DE PAGO (paso 2) ====== */}
-          <div className="bg-white border-t border-gray-100 px-4 py-4">
-            <p className="flex items-center gap-1.5 text-xs font-bold text-indigo-400 uppercase tracking-wider pb-2 mb-3 border-b border-indigo-100">
-              <CreditCard size={12} />Medio de pago
-            </p>
-            {paymentMethods.length === 0 ? (
-              <p className="text-xs text-gray-400">No hay medios de pago configurados.</p>
-            ) : (
-              <div className="flex flex-wrap gap-2">
-                {paymentMethods.map((m) => {
-                  const selected = paymentMethodId === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => setPaymentMethodId(m.id)}
-                      className={`px-3 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
-                        selected
-                          ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                          : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-indigo-300'
-                      }`}
-                    >
-                      <CreditCard size={11} className="inline mr-1 -mt-0.5" />
-                      {m.name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          </>)}
-
-        </div>{/* fin scroll */}
-
-        {/* ========== FOOTER SIEMPRE VISIBLE ========== */}
-        <div className="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-4">
-          {/* Errores */}
-          {errors.length > 0 && (
-            <div className="mb-3 bg-red-50 border border-red-200 rounded-xl p-3">
-              {errors.map((error, index) => (
-                <div key={index} className="flex items-start gap-2 text-xs text-red-700">
-                  <AlertCircle size={12} className="mt-0.5 flex-shrink-0" />
-                  <span>{error}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {step === 'client' ? (
             <button
               onClick={() => { if (validateClient()) { setStep('order'); setTimeout(() => searchInputRef.current?.focus(), 100); } }}
               className="w-full py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-xl text-base font-bold hover:from-purple-700 hover:to-purple-600 transition-all shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2 group"
@@ -910,63 +993,9 @@ export const NewDeliveryModal = ({
               <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
               Continuar — Elegir productos
             </button>
-          ) : (
-            <>
-              {/* Totales compactos */}
-              {cart.length > 0 && (
-                <div className="space-y-0.5 mb-3 text-sm">
-                  <div className="flex justify-between text-gray-600">
-                    <span>Subtotal</span>
-                    <span className="font-medium">${fmt(subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-purple-600">
-                    <span>Delivery</span>
-                    <span className="font-medium">${fmt(deliveryFeeValue)}</span>
-                  </div>
-                  <div className="flex justify-between text-base font-bold text-gray-900 pt-1 border-t border-gray-200">
-                    <span>Total</span>
-                    <span className="text-purple-600">${fmt(total)}</span>
-                  </div>
-                </div>
-              )}
-
-              <button
-                onClick={handleConfirm}
-                disabled={loading}
-                className="w-full py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg font-bold hover:from-green-600 hover:to-green-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {loading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                    Creando...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard size={18} />
-                    {cart.length === 0
-                      ? 'Crear Delivery'
-                      : `Crear Delivery $${fmt(total)}`}
-                  </>
-                )}
-              </button>
-              <button
-                onClick={handleSaveEmpty}
-                disabled={loading}
-                className="w-full border border-gray-300 text-gray-600 rounded-lg py-2 text-sm hover:bg-gray-50 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                💾 Guardar sin productos
-              </button>
-              <button
-                onClick={() => setShowPrintControl(true)}
-                disabled={cart.length === 0}
-                className="w-full py-2 border-2 border-indigo-400 text-indigo-600 rounded-lg font-bold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Printer size={17} />
-                Imprimir control de mesa
-              </button>
-            </>
-          )}
+          </div>
         </div>
+        )}
 
       </div>
       <PrintControlModal
@@ -984,7 +1013,8 @@ export const NewDeliveryModal = ({
         tax={tax}
         total={total}
       />
-    </>
+    </>,
+    document.body
   );
 };
 

@@ -28,3 +28,36 @@ export function emojiForCategory(cat: ProductCategory, products: Product[]): str
 export function categoryLabel(cat: ProductCategory): string {
   return String(cat.name ?? '').toLowerCase() === 'sin categoria' ? 'Otros' : cat.name;
 }
+
+// ═══════════════════════════════════════════════════════════════
+// Hotfix 245 C2 — paleta de colores por categoría (12 tonos
+// diferenciables entre sí; SIN naranja ni vecinos de #F97316,
+// que queda reservado al botón principal "Confirmar orden")
+// ═══════════════════════════════════════════════════════════════
+export const CATEGORY_PALETTE: string[] = [
+  '#3B82F6', // azul
+  '#8B5CF6', // violeta
+  '#10B981', // esmeralda
+  '#EC4899', // rosa
+  '#06B6D4', // cian
+  '#84CC16', // lima
+  '#6366F1', // índigo
+  '#E11D48', // rosa intenso
+  '#14B8A6', // teal
+  '#A855F7', // púrpura
+  '#0EA5E9', // cielo
+  '#64748B', // pizarra
+];
+
+// Hotfix 245 C2: color estable por categoría según su posición en la
+// lista ordenada que usa el render; baldosas adyacentes jamás comparten
+// color (si coincide con la anterior, avanza un slot del ciclo).
+export function colorForCategory(categories: ProductCategory[], categoryId: string, previousColor?: string): string {
+  const idx = categories.findIndex(c => c.id === categoryId);
+  if (idx < 0) return CATEGORY_PALETTE[0];
+  let color = CATEGORY_PALETTE[idx % CATEGORY_PALETTE.length];
+  if (previousColor && color === previousColor) {
+    color = CATEGORY_PALETTE[(idx + 1) % CATEGORY_PALETTE.length];
+  }
+  return color;
+}

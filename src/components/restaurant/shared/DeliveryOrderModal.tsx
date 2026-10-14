@@ -7,13 +7,14 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   X, Search, Plus, Minus, Truck, ShoppingBag, MapPin,
   Phone, User, Printer, CreditCard, Pencil, ChefHat,
-  Loader2, Tag, Clock,
+  Loader2, Tag, Clock, LayoutGrid,
 } from 'lucide-react';
 import { ModifiersModal } from '../../../pages/Restaurant/components/ModifiersModal';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { restaurantService } from '../../../services/restaurantService';
 import { posService } from '../../../services/posService';
 import type { Sale, Product, SaleItem, ProductModifier } from '../../../types/restaurant.types';
+import { emojiForCategory, categoryLabel } from '../../../lib/categoryHelpers';
 import toast from 'react-hot-toast';
 import { usePermission } from '../../../hooks/usePermission';
 import { useRemovalReason } from '../../../hooks/useRemovalReason';
@@ -65,6 +66,16 @@ export function DeliveryOrderModal({
   // Productos
   const [searchQuery,       setSearchQuery]       = useState('');
   const [selectedCategory,  setSelectedCategory]  = useState('');
+  // Hotfix #244: toggle búsqueda↔grilla, preferencia persistida por dispositivo
+  const [viewMode, setViewMode] = useState<'search' | 'grid'>(() =>
+    (localStorage.getItem('bullweb_pos_viewmode_edit') as 'search' | 'grid') || 'search'
+  );
+  const toggleViewMode = (mode: 'search' | 'grid') => {
+    setViewMode(mode);
+    localStorage.setItem('bullweb_pos_viewmode_edit', mode);
+    // modo grid = exactamente #243: sin texto de búsqueda residual filtrando
+    if (mode === 'grid') setSearchQuery('');
+  };
 
   // Modificadores
   const [pendingProduct,    setPendingProduct]    = useState<Product | null>(null);
@@ -172,28 +183,8 @@ export function DeliveryOrderModal({
     return matchCat && matchSearch && p.available;
   });
 
-  // ── Hotfix #243: icono por categoría — emoji por nombre → emoji del primer
-  // producto con emoji → default 🍽️ (jerarquía del patrón CartaDigital :1994-1996;
-  // la imagen del chip se sirve aparte como object-cover chico)
-  function emojiForCategory(cat: ProductCategory): string {
-    const n = String(cat.name ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    const table: Record<string, string> = {
-      pizza: '🍕', sushi: '🍣', burger: '🍔', hamburguesa: '🍔', taco: '🌮', ensalada: '🥗',
-      bebida: '🥤', cafe: '☕', postre: '🍰', pastel: '🎂', helado: '🍦', vino: '🍷',
-      cerveza: '🍺', pescado: '🐟', marisco: '🦐', carne: '🥩', pollo: '🍗', pasta: '🍝',
-      sandwich: '🥪', sopa: '🍲', desayuno: '🥐', infantil: '🧒', comida: '🍔',
-      promocion: '🔥', combo: '🔥',
-    };
-    const hit = Object.keys(table).find(k => n.includes(k));
-    if (hit) return table[hit];
-    const fp = products.find(p => p.categoryId === cat.id && (p as any).emoji);
-    return (fp as any)?.emoji ?? '🍽️';
-  }
-
-  // Hotfix #243: label "Sin Categoria" → "Otros" (decisión del estratega)
-  function categoryLabel(cat: ProductCategory): string {
-    return String(cat.name ?? '').toLowerCase() === 'sin categoria' ? 'Otros' : cat.name;
-  }
+  // ── Hotfix #243 (→ #244 DRY): emojiForCategory y categoryLabel viven ahora
+  // en src/lib/categoryHelpers.ts (módulo compartido, importado arriba).
 
   // ── Handlers ─────────────────────────────────────────────────
 
@@ -469,17 +460,43 @@ export function DeliveryOrderModal({
 
             {/* ── LEFT: Catálogo ── */}
             <div className="flex flex-col w-1/2 overflow-hidden bg-gray-50">
-              {/* Búsqueda */}
+              {/* Búsqueda — Hotfix #244: modo search = lo de hoy (búsqueda+chips+grid);
+                  modo grid = exactamente #243 (chips+grid, barra colapsada) */}
               <div className="p-3 border-b border-gray-100">
                 <div className="relative">
-                  <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    ref={searchRef}
-                    value={searchQuery}
-                    onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Buscar producto..."
-                    className="w-full pl-8 pr-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-purple-200"
-                  />
+                  {viewMode === 'search' && (
+                    <>
+                      <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        ref={searchRef}
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        placeholder="Buscar producto..."
+                        className="w-full pl-8 pr-16 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-purple-200"
+                      />
+                    </>
+                  )}
+                  {/* Hotfix #244: toggle Búsqueda↔Categorías, persistido por dispositivo */}
+                  <div className={`absolute top-1/2 -translate-y-1/2 flex gap-1 ${viewMode === 'search' ? 'right-2' : 'right-0'}`}>
+                    <button
+                      onClick={() => toggleViewMode('search')}
+                      title="Búsqueda"
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        viewMode === 'search' ? `${isDelivery ? 'bg-purple-600' : 'bg-blue-600'} text-white` : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Search size={14} />
+                    </button>
+                    <button
+                      onClick={() => toggleViewMode('grid')}
+                      title="Categorías"
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        viewMode === 'grid' ? `${isDelivery ? 'bg-purple-600' : 'bg-blue-600'} text-white` : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <LayoutGrid size={14} />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -509,7 +526,7 @@ export function DeliveryOrderModal({
                     {(cat as any).image ? (
                       <img src={(cat as any).image} alt="" className="w-4 h-4 rounded-full object-cover" loading="lazy" />
                     ) : (
-                      <span className="text-xs leading-none">{emojiForCategory(cat)}</span>
+                      <span className="text-xs leading-none">{emojiForCategory(cat, products)}</span>
                     )}
                     {categoryLabel(cat)}
                   </button>

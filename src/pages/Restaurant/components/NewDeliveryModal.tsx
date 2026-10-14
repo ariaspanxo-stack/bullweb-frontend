@@ -22,8 +22,10 @@ import {
   ArrowLeft,
   ArrowRight,
   Printer,
-  Trash2
+  Trash2,
+  LayoutGrid
 } from 'lucide-react';
+import { emojiForCategory, categoryLabel } from '../../../lib/categoryHelpers';
 import { PrintControlModal } from '../../../components/print/PrintControlModal';
 import type { PrintControlItem } from '../../../components/print/PrintControlModal';
 import type { 
@@ -84,6 +86,14 @@ export const NewDeliveryModal = ({
   const [saveToCustomers, setSaveToCustomers] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  // Hotfix #244: toggle búsqueda↔grilla, preferencia persistida por dispositivo
+  const [viewMode, setViewMode] = useState<'search' | 'grid'>(() =>
+    (localStorage.getItem('bullweb_pos_viewmode_delivery') as 'search' | 'grid') || 'search'
+  );
+  const toggleViewMode = (mode: 'search' | 'grid') => {
+    setViewMode(mode);
+    localStorage.setItem('bullweb_pos_viewmode_delivery', mode);
+  };
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [step, setStep] = useState<'client' | 'order'>(() =>
@@ -648,19 +658,40 @@ export const NewDeliveryModal = ({
                 placeholder="Buscar producto..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-24 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               />
-              {searchQuery && (
+              {/* Hotfix #244: toggle Búsqueda↔Categorías, persistido por dispositivo */}
+              <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
+                <button
+                  onClick={() => toggleViewMode('search')}
+                  title="Búsqueda"
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    viewMode === 'search' ? 'bg-purple-500 text-white' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <Search size={16} />
+                </button>
+                <button
+                  onClick={() => toggleViewMode('grid')}
+                  title="Categorías"
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    viewMode === 'grid' ? 'bg-purple-500 text-white' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <LayoutGrid size={16} />
+                </button>
+              </div>
+              {searchQuery && viewMode === 'search' && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-20 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   <X size={16} />
                 </button>
               )}
 
               {/* Dropdown de resultados */}
-              {searchQuery && filteredProducts.length > 0 && (
+              {viewMode === 'search' && searchQuery && filteredProducts.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-purple-500 rounded-lg shadow-xl max-h-[300px] overflow-y-auto z-50">
                   {filteredProducts.map((product) => (
                     <button
@@ -693,60 +724,78 @@ export const NewDeliveryModal = ({
                 </div>
               )}
 
-              {searchQuery && filteredProducts.length === 0 && (
+              {viewMode === 'search' && searchQuery && filteredProducts.length === 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-gray-300 rounded-lg shadow-lg p-4 text-center z-50">
                   <Search size={24} className="mx-auto text-gray-400 mb-2" />
                   <p className="text-sm text-gray-600">No se encontraron productos</p>
                 </div>
               )}
             </div>
+{/* Categorías — Hotfix #244: chips con icono imagen→emoji→default (patrón #243),
+    visibles SOLO en modo grid */}
+{viewMode === 'grid' && (
+<div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+  <button
+    onClick={() => setSelectedCategory('')}
+    className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
+      !selectedCategory
+        ? 'bg-purple-500 text-white'
+        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+    }`}
+  >
+    Todos
+  </button>
+  {categories.map((cat) => (
+    <button
+      key={cat.id}
+      onClick={() => setSelectedCategory(cat.id)}
+      className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex items-center gap-1.5 ${
+        selectedCategory === cat.id ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+      }`}
+    >
+      {(cat as any).image ? (
+        <img src={(cat as any).image} alt="" className="w-4 h-4 rounded-full object-cover" loading="lazy" />
+      ) : (
+        <span className="text-xs leading-none">{emojiForCategory(cat, products)}</span>
+      )}
+      {categoryLabel(cat)}
+    </button>
+  ))}
+</div>
+)}
+</div>
 
-            {/* Categorías */}
-            <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
-              <button
-                onClick={() => setSelectedCategory('')}
-                className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                  !selectedCategory ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Todos
-              </button>
-              {categories.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
-                    selectedCategory === cat.id ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              ))}
+{/* ── Hotfix #244: grilla visual por categoría (patrón #243), visible SOLO
+  en modo grid; la selección LLAMA al handler existente handleAddProduct ── */}
+{viewMode === 'grid' && !searchQuery && (
+<div className="border-b border-gray-200 bg-white overflow-y-auto flex-shrink-0" style={{ maxHeight: 300 }}>
+  {filteredProducts.length > 0 ? (
+    <div className="grid grid-cols-2 gap-2 p-3">
+      {filteredProducts.map((product) => (
+        <button
+          key={product.id}
+          onClick={() => { handleAddProduct(product); }}
+          className="text-left p-2.5 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-300 rounded-xl transition-all"
+        >
+          {(product as any).image ? (
+            <div className="w-full h-16 mb-1.5 rounded-lg overflow-hidden bg-gray-100">
+              <img src={(product as any).image} alt="" className="w-full h-full object-cover" loading="lazy" />
             </div>
-          </div>
-
-          {/* ── Grilla de productos por categoría (sin búsqueda) ── */}
-          {!searchQuery && selectedCategory && (
-            <div className="border-b border-gray-200 bg-white overflow-y-auto flex-shrink-0" style={{ maxHeight: 240 }}>
-              {filteredProducts.length > 0 ? (
-                <div className="grid grid-cols-2 gap-2 p-3">
-                  {filteredProducts.map((product) => (
-                    <button
-                      key={product.id}
-                      onClick={() => { handleAddProduct(product); }}
-                      className="text-left p-2.5 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-300 rounded-xl transition-all"
-                    >
-                      <p className="text-xs font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</p>
-                      <p className="text-sm font-bold text-purple-600">${fmt(product.price)}</p>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-sm text-gray-400 py-6">Sin productos en esta categoría</p>
-              )}
+          ) : (
+            <div className="w-full h-16 mb-1.5 flex items-center justify-center rounded-lg bg-gray-100">
+              <span className="text-3xl leading-none">{(product as any).emoji || '🍽️'}</span>
             </div>
           )}
-
+          <p className="text-xs font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</p>
+          <p className="text-sm font-bold text-purple-600">${fmt(product.price)}</p>
+        </button>
+      ))}
+    </div>
+  ) : (
+    <p className="text-center text-sm text-gray-400 py-6">Sin productos en esta categoría</p>
+  )}
+</div>
+)}
           {/* ====== CARRITO ====== */}
           <div className={`bg-gray-50 ${cart.length === 0 ? 'pb-2' : ''}`}>
             {cart.length === 0 ? (

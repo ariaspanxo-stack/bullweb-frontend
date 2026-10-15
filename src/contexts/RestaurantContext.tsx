@@ -251,6 +251,8 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   const [pendingOrderCustomerName,   setPendingOrderCustomerName]   = useState<string | undefined>(undefined);
   const [pendingDiscount,            setPendingDiscount]            = useState<{ type: 'PERCENTAGE' | 'FIXED'; value: number } | undefined>(undefined);
   const [orderForPayment,            setOrderForPayment]            = useState<Sale | null>(null);
+  // Hotfix 246 CE: mesa objetivo cuando hay ítems sin enviar y se pide salto de mesa
+  const [pendingTable,               setPendingTable]               = useState<Table | null>(null);
 
   // ── Modales ────────────────────────────────────────────────
   const [showMostradorModal, setShowMostradorModal] = useState(false);
@@ -585,6 +587,15 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   };
 
   const handleSelectTable = async (table: Table) => {
+    // Hotfix 246 CE: guard de salto de mesa — si el modal está abierto
+    // (showCart), la mesa tocada es DISTINTA a la seleccionada y hay ítems
+    // nuevos sin enviar (la MISMA condición de CD: cart.length === 0),
+    // guardar la mesa objetivo y mostrar el guard de 3 botones. Si no,
+    // el comportamiento queda INTACTO.
+    if (showCart && selectedTable && table.id !== selectedTable.id && cart.length > 0) {
+      setPendingTable(table);
+      return;
+    }
     if (table.status === 'OCCUPIED') {
       let existingOrder = dineInOrders.find(o => o.tableId === table.id);
 
@@ -1181,6 +1192,56 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
       deliveryDraft,  setDeliveryDraft,
       clearDeliveryDraft,
     }}>
+
+      {/* Hotfix 246 CE: guard de salto de mesa — 3 botones grandes.
+          "Enviar a cocina y cambiar" llama handleSendToKitchen EXISTENTE y
+          al completar setSelectedTable de la mesa objetivo; "Descartar"
+          limpia el carrito con setCart (setter EXISTENTE) y cambia de mesa;
+          "Quedarme en Mesa N" cierra el guard sin cambios. */}
+      {pendingTable && selectedTable && (() => {
+        const goTable = pendingTable;
+        return (
+          <div className="fixed inset-0 bg-black/60 z-[90] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center">
+              <h3 className="font-bold text-lg mb-1">Cambiar a Mesa {goTable.number}</h3>
+              <p className="text-sm text-gray-500 mb-5">
+                Tienes {cart.length} {cart.length === 1 ? 'ítem nuevo sin enviar' : 'ítems nuevos sin enviar'} en Mesa {selectedTable.number}.
+              </p>
+              <div className="space-y-2.5">
+                <button
+                  onClick={async () => {
+                    const target = goTable;
+                    setPendingTable(null);
+                    await handleSendToKitchen();
+                    setSelectedTable(target);
+                  }}
+                  className="w-full min-h-[52px] bg-[#F97316] hover:bg-[#ea6a0a] text-white rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                >
+                  Enviar a cocina y cambiar
+                </button>
+                <button
+                  onClick={() => {
+                    const target = goTable;
+                    setPendingTable(null);
+                    setCart([]);
+                    setSelectedTable(target);
+                  }}
+                  className="w-full min-h-[52px] bg-white border-2 border-gray-300 text-gray-600 hover:bg-gray-50 rounded-xl font-bold text-sm transition-colors"
+                >
+                  Descartar
+                </button>
+                <button
+                  onClick={() => setPendingTable(null)}
+                  className="w-full min-h-[52px] bg-white border-2 border-orange-300 text-orange-600 hover:bg-orange-50 rounded-xl font-bold text-sm transition-colors"
+                >
+                  Quedarme en Mesa {selectedTable.number}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {children}
     </RestaurantCtx.Provider>
   );

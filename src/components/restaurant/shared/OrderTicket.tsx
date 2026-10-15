@@ -8,6 +8,16 @@
 // PROHIBIDO mover estado, PROHIBIDO nueva aritmética, PROHIBIDO
 // lógica duplicada — las diferencias entre gemelos se resuelven con
 // props opcionales.
+//
+// Hotfix 246 (Tanda A) — props nuevas de Mesas:
+//   · existingSection  → bloque "En cocina" (ítems ya enviados) sobre la lista
+//   · alwaysShowFooter → Mesas necesita totales+acciones incluso con carrito vacío
+//   · confirmDisabled  → la MISMA condición que hoy deshabilita el envío (CD)
+//   · accent 'orange'  → acento de Mesas (#F97316)
+// Pulido aprobado (Comandante, mejora los 3 modales):
+//   · botones −/+ fondo blanco, borde gris, signo visible (sin amarillo)
+//   · fondo de ítems blanco/gris suave (sin bg-yellow)
+//   · precio SIN espacio tras el signo peso en TODAS las líneas
 // ═══════════════════════════════════════════════════════════════
 
 import type { ReactNode } from 'react';
@@ -39,15 +49,22 @@ export interface OrderTicketProps {
   customerChip?: ReactNode;
   // ── Errores del gemelo ──
   errorNode?: ReactNode;
-  // ── Acento visual del gemelo (azul mostrador · púrpura delivery) ──
-  accent?: 'blue' | 'purple';
+  // ── Acento visual del gemelo (azul mostrador · púrpura delivery · naranja mesas) ──
+  accent?: 'blue' | 'purple' | 'orange';
   emptyIcon?: 'bag' | 'truck';
   /** Contenido extra al pie del ticket (p.ej. medio de pago del delivery) */
   footerExtra?: ReactNode;
+  // ── Hotfix 246 Mesas ──
+  /** Bloque de ítems ya enviados a cocina ("En cocina") — Mesas */
+  existingSection?: ReactNode;
+  /** Mostrar totales+acciones aunque el carrito esté vacío — Mesas */
+  alwaysShowFooter?: boolean;
+  /** Deshabilitar confirm (misma condición existente del modal llamador) — Mesas */
+  confirmDisabled?: boolean;
 }
 
-const accentText = (accent: 'blue' | 'purple') =>
-  accent === 'blue' ? 'text-blue-500' : 'text-purple-600';
+const accentText = (accent: 'blue' | 'purple' | 'orange') =>
+  accent === 'blue' ? 'text-blue-500' : accent === 'purple' ? 'text-purple-600' : 'text-[#F97316]';
 
 export const OrderTicket = ({
   items,
@@ -70,13 +87,19 @@ export const OrderTicket = ({
   accent = 'blue',
   emptyIcon = 'bag',
   footerExtra,
+  existingSection,
+  alwaysShowFooter = false,
+  confirmDisabled = false,
 }: OrderTicketProps) => {
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-gray-50">
       {/* Chip de cliente editable en 1 tap */}
       {customerChip}
 
-      {items.length === 0 ? (
+      {/* Hotfix 246 Mesas: ítems ya en cocina, sobre la lista de nuevos */}
+      {existingSection}
+
+      {items.length === 0 && !alwaysShowFooter ? (
         /* Estado vacío: ícono + una línea */
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
@@ -90,54 +113,67 @@ export const OrderTicket = ({
         </div>
       ) : (
         <>
-          {/* Items con −/+ h-11 (44px) */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
-            {items.map((item) => (
-              <div
-                key={item.id}
-                className="bg-yellow-50 rounded-lg border border-yellow-200 overflow-hidden"
-              >
-                <div className="flex items-center gap-2 px-2 py-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() => onDecreaseQuantity(item.id)}
-                      className="w-11 h-11 bg-yellow-200 hover:bg-yellow-300 rounded-lg flex items-center justify-center transition-colors"
-                      aria-label="Restar"
-                    >
-                      <Minus size={14} />
-                    </button>
-                    <span className="w-7 text-center text-sm font-bold text-gray-800">
-                      {item.quantity}
+          {/* Estado vacío (Mesas con footer permanente: solo la zona de items) */}
+          {items.length === 0 && alwaysShowFooter && (
+            <div className="flex-1 flex items-center justify-center min-h-[80px]">
+              <div className="text-center">
+                <ShoppingBag size={32} className="mx-auto text-gray-400 mb-2" />
+                <p className="text-gray-600 text-sm font-medium">Sin items nuevos</p>
+                <p className="text-gray-400 text-xs mt-0.5">Agrega productos desde la carta</p>
+              </div>
+            </div>
+          )}
+
+          {/* Items con −/+ h-11 (44px) — pulido 246: blanco + borde gris + signo visible */}
+          {items.length > 0 && (
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {items.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white rounded-lg border border-gray-200 overflow-hidden"
+                >
+                  <div className="flex items-center gap-2 px-2 py-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => onDecreaseQuantity(item.id)}
+                        className="w-11 h-11 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors"
+                        aria-label="Restar"
+                      >
+                        <Minus size={14} className="text-gray-700" />
+                      </button>
+                      <span className="w-7 text-center text-sm font-bold text-gray-800">
+                        {item.quantity}
+                      </span>
+                      <button
+                        onClick={() => onIncreaseQuantity(item.id)}
+                        className="w-11 h-11 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors"
+                        aria-label="Sumar"
+                      >
+                        <Plus size={14} className="text-gray-700" />
+                      </button>
+                    </div>
+                    <span className="flex-1 font-semibold text-sm text-gray-900 truncate">
+                      {item.productName}
+                    </span>
+                    <span className="text-sm font-bold text-gray-800 whitespace-nowrap">
+                      ${formatPrice(item.subtotal)}
                     </span>
                     <button
-                      onClick={() => onIncreaseQuantity(item.id)}
-                      className="w-11 h-11 bg-yellow-200 hover:bg-yellow-300 rounded-lg flex items-center justify-center transition-colors"
-                      aria-label="Sumar"
+                      onClick={() => onRemoveItem(item.id)}
+                      className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                      aria-label="Eliminar"
                     >
-                      <Plus size={14} />
+                      <X size={14} />
                     </button>
                   </div>
-                  <span className="flex-1 font-semibold text-sm text-gray-900 truncate">
-                    {item.productName}
-                  </span>
-                  <span className="text-sm font-bold text-gray-800 whitespace-nowrap">
-                    $ {formatPrice(item.subtotal)}
-                  </span>
-                  <button
-                    onClick={() => onRemoveItem(item.id)}
-                    className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                    aria-label="Eliminar"
-                  >
-                    <X size={14} />
-                  </button>
+                  {/* Modificadores/notas en líneas sangradas "+ X" (patrón actual, vía props) */}
+                  {renderItemExtras && renderItemExtras(item)}
                 </div>
-                {/* Modificadores/notas en líneas sangradas "+ X" (patrón actual, vía props) */}
-                {renderItemExtras && renderItemExtras(item)}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
-          {/* Totales + acciones */}
+          {/* Totales + acciones — Hotfix 246: en Mesas siempre visibles */}
           <div className="border-t-2 border-gray-300 bg-white p-3 flex-shrink-0">
             <div className="space-y-1 mb-3">
               <div className="flex justify-between text-sm text-gray-600">
@@ -156,7 +192,7 @@ export const OrderTicket = ({
 
             <button
               onClick={onConfirm}
-              disabled={saving}
+              disabled={saving || confirmDisabled}
               className="w-full h-12 bg-[#F97316] hover:bg-[#ea6a0a] text-white rounded-lg font-bold text-base transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving ? (

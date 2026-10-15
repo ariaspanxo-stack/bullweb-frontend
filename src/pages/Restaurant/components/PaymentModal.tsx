@@ -1,4 +1,5 @@
 ﻿import { useState, memo, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Check, AlertCircle, Plus, Trash2, CreditCard, Banknote, Smartphone, ArrowLeftRight, Tag, ChevronRight, ChevronDown, CheckCircle, Printer, FileText } from 'lucide-react';
 import type { Payment, Table, CartItem } from '../../../types/restaurant.types';
 import { paymentMethodsService } from '@/services/paymentMethodsService';
@@ -359,8 +360,8 @@ export const PaymentModal = ({
   };
 
   if (paymentCompleted) {
-    return (
-      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    return createPortal(
+      <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-green-600" />
@@ -386,15 +387,16 @@ export const PaymentModal = ({
             Cerrar
           </button>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 
-  return (
+  return createPortal(
     <>
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100]" onClick={onClose} />
 
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <div
           className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden"
           style={{ height: 'min(92vh, 780px)' }}
@@ -771,7 +773,8 @@ export const PaymentModal = ({
           </div>
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 };
 

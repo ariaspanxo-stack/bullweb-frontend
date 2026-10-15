@@ -334,7 +334,7 @@ export const OrderModal = ({
       {/* ── CA: drawer derecho SIN backdrop — el mapa de mesas queda
           VISIBLE y TOCABLE detrás. Fullscreen < 1024px (mobileTab intacto),
           70% en lg, 60% min-900px en xl. Sombra a la izquierda. ── */}
-      <div className="fixed right-0 top-0 bottom-0 z-50 w-full lg:w-[70%] xl:w-[60%] xl:min-w-[900px] bg-white flex flex-col overflow-hidden shadow-[-8px_0_30px_rgba(0,0,0,0.25)]">
+      <div className="fixed right-0 top-0 bottom-0 z-40 w-full lg:w-[70%] xl:w-[60%] xl:min-w-[900px] bg-white flex flex-col overflow-hidden shadow-[-8px_0_30px_rgba(0,0,0,0.25)]">
 
           {/* ── HEADER (CA): círculo de mesa como elemento más grande,
               garzón, "Cambiar mesa" secundario (mismo onClick) y X ── */}

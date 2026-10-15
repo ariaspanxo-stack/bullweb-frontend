@@ -6,6 +6,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import QRCode from 'qrcode';
 import api from '../services/api';
+import { paymentMethodsService, type PaymentMethod } from '../services/paymentMethodsService';
 import { useAuthStore } from '../store/authStore';
 import {
   ExternalLink, Download, Copy, Check,
@@ -16,7 +17,7 @@ import {
   CalendarDays, ShoppingCart as ShoppingCartIcon,
 } from 'lucide-react';
 
-type ActiveTab = 'qr' | 'preview' | 'instrucciones' | 'horarios' | 'personalizar' | 'analiticas' | 'pedidos' | 'mesas';
+type ActiveTab = 'qr' | 'preview' | 'instrucciones' | 'horarios' | 'mediospago' | 'personalizar' | 'analiticas' | 'pedidos' | 'mesas';
 
 function fmtCLP(n: number) {
   return n.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
@@ -156,6 +157,16 @@ export default function CartaQRPage() {
   const [mesaQrUrls,      setMesaQrUrls]      = useState<Record<string, string>>({});
   const [loadingMesaQrs,  setLoadingMesaQrs]  = useState(false);
 
+  // ── Estado: Medios de pago por canal (HOTFIX 248 T2) ──────────
+  const [payMethods,        setPayMethods]        = useState<PaymentMethod[]>([]);
+  const [loadingPayMethods, setLoadingPayMethods] = useState(false);
+  const [idsRetiro,         setIdsRetiro]         = useState<string[]>([]);
+  const [idsDelivery,       setIdsDelivery]       = useState<string[]>([]);
+  const [savingPayMethods,  setSavingPayMethods]  = useState(false);
+  const [savedPayMethods,   setSavedPayMethods]   = useState(false);
+  const [payRetiroRaw,      setPayRetiroRaw]      = useState<string[] | null>(null);
+  const [payDeliveryRaw,    setPayDeliveryRaw]    = useState<string[] | null>(null);
+
   // Cargar settings de carta al montar
   useEffect(() => {
     api.get('/menu/carta-settings')
@@ -170,6 +181,9 @@ export default function CartaQRPage() {
         if (s.cartaAddress !== undefined) setCartaAddress(s.cartaAddress ?? '');
         if (s.cartaPhone  !== undefined) setCartaPhone(s.cartaPhone ?? '');
         if (s.cartaEmail  !== undefined) setCartaEmail(s.cartaEmail ?? '');
+        // HOTFIX 248 T2 — ids por canal guardados ([] = todos)
+        setPayRetiroRaw(Array.isArray(s.cartaPayRetiro) ? s.cartaPayRetiro : null);
+        setPayDeliveryRaw(Array.isArray(s.cartaPayDelivery) ? s.cartaPayDelivery : null);
 
         const name = s.restaurantName ?? '';
         if (s.cartaSlug) {
@@ -199,6 +213,21 @@ export default function CartaQRPage() {
       .catch(() => setAnalytics(null))
       .finally(() => setLoadingAnalytics(false));
   }, [activeTab]);
+
+  // HOTFIX 248 T2 — cargar métodos del tenant al abrir la tab "Medios de pago"
+  useEffect(() => {
+    if (activeTab !== 'mediospago') return;
+    setLoadingPayMethods(true);
+    paymentMethodsService.fetchAll()
+      .then(methods => {
+        setPayMethods(methods);
+        const allActiveIds = methods.filter(m => m.active).map(m => m.id);
+        setIdsRetiro(payRetiroRaw && payRetiroRaw.length > 0 ? [...payRetiroRaw] : allActiveIds);
+        setIdsDelivery(payDeliveryRaw && payDeliveryRaw.length > 0 ? [...payDeliveryRaw] : allActiveIds);
+      })
+      .catch(() => { /* silencioso */ })
+      .finally(() => setLoadingPayMethods(false));
+  }, [activeTab, payRetiroRaw, payDeliveryRaw]);
 
   // ── Subir logo vía archivo ─────────────────────────────────────────────────
   const handleLogoUpload = async (e: any) => {
@@ -277,6 +306,23 @@ export default function CartaQRPage() {
       // silencioso
     } finally {
       setSavingPersonal(false);
+    }
+  };
+
+  // HOTFIX 248 T2 — guardar ids por canal (misma vía PATCH que handleSavePersonal)
+  const handleSavePayMethods = async () => {
+    setSavingPayMethods(true);
+    try {
+      await api.patch('/menu/carta-settings', {
+        cartaPayRetiro:   idsRetiro,
+        cartaPayDelivery: idsDelivery,
+      });
+      setSavedPayMethods(true);
+      setTimeout(() => setSavedPayMethods(false), 2500);
+    } catch {
+      // silencioso
+    } finally {
+      setSavingPayMethods(false);
     }
   };
 
@@ -701,6 +747,7 @@ export default function CartaQRPage() {
           { id: 'preview',       icon: Eye,         label: 'Vista previa'  },
           { id: 'instrucciones', icon: Smartphone,  label: 'Instrucciones' },
           { id: 'horarios',      icon: Clock,       label: 'Horarios'      },
+          { id: 'mediospago',    icon: ShoppingCartIcon, label: 'Medios de pago' },
           { id: 'personalizar',  icon: Palette,     label: 'Personalizar'  },
           { id: 'mesas',        icon: LayoutGrid,  label: 'QR Mesas'     },
           { id: 'analiticas',   icon: LayoutGrid,  label: 'Analíticas'    },
@@ -1188,6 +1235,77 @@ export default function CartaQRPage() {
                   <><Check className="w-4 h-4" /> ¡Guardado!</>
                 ) : (
                   <><Save className="w-4 h-4" /> Guardar horarios</>
+                )}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ─── TAB: MEDIOS DE PAGO (HOTFIX 248 T2) ────────────────── */}
+      {activeTab === 'mediospago' && (
+        <div className="space-y-3">
+          <p className="text-sm text-gray-500 mb-2">
+            Si desmarcas todos los medios de un grupo, se mostrarán todos los medios activos.
+          </p>
+
+          {loadingPayMethods ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
+            </div>
+          ) : (
+            <>
+              {([
+                { key: 'retiro',   label: 'Retiro en tienda', ids: idsRetiro,   setIds: setIdsRetiro   },
+                { key: 'delivery', label: 'Delivery',         ids: idsDelivery, setIds: setIdsDelivery },
+              ] as const).map(group => (
+                <div key={group.key}
+                  className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-semibold text-gray-800 text-sm">{group.label}</span>
+                  </div>
+                  <div className="flex flex-col">
+                    {payMethods.map(m => {
+                      const checked = group.ids.includes(m.id);
+                      return (
+                        <label key={m.id}
+                          className="flex items-center gap-3 cursor-pointer"
+                          style={{ height: '44px' }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => {
+                              group.setIds(checked
+                                ? group.ids.filter(id => id !== m.id)
+                                : [...group.ids, m.id]);
+                            }}
+                            className="w-4 h-4 accent-orange-500"
+                          />
+                          <span className={`text-sm ${checked ? 'text-gray-800' : 'text-gray-400'}`}>
+                            {m.name}{!m.active ? ' (inactivo)' : ''}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              <button
+                onClick={handleSavePayMethods}
+                disabled={savingPayMethods}
+                className="w-full py-4 bg-orange-500 hover:bg-orange-400 text-white font-bold
+                           rounded-2xl flex items-center justify-center gap-2
+                           disabled:opacity-50 transition-colors mt-2"
+              >
+                {savingPayMethods ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+                ) : savedPayMethods ? (
+                  <><Check className="w-4 h-4" /> ¡Guardado!</>
+                ) : (
+                  <><Save className="w-4 h-4" /> Guardar medios de pago</>
                 )}
               </button>
             </>

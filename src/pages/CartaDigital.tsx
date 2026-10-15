@@ -60,6 +60,8 @@ interface CartaSettings {
   hideUnavailable?: boolean;
   slug?:            string | null;
   paymentMethods?:  Array<{ id: string; name: string }>;
+  paymentMethodsRetiro?:    Array<{ id: string; name: string }>;
+  paymentMethodsDelivery?:  Array<{ id: string; name: string }>;
   address?:         string | null;
   city?:            string | null;
   phone?:           string | null;
@@ -886,6 +888,8 @@ function CartSheet({
   tenantSlug,
   themeColor,
   paymentMethods,
+  paymentMethodsRetiro,
+  paymentMethodsDelivery,
   onClose,
   onUpdate,
   onOrderSuccess,
@@ -895,6 +899,8 @@ function CartSheet({
   tenantSlug:       string | null;
   themeColor:       string;
   paymentMethods:   Array<{ id: string; name: string }>;
+  paymentMethodsRetiro?:    Array<{ id: string; name: string }>;
+  paymentMethodsDelivery?:  Array<{ id: string; name: string }>;
   onClose:          () => void;
   onUpdate:         (productId: string, delta: number) => void;
   onOrderSuccess:   () => void;
@@ -923,6 +929,21 @@ function CartSheet({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null);
   const [cashAmount,    setCashAmount]    = useState('');
+
+  // HOTFIX 248 T2 — lista activa de medios de pago según el canal (retiro/delivery).
+  // Semántica del backend: array vacío/ausente = TODOS los medios activos.
+  const channelPaymentMethods: Array<{ id: string; name: string }> =
+    orderType === 'delivery'
+      ? (paymentMethodsDelivery && paymentMethodsDelivery.length > 0 ? paymentMethodsDelivery : paymentMethods ?? FALLBACK_PAYMENT_METHODS)
+      : (paymentMethodsRetiro && paymentMethodsRetiro.length > 0 ? paymentMethodsRetiro : paymentMethods ?? FALLBACK_PAYMENT_METHODS);
+
+  // Reset del método seleccionado al cambiar de canal si ya no está disponible
+  useEffect(() => {
+    if (paymentMethod !== null && !channelPaymentMethods.some(m => m.id === paymentMethod)) {
+      setPaymentMethod(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orderType]);
 
   const stepNumber: Record<OrderStep, number> = { cart: 1, type: 2, form: 3, payment: 4, success: 5 };
   const sn = stepNumber[step];
@@ -973,8 +994,8 @@ function CartSheet({
           marketingOptIn:  marketingOptIn,
           deliveryFee:     0,
           notes:           form.comment.trim() || null,
-          paymentMethod:   paymentMethods.find(m => m.id === paymentMethod)?.name
-                             ?? paymentMethods[0]?.name
+          paymentMethod:   channelPaymentMethods.find(m => m.id === paymentMethod)?.name
+                             ?? channelPaymentMethods[0]?.name
                              ?? 'efectivo',
           cashAmount:      paymentMethod === 'efectivo' && cashAmount
                              ? parseInt(cashAmount)
@@ -1126,7 +1147,7 @@ function CartSheet({
 
           {/* Lista vertical de métodos */}
           <div className="flex flex-col gap-3">
-            {paymentMethods.map(method => {
+            {channelPaymentMethods.map(method => {
               const isActive = paymentMethod === method.id;
               return (
                 <button
@@ -2353,6 +2374,8 @@ export default function CartaDigital() {
           tenantSlug={tenantSlug}
           themeColor={themeColor}
           paymentMethods={cartaSettings?.paymentMethods ?? FALLBACK_PAYMENT_METHODS}
+          paymentMethodsRetiro={cartaSettings?.paymentMethodsRetiro}
+          paymentMethodsDelivery={cartaSettings?.paymentMethodsDelivery}
           onClose={() => setShowCart(false)}
           onUpdate={updateCartItem}
           onOrderSuccess={() => {

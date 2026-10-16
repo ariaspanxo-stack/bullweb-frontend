@@ -65,6 +65,7 @@ interface CartaSettings {
   address?:         string | null;
   city?:            string | null;
   phone?:           string | null;
+  whatsapp?:        string | null;
   email?:           string | null;
   hours?:           string | null;
   instagram?:       string | null;
@@ -509,6 +510,17 @@ const PAYMENT_DESC: Record<string, string> = {
   transferencia: 'Depósito / Transbank',
 };
 
+// HOTFIX 250 T2 (F5) - normaliza un teléfono chileno para wa.me:
+// strip no-dígitos → 9 dígitos empezando en 9 → anteponer 56;
+// empieza con 56 → dejar; cualquier otro caso → null.
+// (Lógica del patrón de SuperAdminTenants.tsx :91, copiada la LÓGICA, no el código.)
+function normalizeWhatsAppPhone(raw: string): string | null {
+  const digits = raw.replace(/\D/g, '');
+  if (/^9\d{8}$/.test(digits)) return `56${digits}`;
+  if (digits.startsWith('56')) return digits;
+  return null;
+}
+
 // ── Definidos FUERA de CartSheet para evitar que React los destruya
 // en cada re-render, causando pérdida de foco en inputs ─────────────
 // HOTFIX #240 — Sheet delimitado al VIEWPORT real (segundo reo del
@@ -890,6 +902,7 @@ function CartSheet({
   paymentMethods,
   paymentMethodsRetiro,
   paymentMethodsDelivery,
+  whatsapp,
   onClose,
   onUpdate,
   onOrderSuccess,
@@ -901,6 +914,7 @@ function CartSheet({
   paymentMethods:   Array<{ id: string; name: string }>;
   paymentMethodsRetiro?:    Array<{ id: string; name: string }>;
   paymentMethodsDelivery?:  Array<{ id: string; name: string }>;
+  whatsapp?:        string | null;
   onClose:          () => void;
   onUpdate:         (productId: string, delta: number) => void;
   onOrderSuccess:   () => void;
@@ -954,6 +968,33 @@ function CartSheet({
     i.product.price + (i.modifiers ?? []).reduce((s, m) => s + m.priceAdjustment, 0);
   const total    = cart.reduce((s, i) => s + itemUnitPrice(i) * i.quantity, 0);
   const totalQty = cart.reduce((s, i) => s + i.quantity, 0);
+
+  // HOTFIX 250 T2 (F4) - mensaje prearmado para el botón "Pedir por WhatsApp".
+  // Usa EXCLUSIVAMENTE estados capturados (cart/tableNumber/form/paymentMethod).
+  // Omisión declarada: restaurantName no está en la firma del spec ni accesible
+  // aquí (vive en cartaSettings del componente padre) → saludo genérico "Hola!".
+  // Truncamiento: >20 ítems → primeros 20 + línea "... y {N} ítems más".
+  function buildWhatsAppOrderMessage(): string {
+    const lines: string[] = ['Hola! Quiero hacer un pedido:'];
+    for (const i of cart.slice(0, 20)) {
+      lines.push(`${i.quantity}x ${i.product.name} — ${fmtCLP(itemUnitPrice(i) * i.quantity)}`);
+      for (const m of i.modifiers ?? []) lines.push(`  ${m.name}`);
+      if (i.notes) lines.push(`  Nota: ${i.notes}`);
+    }
+    if (cart.length > 20) {
+      lines.push(`... y ${cart.length - 20} ítems más (total referencial ${fmtCLP(total)})`);
+    }
+    if (serveAtTable && tableNumber) lines.push(`Servir en mi mesa ${tableNumber}`);
+    else if (orderType === 'delivery') lines.push('Delivery');
+    else lines.push('Retiro en tienda');
+    if (orderType === 'delivery' && form.address.trim()) lines.push(`Dirección: ${form.address.trim()}`);
+    if (form.name.trim())  lines.push(`Nombre: ${form.name.trim()}`);
+    if (form.phone.trim()) lines.push(`Tel: ${form.phone.trim()}`);
+    const paymentMethodName = channelPaymentMethods.find(m => m.id === paymentMethod)?.name;
+    if (paymentMethodName) lines.push(`Pago: ${paymentMethodName}`);
+    lines.push(`Total referencial: ${fmtCLP(total)}`);
+    return lines.join('\n');
+  }
 
   const setField = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [k]: e.target.value }));
@@ -1245,6 +1286,34 @@ function CartSheet({
           {!paymentMethod && (
             <p className="text-center text-gray-500 text-xs">Selecciona un método de pago</p>
           )}
+          {/* HOTFIX 250 T2 (F6) - botón secundario "Pedir por WhatsApp" (outline verde) */}
+          {(() => {
+            const waNumber = normalizeWhatsAppPhone(whatsapp ?? '');
+            if (!waNumber) return null;
+            if (cart.length === 0) {
+              return (
+                <button
+                  type="button"
+                  disabled
+                  className="mt-2 w-full py-3 rounded-2xl font-bold text-base flex items-center justify-center gap-2 bg-transparent border border-[#128C7E]/40 text-[#128C7E]/50 cursor-not-allowed"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Pedir por WhatsApp
+                </button>
+              );
+            }
+            return (
+              <a
+                href={`https://wa.me/${waNumber}?text=${encodeURIComponent(buildWhatsAppOrderMessage())}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 w-full py-3 rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition-colors bg-transparent border border-[#128C7E] text-[#128C7E] hover:bg-[#128C7E]/10"
+              >
+                <MessageCircle className="w-5 h-5" />
+                Pedir por WhatsApp
+              </a>
+            );
+          })()}
         </div>
       </SheetWrap>
     );
@@ -2376,6 +2445,7 @@ export default function CartaDigital() {
           paymentMethods={cartaSettings?.paymentMethods ?? FALLBACK_PAYMENT_METHODS}
           paymentMethodsRetiro={cartaSettings?.paymentMethodsRetiro}
           paymentMethodsDelivery={cartaSettings?.paymentMethodsDelivery}
+          whatsapp={cartaSettings?.whatsapp}
           onClose={() => setShowCart(false)}
           onUpdate={updateCartItem}
           onOrderSuccess={() => {

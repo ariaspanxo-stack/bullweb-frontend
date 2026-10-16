@@ -144,6 +144,7 @@ export default function CartaQRPage() {
   // ── Estado: Contacto (carta pública) ──────────────────────
   const [cartaAddress, setCartaAddress] = useState('');
   const [cartaPhone,   setCartaPhone]   = useState('');
+  const [cartaWhatsApp, setCartaWhatsApp] = useState('');
   const [cartaEmail,   setCartaEmail]   = useState('');
 
   // ── Estado: Analíticas ───────────────────────────────────────
@@ -180,6 +181,7 @@ export default function CartaQRPage() {
         setHideUnavailable(s.hideUnavailableProducts ?? false);
         if (s.cartaAddress !== undefined) setCartaAddress(s.cartaAddress ?? '');
         if (s.cartaPhone  !== undefined) setCartaPhone(s.cartaPhone ?? '');
+        if (s.cartaWhatsApp !== undefined) setCartaWhatsApp(s.cartaWhatsApp ?? '');
         if (s.cartaEmail  !== undefined) setCartaEmail(s.cartaEmail ?? '');
         // HOTFIX 248 T2 — ids por canal guardados ([] = todos)
         setPayRetiroRaw(Array.isArray(s.cartaPayRetiro) ? s.cartaPayRetiro : null);
@@ -298,6 +300,7 @@ export default function CartaQRPage() {
         hideUnavailableProducts: hideUnavailable,
         cartaAddress:            cartaAddress || null,
         cartaPhone:              cartaPhone   || null,
+        cartaWhatsApp:           cartaWhatsApp || null,
         cartaEmail:              cartaEmail   || null,
       });
       setSavedPersonal(true);
@@ -1464,6 +1467,18 @@ export default function CartaQRPage() {
                   maxLength={30}
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">WhatsApp (pedidos)</label>
+                <input
+                  type="text"
+                  value={cartaWhatsApp}
+                  onChange={e => setCartaWhatsApp(e.target.value.slice(0, 30))}
+                  placeholder="Ej: +56 9 1234 5678"
+                  maxLength={30}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+                <p className="text-xs text-gray-400 mt-1">Si lo completas, la carta muestra el botón Pedir por WhatsApp con el pedido armado.</p>
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Email</label>

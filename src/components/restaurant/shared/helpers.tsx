@@ -19,33 +19,50 @@ export function formatTimeAgo(timestamp: string): string {
   return `hace ${Math.floor(mins / 60)}h`;
 }
 
-// ─── Componente tiempo transcurrido ───────────────────────────
-export const ElapsedTime = ({ createdAt }: { createdAt?: string }) => {
-  const [elapsed, setElapsed] = useState('');
+// ─── Tiempo transcurrido (sin segundos) ───────────────────────
+// <60 min: "32 min" · <24 h: "6 h 55 min" · ≥24 h: "31 d 8 h"
+export function formatElapsed(totalMin: number): string {
+  const m = Math.max(0, totalMin);
+  if (m < 60) return `${m} min`;
+  if (m < 1440) return `${Math.floor(m / 60)} h ${m % 60} min`;
+  return `${Math.floor(m / 1440)} d ${Math.floor((m % 1440) / 60)} h`;
+}
+
+export interface ElapsedInfo {
+  text:    string;  // texto para pantalla
+  minutes: number;  // minutos totales (para colorear)
+  title:   string;  // timestamp exacto (atributo title)
+}
+
+// Hook: recalcula cada 60 s
+export function useElapsed(createdAt?: string): ElapsedInfo | null {
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     if (!createdAt) return;
-    const update = () => {
-      const diffMs  = Date.now() - new Date(createdAt).getTime();
-      const diffMin = Math.floor(diffMs / 60000);
-      if (diffMin < 60) {
-        const diffSeg = Math.floor((diffMs % 60000) / 1000);
-        setElapsed(`${diffMin}m ${diffSeg}s`);
-      } else {
-        const hrs  = Math.floor(diffMin / 60);
-        const mins = diffMin % 60;
-        setElapsed(`${hrs}h ${mins}m`);
-      }
-    };
-    update();
-    const timer = setInterval(update, 10000);
+    setNow(Date.now());
+    const timer = setInterval(() => setNow(Date.now()), 60000);
     return () => clearInterval(timer);
   }, [createdAt]);
 
+  if (!createdAt) return null;
+  const start = new Date(createdAt);
+  if (isNaN(start.getTime())) return null;
+  const minutes = Math.floor((now - start.getTime()) / 60000);
+  return {
+    text:    formatElapsed(minutes),
+    minutes,
+    title:   start.toLocaleString('es-CL'),
+  };
+}
+
+// ─── Componente tiempo transcurrido ───────────────────────────
+export const ElapsedTime = ({ createdAt }: { createdAt?: string }) => {
+  const elapsed = useElapsed(createdAt);
   if (!elapsed) return null;
   return (
-    <span className="text-xs text-gray-400 flex items-center gap-1">
-      <Clock size={10} />{elapsed}
+    <span className="text-xs text-gray-400 flex items-center gap-1" title={elapsed.title}>
+      <Clock size={10} />{elapsed.text}
     </span>
   );
 };

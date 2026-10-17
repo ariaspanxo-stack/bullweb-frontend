@@ -8,14 +8,15 @@ import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { OrderCardCompact } from '../shared/OrderCardCompact';
 import { DeliveryOrderModal } from '../shared/DeliveryOrderModal';
 import type { Sale } from '../../../types/restaurant.types';
+import { STATUS_STYLES } from '../shared/orderStatusStyles';
 
 type StatusFilter = 'ALL' | 'PENDING' | 'PREPARING' | 'READY';
 
 const STATUS_TABS: { key: StatusFilter; label: string; dot: string }[] = [
-  { key: 'ALL',       label: 'Todas',          dot: 'bg-gray-400'   },
-  { key: 'PENDING',   label: 'Pendiente',      dot: 'bg-red-400'    },
-  { key: 'PREPARING', label: 'En Preparacion', dot: 'bg-yellow-400' },
-  { key: 'READY',     label: 'Listo',          dot: 'bg-green-400'  },
+  { key: 'ALL',       label: 'Todas',                         dot: 'bg-gray-400'                 },
+  { key: 'PENDING',   label: STATUS_STYLES.PENDING.label,     dot: STATUS_STYLES.PENDING.dot     },
+  { key: 'PREPARING', label: STATUS_STYLES.PREPARING.label,   dot: STATUS_STYLES.PREPARING.dot   },
+  { key: 'READY',     label: STATUS_STYLES.READY.label,       dot: STATUS_STYLES.READY.dot       },
 ];
 
 export function DeliveryTab() {
@@ -59,17 +60,17 @@ export function DeliveryTab() {
             <Truck size={20} className="text-purple-600" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-gray-800">Ordenes Delivery</h2>
+            <h2 className="text-xl font-bold text-gray-800">Órdenes de delivery</h2>
             {activeCount > 0 && (
               <p className="text-xs text-purple-500 font-medium mt-0.5">
-                {activeCount} orden{activeCount !== 1 ? 'es' : ''} activa{activeCount !== 1 ? 's' : ''}
+                {activeCount} {activeCount !== 1 ? 'órdenes' : 'orden'} activa{activeCount !== 1 ? 's' : ''}
               </p>
             )}
           </div>
         </div>
         <button
           onClick={() => setShowDeliveryModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-purple-500 hover:bg-purple-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md shadow-purple-200"
+          className="flex items-center gap-2 h-11 px-4 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-xl font-semibold text-sm transition-colors"
         >
           <Plus size={16} />
           Nuevo Delivery
@@ -88,14 +89,14 @@ export function DeliveryTab() {
                 onClick={() => setStatusFilter(tab.key)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
                   isActive
-                    ? 'bg-purple-600 text-white border-purple-600 shadow-sm'
+                    ? 'bg-violet-50 border-[1.5px] border-violet-600 text-violet-700'
                     : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600'
                 }`}
               >
-                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${isActive ? 'bg-white/70' : tab.dot}`} />
+                <span className={`w-2 h-2 rounded-full flex-shrink-0 ${tab.dot}`} />
                 {tab.label}
                 <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  isActive ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+                  isActive ? 'bg-white text-violet-700' : 'bg-gray-100 text-gray-500'
                 }`}>
                   {count}
                 </span>
@@ -133,7 +134,7 @@ export function DeliveryTab() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-stretch">
           {filtered.map((order: Sale) => (
             <OrderCardCompact
               key={order.id}

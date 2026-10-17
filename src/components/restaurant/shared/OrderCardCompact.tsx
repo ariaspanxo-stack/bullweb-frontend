@@ -1,16 +1,19 @@
 // ═══════════════════════════════════════════════════════════════
-// OrderCardCompact — Tarjeta compacta ~110px para Mostrador y Delivery
+// OrderCardCompact — Tarjeta de orden para Mostrador y Delivery
 // Usada en MostradorTab y DeliveryTab
+// Estructura: encabezado · cuerpo · pie anclado (total + acciones)
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useRef, useEffect } from 'react';
   import {
-    ChefHat, CheckCircle, Package, DollarSign,
+    CheckCircle, Package, DollarSign,
     MoreHorizontal, X,
-    Truck, Pencil,
+    Truck, Pencil, Play,
     MapPin, Phone, MessageSquare,
+    ShoppingBag, Bike,
   } from 'lucide-react';
-import { fmt, ElapsedTime } from './helpers';
+import { fmt, useElapsed } from './helpers';
+import { STATUS_STYLES, TIME_WARN_MIN, TIME_ALERT_MIN } from './orderStatusStyles';
 import { formatSaleNumber } from '../../../utils/formatSaleNumber';
 import { posService } from '../../../services/posService';
 import { EditCustomerModal } from './EditCustomerModal';
@@ -18,20 +21,28 @@ import type { Sale } from '../../../types/restaurant.types';
 import { usePermission } from '../../../hooks/usePermission';
 import toast from 'react-hot-toast';
 
-// ─── Borde izquierdo por estado ────────────────────────────────
-const BORDER: Record<string, string> = {
-  PENDING:   'border-l-amber-500',
-  PREPARING: 'border-l-blue-500',
-  READY:     'border-l-green-500',
-  CANCELLED: 'border-l-gray-300',
+// ─── Clases de botones (fila de acciones, todos 44px) ─────────
+const BTN_PRIMARY   = 'h-11 px-4 flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-white bg-[#F97316] hover:bg-[#EA580C] transition-colors disabled:opacity-60';
+const BTN_SECONDARY = 'h-11 px-4 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-slate-800 bg-white border-[1.5px] border-slate-300 hover:bg-slate-50 transition-colors disabled:opacity-60 flex-shrink-0';
+const BTN_ICON      = 'w-11 h-11 inline-flex items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 transition-colors flex-shrink-0';
+
+// ─── Formatos solo de pantalla ─────────────────────────────────
+const toTitleCase = (s: string) =>
+  s.split(' ').map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : w)).join(' ');
+
+const capitalizeFirst = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+const formatPhoneCL = (raw: string) => {
+  const d = raw.replace(/\D/g, '');
+  if (d.length === 11 && d.startsWith('569')) return `+56 9 ${d.slice(3, 7)} ${d.slice(7)}`;
+  if (d.length === 9 && d.startsWith('9'))    return `+56 9 ${d.slice(1, 5)} ${d.slice(5)}`;
+  return raw;
 };
 
-// ─── Badge por estado ──────────────────────────────────────────
-const BADGE: Record<string, { bg: string; text: string; label: string }> = {
-  PENDING:   { bg: 'bg-amber-100', text: 'text-amber-800', label: 'Pendiente' },
-  PREPARING: { bg: 'bg-blue-100',  text: 'text-blue-800',  label: 'En Prep.' },
-  READY:     { bg: 'bg-green-100', text: 'text-green-800', label: 'Listo' },
-  CANCELLED: { bg: 'bg-gray-100',  text: 'text-gray-800',  label: 'Cancelado' },
+const elapsedClass = (minutes: number) => {
+  if (minutes > TIME_ALERT_MIN) return 'text-red-700 bg-red-100 px-1.5 rounded';
+  if (minutes >= TIME_WARN_MIN) return 'text-amber-700';
+  return 'text-slate-600';
 };
 
 // ─── Props ─────────────────────────────────────────────────────
@@ -51,19 +62,24 @@ function ItemsSummaryInline({ items }: { items: any[] }) {
   // Soft-delete: excluir ítems cancelados del resumen
   const active = (items ?? []).filter((i: any) => !i.isCancelled);
   if (active.length === 0) {
-    return <p className="text-xs text-gray-400 italic">Sin ítems</p>;
+    return (
+      <p className="flex items-center gap-1.5 text-xs text-slate-400">
+        <ShoppingBag size={14} className="flex-shrink-0" />
+        Sin ítems
+      </p>
+    );
   }
   const visible = active.slice(0, 2);
   const hidden  = active.length - 2;
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
       {visible.map((i: any, idx: number) => (
-        <p key={idx} className="text-sm text-gray-800 font-medium truncate leading-tight">
-          <span className="font-bold">{i.quantity}×</span> {i.productName}
+        <p key={idx} className="text-[13px] text-slate-700 truncate leading-snug">
+          <span className="font-bold text-slate-900">{i.quantity}×</span> {i.productName}
         </p>
       ))}
       {hidden > 0 && (
-        <p className="text-xs text-gray-400 leading-tight">y {hidden} más</p>
+        <p className="text-xs font-medium text-slate-500 leading-snug">+{hidden} productos</p>
       )}
     </div>
   );
@@ -97,17 +113,26 @@ export function OrderCardCompact({
   const canCancel    = canCancelOwn || canCancelAny;
   const canCreateOrder = usePermission('pos.create_order');
 
-  const badge       = BADGE[order.status]  ?? BADGE.PENDING;
-  const leftColor   = BORDER[order.status] ?? 'border-l-gray-300';
+  const statusStyle     = STATUS_STYLES[order.status] ?? STATUS_STYLES.PENDING;
+  const leftColor       = STATUS_STYLES[order.status]?.border ?? 'border-l-gray-300';
   const deliveryAddress = (order as any).customerAddress as string | undefined;
   const deliveryFee     = (order as any).deliveryFee     as number | undefined;
   const createdAt       = (order as any).createdAt       as string | undefined;
+  const customerPhone   = (order as any).customerPhone   as string | undefined;
+  const elapsed         = useElapsed(createdAt);
+
+  // Medio de pago (solo texto del pie) — resiliente a ambos modelos:
+  //  · Pedidos manuales: paymentMethodId (FK) + paymentMethod.name (objeto)
+  //  · Pedidos QR: paymentMethod (string plano, ej. "Efectivo")
+  const pmRaw   = (order as any).paymentMethod;
+  const pmLabel = ((order as any).paymentMethodId || pmRaw)
+    ? (pmRaw?.name ?? (typeof pmRaw === 'string' ? pmRaw : undefined) ?? 'Pago asignado')
+    : null;
 
   // Botón de acción principal según estado
   type ActionConfig = {
     label: string;
     icon: React.ReactNode;
-    className: string;
     onClick: () => void;
   };
 
@@ -115,9 +140,8 @@ export function OrderCardCompact({
     if (order.status === 'PENDING') {
       if (!canCreateOrder) return null;
       return {
-        label:     'En Preparación',
-        icon:      <ChefHat size={14} />,
-        className: 'px-4 py-2 bg-amber-400 hover:bg-amber-500 text-amber-900',
+        label:     'Iniciar preparación',
+        icon:      <Play size={14} />,
         onClick:   () => onUpdateStatus(order, 'PREPARING'),
       };
     }
@@ -125,7 +149,6 @@ export function OrderCardCompact({
       return {
         label:     variant === 'delivery' ? 'Enviado' : 'Listo',
         icon:      variant === 'delivery' ? <Truck size={14} /> : <CheckCircle size={14} />,
-        className: 'px-4 py-2 bg-sky-500 hover:bg-sky-600 text-white',
         onClick:   () => onUpdateStatus(order, 'READY'),
       };
     }
@@ -133,86 +156,110 @@ export function OrderCardCompact({
       return {
         label:     'Entregado',
         icon:      <Package size={14} />,
-        className: 'px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white',
         onClick:   () => onPay(order),
       };
     }
     return null;
   })();
 
+  // ─── Jerarquía de botones (solo estilo; mismas acciones) ────
+  // mostrador: PRIMARIO = Cobrar si existe; avance de estado SECUNDARIO.
+  // delivery:  PRIMARIO = avance de estado; si no hay, Cerrar Pedido. Cobrar SECUNDARIO.
+  const isDeliveryClose = variant === 'delivery' && !!(order as any).paymentMethodId;
+  const mainIsPrimary   = variant === 'delivery' ? true : !canCobrar;
+  const slotIsPrimary   = variant === 'delivery' ? (!mainAction && isDeliveryClose) : true;
+  const primaryCls   = `${BTN_PRIMARY} order-1`;
+  const secondaryCls = `${BTN_SECONDARY} order-2`;
+
   return (
     <>
     <div
-      className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-gray-100 border-l-4 overflow-visible cursor-pointer ${leftColor}`}
+      className={`p-4 rounded-xl border border-slate-200 bg-white border-l-4 ${leftColor} flex flex-col h-full gap-3 overflow-visible cursor-pointer`}
       onClick={() => onCardClick?.(order)}
     >
-      <div className="px-3 py-2.5 flex flex-col gap-1.5">
 
-        {/* ── Fila 1: #número · cliente · tiempo · badge ── */}
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="text-lg font-bold text-gray-900 leading-none flex-shrink-0">
-            {formatSaleNumber(order.orderNumber || order.id.slice(-6).toUpperCase())}
+      {/* ── ENCABEZADO: #número · canal · cliente | tiempo · estado ── */}
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="flex-shrink-0 inline-flex items-center h-6 px-2 rounded-md bg-slate-100 text-slate-800 text-[13px] font-bold tabular-nums">
+          {formatSaleNumber(order.orderNumber || order.id.slice(-6).toUpperCase())}
+        </span>
+        {variant === 'delivery'
+          ? <Bike size={16} className="text-slate-500 flex-shrink-0" />
+          : <ShoppingBag size={16} className="text-slate-500 flex-shrink-0" />}
+        <span className="text-base font-semibold text-slate-900 truncate flex-1 min-w-0">
+          {toTitleCase(order.customerName || 'Cliente')}
+        </span>
+        {elapsed && (
+          <span
+            className={`flex-shrink-0 text-[13px] font-semibold tabular-nums whitespace-nowrap ${elapsedClass(elapsed.minutes)}`}
+            title={elapsed.title}
+          >
+            {elapsed.text}
           </span>
-          <span className="text-lg font-bold text-gray-900 truncate flex-1 min-w-0">
-            {order.customerName || 'Cliente'}
-          </span>
-          <ElapsedTime createdAt={createdAt} />
-          <span className={`flex-shrink-0 text-xs font-semibold px-2.5 py-0.5 rounded-full whitespace-nowrap ${badge.bg} ${badge.text}`}>
-            {badge.label}
-          </span>
-        </div>
+        )}
+        <span className={`flex-shrink-0 inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-xs font-semibold whitespace-nowrap ${statusStyle.badgeBg} ${statusStyle.badgeText}`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot}`} />
+          {statusStyle.label}
+        </span>
+      </div>
 
-        {/* ── Datos del Cliente: Dirección y Teléfono (solo variant=delivery) ── */}
-        {variant === 'delivery' && (deliveryAddress || (order as any).customerPhone || order.notes) && (
-          <div className="border border-gray-200 bg-white rounded-lg p-2 flex flex-col gap-1.5">
-            {deliveryAddress && (
-              <div className="flex items-start gap-1.5 min-w-0">
-                <MapPin size={12} className="text-purple-500 flex-shrink-0 mt-0.5" />
-                <div className="min-w-0">
-                  <p className="font-bold text-gray-800 text-xs uppercase tracking-wide">Dirección</p>
-                  <p className="text-sm text-gray-600 font-medium truncate">{deliveryAddress}</p>
-                </div>
-              </div>
-            )}
-            {(order as any).customerPhone && (
-              <div className="flex items-start gap-1.5 min-w-0">
-                <Phone size={12} className="text-gray-500 flex-shrink-0 mt-0.5" />
-                <div className="min-w-0">
-                  <p className="font-bold text-gray-800 text-xs uppercase tracking-wide">Teléfono</p>
-                  <p className="text-sm text-gray-600 font-medium truncate">{(order as any).customerPhone}</p>
-                </div>
-              </div>
-            )}
-            {order.notes && (
-              <div className="flex items-start gap-1.5 min-w-0">
-                <MessageSquare size={12} className="text-gray-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-gray-400 truncate italic">{order.notes}</p>
-              </div>
-            )}
+      {/* ── CUERPO ── */}
+      <div className="flex flex-col gap-2 min-w-0">
+        {/* Delivery: dirección y teléfono (sin caja ni etiquetas) */}
+        {variant === 'delivery' && deliveryAddress && (
+          <div className="flex items-start gap-1.5 min-w-0">
+            <MapPin size={16} className="text-slate-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm font-semibold text-slate-900 truncate">{deliveryAddress}</p>
+          </div>
+        )}
+        {variant === 'delivery' && customerPhone && (
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Phone size={14} className="text-slate-500 flex-shrink-0" />
+            <p className="text-[13px] text-slate-600 truncate tabular-nums">{formatPhoneCL(customerPhone)}</p>
           </div>
         )}
 
-        {/* ── Lista de Productos ── */}
-        <div className="border-t border-dashed border-gray-200 mt-2 pt-2">
-          <ItemsSummaryInline items={order.items as any || []} />
+        <ItemsSummaryInline items={order.items as any || []} />
+
+        {/* Nota del cliente (ambas variantes) */}
+        {order.notes && (
+          <div className="flex items-start gap-1.5 min-w-0 text-xs font-medium text-yellow-900 bg-yellow-50 px-2 py-1.5 rounded-md">
+            <MessageSquare size={14} className="flex-shrink-0 mt-px" />
+            <p className="min-w-0 break-words">{order.notes}</p>
+          </div>
+        )}
+      </div>
+
+      {/* ── PIE anclado: total + acciones ── */}
+      <div className="mt-auto flex flex-col gap-3">
+        {/*
+          order.total proviene del backend y YA incluye el deliveryFee
+          (ver pos.service.ts: total = subtotal + deliveryFeeAmt).
+          NO se debe volver a sumar el envío aquí; solo se aclara que está incluido.
+        */}
+        <div className="flex justify-between items-end gap-2 pt-3 border-t border-slate-200">
+          <span className="text-[11px] font-semibold text-slate-500 tracking-wide min-w-0 truncate">
+            TOTAL{pmLabel ? ` · ${capitalizeFirst(pmLabel)}` : ''}
+          </span>
+          <div className="text-right flex-shrink-0">
+            <span className="text-[22px] font-bold text-slate-900 tabular-nums block leading-tight">
+              ${fmt(Number(order.total) || 0)}
+            </span>
+            {variant === 'delivery' && deliveryFee && Number(deliveryFee) > 0 && (
+              <span className="text-xs text-slate-500 block">
+                Incl. ${fmt(Number(deliveryFee))} envío
+              </span>
+            )}
+          </div>
         </div>
 
         {/* ── Acciones ── */}
-        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-          {/* Chip de medio de pago — resiliente a ambos modelos:
-              · Pedidos manuales: paymentMethodId (FK) + paymentMethod.name (objeto)
-              · Pedidos QR: paymentMethod (string plano, ej. "Efectivo") */}
-          {((order as any).paymentMethodId || (order as any).paymentMethod) && (
-            <span className="text-sm font-bold bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full flex-shrink-0">
-              {(order as any).paymentMethod?.name ?? (order as any).paymentMethod ?? 'Pago asignado'}
-            </span>
-          )}
-
-          {/* Botón acción principal */}
+        <div className="flex items-center gap-2 min-w-0">
+          {/* Botón acción principal (avance de estado) */}
           {mainAction && (
             <button
               onClick={e => { e.stopPropagation(); mainAction.onClick(); }}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors flex-shrink-0 ${mainAction.className}`}
+              className={mainIsPrimary ? primaryCls : secondaryCls}
             >
               {mainAction.icon}
               <span>{mainAction.label}</span>
@@ -221,7 +268,7 @@ export function OrderCardCompact({
 
           {/* Botón Cobrar / Cerrar Pedido — directo si delivery con medio de pago asignado */}
           {canCobrar && (
-            variant === 'delivery' && (order as any).paymentMethodId ? (
+            isDeliveryClose ? (
               <button
                 disabled={isClosing}
                 onClick={async (e) => {
@@ -254,42 +301,41 @@ export function OrderCardCompact({
                     setIsClosing(false);
                   }
                 }}
-                className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors flex-shrink-0 disabled:opacity-60"
+                className={slotIsPrimary ? primaryCls : secondaryCls}
               >
-                <CheckCircle size={12} />
+                <CheckCircle size={16} />
                 <span>{isClosing ? 'Cerrando...' : 'Cerrar Pedido'}</span>
               </button>
             ) : (
               <button
                 onClick={e => { e.stopPropagation(); onPay(order); }}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold bg-green-500 hover:bg-green-600 text-white transition-colors flex-shrink-0"
+                className={slotIsPrimary ? primaryCls : secondaryCls}
               >
-                <DollarSign size={12} />
+                <DollarSign size={16} />
                 <span>Cobrar</span>
               </button>
             )
           )}
 
-          {/* Botón Editar cliente — MUY visible, siempre presente */}
+          {/* Botón Editar cliente — solo ícono, siempre presente */}
           <button
             onClick={e => { e.stopPropagation(); setShowEditModal(true); }}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold bg-blue-500 hover:bg-blue-600 text-white transition-colors flex-shrink-0 shadow-sm"
+            className={`${BTN_ICON} order-3 ml-auto`}
             aria-label="Editar cliente"
             title="Editar cliente"
           >
             <Pencil size={18} />
-            <span>Editar</span>
           </button>
 
           {/* Menú ··· — solo visible si puede cancelar */}
           {canCancel && (
-            <div className="relative flex-shrink-0" ref={menuRef}>
+            <div className="relative flex-shrink-0 order-4" ref={menuRef}>
               <button
                 onClick={e => { e.stopPropagation(); setShowMenu((v) => !v); }}
-                className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                className={BTN_ICON}
                 aria-label="Más opciones"
               >
-                <MoreHorizontal size={15} />
+                <MoreHorizontal size={18} />
               </button>
 
               {showMenu && (
@@ -306,26 +352,6 @@ export function OrderCardCompact({
               )}
             </div>
           )}
-        </div>
-
-        {/* ── Total — contenedor propio al final de la tarjeta ── */}
-        {/*
-          order.total proviene del backend y YA incluye el deliveryFee
-          (ver pos.service.ts: total = subtotal + deliveryFeeAmt).
-          NO se debe volver a sumar el envío aquí; solo se aclara que está incluido.
-        */}
-        <div className="flex justify-between items-center mt-3 pt-3 border-t-2 border-gray-800 gap-2">
-          <span className="text-sm font-bold text-gray-500 uppercase flex-shrink-0">Total</span>
-          <div className="text-right min-w-0">
-            <span className="text-2xl font-extrabold text-gray-900 block leading-tight">
-              ${fmt(Number(order.total) || 0)}
-            </span>
-            {variant === 'delivery' && deliveryFee && Number(deliveryFee) > 0 && (
-              <span className="text-[10px] text-gray-400 font-normal block">
-                (incluye ${fmt(Number(deliveryFee))} envío)
-              </span>
-            )}
-          </div>
         </div>
       </div>
     </div>

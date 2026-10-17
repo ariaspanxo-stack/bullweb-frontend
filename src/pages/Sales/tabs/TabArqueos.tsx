@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { RefreshCw, Loader2, FileDown, ChevronRight, Check, PlusCircle, Trash2, TrendingUp, TrendingDown, AlertTriangle, Clock, User, Info } from 'lucide-react';
 import { exportSheet } from '@/utils/exportExcel';
@@ -89,12 +89,19 @@ export const TabArqueos = () => {
   const CASH_OUT_THRESHOLD = 50000;
   const [displayLimit, setDisplayLimit] = useState(20);
 
+  // Hotfix #254: valores sugeridos al abrir el modal; si el usuario no los
+  // edita, la hora de apertura la fija el backend al momento de enviar.
+  const openDefaultsRef = useRef<{ date: string; time: string }>({ date: '', time: '' });
+
   const handleShowOpenModal = () => {
     const now = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
     // Usar fecha y hora LOCAL (no UTC) para que el modal muestre el día correcto en Chile
-    setOpenDate(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`);
-    setOpenTime(`${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`);
+    const date = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const time = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    openDefaultsRef.current = { date, time };
+    setOpenDate(date);
+    setOpenTime(time);
     setOpenMonto('');
     setShowOpenModal(true);
   };
@@ -198,17 +205,24 @@ export const TabArqueos = () => {
   });
 
   const openMutation = useMutation({
-    mutationFn: () =>
-      cashRegistersService.openSession(registerId!, {
+    mutationFn: () => {
+      const edited = openDate !== openDefaultsRef.current.date || openTime !== openDefaultsRef.current.time;
+      return cashRegistersService.openSession(registerId!, {
         openingCash: parseFloat(openMonto) || 0,
-        openedAt: new Date(`${openDate}T${openTime}`).toISOString(),
-      }),
-    onSuccess: () => {
+        ...(edited ? { openedAt: new Date(`${openDate}T${openTime}`).toISOString() } : {}),
+      });
+    },
+    onSuccess: (result: any) => {
       qc.invalidateQueries({ queryKey: ['active-register'] });
       qc.invalidateQueries({ queryKey: ['cash-sessions-all'] });
       setShowOpenModal(false);
       toast.success('Caja abierta correctamente.');
+      const adopted = result?.adoptedPayments;
+      if (adopted?.count > 0) {
+        toast.success(`Se sumaron ${adopted.count} cobros previos por $${Math.round(adopted.amount).toLocaleString('es-CL')}`);
+      }
     },
+    // Hotfix #254: mensaje del backend tal cual (409 caja abierta / 400 hora inválida)
     onError: (e: any) => toast.error(e?.data?.error ?? e?.message ?? 'Error al abrir caja'),
   });
 

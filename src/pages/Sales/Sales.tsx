@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { SalesFilters } from './SalesFilters';
 import { SalesStats } from './SalesStats';
@@ -177,10 +177,17 @@ export const Sales = () => {
     }
   };
 
+  // Hotfix #254: valores sugeridos al abrir el modal; si el usuario no los
+  // edita, la hora de apertura la fija el backend al momento de enviar.
+  const openDefaultsRef = useRef<{ date: string; time: string }>({ date: '', time: '' });
+
   const handleOpenCash = () => {
     const now = new Date();
-    setOpenDate(now.toISOString().slice(0, 10));
-    setOpenTime(now.toTimeString().slice(0, 8));
+    const date = now.toISOString().slice(0, 10);
+    const time = now.toTimeString().slice(0, 8);
+    openDefaultsRef.current = { date, time };
+    setOpenDate(date);
+    setOpenTime(time);
     setOpenMonto('');
     setShowCashModal(true);
     loadRegisters();
@@ -193,22 +200,23 @@ export const Sales = () => {
     }
     try {
       setOpeningCash(true);
-      await cashRegistersService.openSession(selectedRegisterId, {
+      const edited = openDate !== openDefaultsRef.current.date || openTime !== openDefaultsRef.current.time;
+      const result: any = await cashRegistersService.openSession(selectedRegisterId, {
         openingCash: parseFloat(openMonto) || 0,
-        openedAt: new Date(`${openDate}T${openTime}`).toISOString(),
+        ...(edited ? { openedAt: new Date(`${openDate}T${openTime}`).toISOString() } : {}),
       });
       qc.invalidateQueries({ queryKey: ['active-register'] });
       qc.invalidateQueries({ queryKey: ['cash-sessions-all'] });
       qc.invalidateQueries({ queryKey: ['cash-cuadre'] });
       setShowCashModal(false);
       toast.success('Caja abierta correctamente.');
-    } catch (e: any) {
-      const status = e?.status;
-      if (status === 409) {
-        toast.error('La caja ya esta abierta. Cierra la sesion actual desde Arqueos primero.');
-      } else {
-        toast.error(e?.data?.error ?? e?.message ?? 'Error al abrir caja');
+      const adopted = result?.adoptedPayments;
+      if (adopted?.count > 0) {
+        toast.success(`Se sumaron ${adopted.count} cobros previos por $${Math.round(adopted.amount).toLocaleString('es-CL')}`);
       }
+    } catch (e: any) {
+      // Hotfix #254: mensaje del backend tal cual (409 caja abierta / 400 hora inválida)
+      toast.error(e?.data?.error ?? e?.message ?? 'Error al abrir caja');
       setShowCashModal(false);
     } finally {
       setOpeningCash(false);

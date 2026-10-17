@@ -283,6 +283,20 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
             ) : cuadre ? (
               <div className="space-y-3">
 
+                {/* Hotfix #254: cobros sin caja abierta desde la apertura (informativo) */}
+                {(() => {
+                  const orphans = (cuadre as { orphanPayments?: { count: number; amount: number } }).orphanPayments;
+                  if (!orphans || Number(orphans.count) <= 0) return null;
+                  return (
+                    <div className="flex items-start gap-2 text-sm font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                      <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                      <span>
+                        {orphans.count} cobros por <span className="font-bold">{formatCLP(Number(orphans.amount ?? 0))}</span> se hicieron sin caja abierta desde la apertura. No están en este arqueo.
+                      </span>
+                    </div>
+                  );
+                })()}
+
                 {/* KPIs */}
                 <div className="grid grid-cols-2 gap-2">
                   <div className="bg-indigo-50 rounded-2xl p-3 text-center">

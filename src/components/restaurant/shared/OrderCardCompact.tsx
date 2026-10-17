@@ -11,6 +11,7 @@ import { useState, useRef, useEffect } from 'react';
     Truck, Pencil, Play,
     MapPin, Phone, MessageSquare,
     ShoppingBag, Bike,
+    CreditCard, Banknote, ArrowLeftRight, Coins,
   } from 'lucide-react';
 import { fmt, useElapsed } from './helpers';
 import { STATUS_STYLES, TIME_WARN_MIN, TIME_ALERT_MIN } from './orderStatusStyles';
@@ -37,6 +38,15 @@ const formatPhoneCL = (raw: string) => {
   if (d.length === 11 && d.startsWith('569')) return `+56 9 ${d.slice(3, 7)} ${d.slice(7)}`;
   if (d.length === 9 && d.startsWith('9'))    return `+56 9 ${d.slice(1, 5)} ${d.slice(5)}`;
   return raw;
+};
+
+// Ícono del medio de pago según su nombre (solo pantalla)
+const paymentIcon = (label: string) => {
+  const n = label.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  if (n.includes('debito') || n.includes('credito') || n.includes('tarjeta')) return CreditCard;
+  if (n.includes('efectivo')) return Banknote;
+  if (n.includes('transferencia')) return ArrowLeftRight;
+  return Coins;
 };
 
 const elapsedClass = (minutes: number) => {
@@ -69,17 +79,17 @@ function ItemsSummaryInline({ items }: { items: any[] }) {
       </p>
     );
   }
-  const visible = active.slice(0, 2);
-  const hidden  = active.length - 2;
+  const visible = active.slice(0, 3);
+  const hidden  = active.length - 3;
   return (
     <div className="flex flex-col gap-0.5 min-w-0">
       {visible.map((i: any, idx: number) => (
-        <p key={idx} className="text-[13px] text-slate-700 truncate leading-snug">
+        <p key={idx} className="text-[15px] text-slate-800 truncate leading-snug">
           <span className="font-bold text-slate-900">{i.quantity}×</span> {i.productName}
         </p>
       ))}
       {hidden > 0 && (
-        <p className="text-xs font-medium text-slate-500 leading-snug">+{hidden} productos</p>
+        <p className="text-[13px] font-medium text-slate-500 leading-snug">+{hidden} productos</p>
       )}
     </div>
   );
@@ -128,6 +138,7 @@ export function OrderCardCompact({
   const pmLabel = ((order as any).paymentMethodId || pmRaw)
     ? (pmRaw?.name ?? (typeof pmRaw === 'string' ? pmRaw : undefined) ?? 'Pago asignado')
     : null;
+  const PmIcon = pmLabel ? paymentIcon(pmLabel) : null;
 
   // Botón de acción principal según estado
   type ActionConfig = {
@@ -174,37 +185,37 @@ export function OrderCardCompact({
   return (
     <>
     <div
-      className={`p-4 rounded-xl border border-slate-200 bg-white border-l-4 ${leftColor} flex flex-col h-full gap-3 overflow-visible cursor-pointer`}
+      className={`p-4 rounded-xl border border-slate-200 bg-white border-l-4 ${leftColor} flex flex-col h-full gap-3 overflow-visible cursor-pointer hover:shadow-md transition-shadow`}
       onClick={() => onCardClick?.(order)}
     >
 
       {/* ── ENCABEZADO: #número · canal · cliente | tiempo · estado ── */}
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="flex-shrink-0 inline-flex items-center h-6 px-2 rounded-md bg-slate-100 text-slate-800 text-[13px] font-bold tabular-nums">
+      <div className="flex items-center gap-2 min-w-0 -m-4 mb-3 px-4 py-3 rounded-t-xl bg-slate-50">
+        <span className="flex-shrink-0 inline-flex items-center h-7 px-2.5 rounded-md bg-slate-100 text-slate-800 text-sm font-bold tabular-nums">
           {formatSaleNumber(order.orderNumber || order.id.slice(-6).toUpperCase())}
         </span>
         {variant === 'delivery'
           ? <Bike size={16} className="text-slate-500 flex-shrink-0" />
           : <ShoppingBag size={16} className="text-slate-500 flex-shrink-0" />}
-        <span className="text-base font-semibold text-slate-900 truncate flex-1 min-w-0">
+        <span className="text-lg font-semibold text-slate-900 truncate flex-1 min-w-0">
           {toTitleCase(order.customerName || 'Cliente')}
         </span>
         {elapsed && (
           <span
-            className={`flex-shrink-0 text-[13px] font-semibold tabular-nums whitespace-nowrap ${elapsedClass(elapsed.minutes)}`}
+            className={`flex-shrink-0 text-sm font-semibold tabular-nums whitespace-nowrap ${elapsedClass(elapsed.minutes)}`}
             title={elapsed.title}
           >
             {elapsed.text}
           </span>
         )}
-        <span className={`flex-shrink-0 inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-xs font-semibold whitespace-nowrap ${statusStyle.badgeBg} ${statusStyle.badgeText}`}>
+        <span className={`flex-shrink-0 inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[13px] font-semibold whitespace-nowrap ${statusStyle.badgeBg} ${statusStyle.badgeText}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot}`} />
           {statusStyle.label}
         </span>
       </div>
 
       {/* ── CUERPO ── */}
-      <div className="flex flex-col gap-2 min-w-0">
+      <div className="flex flex-col gap-2 min-w-0 flex-1">
         {/* Delivery: dirección y teléfono (sin caja ni etiquetas) */}
         {variant === 'delivery' && deliveryAddress && (
           <div className="flex items-start gap-1.5 min-w-0">
@@ -223,7 +234,7 @@ export function OrderCardCompact({
 
         {/* Nota del cliente (ambas variantes) */}
         {order.notes && (
-          <div className="flex items-start gap-1.5 min-w-0 text-xs font-medium text-yellow-900 bg-yellow-50 px-2 py-1.5 rounded-md">
+          <div className="flex items-start gap-1.5 min-w-0 text-[13px] font-medium text-yellow-900 bg-yellow-50 px-2 py-1.5 rounded-md">
             <MessageSquare size={14} className="flex-shrink-0 mt-px" />
             <p className="min-w-0 break-words">{order.notes}</p>
           </div>
@@ -238,11 +249,13 @@ export function OrderCardCompact({
           NO se debe volver a sumar el envío aquí; solo se aclara que está incluido.
         */}
         <div className="flex justify-between items-end gap-2 pt-3 border-t border-slate-200">
-          <span className="text-[11px] font-semibold text-slate-500 tracking-wide min-w-0 truncate">
-            TOTAL{pmLabel ? ` · ${capitalizeFirst(pmLabel)}` : ''}
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 tracking-wide min-w-0">
+            <span className="flex-shrink-0">TOTAL{pmLabel ? ' ·' : ''}</span>
+            {pmLabel && PmIcon && <PmIcon size={14} className="flex-shrink-0" />}
+            {pmLabel && <span className="truncate">{capitalizeFirst(pmLabel)}</span>}
           </span>
           <div className="text-right flex-shrink-0">
-            <span className="text-[22px] font-bold text-slate-900 tabular-nums block leading-tight">
+            <span className="text-[26px] font-bold text-slate-900 tabular-nums block leading-tight">
               ${fmt(Number(order.total) || 0)}
             </span>
             {variant === 'delivery' && deliveryFee && Number(deliveryFee) > 0 && (

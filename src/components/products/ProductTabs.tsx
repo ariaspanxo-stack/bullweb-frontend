@@ -1,7 +1,8 @@
 import React from 'react';
-import { PackageIcon, FolderIcon, Carrot, ClipboardList, Settings, ChartBarIcon, ChefHat } from 'lucide-react';
+import { PackageIcon, FolderIcon, Carrot, ClipboardList, Settings, ChefHat } from 'lucide-react';
 
-export type TabType = 'productos' | 'categorias' | 'ingredientes' | 'fichas' | 'modificadores' | 'reportes' | 'estaciones';
+// Hotfix #258 (A1): la pestaña "Dashboard" se elimina de Productos.
+export type TabType = 'productos' | 'categorias' | 'ingredientes' | 'fichas' | 'modificadores' | 'estaciones';
 
 interface ProductTabsProps {
   activeTab: TabType;
@@ -52,7 +53,7 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({
     },
     {
       id: 'fichas' as TabType,
-      label: 'Fichas Técnicas',
+      label: 'Fichas técnicas',
       icon: ClipboardList,
       count: recipeCount,
     },
@@ -74,17 +75,11 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({
       icon: ChefHat,
       count: stationCount,
     },
-    {
-      id: 'reportes' as TabType,
-      label: 'Dashboard',
-      icon: ChartBarIcon,
-      count: undefined,
-    },
   ];
 
   return (
-    <div className="bg-white border-b border-gray-200">
-      <div className="flex gap-1 px-6">
+    <div className="bg-white border-b border-[#E2E8F0]">
+      <div className="flex gap-1 px-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -94,12 +89,12 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`
-                relative flex items-center gap-2 px-4 py-3 text-sm font-medium
-                border-b-2 transition-all duration-200
+                relative flex items-center gap-2 h-12 px-4 text-sm font-semibold whitespace-nowrap
+                border-b-2 transition-colors duration-200
                 ${
                   isActive
-                    ? 'border-blue-600 text-blue-600 bg-blue-50'
-                    : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'border-[#F97316] text-[#0F172A]'
+                    : 'border-transparent text-[#64748B] hover:text-[#0F172A]'
                 }
               `}
             >
@@ -111,8 +106,8 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({
                     ml-1 px-2 py-0.5 text-xs font-semibold rounded-full
                     ${
                       isActive
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-700'
+                        ? 'bg-[#FFF7ED] text-[#C2410C]'
+                        : 'bg-[#F1F5F9] text-[#475569]'
                     }
                   `}
                 >

@@ -9,14 +9,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { Product, ProductCategory } from '../../types/product.types';
 import { useToast } from '../../components/Toast';
 import api from '../../services/api';
-import { CategorySidebar } from '../../components/products/CategorySidebar';
 import ProductModal from '../../components/products/ProductModal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import ProductTabs from '../../components/products/ProductTabs';
 import type { TabType } from '../../components/products/ProductTabs';
 import CategoriesTab from '../../components/products/CategoriesTab';
 import StationsTab from '../../components/products/StationsTab';
-import DashboardTab from '../../components/dashboard/DashboardTab';
+import { PAGE_BG } from '../../components/products/productsUi';
 import CategoryModal from '../../components/products/CategoryModal';
 import ProductsListTab from '../../components/products/ProductsListTab';
 import { usePermission } from '../../hooks/usePermission';
@@ -53,8 +52,8 @@ function PermissionErrorView({ message }: { message: string }) {
     <div className="flex items-center justify-center py-16">
       <div className="text-center max-w-sm">
         <div className="text-5xl mb-4">🔒</div>
-        <h3 className="text-lg font-semibold text-white mb-2">Sin permisos</h3>
-        <p className="text-sm text-gray-400">{message}</p>
+        <h3 className="text-lg font-semibold text-[#0F172A] mb-2">Sin permisos</h3>
+        <p className="text-sm text-[#64748B]">{message}</p>
       </div>
     </div>
   );
@@ -75,7 +74,6 @@ const Products = () => {
   const [ingredientPermError, setIngredientPermError] = useState(false);
   const [recipePermError, setRecipePermError] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [confirmDialog, setConfirmDialog] = useState({
@@ -165,8 +163,6 @@ const Products = () => {
           setStations(stts);
           break;
         }
-        case 'reportes':
-          break; // usa datos ya cargados
       }
       setLoadedTabs(prev => new Set([...prev, tab]));
     } catch (err: any) {
@@ -191,7 +187,8 @@ const Products = () => {
     const tabParam = params.get('tab') as TabType;
     // SOFT-HIDE: 'modificadores' removido de validTabs para que no se pueda
     // activar vía URL (?tab=modificadores). El código del tab se conserva.
-    const validTabs = ['productos', 'categorias', 'ingredientes', 'fichas', 'estaciones', 'reportes'];
+    // Hotfix #258 (A1): sin pestaña Dashboard ('reportes')
+    const validTabs = ['productos', 'categorias', 'ingredientes', 'fichas', 'estaciones'];
     if (tabParam && validTabs.includes(tabParam)) {
       setActiveTab(tabParam);
       loadTabData(tabParam);
@@ -727,14 +724,15 @@ const Products = () => {
   // overflow-y-auto del Layout quedaba clavado a la altura visible y el gris asomaba
   // tras el último card al scrollear — el nivel real del desborde que el #126 no tocó)
   return (
-    <div className="min-h-full flex bg-gray-950">
+    // Hotfix #258 (A2/A3): sin columna lateral de categorías; fondo claro único
+    <div className={`min-h-full flex ${PAGE_BG}`}>
       {/* Loading overlay — solo para operaciones de guardado/eliminación */}
       {(loadingTab === 'saving' || loadingTab === 'delete') && (
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-lg p-6 shadow-xl border border-white/10">
+          <div className="bg-white rounded-xl p-6 shadow-xl border border-[#E2E8F0]">
             <div className="flex items-center space-x-3">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-              <span className="text-gray-300 font-medium">Guardando...</span>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F97316]"></div>
+              <span className="text-[#0F172A] font-medium">Guardando...</span>
             </div>
           </div>
         </div>
@@ -742,7 +740,7 @@ const Products = () => {
       
       {/* Error message */}
       {error && loadingTab === null && (
-        <div className="fixed top-4 right-4 bg-gray-900 border border-red-500/30 rounded-lg p-4 shadow-lg z-50 max-w-md">
+        <div className="fixed top-4 right-4 bg-white border border-red-200 rounded-xl p-4 shadow-lg z-50 max-w-md">
           <div className="flex items-start">
             <div className="flex-shrink-0">
               <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -772,18 +770,6 @@ const Products = () => {
         </div>
       )}
       
-      {/* CategorySidebar */}
-      <CategorySidebar
-        categories={categoriesWithCounts}
-        selectedCategory={selectedCategory}
-        onCategorySelect={(categoryId) => {
-          setSelectedCategory(categoryId);
-          setSidebarOpen(false); // Cerrar en mobile al seleccionar
-        }}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
-
       {/* Contenedor principal */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Tabs */}
@@ -807,7 +793,6 @@ const Products = () => {
             onDuplicateProduct={handleDuplicateProduct}
             onDeleteProduct={handleDeleteProduct}
             selectedCategory={selectedCategory}
-            onCategoryToggle={() => setSidebarOpen(true)}
             onCategoryChange={setSelectedCategory}
             onBulkUpdate={handleBulkUpdate}
             canManage={canManage}
@@ -851,13 +836,8 @@ const Products = () => {
             onEditOption={handleEditModifierOption}
             onDeleteOption={handleDeleteModifierOption}
           />
-        ) : activeTab === 'estaciones' ? (
-          <StationsTab onStationsChange={() => loadTabData('estaciones', true)} />
         ) : (
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-            <h3 className="text-xl font-bold text-white mb-2">🚧 Próximamente 🚧</h3>
-            <p className="text-gray-500">El dashboard de reportes estará disponible muy pronto.</p>
-          </div>
+          <StationsTab onStationsChange={() => loadTabData('estaciones', true)} />
         )}
       </div>
 

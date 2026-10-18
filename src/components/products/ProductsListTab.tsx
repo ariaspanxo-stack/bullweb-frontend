@@ -1,26 +1,38 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { 
-  Search, 
-  Plus, 
+import {
+  Search,
+  Plus,
   Grid3x3,
   Table as TableIcon,
   Package,
   TrendingUp,
   AlertCircle,
-  Menu,
   ArrowUp,
   ArrowDown,
   Download,
   X,
   ToggleLeft,
   ToggleRight,
+  Pencil,
+  Copy,
 } from 'lucide-react';
 import type { Product, ProductCategory } from '../../types/product.types';
 import { usePagination } from '../../hooks/usePagination';
 import Pagination from './Pagination';
 import ProductTable from './ProductTable';
-import { calculateProductMetrics, formatMetric } from '../../utils/metricsCalculator';
 import { formatCurrency } from '../../lib/utils';
+import { colorForCategory } from '../../lib/categoryHelpers';
+import {
+  BTN_ICON,
+  BTN_OUTLINE,
+  BTN_PRIMARY,
+  CARD,
+  MarginBadge,
+  SUBTITLE,
+  TITLE,
+  TrashButton,
+  filterClass,
+} from './productsUi';
 
 interface ProductsListTabProps {
   products: Product[];
@@ -30,13 +42,15 @@ interface ProductsListTabProps {
   onDuplicateProduct: (product: Product) => void;
   onDeleteProduct: (product: Product) => void;
   selectedCategory: string | null;
-  onCategoryToggle: () => void;
   onCategoryChange: (id: string | null) => void;
   onBulkUpdate: (ids: string[], data: { available: boolean }) => Promise<void>;
   canManage?: boolean;
 }
 
 type FilterType = 'all' | 'active' | 'popular' | 'lowstock';
+
+/** Hotfix #258 (B Productos): 24 productos por página por defecto */
+const DEFAULT_PAGE_SIZE = 24;
 
 export const ProductsListTab: React.FC<ProductsListTabProps> = ({
   products,
@@ -46,7 +60,6 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
   onDuplicateProduct,
   onDeleteProduct,
   selectedCategory,
-  onCategoryToggle,
   onCategoryChange,
   onBulkUpdate,
   canManage = true,
@@ -63,9 +76,9 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
     total: products.length,
     active: products.filter(p => p.available).length,
     popular: products.filter(p => p.popular).length,
-    lowStock: products.filter(p => 
-      p.hasStock && 
-      p.currentStock !== undefined && 
+    lowStock: products.filter(p =>
+      p.hasStock &&
+      p.currentStock !== undefined &&
       p.minStock !== undefined &&
       p.currentStock < p.minStock
     ).length
@@ -74,7 +87,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
   // Filtrado
   const filteredProducts = useMemo(() => {
     let filtered = products;
-    
+
     // Búsqueda
     if (searchQuery) {
       filtered = filtered.filter(product =>
@@ -95,9 +108,9 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
     } else if (quickFilter === 'popular') {
       filtered = filtered.filter(product => product.popular === true);
     } else if (quickFilter === 'lowstock') {
-      filtered = filtered.filter(product => 
-        product.hasStock && 
-        product.currentStock !== undefined && 
+      filtered = filtered.filter(product =>
+        product.hasStock &&
+        product.currentStock !== undefined &&
         product.minStock !== undefined &&
         product.currentStock < product.minStock
       );
@@ -128,7 +141,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
     canGoPrevious,
   } = usePagination({
     data: filteredProducts,
-    itemsPerPage: 10,
+    itemsPerPage: DEFAULT_PAGE_SIZE,
     initialSortField: null,
     initialSortDirection: null,
   });
@@ -185,7 +198,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
     });
     const header = 'Nombre,SKU,Precio,Costo,Categoría,Margen %,Stock,Disponible';
     const csv = [header, ...rows].join('\n');
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -196,251 +209,156 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  // Componente de botón de ordenamiento
+  // Botón de ordenamiento — la opción activa se resalta con su flecha ↑↓
   const SortButton: React.FC<{
     field: 'name' | 'price' | 'cost' | 'currentStock' | 'createdAt';
     label: string;
   }> = ({ field, label }) => {
     const isActive = sortField === field;
-    
+
     return (
-      <button
-        onClick={() => handleSort(field)}
-        className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-          isActive
-            ? 'bg-brand-500/10 text-brand-400 ring-1 ring-inset ring-brand-500/20'
-            : 'text-gray-400 hover:bg-white/5 hover:text-white'
-        }`}
-      >
+      <button onClick={() => handleSort(field)} className={filterClass(isActive)}>
         {label}
-        {isActive && sortDirection === 'asc' && (
-          <ArrowUp className="w-4 h-4" />
-        )}
-        {isActive && sortDirection === 'desc' && (
-          <ArrowDown className="w-4 h-4" />
-        )}
+        {isActive && sortDirection === 'asc' && <ArrowUp className="w-4 h-4" />}
+        {isActive && sortDirection === 'desc' && <ArrowDown className="w-4 h-4" />}
       </button>
     );
   };
 
   return (
     <>
-      {/* Header premium #124 — patrón Command Center #110-111 */}
-      <div className="sticky top-0 z-20 bg-gray-950/90 backdrop-blur border-b border-white/5 px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            {/* Botón toggle sidebar (mobile) */}
-            <button
-              onClick={onCategoryToggle}
-              className="lg:hidden p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
-              title="Abrir categorías"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            
-            <div className="w-10 h-10 rounded-lg bg-brand-500/10 flex items-center justify-center flex-shrink-0">
-              <Package className="w-5 h-5 text-brand-400" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-white">Productos</h1>
-              <p className="text-xs text-gray-500 mt-1">
-                Mostrando {startIndex + 1}-{endIndex} de {totalItems} productos
-                {filteredProducts.length !== products.length && ` (${products.length} total)`}
-              </p>
-            </div>
+      {/* Encabezado — Hotfix #258 (A3/A4/A5): fondo claro, título legible, crear naranja arriba a la derecha */}
+      <div className="sticky top-0 z-20 bg-[#F8FAFC]/95 backdrop-blur border-b border-[#E2E8F0] px-6 py-4">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <div>
+            <h1 className={TITLE}>Productos</h1>
+            <p className={SUBTITLE}>
+              Mostrando {totalItems === 0 ? 0 : startIndex + 1}-{endIndex} de {totalItems} productos
+              {filteredProducts.length !== products.length && ` (${products.length} en total)`}
+            </p>
           </div>
-          <button
-            onClick={onAddProduct}
-            className="inline-flex items-center px-4 py-2 bg-brand-500 text-white font-medium rounded-lg hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/25"
-            style={canManage ? undefined : { display: 'none' }}
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Nuevo Producto
-          </button>
+          {canManage && (
+            <button onClick={onAddProduct} className={BTN_PRIMARY}>
+              <Plus className="w-5 h-5" />
+              Nuevo producto
+            </button>
+          )}
         </div>
 
-        {/* Búsqueda y filtros */}
+        {/* Búsqueda, exportar y vista */}
         <div className="flex items-center gap-3">
-          {/* Búsqueda */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]" size={20} />
             <input
               type="text"
               placeholder="Buscar por nombre, descripción o SKU..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-white/10 placeholder-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-transparent"
+              className="w-full h-11 pl-10 pr-4 bg-white border border-[#CBD5E1] rounded-lg text-sm text-[#0F172A] placeholder-[#94A3B8] focus:outline-none focus:border-[#F97316]"
             />
           </div>
 
-          {/* Exportar CSV */}
-          <button
-            onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 border border-white/10 text-gray-400 text-sm font-medium rounded-lg hover:bg-white/5 hover:text-white transition-colors"
-            title="Exportar productos filtrados a CSV"
-          >
+          <button onClick={handleExportCSV} className={BTN_OUTLINE} title="Exportar productos filtrados a CSV">
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">CSV</span>
           </button>
 
-          {/* Toggle vista */}
           <div className="flex gap-2">
             <button
               onClick={() => setViewType('grid')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewType === 'grid'
-                  ? 'bg-brand-500/10 text-brand-400 ring-1 ring-inset ring-brand-500/20'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
-              }`}
-              title="Vista Cards"
+              className={viewType === 'grid' ? filterClass(true) : BTN_ICON}
+              title="Vista tarjetas"
+              aria-label="Vista tarjetas"
             >
               <Grid3x3 className="w-5 h-5" />
             </button>
             <button
               onClick={() => setViewType('table')}
-              className={`p-2 rounded-lg transition-colors ${
-                viewType === 'table'
-                  ? 'bg-brand-500/10 text-brand-400 ring-1 ring-inset ring-brand-500/20'
-                  : 'text-gray-400 hover:bg-white/5 hover:text-white'
-              }`}
-              title="Vista Tabla"
+              className={viewType === 'table' ? filterClass(true) : BTN_ICON}
+              title="Vista tabla"
+              aria-label="Vista tabla"
             >
               <TableIcon className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Chips de categoría */}
+        {/* Chips de categoría — Hotfix #258 (A2): único filtro de categoría, con el color de la categoría */}
         {categories.length > 0 && (
           <div className="flex items-center gap-2 mt-3 flex-wrap">
-            <button
-              onClick={() => onCategoryChange(null)}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                !selectedCategory
-                  ? 'bg-brand-500/10 text-brand-400 border-brand-500/20 ring-1 ring-inset ring-brand-500/20'
-                  : 'border-white/10 text-gray-400 hover:bg-white/5 hover:text-white'
-              }`}
-            >
+            <button onClick={() => onCategoryChange(null)} className={filterClass(!selectedCategory)}>
               Todas
             </button>
             {categories.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => onCategoryChange(selectedCategory === cat.id ? null : cat.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                  selectedCategory === cat.id
-                    ? 'bg-brand-500/10 text-brand-400 border-brand-500/20 ring-1 ring-inset ring-brand-500/20'
-                    : 'border-white/10 text-gray-400 hover:bg-white/5 hover:text-white'
-                }`}
+                className={filterClass(selectedCategory === cat.id)}
               >
-                {cat.icon && <span className="text-sm">{cat.icon}</span>}
+                <span
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: colorForCategory(categories, cat.id) }}
+                />
                 {cat.name}
-                <span className={`text-xs ml-0.5 ${selectedCategory === cat.id ? 'text-brand-300' : 'text-gray-500'}`}>
+                <span className="text-xs text-[#64748B]">
                   ({products.filter(p => p.categoryId === cat.id).length})
                 </span>
-                {selectedCategory === cat.id && (
-                  <X size={12} className="ml-0.5 opacity-80 flex-shrink-0" />
-                )}
+                {selectedCategory === cat.id && <X size={12} className="flex-shrink-0" />}
               </button>
             ))}
           </div>
         )}
 
-        {/* Filtros rápidos */}
-        <div className="flex items-center gap-2 mt-3">
-          <button
-            onClick={() => setQuickFilter('all')}
-            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-              quickFilter === 'all'
-                ? 'bg-brand-500/10 text-brand-400 ring-1 ring-inset ring-brand-500/20'
-                : 'text-gray-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
+        {/* Filtros rápidos — A8 */}
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          <button onClick={() => setQuickFilter('all')} className={filterClass(quickFilter === 'all')}>
             Todos ({products.length})
           </button>
-          <button
-            onClick={() => setQuickFilter('active')}
-            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
-              quickFilter === 'active'
-                ? 'bg-green-500/15 text-green-400 ring-1 ring-inset ring-green-500/30'
-                : 'text-gray-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
-            <div className={`w-2 h-2 rounded-full ${quickFilter === 'active' ? 'bg-green-400' : 'bg-green-500/60'}`}></div>
+          <button onClick={() => setQuickFilter('active')} className={filterClass(quickFilter === 'active')}>
             Activos ({stats.active})
           </button>
-          <button
-            onClick={() => setQuickFilter('popular')}
-            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
-              quickFilter === 'popular'
-                ? 'bg-yellow-500/15 text-yellow-400 ring-1 ring-inset ring-yellow-500/30'
-                : 'text-gray-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
+          <button onClick={() => setQuickFilter('popular')} className={filterClass(quickFilter === 'popular')}>
             <TrendingUp size={14} />
             Populares ({stats.popular})
           </button>
-          <button
-            onClick={() => setQuickFilter('lowstock')}
-            className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
-              quickFilter === 'lowstock'
-                ? 'bg-red-500/15 text-red-400 ring-1 ring-inset ring-red-500/30'
-                : 'text-gray-400 hover:bg-white/5 hover:text-white'
-            }`}
-          >
+          <button onClick={() => setQuickFilter('lowstock')} className={filterClass(quickFilter === 'lowstock')}>
             <AlertCircle size={14} />
-            Stock Bajo ({stats.lowStock})
+            Stock bajo ({stats.lowStock})
           </button>
         </div>
 
         {/* Ordenamiento */}
-        <div className="flex items-center gap-2 pt-3 border-t border-white/5">
-          <span className="text-sm text-gray-500">Ordenar por:</span>
-          <div className="flex flex-wrap gap-2">
-            <SortButton field="name" label="Nombre" />
-            <SortButton field="price" label="Precio" />
-            <SortButton field="cost" label="Costo" />
-            <SortButton field="currentStock" label="Stock" />
-            <SortButton field="createdAt" label="Fecha" />
-          </div>
+        <div className="flex items-center gap-2 pt-3 mt-3 border-t border-[#E2E8F0] flex-wrap">
+          <span className="text-sm text-[#64748B]">Ordenar por:</span>
+          <SortButton field="name" label="Nombre" />
+          <SortButton field="price" label="Precio" />
+          <SortButton field="cost" label="Costo" />
+          <SortButton field="currentStock" label="Stock" />
+          <SortButton field="createdAt" label="Fecha" />
         </div>
       </div>
 
       {/* Barra de acciones masivas */}
       {selectedIds.size > 0 && (
-        <div className="bg-gray-900 border-b border-brand-500/30 px-6 py-3 flex items-center gap-3 shadow-md z-10">
-          <span className="font-medium text-sm flex-shrink-0 text-brand-400">
+        <div className="bg-white border-b border-[#E2E8F0] px-6 py-3 flex items-center gap-3 z-10">
+          <span className="font-semibold text-sm flex-shrink-0 text-[#C2410C]">
             {selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''}
           </span>
           {selectedIds.size < currentItems.length && (
-            <button
-              onClick={toggleSelectAll}
-              className="text-sm text-gray-400 hover:text-white underline"
-            >
+            <button onClick={toggleSelectAll} className="text-sm text-[#475569] hover:text-[#0F172A] underline">
               Seleccionar todos ({currentItems.length})
             </button>
           )}
           <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-            <button
-              onClick={() => handleBulkAvailability(true)}
-              disabled={bulkLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/15 hover:bg-green-500/25 text-green-400 border border-green-500/30 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
-            >
+            <button onClick={() => handleBulkAvailability(true)} disabled={bulkLoading} className={BTN_OUTLINE}>
               <ToggleRight className="w-4 h-4" />
               Habilitar
             </button>
-            <button
-              onClick={() => handleBulkAvailability(false)}
-              disabled={bulkLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-500/15 hover:bg-red-500/25 text-red-400 border border-red-500/30 text-sm font-medium rounded-lg transition-colors disabled:opacity-50"
-            >
+            <button onClick={() => handleBulkAvailability(false)} disabled={bulkLoading} className={BTN_OUTLINE}>
               <ToggleLeft className="w-4 h-4" />
               Deshabilitar
             </button>
-            <button
-              onClick={clearSelection}
-              className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white text-sm font-medium rounded-lg transition-colors"
-            >
+            <button onClick={clearSelection} className={BTN_OUTLINE}>
               Cancelar
             </button>
           </div>
@@ -450,33 +368,28 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
       {/* Contenido */}
       <div className="flex-1 overflow-y-auto p-6">
         {filteredProducts.length === 0 ? (
-          // Empty state
           <div className="flex items-center justify-center h-64">
             <div className="text-center max-w-md">
-              <div className="w-20 h-20 rounded-full bg-brand-500/10 flex items-center justify-center mx-auto mb-4">
-                <Package size={40} className="text-brand-400/60" />
+              <div className="w-20 h-20 rounded-full bg-[#F1F5F9] flex items-center justify-center mx-auto mb-4">
+                <Package size={40} className="text-[#94A3B8]" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">
+              <h3 className="text-xl font-bold text-[#0F172A] mb-2">
                 {products.length === 0 ? 'Aún no hay registros' : 'No se encontraron productos'}
               </h3>
-              <p className="text-gray-500 mb-6">
+              <p className="text-[#64748B] mb-6">
                 {products.length === 0
                   ? 'Crea tu primer producto en 3 pasos: nombre, precio y categoría.'
                   : 'Intenta cambiar los filtros o búsqueda.'}
               </p>
               {products.length === 0 && canManage && (
-                <button
-                  onClick={onAddProduct}
-                  className="px-6 py-3 bg-brand-500 text-white font-medium rounded-lg hover:bg-brand-600 transition-colors shadow-lg shadow-brand-500/25"
-                >
-                  <Plus className="w-5 h-5 inline mr-2" />
-                  Crear Primer Producto
+                <button onClick={onAddProduct} className={BTN_PRIMARY}>
+                  <Plus className="w-5 h-5" />
+                  Crear primer producto
                 </button>
               )}
             </div>
           </div>
         ) : viewType === 'table' ? (
-          // Vista Tabla
           <ProductTable
             products={currentItems}
             onEdit={onEditProduct}
@@ -485,58 +398,55 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
             canManage={canManage}
           />
         ) : (
-          // Vista Cards — H126: grid denso (8-18 productos por pantalla para catálogos grandes)
+          // Vista tarjetas — misma altura (flex-col h-full), sin código PRD, solo margen con color por rango
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3">
             {currentItems.map((product) => {
               const category = categories.find(c => c.id === product.categoryId);
-              const margin = product.cost
-                ? Math.round(((product.price - product.cost) / product.price) * 100)
-                : 0;
-              const metrics = calculateProductMetrics(product.price, product.cost || 0);
-              const marginColor = margin >= 40 ? 'text-emerald-400' : margin >= 20 ? 'text-amber-400' : 'text-rose-400';
+              const catColor = product.categoryId ? colorForCategory(categories, product.categoryId) : '#64748B';
               // Thumbnail: el backend envía 'image' (Prisma); imageUrl es el nombre frontend
               const imageSrc: string | undefined = (product as any).image || product.imageUrl;
               const emoji: string | undefined = (product as any).emoji;
+              const selected = selectedIds.has(product.id);
+              const stockState = product.hasStock && product.currentStock !== undefined
+                ? product.currentStock <= 0
+                  ? { label: 'Sin stock', cls: 'bg-[#FEE2E2] text-[#B91C1C]' }
+                  : product.minStock && product.currentStock < product.minStock
+                  ? { label: `Stock: ${product.currentStock}`, cls: 'bg-[#FEF3C7] text-[#92400E]' }
+                  : { label: `Stock: ${product.currentStock}`, cls: 'bg-[#F1F5F9] text-[#475569]' }
+                : null;
 
               return (
                 <div
                   key={product.id}
-                  className={`bg-white/[0.03] rounded-2xl border overflow-hidden transition-all duration-200 group ${
-                    selectedIds.has(product.id)
-                      ? 'border-brand-500/50 ring-2 ring-brand-500/50'
-                      : 'border-white/5 hover:border-white/10 hover:bg-white/[0.05]'
+                  className={`${CARD} h-full flex flex-col overflow-hidden transition-shadow group ${
+                    selected ? 'ring-2 ring-[#F97316] border-[#F97316]' : 'hover:shadow-md'
                   }`}
                 >
-                  {/* Imagen — H126: thumbnail compacto (h-48→h-32, -64px por card) */}
-                  <div className="relative h-32 bg-gray-800">
+                  {/* Imagen o color de la categoría */}
+                  <div className="relative h-32 flex-shrink-0" style={imageSrc ? undefined : { backgroundColor: catColor }}>
                     {imageSrc ? (
                       <img
                         src={imageSrc}
                         alt={product.name}
                         loading="lazy"
-                        className={`w-full h-full object-cover transition-all duration-300 ${!product.available ? 'grayscale opacity-60' : 'group-hover:scale-105'}`}
+                        className={`w-full h-full object-cover ${!product.available ? 'grayscale opacity-60' : ''}`}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-brand-500/10 to-gray-800">
+                      <div className="w-full h-full flex items-center justify-center">
                         <span className="text-5xl">{emoji ?? '🍽️'}</span>
                       </div>
                     )}
-                    
-                    {/* Checkbox + Badges */}
+
+                    {/* Selección + badges */}
                     <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-                      {/* Checkbox de selección */}
                       <div
-                        className={`transition-opacity ${
-                          selectedIds.size > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                        }`}
+                        className={`transition-opacity ${selectedIds.size > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                         onClick={(e) => { e.stopPropagation(); toggleSelect(product.id); }}
                       >
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer shadow-sm transition-colors ${
-                          selectedIds.has(product.id)
-                            ? 'bg-blue-600 border-blue-600'
-                            : 'bg-white/90 border-gray-400 hover:border-blue-500'
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer shadow-sm ${
+                          selected ? 'bg-[#F97316] border-[#F97316]' : 'bg-white/90 border-[#94A3B8]'
                         }`}>
-                          {selectedIds.has(product.id) && (
+                          {selected && (
                             <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>
@@ -544,137 +454,80 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                         </div>
                       </div>
                       {product.popular && (
-                        <span className="px-2 py-1 bg-yellow-500 text-white text-xs font-bold rounded-md flex items-center gap-1">
+                        <span className="px-2 py-0.5 bg-[#FEF3C7] text-[#92400E] text-xs font-bold rounded-md flex items-center gap-1">
                           <TrendingUp size={12} />
                           Popular
                         </span>
                       )}
-                      {!product.available && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-gray-950/70 backdrop-blur-[2px]">
-                          <span className="text-[10px] font-bold text-white px-2 py-0.5 rounded-full bg-black/45 uppercase tracking-wider">
-                            Agotado
-                          </span>
-                        </div>
-                      )}
                     </div>
 
-                    {/* Stock badge */}
-                    {product.hasStock && product.currentStock !== undefined && (
-                      <div className="absolute top-2 right-2">
-                        <span className={`px-2 py-1 text-xs font-bold rounded-md backdrop-blur-sm ${
-                          product.currentStock === 0
-                            ? 'bg-red-500 text-white'
-                            : product.minStock && product.currentStock < product.minStock
-                            ? 'bg-yellow-500 text-white'
-                            : 'bg-green-500 text-white'
-                        }`}>
-                          {product.currentStock === 0
-                            ? 'Sin stock'
-                            : `Stock: ${product.currentStock}`}
+                    {!product.available && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-[#0F172A]/50">
+                        <span className="text-[11px] font-bold text-white px-2 py-0.5 rounded-full bg-black/50 uppercase tracking-wider">
+                          Agotado
                         </span>
                       </div>
                     )}
 
-                    {/* Pastilla de precio #124 — patrón carta #103 */}
+                    {stockState && (
+                      <div className="absolute top-2 right-2">
+                        <span className={`px-2 py-0.5 text-xs font-bold rounded-md ${stockState.cls}`}>{stockState.label}</span>
+                      </div>
+                    )}
+
+                    {/* Precio en píldora oscura legible sobre cualquier foto */}
                     <div className="absolute bottom-2 right-2">
-                      <span className={`px-2.5 py-1 text-sm font-bold rounded-full shadow-lg ${
-                        product.available === false
-                          ? 'bg-gray-950/80 text-gray-400 line-through'
-                          : 'bg-brand-500 text-white'
-                      }`}>
+                      <span
+                        className={`inline-block px-2.5 py-1 text-sm font-bold text-white rounded-full ${product.available === false ? 'line-through' : ''}`}
+                        style={{ backgroundColor: 'rgba(15,23,42,0.75)' }}
+                      >
                         {formatCurrency(product.price)}
                       </span>
                     </div>
                   </div>
 
-                  {/* Contenido — H126: p-4→p-3 compacto */}
-                  <div className="p-3">
-                    {/* Categoría + SKU — línea meta */}
-                    <div className="flex items-center justify-between gap-2 mb-1.5">
-                      {category ? (
-                        <span className="text-[10px] font-medium text-brand-300 bg-brand-500/10 border border-brand-500/20 rounded-full px-2 py-0.5">
-                          {category.icon} {category.name}
-                        </span>
-                      ) : (
-                        <span />
-                      )}
-                      <span className="text-[10px] font-mono text-gray-500 truncate">
-                        {product.sku}
+                  {/* Contenido */}
+                  <div className="p-3 flex flex-col flex-1">
+                    {category && (
+                      <span className="inline-flex items-center gap-1.5 text-xs text-[#475569] mb-1">
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: catColor }} />
+                        {category.name}
                       </span>
-                    </div>
-
-                    {/* Nombre */}
-                    <h3 className="font-bold text-white text-[15px] mb-1 line-clamp-1">
+                    )}
+                    <h3 className="font-bold text-[#0F172A] text-[15px] mb-1 line-clamp-1" title={product.name}>
                       {product.name}
                     </h3>
-
-                    {/* Tags — H126: máximo 2 chips visibles */}
-                    {product.tags && product.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {product.tags.slice(0, 2).map((tag) => {
-                          const TAG_EMOJI: Record<string, string> = {
-                            vegano: '🌱', vegetariano: '🥦', sin_gluten: '🌾',
-                            picante: '🌶️', popular: '⭐', nuevo: '🆕', oferta: '🏷️',
-                          };
-                          return (
-                            <span key={tag} className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-white/5 text-gray-400 text-[10px] rounded-full">
-                              {TAG_EMOJI[tag] ?? '🏷️'} {tag.replace('_', ' ')}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* Descripción — H126: 1 línea, sin min-height */}
                     {product.description && (
-                      <p className="text-xs text-gray-500 mb-2 line-clamp-1 leading-relaxed">
-                        {product.description}
-                      </p>
+                      <p className="text-xs text-[#64748B] mb-2 line-clamp-1">{product.description}</p>
                     )}
 
-                    {/* Métricas como chips discretos #124 — cálculo intacto (:489-493) */}
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[10px] text-gray-500 bg-white/5 rounded-full px-2 py-0.5">
-                        Costo {formatCurrency(product.cost || 0)}
-                      </span>
-                      {product.cost ? (
-                        <>
-                          <span className={`text-[10px] rounded-full px-2 py-0.5 font-medium bg-white/5 ${marginColor}`}>
-                            Mrg {metrics.marginPercent}%
-                          </span>
-                          <span className="text-[10px] text-gray-500 bg-white/5 rounded-full px-2 py-0.5">
-                            Mkup {metrics.markupPercent}%
-                          </span>
-                        </>
-                      ) : null}
-                    </div>
+                    <div className="mt-auto">
+                      <div className="mb-2">
+                        <MarginBadge price={product.price} cost={product.cost} />
+                      </div>
 
-                    {/* Acciones al hover #124 — handlers intactos */}
-                    <div className="flex gap-2 pt-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => onEditProduct(product)}
-                        title="Editar"
-                        aria-label={`Editar ${product.name}`}
-                        className="flex-1 px-3 py-2 bg-brand-500/10 border border-brand-500/20 text-brand-400 text-sm font-medium rounded-lg hover:bg-brand-500/20 transition-colors"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => onDuplicateProduct(product)}
-                        title="Duplicar"
-                        aria-label={`Duplicar ${product.name}`}
-                        className="px-3 py-2 border border-white/10 text-gray-400 text-sm font-medium rounded-lg hover:bg-white/5 hover:text-white transition-colors"
-                      >
-                        Duplicar
-                      </button>
-                      <button
-                        onClick={() => onDeleteProduct(product)}
-                        title="Eliminar"
-                        aria-label={`Eliminar ${product.name}`}
-                        className="px-3 py-2 border border-red-500/20 text-red-400 text-sm font-medium rounded-lg hover:bg-red-500/10 transition-colors"
-                      >
-                        Eliminar
-                      </button>
+                      {(
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => onEditProduct(product)}
+                            title="Editar"
+                            aria-label={`Editar ${product.name}`}
+                            className={`${BTN_OUTLINE} flex-1`}
+                          >
+                            <Pencil className="w-4 h-4" />
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => onDuplicateProduct(product)}
+                            title="Duplicar"
+                            aria-label={`Duplicar ${product.name}`}
+                            className={BTN_ICON}
+                          >
+                            <Copy className="w-4 h-4" />
+                          </button>
+                          <TrashButton onClick={() => onDeleteProduct(product)} label={`Eliminar ${product.name}`} className="ml-4" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

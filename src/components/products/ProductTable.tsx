@@ -1,8 +1,9 @@
 import React from 'react';
-import { PencilIcon, CopyIcon, TrashIcon, Info } from 'lucide-react';
+import { PencilIcon, CopyIcon, Info } from 'lucide-react';
 import type { Product } from '../../types/product.types';
 import { calculateProductMetrics, formatMetric, metricDescriptions } from '../../utils/metricsCalculator';
 import { formatCurrency } from '../../lib/utils';
+import { BTN_ICON, CARD, NoCostBadge, TrashButton, formatPct, marginTone } from './productsUi';
 
 interface ProductTableProps {
   products: Product[];
@@ -11,6 +12,18 @@ interface ProductTableProps {
   onDelete: (product: Product) => void;
   canManage?: boolean;
 }
+
+// Hotfix #258: vista tabla en fondo claro; aquí viven costo y markup (la tarjeta solo muestra margen).
+const TH = 'px-4 py-3 text-xs font-semibold text-[#64748B] uppercase tracking-wider';
+
+const InfoTip: React.FC<{ text: string }> = ({ text }) => (
+  <div className="relative group/tooltip">
+    <Info className="w-4 h-4 text-[#94A3B8] cursor-help" />
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-64 p-2 bg-[#0F172A] text-white text-xs normal-case rounded-lg shadow-lg z-10">
+      {text}
+    </div>
+  </div>
+);
 
 export const ProductTable: React.FC<ProductTableProps> = ({
   products,
@@ -23,210 +36,104 @@ export const ProductTable: React.FC<ProductTableProps> = ({
   // ahora se usa la categoría real poblada del producto (product.category)
 
   return (
-    <div className="bg-gray-900 rounded-xl border border-white/5 overflow-hidden">
+    <div className={`${CARD} overflow-hidden`}>
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-white/5">
-          <thead className="bg-white/5">
+        <table className="min-w-full divide-y divide-[#E2E8F0]">
+          <thead className="bg-[#F8FAFC]">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Imagen
+              <th className={`${TH} text-left`}>Imagen</th>
+              <th className={`${TH} text-left`}>SKU</th>
+              <th className={`${TH} text-left`}>Nombre</th>
+              <th className={`${TH} text-left`}>Categoría</th>
+              <th className={`${TH} text-right`}>Precio</th>
+              <th className={`${TH} text-right`}>Costo</th>
+              <th className={`${TH} text-center`}>
+                <div className="flex items-center justify-center gap-1">Margen $ <InfoTip text={metricDescriptions.marginAmount} /></div>
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                SKU
+              <th className={`${TH} text-center`}>
+                <div className="flex items-center justify-center gap-1">Margen % <InfoTip text={metricDescriptions.marginPercent} /></div>
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nombre
+              <th className={`${TH} text-center`}>
+                <div className="flex items-center justify-center gap-1">Markup % <InfoTip text={metricDescriptions.markupPercent} /></div>
               </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Categoría
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Precio
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Costo
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider group relative">
-                <div className="flex items-center justify-center gap-1">
-                  Margen $
-                  <div className="relative group/tooltip">
-                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-64 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
-                      {metricDescriptions.marginAmount}
-                    </div>
-                  </div>
-                </div>
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider group relative">
-                <div className="flex items-center justify-center gap-1">
-                  Margen %
-                  <div className="relative group/tooltip">
-                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-64 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
-                      {metricDescriptions.marginPercent}
-                    </div>
-                  </div>
-                </div>
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider group relative">
-                <div className="flex items-center justify-center gap-1">
-                  Markup %
-                  <div className="relative group/tooltip">
-                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block w-64 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
-                      {metricDescriptions.markupPercent}
-                    </div>
-                  </div>
-                </div>
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Stock
-              </th>
-              <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
-              </th>
+              <th className={`${TH} text-center`}>Stock</th>
+              <th className={`${TH} text-center`}>Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className="divide-y divide-[#E2E8F0] bg-white">
             {products.map((product) => {
               const isLowStock = (product.currentStock || 0) < 10;
               const metrics = calculateProductMetrics(product.price, product.cost || 0);
+              const hasCost = !!product.cost && product.cost > 0;
               // Thumbnail: el backend envía 'image' (Prisma); imageUrl es el nombre frontend
               const imageSrc: string | undefined = (product as any).image || product.imageUrl;
               const emoji: string | undefined = (product as any).emoji;
 
               return (
-                <tr
-                  key={product.id}
-                  className={`hover:bg-white/5 transition-colors ${!product.available ? 'opacity-60' : ''}`}
-                >
-                  {/* Imagen */}
+                <tr key={product.id} className={`hover:bg-[#F8FAFC] transition-colors ${!product.available ? 'opacity-60' : ''}`}>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <div className={`w-12 h-12 rounded-lg bg-gray-800 flex items-center justify-center overflow-hidden ${!product.available ? 'grayscale' : ''}`}>
+                    <div className={`w-12 h-12 rounded-lg bg-[#F1F5F9] flex items-center justify-center overflow-hidden ${!product.available ? 'grayscale' : ''}`}>
                       {imageSrc ? (
-                        <img
-                          src={imageSrc}
-                          alt={product.name}
-                          loading="lazy"
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={imageSrc} alt={product.name} loading="lazy" className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-xl">{emoji ?? '🍽️'}</span>
                       )}
                     </div>
                   </td>
-
-                  {/* SKU */}
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className="text-xs font-mono text-gray-400 bg-white/5 px-2 py-1 rounded">
-                      {product.sku}
-                    </span>
+                    <span className="text-xs font-mono text-[#64748B] bg-[#F1F5F9] px-2 py-1 rounded">{product.sku}</span>
                   </td>
-
-                  {/* Nombre */}
                   <td className="px-4 py-3">
                     <div className="max-w-xs">
-                      <p className="text-sm font-medium text-white truncate">
-                        {product.name}
-                      </p>
-                      {product.description && (
-                        <p className="text-xs text-gray-500 truncate">
-                          {product.description}
-                        </p>
-                      )}
-                      {product.popular && (
-                        <span className="inline-flex items-center mt-1 text-xs text-yellow-500">
-                          ⭐ Popular
-                        </span>
-                      )}
+                      <p className="text-sm font-semibold text-[#0F172A] truncate">{product.name}</p>
+                      {product.description && <p className="text-xs text-[#64748B] truncate">{product.description}</p>}
+                      {product.popular && <span className="inline-flex items-center mt-1 text-xs text-[#92400E]">⭐ Popular</span>}
                     </div>
                   </td>
-
-                  {/* Categoría — fix #124: categoría real, no hardcode */}
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <span className="text-sm text-gray-400">
-                      {product.category?.name || product.categoryId}
-                    </span>
+                    <span className="text-sm text-[#475569]">{product.category?.name || product.categoryId}</span>
                   </td>
-
-                  {/* Precio — pastilla patrón carta #124 */}
                   <td className="px-4 py-3 whitespace-nowrap text-right">
-                    <span className={`inline-block text-sm font-semibold rounded-lg px-2.5 py-1 ${
-                      product.available === false
-                        ? 'text-gray-500 line-through bg-white/5'
-                        : 'bg-brand-500/15 text-brand-400'
-                    }`}>
+                    <span className={`text-sm font-bold ${product.available === false ? 'text-[#94A3B8] line-through' : 'text-[#0F172A]'}`}>
                       {formatCurrency(product.price)}
                     </span>
                   </td>
-
-                  {/* Costo */}
                   <td className="px-4 py-3 whitespace-nowrap text-right">
-                    <span className="text-sm text-gray-500">
-                      {formatCurrency(product.cost || 0)}
+                    <span className="text-sm font-bold text-[#475569]">{formatCurrency(product.cost || 0)}</span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-center">
+                    <span className="text-sm font-bold text-[#0F172A]">
+                      {hasCost ? formatMetric(metrics.marginAmount, 'currency') : '—'}
                     </span>
                   </td>
-
-                  {/* Margen $ */}
                   <td className="px-4 py-3 whitespace-nowrap text-center">
-                    <span className="text-sm font-semibold text-white">
-                      {formatMetric(metrics.marginAmount, 'currency')}
-                    </span>
-                  </td>
-
-                  {/* Margen % */}
-                  <td className="px-4 py-3 whitespace-nowrap text-center">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${metrics.marginPercent >= 40 ? 'bg-emerald-500/10 text-emerald-400' : metrics.marginPercent >= 20 ? 'bg-amber-500/10 text-amber-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                      {metrics.marginPercent}%
-                    </span>
-                  </td>
-
-                  {/* Markup % */}
-                  <td className="px-4 py-3 whitespace-nowrap text-center">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${metrics.markupPercent >= 67 ? 'bg-emerald-500/10 text-emerald-400' : metrics.markupPercent >= 25 ? 'bg-amber-500/10 text-amber-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                      {metrics.markupPercent}%
-                    </span>
-                  </td>
-
-                  {/* Stock */}
-                  <td className="px-4 py-3 whitespace-nowrap text-center">
-                    <span className={`text-sm font-medium ${isLowStock ? 'text-red-400' : 'text-white'}`}>
-                      {product.currentStock || 0}
-                    </span>
-                    {isLowStock && (
-                      <span className="block text-xs text-red-500">Bajo</span>
+                    {hasCost ? (
+                      <span className={`text-[13px] font-bold ${marginTone(metrics.marginPercent)}`}>{formatPct(metrics.marginPercent)}</span>
+                    ) : (
+                      <NoCostBadge />
                     )}
                   </td>
-
-                  {/* Acciones */}
+                  <td className="px-4 py-3 whitespace-nowrap text-center">
+                    <span className="text-[13px] font-semibold text-[#475569]">{hasCost ? formatPct(metrics.markupPercent) : '—'}</span>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap text-center">
+                    <span className={`text-sm font-medium ${isLowStock ? 'text-[#B45309]' : 'text-[#0F172A]'}`}>{product.currentStock || 0}</span>
+                    {isLowStock && <span className="block text-xs text-[#B45309]">Bajo</span>}
+                  </td>
                   <td className="px-4 py-3 whitespace-nowrap text-center">
                     <div className="flex items-center justify-center gap-2">
                       {canManage && (
-                        <button
-                          onClick={() => onEdit(product)}
-                          className="p-1.5 text-brand-400 hover:bg-brand-500/10 rounded transition-colors"
-                          title="Editar"
-                        >
+                        <button onClick={() => onEdit(product)} className={BTN_ICON} title="Editar" aria-label={`Editar ${product.name}`}>
                           <PencilIcon className="w-4 h-4" />
                         </button>
                       )}
                       {canManage && (
-                        <button
-                          onClick={() => onDuplicate(product)}
-                          className="p-1.5 text-gray-400 hover:bg-white/5 hover:text-white rounded transition-colors"
-                          title="Duplicar"
-                        >
+                        <button onClick={() => onDuplicate(product)} className={BTN_ICON} title="Duplicar" aria-label={`Duplicar ${product.name}`}>
                           <CopyIcon className="w-4 h-4" />
                         </button>
                       )}
                       {canManage && (
-                        <button
-                          onClick={() => onDelete(product)}
-                          className="p-1.5 text-red-400 hover:bg-red-500/10 rounded transition-colors"
-                          title="Eliminar"
-                        >
-                          <TrashIcon className="w-4 h-4" />
-                        </button>
+                        <TrashButton onClick={() => onDelete(product)} label={`Eliminar ${product.name}`} className="ml-4" />
                       )}
                     </div>
                   </td>
@@ -237,10 +144,9 @@ export const ProductTable: React.FC<ProductTableProps> = ({
         </table>
       </div>
 
-      {/* Empty state */}
       {products.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No hay productos para mostrar</p>
+          <p className="text-[#64748B]">No hay productos para mostrar</p>
         </div>
       )}
     </div>

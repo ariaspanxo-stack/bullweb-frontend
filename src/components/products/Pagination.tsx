@@ -23,7 +23,8 @@ interface PaginationProps {
   canGoPrevious: boolean;
 }
 
-const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100];
+// Hotfix #258: 24 por página por defecto en Productos
+const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48, 96];
 
 export const Pagination: React.FC<PaginationProps> = ({
   currentPage,
@@ -91,7 +92,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               id="itemsPerPage"
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-[#F97316] h-11"
             >
               {ITEMS_PER_PAGE_OPTIONS.map((option) => (
                 <option key={option} value={option}>
@@ -108,7 +109,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           <button
             onClick={onFirstPage}
             disabled={!canGoPrevious}
-            className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-11 h-11 inline-flex items-center justify-center rounded-lg border-[1.5px] border-[#CBD5E1] bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Primera página"
           >
             <ChevronsLeft className="w-5 h-5 text-gray-600" />
@@ -118,7 +119,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           <button
             onClick={onPreviousPage}
             disabled={!canGoPrevious}
-            className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-11 h-11 inline-flex items-center justify-center rounded-lg border-[1.5px] border-[#CBD5E1] bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Página anterior"
           >
             <ChevronLeft className="w-5 h-5 text-gray-600" />
@@ -142,10 +143,10 @@ export const Pagination: React.FC<PaginationProps> = ({
                 <button
                   key={page}
                   onClick={() => onPageChange(page as number)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`min-w-[44px] h-11 px-3 rounded-lg text-sm font-semibold transition-colors ${
                     currentPage === page
-                      ? 'bg-blue-600 text-white'
-                      : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
+                      ? 'bg-[#FFF7ED] border-[1.5px] border-[#F97316] text-[#C2410C]'
+                      : 'border-[1.5px] border-[#CBD5E1] text-[#1E2A4A] hover:bg-slate-50'
                   }`}
                 >
                   {page}
@@ -163,7 +164,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           <button
             onClick={onNextPage}
             disabled={!canGoNext}
-            className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-11 h-11 inline-flex items-center justify-center rounded-lg border-[1.5px] border-[#CBD5E1] bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Página siguiente"
           >
             <ChevronRight className="w-5 h-5 text-gray-600" />
@@ -173,7 +174,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           <button
             onClick={onLastPage}
             disabled={!canGoNext}
-            className="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-11 h-11 inline-flex items-center justify-center rounded-lg border-[1.5px] border-[#CBD5E1] bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             title="Última página"
           >
             <ChevronsRight className="w-5 h-5 text-gray-600" />

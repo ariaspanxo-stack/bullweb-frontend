@@ -71,6 +71,9 @@ function mapOrder(raw: any): Sale {
     tips: raw.tips || [],
     subtotal: Number(raw.subtotal) || 0,
     discount: Number(raw.discount) || 0,
+    // Hotfix #257: tipo y valor ingresado del descuento guardado en la orden (origen único)
+    discountType: raw.discountType ?? null,
+    discountValue: raw.discountValue != null ? Number(raw.discountValue) : null,
     tax: Number(raw.tax) || 0,
     total: Number(raw.total) || 0,
     numberOfPeople: raw.numberOfPeople || 1,
@@ -474,7 +477,8 @@ class RestaurantService {
     }
   }
 
-  async applyDiscount(saleId: string, discount: { type: 'PERCENTAGE' | 'FIXED'; value: number }): Promise<void> {
+  // Hotfix #257: reason y pin (PIN de administrador sobre el umbral del tenant) opcionales
+  async applyDiscount(saleId: string, discount: { type: 'PERCENTAGE' | 'FIXED'; value: number; reason?: string; pin?: string }): Promise<void> {
     try {
       await api.post(`/pos/orders/${saleId}/discount`, discount);
       _ordersCache = [];

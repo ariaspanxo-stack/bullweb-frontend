@@ -153,6 +153,7 @@ function RestaurantInner() {
           customerId={ctx.orderForPayment?.customerId || ctx.pendingOrderCustomerId}
           customerName={ctx.orderForPayment?.customerName || ctx.pendingOrderCustomerName}
           orderId={ctx.orderForPayment?.id || ctx.activeOrderId || ctx.lastPaidOrderId || undefined}
+          discountOrderId={ctx.orderForPayment?.id || ctx.activeOrderId || undefined}
           orderType={ctx.orderForPayment ? (ctx.orderForPayment.type as string) : 'DINE_IN'}
           onConfirm={ctx.orderForPayment
             ? ctx.handleConfirmOrderPayment

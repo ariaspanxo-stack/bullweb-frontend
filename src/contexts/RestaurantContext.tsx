@@ -818,12 +818,12 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   const handlePayOrderFromCard = (order: Sale) => {
     setOrderForPayment(order);
     // Propagar el descuento que ya tiene la orden para que el modal lo muestre
+    // Hotfix #257: si la orden guardó un %, se propaga el % (discountValue); si no, el monto
     setPendingDiscount(
       order.discount
-        ? {
-            type: order.discountType === '%' ? 'PERCENTAGE' : 'FIXED',
-            value: order.discount,
-          }
+        ? order.discountType === 'PERCENTAGE' && Number(order.discountValue ?? 0) > 0
+          ? { type: 'PERCENTAGE', value: Number(order.discountValue) }
+          : { type: 'FIXED', value: order.discount }
         : undefined,
     );
     setShowPaymentModal(true);

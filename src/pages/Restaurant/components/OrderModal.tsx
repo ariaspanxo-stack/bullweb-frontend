@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   X, Search, Plus, Minus, ShoppingCart, CreditCard,
-  Clock, Star, Users, MessageSquare, UserPlus, Loader2, Pencil,
+  Clock, Star, Users, MessageSquare, UserPlus, Loader2, Tag, Pencil,
   Printer, ChefHat, ClipboardList, CheckCircle, Mail, LayoutGrid, ArrowLeft,
 } from 'lucide-react';
 import { ModifiersModal } from './ModifiersModal';
@@ -25,6 +25,7 @@ import type {
 import customersService from '../../../services/customersService';
 import { restaurantService } from '../../../services/restaurantService';
 import { posService } from '../../../services/posService';
+import { applyOrderDiscount, discountInputAllowed, discountLimitHint, useAdminPin } from '../../../components/pos/discountControl';
 import CustomerAutocomplete from '../../../components/CustomerAutocomplete';
 import toast from 'react-hot-toast';
 import { usePermission } from '../../../hooks/usePermission';
@@ -99,8 +100,14 @@ export const OrderModal = ({
   const [mobileTab, setMobileTab]                   = useState<'menu' | 'order'>('menu');
   const [discountType, setDiscountType]             = useState<'%' | '$'>('%');
   const [discountInput, setDiscountInput]           = useState('10');
-  // Hotfix #256: el descuento se captura solo en PaymentModal; aquí es de solo lectura
+  // Hotfix #257: descuento con origen único en la orden; se edita aquí y en PaymentModal (mismo endpoint)
   const [discountApplied, setDiscountApplied]       = useState(false);
+  const [showDiscountPopover, setShowDiscountPopover] = useState(false);
+  // Borrador del popover: el estado guardado (discountType/discountInput) solo cambia al aplicar
+  const [draftType, setDraftType]                   = useState<'%' | '$'>('%');
+  const [draftInput, setDraftInput]                 = useState('');
+  const [discountReason, setDiscountReason]         = useState('');
+  const [applyingDiscount, setApplyingDiscount]     = useState(false);
   const [showWaiterPicker, setShowWaiterPicker] = useState(false);
   // Hotfix 246 CB: toggle grilla↔búsqueda (clave NUEVA, patrón gemelos #245)
   const [viewMode, setViewMode] = useState<'search' | 'grid'>(() =>
@@ -122,6 +129,8 @@ export const OrderModal = ({
 
   // ── Hook para pedir motivo de eliminación ──
   const { promptReason, modalElement: removalReasonModal } = useRemovalReason();
+  // Hotfix #257: PIN de administrador para descuentos sobre el umbral
+  const { requestPin, pinModal } = useAdminPin();
 
   const { data: waiters = [] } = useQuery({
     queryKey: ['order-waiters'],
@@ -143,6 +152,7 @@ export const OrderModal = ({
   // ─── Permisos ───────────────────────────────────────────────
   const canCobrar   = usePermission('pos.cobrar');
   const canEdit     = usePermission('pos.edit_order');
+  const canDiscount = usePermission('pos.discount_table');
   const canTransfer = usePermission('pos.transfer_order');
   const canSendToKitchen = usePermission('tables.order');
 
@@ -174,10 +184,17 @@ export const OrderModal = ({
         if (sale?.customerPhone) setClientPhone(sale.customerPhone);
         if (sale?.status)       setExistingStatus(sale.status);
         const disc = Number((sale as any)?.discount ?? 0);
+        const pct  = Number((sale as any)?.discountValue ?? 0);
         if (disc > 0) {
           setDiscountApplied(true);
-          setDiscountType('$');
-          setDiscountInput(String(disc));
+          // Hotfix #257: si la orden guardó un %, se muestra el % (se recalcula con el subtotal)
+          if ((sale as any)?.discountType === 'PERCENTAGE' && pct > 0) {
+            setDiscountType('%');
+            setDiscountInput(String(pct));
+          } else {
+            setDiscountType('$');
+            setDiscountInput(String(disc));
+          }
         }
       }).catch(e => console.warn('[OrderModal] error cargando orden', e));
     }
@@ -299,6 +316,61 @@ export const OrderModal = ({
   const handlePrintPreBill = async () => {
     if (!existingOrderId) return;
     try { await posService.printPrecuenta(existingOrderId); } catch { /* silencioso */ }
+  };
+
+  // ── Hotfix #257: descuento guardado en la orden (topes + PIN de administrador) ──
+  const discountKind = draftType === '%' ? 'PERCENTAGE' as const : 'FIXED' as const;
+  const draftValue   = parseFloat(draftInput) || 0;
+  const toggleDiscountPopover = () => {
+    if (!showDiscountPopover) {
+      setDraftType(discountType);
+      setDraftInput(discountApplied ? discountInput : '');
+    }
+    setShowDiscountPopover(v => !v);
+  };
+  const persistDiscount = async (payload: { type: 'PERCENTAGE' | 'FIXED'; value: number; reason?: string }) => {
+    if (!existingOrderId) return false;
+    setApplyingDiscount(true);
+    try {
+      const ok = await applyOrderDiscount(existingOrderId, payload, requestPin);
+      if (ok) {
+        queryClient.invalidateQueries({ queryKey: ['tables'] });
+        queryClient.invalidateQueries({ queryKey: ['sales'] });
+      }
+      return ok;
+    } catch (e: any) {
+      toast.error(e?.message || 'No se pudo aplicar el descuento');
+      return false;
+    } finally {
+      setApplyingDiscount(false);
+    }
+  };
+
+  const handleApplyDiscount = async () => {
+    if (draftValue <= 0) { toast.error('Ingresa un valor mayor a 0'); return; }
+    if (!discountInputAllowed(discountKind, draftInput, existingSubtotal)) {
+      toast.error(discountLimitHint(discountKind, existingSubtotal));
+      return;
+    }
+    const ok = await persistDiscount({ type: discountKind, value: draftValue, reason: discountReason.trim() || undefined });
+    if (ok) {
+      setDiscountType(draftType);
+      setDiscountInput(draftInput);
+      setDiscountApplied(true);
+      setShowDiscountPopover(false);
+      toast.success('Descuento aplicado');
+    }
+  };
+
+  const handleRemoveDiscount = async () => {
+    const ok = await persistDiscount({ type: 'FIXED', value: 0 });
+    if (ok) {
+      setDiscountApplied(false);
+      setDiscountInput('10');
+      setDiscountType('%');
+      setShowDiscountPopover(false);
+      toast.success('Descuento eliminado');
+    }
   };
 
   // ══════════════════════════════════════════════════════════════
@@ -714,7 +786,7 @@ export const OrderModal = ({
                       />
                     </div>
                     {discountApplied && discountAmount > 0 && (
-                      <div className="flex justify-between text-sm text-green-600">
+                      <div className="flex justify-between text-sm text-slate-600">
                         <span>Descuento{discountType === '%' ? ` (${discountValue}%)` : ''}</span>
                         <span className="font-medium">-${fmt(discountAmount)}</span>
                       </div>
@@ -930,14 +1002,75 @@ export const OrderModal = ({
                 /* (CC/CD) fila de 3 secundarios de contorno — mismos onClick/args */
                 footerExtra={
                   <div className="mt-3 space-y-2">
-                    {/* Fila de botones secundarios (contorno). Hotfix #256: sin edición de descuento */}
-                    <div className="grid grid-cols-2 gap-2">
+                    {/* Hotfix #257: descuento guardado en la orden (mismo dato que PaymentModal y la pre-cuenta) */}
+                    {showDiscountPopover && (
+                      <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
+                        <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">Descuento de la orden</p>
+                        <div className="flex gap-2">
+                          {(['%', '$'] as const).map(t => (
+                            <button
+                              key={t}
+                              onClick={() => { setDraftType(t); setDraftInput(''); }}
+                              className={`flex-1 min-h-[44px] rounded-xl text-sm font-bold border transition-colors ${
+                                draftType === t ? 'border-slate-800 text-slate-900 bg-white' : 'border-slate-200 text-slate-500 bg-white hover:border-slate-300'
+                              }`}
+                            >{t === '%' ? '% Porcentaje' : '$ Monto'}</button>
+                          ))}
+                        </div>
+                        <input
+                          type="number" inputMode="numeric" min="0"
+                          max={draftType === '%' ? 100 : Math.round(existingSubtotal)}
+                          value={draftInput}
+                          onChange={e => { if (discountInputAllowed(discountKind, e.target.value, existingSubtotal)) setDraftInput(e.target.value); }}
+                          className="w-full min-h-[44px] px-3 border border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:outline-none focus:border-slate-500"
+                          placeholder={draftType === '%' ? 'Porcentaje' : 'Monto'}
+                        />
+                        <p className="text-xs text-slate-400">{discountLimitHint(discountKind, existingSubtotal)}</p>
+                        <input
+                          type="text" maxLength={200}
+                          value={discountReason}
+                          onChange={e => setDiscountReason(e.target.value)}
+                          className="w-full min-h-[44px] px-3 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-500"
+                          placeholder="Motivo (opcional)"
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            onClick={handleRemoveDiscount}
+                            disabled={applyingDiscount || !discountApplied}
+                            className="min-h-[44px] bg-white border border-slate-300 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 disabled:opacity-40"
+                          >Quitar</button>
+                          <button
+                            onClick={handleApplyDiscount}
+                            disabled={applyingDiscount}
+                            className="min-h-[44px] bg-[#F97316] text-white rounded-xl text-sm font-bold hover:bg-orange-600 disabled:opacity-40"
+                          >{applyingDiscount ? 'Aplicando…' : 'Aplicar'}</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Fila de 3 botones secundarios (contorno) */}
+                    <div className="grid grid-cols-3 gap-2">
                       <button
                         onClick={handlePrintPreBill}
                         disabled={!existingOrderId || (existingItems.length === 0 && cart.length === 0)}
                         className="py-2 bg-white border-2 border-gray-300 text-gray-600 rounded-xl font-bold text-xs hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <Printer size={14} /> Pre-cuenta
+                      </button>
+                      <button
+                        onClick={toggleDiscountPopover}
+                        disabled={!canDiscount || !existingOrderId}
+                        title={!existingOrderId ? 'Envía el pedido a cocina para aplicar descuento' : undefined}
+                        className={`py-2 bg-white border-2 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed ${
+                          discountApplied && discountAmount > 0
+                            ? 'border-orange-400 text-orange-700'
+                            : 'border-gray-300 text-gray-600 hover:border-orange-300 hover:text-orange-600'
+                        }`}
+                      >
+                        <Tag size={14} />
+                        {discountApplied && discountAmount > 0
+                          ? `-${fmt(discountAmount)}${discountType === '%' ? ` ${discountValue}%` : ''}`
+                          : 'Descuento'}
                       </button>
                       <button
                         onClick={async () => {
@@ -1119,6 +1252,7 @@ export const OrderModal = ({
 
       {/* Modal de motivo de eliminación */}
       {removalReasonModal}
+      {pinModal}
 
     </>,
     document.body

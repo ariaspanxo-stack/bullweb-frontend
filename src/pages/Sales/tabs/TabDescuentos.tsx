@@ -130,10 +130,15 @@ export const TabDescuentos = ({ sales, isLoading, hasSearched }: Props) => {
                     {formatType(sale.discountType)}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-600 font-medium">{sale.waiterName}</td>
+                <td className="px-4 py-3 text-sm text-gray-600 font-medium">
+                  {/* Hotfix #257 (D4): quien aplicó o autorizó con PIN, motivo y hora */}
+                  {sale.discountAppliedByName ?? sale.waiterName}
+                  {sale.discountReason && <div className="text-xs text-gray-400 font-normal">{sale.discountReason}</div>}
+                  {sale.discountAt && <div className="text-xs text-gray-400 font-normal">{formatDateTime(sale.discountAt)}</div>}
+                </td>
                 <td className="px-4 py-3 text-sm text-right font-semibold text-red-700">
-                  {sale.discountType === 'PERCENTAGE' && (sale as any).discountValue
-                    ? `${(sale as any).discountValue}% → -${formatCurrency(sale.discount)}`
+                  {sale.discountType === 'PERCENTAGE' && sale.discountValue
+                    ? `${sale.discountValue}% → -${formatCurrency(sale.discount)}`
                     : `-${formatCurrency(sale.discount)}`}
                 </td>
               </tr>

@@ -20,6 +20,7 @@ import { emojiForCategory, categoryLabel, colorForCategory } from '../../../lib/
 import toast from 'react-hot-toast';
 import { usePermission } from '../../../hooks/usePermission';
 import { useRemovalReason } from '../../../hooks/useRemovalReason';
+import { applyOrderDiscount, discountInputAllowed, discountLimitHint, useAdminPin } from '../../pos/discountControl';
 
 // ─── Props ──────────────────────────────────────────────────────
 interface DeliveryOrderModalProps {
@@ -109,6 +110,8 @@ export function DeliveryOrderModal({
 
   // ── Hook para pedir motivo de eliminación ──
   const { promptReason, modalElement: removalReasonModal } = useRemovalReason();
+  // Hotfix #257: PIN de administrador para descuentos sobre el umbral
+  const { requestPin, pinModal } = useAdminPin();
 
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -178,6 +181,9 @@ export function DeliveryOrderModal({
   // Descuento: siempre desde BD. El panel solo calcula preview local.
   const orderDiscount = Number(currentOrder.discount ?? 0);
   const total         = subtotal - orderDiscount + deliveryFee;
+  // Hotfix #257: el tope del monto es el subtotal guardado en la orden (sin pendientes de enviar)
+  const savedSubtotal = subtotal - pendingSubtotal;
+  const discountKind  = discountType === '%' ? 'PERCENTAGE' as const : 'FIXED' as const;
 
   // ── Filtrado de productos ─────────────────────────────────────
   const filteredProducts = products.filter(p => {
@@ -357,19 +363,22 @@ export function DeliveryOrderModal({
       toast.error('Ingresa un valor válido');
       return;
     }
+    if (!discountInputAllowed(discountKind, discountInput, savedSubtotal)) {
+      toast.error(discountLimitHint(discountKind, savedSubtotal));
+      return;
+    }
     setSubmitting(true);
     try {
-      await restaurantService.applyDiscount(currentOrder.id, {
-        type:  discountType === '%' ? 'PERCENTAGE' : 'FIXED',
-        value,
-      });
+      // Hotfix #257: mismo endpoint y PIN de administrador si supera el umbral
+      const applied = await applyOrderDiscount(currentOrder.id, { type: discountKind, value }, requestPin);
+      if (!applied) return;
       toast.success('Descuento aplicado');
       await reloadOrder();
       onUpdate();
       setShowDiscount(false);
       setDiscountInput('10');
-    } catch {
-      toast.error('No se pudo aplicar el descuento');
+    } catch (e: any) {
+      toast.error(e?.message || 'No se pudo aplicar el descuento');
     } finally {
       setSubmitting(false);
     }
@@ -874,9 +883,11 @@ export function DeliveryOrderModal({
                       <input
                         type="number"
                         min="0"
+                        max={discountType === '%' ? 100 : Math.round(savedSubtotal)}
                         value={discountInput}
-                        onChange={e => setDiscountInput(e.target.value)}
+                        onChange={e => { if (discountInputAllowed(discountKind, e.target.value, savedSubtotal)) setDiscountInput(e.target.value); }}
                         onKeyDown={e => { if (e.key === 'Enter') handleApplyDiscount(); }}
+                        title={discountLimitHint(discountKind, savedSubtotal)}
                         className="flex-1 border border-gray-200 rounded-lg px-2 py-1 text-xs text-center focus:outline-none"
                       />
                       <button
@@ -974,6 +985,7 @@ export function DeliveryOrderModal({
 
       {/* Modal de motivo de eliminación */}
       {removalReasonModal}
+      {pinModal}
     </>,
     document.body
   );

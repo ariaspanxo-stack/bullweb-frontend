@@ -45,6 +45,11 @@ export interface Sale {
   subtotal: number;
   discount: number;
   discountType?: string | null;
+  /** Hotfix #257: valor ingresado (% o monto) y auditoría del descuento */
+  discountValue?: number | null;
+  discountAppliedByName?: string | null;
+  discountReason?: string | null;
+  discountAt?: Date | null;
   tax: number;
   total: number;
   originalTotal?: number;       // total antes de anular (snapshot)

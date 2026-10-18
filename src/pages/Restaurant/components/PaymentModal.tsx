@@ -9,6 +9,7 @@ import { LoyaltyPanel } from '@/components/pos/LoyaltyPanel';
 import { useAuthStore } from '@/store/authStore';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { EmitBoletaButton } from '../../../components/pos/EmitBoletaButton';
+import { applyOrderDiscount, discountInputAllowed, discountLimitHint, useAdminPin } from '../../../components/pos/discountControl';
 
 interface TipSettings {
   enabled_dine_in:         boolean;
@@ -30,6 +31,8 @@ interface PaymentModalProps {
   orderType?: string;
   initialDiscount?: { type: 'PERCENTAGE' | 'FIXED'; value: number };
   orderId?: string;
+  /** Hotfix #257: orden donde se guarda el descuento (origen único). Sin ella el descuento no se edita aquí. */
+  discountOrderId?: string;
   onClose: () => void;
   /** Hotfix #256: tips = pagos de propina, cada uno con su propio medio */
   onConfirm: (payments: Payment[], tips: Payment[], discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }, couponId?: string) => Promise<void>;
@@ -143,6 +146,7 @@ export const PaymentModal = ({
   customerName,
   initialDiscount,
   orderId,
+  discountOrderId,
   orderType,
   onClose,
   onConfirm,
@@ -260,7 +264,45 @@ export const PaymentModal = ({
   const confirmReplace = (next: Exclude<DiscountSource, null>) =>
     !(discountAmount > 0 && discountSource && discountSource !== next) || window.confirm(REPLACE_MSG);
 
-  const clearDiscount = () => {
+  // ── Hotfix #257 (D1): el descuento vive en la orden; aquí se edita con el mismo endpoint ──
+  const { requestPin, pinModal } = useAdminPin();
+  const canEditDiscount = !!discountOrderId;
+  const [savedDiscount, setSavedDiscount] = useState<{ type: 'PERCENTAGE' | 'FIXED'; value: number } | null>(
+    () => (initialDiscount && initialDiscount.value > 0 ? initialDiscount : null),
+  );
+  const [applyingDiscount, setApplyingDiscount] = useState(false);
+  const currentDiscount = discountEnabled && (parseFloat(discountValue) || 0) > 0
+    ? { type: discountType, value: parseFloat(discountValue) || 0 }
+    : null;
+  const discountDirty = JSON.stringify(currentDiscount) !== JSON.stringify(savedDiscount);
+
+  /** Guarda el descuento en la orden (topes + PIN). null = quitar. */
+  const persistDiscount = async (d: { type: 'PERCENTAGE' | 'FIXED'; value: number } | null, reason?: string): Promise<boolean> => {
+    if (!discountOrderId) return false;
+    if (d && !discountInputAllowed(d.type, String(d.value), effectiveSubtotal)) {
+      setError(discountLimitHint(d.type, effectiveSubtotal));
+      return false;
+    }
+    setApplyingDiscount(true);
+    setError('');
+    try {
+      const ok = await applyOrderDiscount(
+        discountOrderId,
+        d ? { ...d, ...(reason ? { reason } : {}) } : { type: 'FIXED', value: 0 },
+        requestPin,
+      );
+      if (ok) setSavedDiscount(d);
+      return ok;
+    } catch (e: any) {
+      setError(e?.message || 'No se pudo aplicar el descuento');
+      return false;
+    } finally {
+      setApplyingDiscount(false);
+    }
+  };
+
+  const clearDiscount = async () => {
+    if (savedDiscount && !(await persistDiscount(null))) return;
     setDiscountEnabled(false);
     setDiscountValue('');
     setDiscountSource(null);
@@ -289,9 +331,16 @@ export const PaymentModal = ({
       const d = res.data;
       if (d.valid && d.coupon && d.discountAmount !== undefined) {
         if (!confirmReplace('coupon')) return;
+        const cType = d.coupon.type as 'PERCENTAGE' | 'FIXED';
+        const cValue = cType === 'PERCENTAGE' ? d.coupon.value : d.discountAmount;
+        // Hotfix #257: el cupón usa el mismo slot, topes y PIN, y queda guardado en la orden
+        if (!(await persistDiscount({ type: cType, value: cValue }, `Cupón ${couponCode.trim()}`))) {
+          setCouponMsg({ ok: false, text: 'Cupón no aplicado' });
+          return;
+        }
         setDiscountEnabled(true);
-        setDiscountType(d.coupon.type as 'PERCENTAGE' | 'FIXED');
-        setDiscountValue(String(d.coupon.type === 'PERCENTAGE' ? d.coupon.value : d.discountAmount));
+        setDiscountType(cType);
+        setDiscountValue(String(cValue));
         setDiscountSource('coupon');
         setAppliedCouponId(d.coupon.id);
         setCouponMsg({ ok: true, text: `Cupón aplicado: -$${Math.round(d.discountAmount).toLocaleString('es-CL')}` });
@@ -304,7 +353,7 @@ export const PaymentModal = ({
       setCouponLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [couponCode, total, discountAmount, discountSource]);
+  }, [couponCode, total, discountAmount, discountSource, discountOrderId, effectiveSubtotal]);
 
   // ── helpers ──────────────────────────────────────────────
   const addTipRow = () => {
@@ -331,25 +380,22 @@ export const PaymentModal = ({
     .filter(r => parseFloat(r.amount) > 0)
     .map(r => ({ method: r.method, amount: Math.round(parseFloat(r.amount)) }));
   // Hotfix #256 (D3): no se puede cobrar mientras la suma de pagos no cubra la venta
-  const confirmBlocked = loading || missing || (saleTotal > 0.5 && payments.length === 0);
+  const confirmBlocked = loading || applyingDiscount || missing || (saleTotal > 0.5 && payments.length === 0);
 
   const handleConfirm = async () => {
     setError('');
     if (confirmBlocked) return;
+    // Hotfix #257: un cambio de descuento sin aplicar se guarda en la orden antes de cobrar
+    if (canEditDiscount && discountDirty && !(await persistDiscount(currentDiscount))) return;
     const tips: Payment[] = tipRows
       .filter(r => parseFloat(r.amount) > 0)
       .map(r => ({ method: r.method, amount: Math.round(parseFloat(r.amount)) }));
     try {
       setLoading(true);
-      // value 0 quita un descuento que la orden ya traía
-      const discountPayload = discountEnabled && discountAmount > 0
-        ? { type: discountType, value: parseFloat(discountValue) || 0 }
-        : initialDiscount
-          ? { type: 'FIXED' as const, value: 0 }
-          : undefined;
+      // Hotfix #257: el descuento ya está guardado en la orden; no se reenvía al cobrar.
       // El cupón se valida e incrementa atómicamente en el backend (registerPayment)
       // dentro de la misma transacción del pago.
-      await onConfirm(payments, tips, discountPayload, appliedCouponId ?? undefined);
+      await onConfirm(payments, tips, undefined, appliedCouponId ?? undefined);
       setPaymentCompleted(true);
       setAppliedCouponId(null);
     } catch (e: any) {
@@ -493,37 +539,61 @@ export const PaymentModal = ({
                     )}
                   </div>
 
-                  {canApplyDiscount ? (
-                    <div className="flex items-center gap-2">
-                      <div className="flex rounded-xl border border-slate-300 overflow-hidden flex-shrink-0">
-                        {(['PERCENTAGE', 'FIXED'] as const).map(t => (
+                  {!canEditDiscount && (
+                    <p className="text-sm text-slate-400 mb-2">Envía el pedido a cocina para aplicar un descuento.</p>
+                  )}
+                  {canApplyDiscount && canEditDiscount ? (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <div className="flex rounded-xl border border-slate-300 overflow-hidden flex-shrink-0">
+                          {(['PERCENTAGE', 'FIXED'] as const).map(t => (
+                            <button
+                              key={t}
+                              onClick={() => editManual(() => { setDiscountType(t); setDiscountValue(''); })}
+                              className={`min-h-[44px] px-3 text-sm font-bold transition-colors ${
+                                discountEnabled && discountType === t
+                                  ? 'bg-white text-slate-900 underline underline-offset-4 decoration-2'
+                                  : 'bg-white text-slate-400 hover:text-slate-700'
+                              }`}
+                            >{t === 'PERCENTAGE' ? '%' : '$'}</button>
+                          ))}
+                        </div>
+                        <input
+                          type="number" inputMode="numeric" min="0"
+                          max={discountType === 'PERCENTAGE' ? 100 : Math.round(effectiveSubtotal)}
+                          placeholder={discountType === 'PERCENTAGE' ? 'Porcentaje' : 'Monto'}
+                          value={discountEnabled ? discountValue : ''}
+                          onChange={e => {
+                            const v = e.target.value;
+                            // Hotfix #257 (D2): el input bloquea % > 100 y monto > subtotal
+                            if (!discountInputAllowed(discountType, v, effectiveSubtotal)) return;
+                            editManual(() => setDiscountValue(v));
+                          }}
+                          onFocus={e => e.target.select()}
+                          className={`${FIELD} px-3`}
+                        />
+                        {discountDirty && discountSource === 'manual' && (
                           <button
-                            key={t}
-                            onClick={() => editManual(() => { setDiscountType(t); setDiscountValue(''); })}
-                            className={`min-h-[44px] px-3 text-sm font-bold transition-colors ${
-                              discountEnabled && discountType === t
-                                ? 'bg-white text-slate-900 underline underline-offset-4 decoration-2'
-                                : 'bg-white text-slate-400 hover:text-slate-700'
-                            }`}
-                          >{t === 'PERCENTAGE' ? '%' : '$'}</button>
-                        ))}
+                            type="button"
+                            onClick={() => persistDiscount(currentDiscount)}
+                            disabled={applyingDiscount}
+                            className={`${BTN_OUTLINE} flex-shrink-0`}
+                          >
+                            {applyingDiscount ? '…' : 'Aplicar'}
+                          </button>
+                        )}
                       </div>
-                      <input
-                        type="number" inputMode="numeric" min="0"
-                        max={discountType === 'PERCENTAGE' ? 100 : undefined}
-                        placeholder={discountType === 'PERCENTAGE' ? 'Porcentaje' : 'Monto'}
-                        value={discountEnabled ? discountValue : ''}
-                        onChange={e => { const v = e.target.value; editManual(() => setDiscountValue(v)); }}
-                        onFocus={e => e.target.select()}
-                        className={`${FIELD} px-3`}
-                      />
-                    </div>
-                  ) : discountAmount === 0 && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        {discountLimitHint(discountType, effectiveSubtotal)}
+                        {!discountDirty && savedDiscount ? ' · guardado en la orden' : ''}
+                      </p>
+                    </>
+                  ) : discountAmount === 0 && canEditDiscount && (
                     <p className="text-sm text-slate-400">Sin descuento aplicado</p>
                   )}
 
                   {/* Cupón: mismo slot */}
-                  <div className="flex gap-2 mt-2">
+                  {canEditDiscount && <div className="flex gap-2 mt-2">
                     <input
                       type="text"
                       placeholder="Código de cupón"
@@ -540,7 +610,7 @@ export const PaymentModal = ({
                     >
                       {couponLoading ? '…' : 'Aplicar'}
                     </button>
-                  </div>
+                  </div>}
                   {couponMsg && (
                     <p className="text-xs mt-1.5 font-semibold text-slate-600">
                       {couponMsg.ok ? '✓' : '✗'} {couponMsg.text}
@@ -548,13 +618,15 @@ export const PaymentModal = ({
                   )}
 
                   {/* Puntos de fidelidad: mismo slot */}
-                  {customerId && customerName && (
+                  {canEditDiscount && customerId && customerName && (
                     <div className="mt-2">
                       <LoyaltyPanel
                         customerId={customerId}
                         customerName={customerName}
-                        onRedeem={(cashDiscount) => {
+                        onRedeem={async (cashDiscount) => {
                           if (!confirmReplace('points')) return;
+                          // Hotfix #257: puntos en el mismo slot, con topes y PIN, guardados en la orden
+                          if (!(await persistDiscount({ type: 'FIXED', value: cashDiscount }, 'Canje de puntos'))) return;
                           setAppliedCouponId(null);
                           setCouponMsg(null);
                           setDiscountEnabled(true);
@@ -687,6 +759,7 @@ export const PaymentModal = ({
           </div>
         </div>
       </div>
+      {pinModal}
     </>,
     document.body
   );

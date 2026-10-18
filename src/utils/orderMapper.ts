@@ -10,6 +10,10 @@ interface BackendOrder {
   tax: number;
   discount: number;
   discountType?: string | null;
+  discountValue?: number | null;
+  discountAppliedByName?: string | null;
+  discountReason?: string | null;
+  discountAt?: string | null;
   tip: number;
   total: number;
   tableId?: string;
@@ -182,6 +186,11 @@ export function mapOrderToSale(order: BackendOrder): Sale {
     subtotal: order.subtotal,
     discount: order.discount,
     discountType: order.discountType,
+    // Hotfix #257: valor ingresado y auditoría (Ventas > Descuentos)
+    discountValue: order.discountValue ?? null,
+    discountAppliedByName: order.discountAppliedByName ?? null,
+    discountReason: order.discountReason ?? null,
+    discountAt: order.discountAt ? new Date(order.discountAt) : null,
     tax: order.tax,
     total: order.total,
     deliveryFee: (order as any).deliveryFee ?? 0, // Hotfix #167 — columna orders."deliveryFee" viaja en el include del backend

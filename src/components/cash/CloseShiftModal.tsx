@@ -13,6 +13,7 @@ import {
   type CashSession,
   type CashRegister,
   type CloseSessionSnapshot,
+  type CuadreTips,
 } from '../../services/cashRegistersService';
 import { ShiftPrinterSelect } from './ShiftPrinterSelect';
 import { ConfirmModal } from '../ui/ConfirmModal';
@@ -54,6 +55,35 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
   const expectedCash  = cuadre?.expectedCash ?? 0;
   const diff = !isNaN(closingAmount) ? closingAmount - expectedCash : null;
   const needsJustification = diff !== null && Math.abs(diff) > 10_000;
+
+  // Hotfix #256: propinas aparte de las ventas (mismo estilo que el desglose)
+  const renderTips = (tips?: CuadreTips) => {
+    if (!tips || tips.total <= 0) return null;
+    return (
+      <div className="space-y-1.5">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Propinas</p>
+          <span className="text-sm font-bold text-gray-800">{formatCLP(tips.total)}</span>
+        </div>
+        {tips.byMethod.map((p) => (
+          <div
+            key={`tip-${p.methodId}`}
+            className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5"
+          >
+            <div className="flex items-center gap-2">
+              {isCash(p.method)
+                ? <Banknote className="w-4 h-4 text-green-500" />
+                : <CreditCard className="w-4 h-4 text-blue-500" />
+              }
+              <span className="text-sm font-medium text-gray-700">{p.method}</span>
+              <span className="text-xs text-gray-400">({p.count})</span>
+            </div>
+            <span className="text-sm font-bold text-gray-800">{formatCLP(p.total)}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
 
   const shiftDuration = formatDistanceStrict(
     new Date(session.openedAt),
@@ -173,6 +203,8 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
                 </div>
               )}
 
+              {renderTips(closeResult.tips)}
+
               {/* Resultado arqueológico */}
               <div className="border-t border-gray-100 pt-4 space-y-2">
                 <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Arqueo de caja</p>
@@ -180,6 +212,11 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
                   <span className="text-gray-500">Efectivo esperado</span>
                   <span className="font-bold text-gray-800">{formatCLP(closeResult.expectedCash)}</span>
                 </div>
+                {Number(closeResult.tips?.cash ?? 0) > 0 && (
+                  <p className="text-xs text-gray-400 -mt-1 text-right">
+                    incluye {formatCLP(Number(closeResult.tips?.cash ?? 0))} de propinas en efectivo
+                  </p>
+                )}
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">Efectivo contado</span>
                   <span className="font-bold text-gray-800">{formatCLP(closeResult.closingCash)}</span>
@@ -339,6 +376,8 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
                   </div>
                 )}
 
+                {renderTips(cuadre.tips)}
+
                 {/* Efectivo esperado */}
                 <div className="bg-orange-50 border border-orange-100 rounded-2xl px-4 py-3">
                   <div className="flex items-center justify-between">
@@ -352,6 +391,11 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
                   <p className="text-xs text-orange-500 mt-1">
                     Apertura {formatCLP(session.openingCash)} + ventas en efectivo
                   </p>
+                  {Number(cuadre.tips?.cash ?? 0) > 0 && (
+                    <p className="text-xs text-orange-500">
+                      incluye {formatCLP(Number(cuadre.tips?.cash ?? 0))} de propinas en efectivo
+                    </p>
+                  )}
                 </div>
               </div>
             ) : (

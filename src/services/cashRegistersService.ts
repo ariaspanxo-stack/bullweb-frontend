@@ -41,6 +41,13 @@ export interface CuadreItem {
   total:    number;
 }
 
+/** Hotfix #256: propinas (payments.isTip) de la sesión; no son venta */
+export interface CuadreTips {
+  total:    number;
+  cash:     number;
+  byMethod: CuadreItem[];
+}
+
 export interface CuadreResponse {
   registerId:    string;
   registerName:  string;
@@ -54,6 +61,7 @@ export interface CuadreResponse {
   totalSales:    number;
   totalOrders:   number;
   byMethod:      CuadreItem[];
+  tips?:         CuadreTips;
 }
 
 export interface CloseSessionSnapshot {
@@ -64,6 +72,7 @@ export interface CloseSessionSnapshot {
   closingCash:  number;
   difference:   number;
   byMethod:     CuadreItem[];
+  tips?:        CuadreTips;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

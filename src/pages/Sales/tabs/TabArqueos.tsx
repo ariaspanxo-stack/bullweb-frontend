@@ -161,7 +161,12 @@ export const TabArqueos = () => {
   const sistemaIngreso: number = Number(cuadre?.totalSales ?? 0);
   const totalCashIn: number = Number(cuadre?.totalCashIn ?? 0);
   const totalCashOut: number = Number(cuadre?.totalCashOut ?? 0);
-  const sistemaTotal: number = sistemaInicial + sistemaIngreso + totalCashIn - totalCashOut;
+  // Hotfix #256: propinas aparte de las ventas; el dinero sí está en caja/medios
+  const cuadreTips: any = (cuadre as any)?.tips;
+  const tipsByMethod: any[] = cuadreTips?.byMethod ?? [];
+  const tipsTotal: number = Number(cuadreTips?.total ?? 0);
+  const tipsCash: number = Number(cuadreTips?.cash ?? 0);
+  const sistemaTotal: number = sistemaInicial + sistemaIngreso + tipsTotal + totalCashIn - totalCashOut;
   const expectedCash: number = Number(cuadre?.expectedCash ?? sistemaTotal);
   const movements: any[] = cuadre?.movements ?? [];
   const cancellations: any = cuadre?.cancellations ?? { count: 0, total: 0 };
@@ -288,6 +293,17 @@ export const TabArqueos = () => {
       'Usuario (CLP)': closingByMethod ? (closingByMethod[m.method] ?? 0) : (parseFloat(userAmounts[m.method] ?? '0') || 0),
       'Diferencia (CLP)': (closingByMethod ? (closingByMethod[m.method] ?? 0) : (parseFloat(userAmounts[m.method] ?? '0') || 0)) - m.total,
     }));
+    // Hotfix #256: propinas en filas aparte (lo declarado por medio incluye la propina,
+    // por eso la fila de propina resta su monto y la suma de diferencias cuadra con el TOTAL)
+    for (const t of tipsByMethod) {
+      rows.push({
+        Metodo: `Propinas - ${METHOD_LABELS[t.method] ?? t.method}`,
+        Transacciones: t.count,
+        'Sistema (CLP)': t.total,
+        'Usuario (CLP)': 0,
+        'Diferencia (CLP)': -t.total,
+      });
+    }
     rows.push({
       Metodo: 'TOTAL',
       Transacciones: byMethod.reduce((s: number, m: any) => s + m.count, 0),
@@ -627,6 +643,26 @@ export const TabArqueos = () => {
                   </div>
                 )}
               </div>
+              {tipsTotal > 0 && (
+                <div className="py-2 border-t border-gray-100">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 font-semibold uppercase text-xs tracking-wide">Propinas</span>
+                    <span className="font-bold text-gray-800">{fmt(tipsTotal)}</span>
+                  </div>
+                  <div className="ml-1 mt-2 space-y-1.5">
+                    {tipsByMethod.map((m: any) => (
+                      <div key={`tip-${m.method}`} className="flex justify-between text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <ChevronRight size={11} className="text-gray-400" />
+                          {METHOD_LABELS[m.method] ?? m.method}
+                          <span className="text-xs text-gray-400 ml-1">({m.count})</span>
+                        </span>
+                        <span className="font-medium text-gray-700">{fmt(m.total)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {totalCashIn > 0 && (
                 <div className="flex justify-between py-1.5 border-t border-gray-100">
                   <span className="text-green-600 text-xs font-semibold">+ Ingresos manuales</span>
@@ -643,6 +679,11 @@ export const TabArqueos = () => {
                 <span className="text-gray-700 font-bold text-sm">Total</span>
                 <span className="font-black text-gray-900 text-base">{fmt(sistemaTotal)}</span>
               </div>
+              {tipsTotal > 0 && (
+                <p className="text-xs text-gray-400 text-right -mt-1">
+                  incluye {fmt(tipsTotal)} de propinas{tipsCash > 0 ? ` (${fmt(tipsCash)} en efectivo)` : ''}
+                </p>
+              )}
               {movements.length > 0 && (
                 <div className="mt-2 border-t border-gray-100 pt-2">
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1.5">Movimientos manuales</p>
@@ -677,9 +718,10 @@ export const TabArqueos = () => {
                 <div className="space-y-3 mb-3">
                   {[
                     { key: 'Efectivo', label: 'Efectivo' },
-                    ...byMethod
-                      .filter((m: any) => !/efectivo|cash|contado/i.test(m.method))
-                      .map((m: any) => ({ key: m.method, label: METHOD_LABELS[m.method] ?? m.method })),
+                    // Hotfix #256: también los medios que solo recibieron propinas
+                    ...[...new Set([...byMethod, ...tipsByMethod].map((m: any) => m.method as string))]
+                      .filter((method) => !/efectivo|cash|contado/i.test(method))
+                      .map((method) => ({ key: method, label: METHOD_LABELS[method] ?? method })),
                   ].map(({ key, label }) => (
                     <div key={key} className="flex items-center justify-between gap-3">
                       <label className="text-sm text-gray-700 font-medium flex-1">

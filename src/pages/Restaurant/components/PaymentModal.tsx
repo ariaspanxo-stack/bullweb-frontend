@@ -1,11 +1,10 @@
 ﻿import { useState, memo, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Check, AlertCircle, Plus, Trash2, CreditCard, Banknote, Smartphone, ArrowLeftRight, Tag, ChevronRight, ChevronDown, CheckCircle, Printer, FileText } from 'lucide-react';
+import { X, AlertCircle, AlertTriangle, Plus, Trash2, CreditCard, Banknote, Smartphone, ArrowLeftRight, ChevronDown, CheckCircle } from 'lucide-react';
 import type { Payment, Table, CartItem } from '../../../types/restaurant.types';
 import { paymentMethodsService } from '@/services/paymentMethodsService';
 import { cashRegistersService } from '@/services/cashRegistersService';
 import api from '@/services/api';
-import toast from 'react-hot-toast';
 import { LoyaltyPanel } from '@/components/pos/LoyaltyPanel';
 import { useAuthStore } from '@/store/authStore';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
@@ -32,7 +31,8 @@ interface PaymentModalProps {
   initialDiscount?: { type: 'PERCENTAGE' | 'FIXED'; value: number };
   orderId?: string;
   onClose: () => void;
-  onConfirm: (payments: Payment[], tip: number, discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }, couponId?: string) => Promise<void>;
+  /** Hotfix #256: tips = pagos de propina, cada uno con su propio medio */
+  onConfirm: (payments: Payment[], tips: Payment[], discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }, couponId?: string) => Promise<void>;
 }
 
 type Medium = string;
@@ -42,6 +42,11 @@ interface Row {
   method: Medium;   // UUID del payment_method en la BD
   amount: string;
 }
+
+/** Hotfix #256: un solo slot de descuento; el origen define la confirmación de reemplazo */
+type DiscountSource = 'manual' | 'coupon' | 'points' | null;
+
+const REPLACE_MSG = 'Esto reemplaza el descuento actual';
 
 /** Ícono para método de pago */
 function methodIcon(name: string) {
@@ -53,29 +58,15 @@ function methodIcon(name: string) {
   return Smartphone;
 }
 
-/** Clases del select según método seleccionado */
-function methodSelectClasses(name: string, hasValue: boolean): string {
-  if (!hasValue) return 'border-2 border-gray-200 bg-white text-gray-400';
-  const n = name.toLowerCase();
-  if (n.includes('efectivo') || n.includes('cash'))                          return 'border-2 border-emerald-400 bg-emerald-50 text-emerald-800';
-  if (n.includes('débit') || n.includes('debit') || n.includes('debito'))    return 'border-2 border-cyan-400 bg-cyan-50 text-cyan-800';
-  if (n.includes('crédit') || n.includes('credit') || n.includes('tarjeta')) return 'border-2 border-blue-400 bg-blue-50 text-blue-800';
-  if (n.includes('transfer'))                                                 return 'border-2 border-violet-400 bg-violet-50 text-violet-800';
-  return 'border-2 border-slate-400 bg-slate-100 text-slate-800';
-}
-
-/** Color del ícono del método */
-function methodIconColor(name: string, hasValue: boolean): string {
-  if (!hasValue) return 'text-gray-400';
-  const n = name.toLowerCase();
-  if (n.includes('efectivo') || n.includes('cash'))                          return 'text-emerald-600';
-  if (n.includes('débit') || n.includes('debit') || n.includes('debito'))    return 'text-cyan-600';
-  if (n.includes('crédit') || n.includes('credit') || n.includes('tarjeta')) return 'text-blue-600';
-  if (n.includes('transfer'))                                                 return 'text-violet-600';
-  return 'text-slate-600';
-}
-
 const fmt = (n: number) => Math.round(Math.abs(n)).toLocaleString('es-CL');
+
+// Hotfix #256 (D4): un solo patrón de tarjeta, campos y botones de contorno
+const CARD        = 'rounded-xl border border-slate-200 bg-white p-3';
+const CARD_TITLE  = 'text-xs font-bold uppercase tracking-wider text-slate-600';
+const FIELD       = 'w-full min-h-[44px] border border-slate-300 rounded-xl bg-white text-base font-bold text-slate-900 focus:outline-none focus:border-slate-500 transition-colors';
+const BTN_OUTLINE = 'min-h-[44px] px-3 border border-slate-300 rounded-xl bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed';
+const BTN_ICON    = 'w-11 h-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors flex-shrink-0';
+const AMBER_NOTE  = 'flex items-start gap-2 text-sm font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2';
 
 let _id = 0;
 const uid = () => ++_id;
@@ -95,39 +86,26 @@ interface RowInputProps {
 const RowInput = memo(({ row, onMethod, onAmount, onRemove, canRemove, placeholder, activeMethods, quickFill }: RowInputProps) => {
   const selectedName = activeMethods.find(m => m.code === row.method)?.name ?? '';
   const Icon = methodIcon(selectedName);
-  const hasMethod = !!row.method;
   return (
-    <div className="flex items-center gap-1.5">
-      {/* Selector de método — una sola celda */}
+    <div className="flex items-center gap-2">
+      {/* Selector de método */}
       <div className="relative flex-shrink-0">
-        <Icon
-          size={12}
-          className={`absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none z-10 ${
-            methodIconColor(selectedName, hasMethod)
-          }`}
-        />
+        <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 text-slate-500" />
         <select
           value={row.method}
           onChange={e => onMethod(e.target.value)}
-          className={`appearance-none pl-8 pr-6 py-2 rounded-xl border-2 text-[11px] font-black cursor-pointer focus:outline-none transition-all ${
-            methodSelectClasses(selectedName, hasMethod)
-          }`}
+          className="appearance-none min-h-[44px] pl-9 pr-8 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800 cursor-pointer focus:outline-none focus:border-slate-500 transition-colors"
         >
           <option value="" disabled>Método...</option>
           {activeMethods.map(m => (
             <option key={m.code} value={m.code}>{m.name}</option>
           ))}
         </select>
-        <ChevronDown
-          size={10}
-          className={`absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none ${
-            methodIconColor(selectedName, hasMethod)
-          } opacity-60`}
-        />
+        <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500" />
       </div>
-      {/* Input de monto */}
+      {/* Monto */}
       <div className="relative flex-1">
-        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold pointer-events-none">$</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold pointer-events-none">$</span>
         <input
           type="number"
           inputMode="numeric"
@@ -136,25 +114,17 @@ const RowInput = memo(({ row, onMethod, onAmount, onRemove, canRemove, placehold
           value={row.amount}
           onChange={e => onAmount(e.target.value)}
           onFocus={e => e.target.select()}
-          className="w-full pl-7 pr-2 py-2 border-2 border-gray-200 rounded-xl text-base font-black text-gray-900 focus:outline-none focus:border-slate-400 bg-white transition-colors"
+          className={`${FIELD} pl-7 pr-2`}
         />
       </div>
       {quickFill !== undefined && quickFill > 0 && (
-        <button
-          type="button"
-          onClick={() => onAmount(String(quickFill))}
-          className="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-[11px] font-bold text-slate-700 whitespace-nowrap transition-colors flex items-center gap-0.5 flex-shrink-0"
-        >
-          <ChevronRight size={11} />Exacto
+        <button type="button" onClick={() => onAmount(String(quickFill))} className={`${BTN_OUTLINE} flex-shrink-0`}>
+          Exacto
         </button>
       )}
       {canRemove && (
-        <button
-          type="button"
-          onClick={onRemove}
-          className="w-8 h-8 flex items-center justify-center rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors flex-shrink-0"
-        >
-          <Trash2 size={13} />
+        <button type="button" onClick={onRemove} className={BTN_ICON} aria-label="Quitar fila">
+          <Trash2 size={14} />
         </button>
       )}
     </div>
@@ -165,7 +135,7 @@ export const PaymentModal = ({
   table,
   total,
   subtotal,
-  tax,
+  tax: _tax,
   deliveryFee = 0,
   items = [],
   orderNumber,
@@ -242,44 +212,19 @@ export const PaymentModal = ({
 
   const defaultMethod = useCallback(() => defaultMethodRef.current || activeMethods[0]?.code || '', [activeMethods]);
 
-
   const [error, setError] = useState('');
 
-  // ── Descuento — inicializado desde prop al montar (solo una vez)
+  // ── Descuento: UN SOLO SLOT (manual, cupón o puntos) — Hotfix #256 (D2)
   const [discountEnabled, setDiscountEnabled] = useState(() => !!initialDiscount);
   const [discountType, setDiscountType] = useState<'PERCENTAGE' | 'FIXED'>(() => initialDiscount?.type ?? 'PERCENTAGE');
   const [discountValue, setDiscountValue] = useState(() => initialDiscount ? String(initialDiscount.value) : '');
+  const [discountSource, setDiscountSource] = useState<DiscountSource>(() => initialDiscount ? 'manual' : null);
 
   // ── Cupón ────────────────────────────────────────────────────
   const [couponCode,      setCouponCode]      = useState('');
   const [appliedCouponId, setAppliedCouponId] = useState<string | null>(null);
   const [couponLoading,   setCouponLoading]   = useState(false);
   const [couponMsg,       setCouponMsg]       = useState<{ ok: boolean; text: string } | null>(null);
-
-  const handleValidateCoupon = useCallback(async () => {
-    if (!couponCode.trim()) return;
-    setCouponLoading(true);
-    setCouponMsg(null);
-    try {
-      const res = await api.post('/coupons/validate/code', { code: couponCode.trim(), orderTotal: total }) as { data: { valid: boolean; reason?: string; discountAmount?: number; coupon?: { id: string; type: string; value: number } } };
-      const d = res.data;
-      if (d.valid && d.coupon && d.discountAmount !== undefined) {
-        setDiscountEnabled(true);
-        setDiscountType(d.coupon.type as 'PERCENTAGE' | 'FIXED');
-        setDiscountValue(String(d.coupon.type === 'PERCENTAGE' ? d.coupon.value : d.discountAmount));
-        setAppliedCouponId(d.coupon.id);
-        setCouponMsg({ ok: true, text: `Cupón aplicado: -$${Math.round(d.discountAmount).toLocaleString('es-CL')}` });
-      } else {
-        setAppliedCouponId(null);
-        setCouponMsg({ ok: false, text: d.reason ?? 'Cupón inválido' });
-      }
-    } catch {
-      setAppliedCouponId(null);
-      setCouponMsg({ ok: false, text: 'Error al validar cupón' });
-    } finally {
-      setCouponLoading(false);
-    }
-  }, [couponCode, total]);
 
   // ── DOBLE SEGURIDAD: recalcular totales excluyendo ítems cancelados ──
   // El padre (Restaurant.tsx) ya filtra isCancelled, pero si por algún motivo
@@ -295,17 +240,71 @@ export const PaymentModal = ({
     : total;
   const effectiveSubtotal = subtotal > 0 ? Math.min(subtotal, internalSubtotal || subtotal) : subtotal;
 
+  // Hotfix #256 (D2): cálculo único, % sobre el subtotal (antes de propina)
   const discountAmount = (() => {
     const v = parseFloat(discountValue) || 0;
     if (!discountEnabled || v <= 0) return 0;
-    if (discountType === 'PERCENTAGE') return Math.round(effectiveTotal * Math.min(v, 100) / 100);
-    return Math.min(Math.round(v), effectiveTotal);
+    if (discountType === 'PERCENTAGE') return Math.round(effectiveSubtotal * Math.min(v, 100) / 100);
+    return Math.min(Math.round(v), effectiveSubtotal);
   })();
 
-  const tipTotal = tipRows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
-  const payTotal = payRows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
-  const finalTotal = effectiveTotal - discountAmount + tipTotal;
-  const balance = payTotal - finalTotal; // negativo = falta, positivo = vuelto
+  const tipTotal  = tipRows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+  const payTotal  = payRows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+  // Venta (lo que cubren los pagos) y total a cobrar (venta + propinas con su medio)
+  const saleTotal = effectiveTotal - discountAmount;
+  const finalTotal = saleTotal + tipTotal;
+  const balance = payTotal - saleTotal; // negativo = falta, positivo = vuelto
+  const missing = balance < -0.5;
+
+  /** Confirma el reemplazo si ya hay un descuento de otro origen en el slot */
+  const confirmReplace = (next: Exclude<DiscountSource, null>) =>
+    !(discountAmount > 0 && discountSource && discountSource !== next) || window.confirm(REPLACE_MSG);
+
+  const clearDiscount = () => {
+    setDiscountEnabled(false);
+    setDiscountValue('');
+    setDiscountSource(null);
+    setAppliedCouponId(null);
+    setCouponMsg(null);
+  };
+
+  /** Edición manual: si el slot lo ocupa un cupón o puntos, confirma y lo reemplaza */
+  const editManual = (apply: () => void) => {
+    if (discountSource !== 'manual') {
+      if (!confirmReplace('manual')) return;
+      setAppliedCouponId(null);
+      setCouponMsg(null);
+      setDiscountSource('manual');
+    }
+    setDiscountEnabled(true);
+    apply();
+  };
+
+  const handleValidateCoupon = useCallback(async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponMsg(null);
+    try {
+      const res = await api.post('/coupons/validate/code', { code: couponCode.trim(), orderTotal: total }) as { data: { valid: boolean; reason?: string; discountAmount?: number; coupon?: { id: string; type: string; value: number } } };
+      const d = res.data;
+      if (d.valid && d.coupon && d.discountAmount !== undefined) {
+        if (!confirmReplace('coupon')) return;
+        setDiscountEnabled(true);
+        setDiscountType(d.coupon.type as 'PERCENTAGE' | 'FIXED');
+        setDiscountValue(String(d.coupon.type === 'PERCENTAGE' ? d.coupon.value : d.discountAmount));
+        setDiscountSource('coupon');
+        setAppliedCouponId(d.coupon.id);
+        setCouponMsg({ ok: true, text: `Cupón aplicado: -$${Math.round(d.discountAmount).toLocaleString('es-CL')}` });
+      } else {
+        setCouponMsg({ ok: false, text: d.reason ?? 'Cupón inválido' });
+      }
+    } catch {
+      setCouponMsg({ ok: false, text: 'Error al validar cupón' });
+    } finally {
+      setCouponLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [couponCode, total, discountAmount, discountSource]);
 
   // ── helpers ──────────────────────────────────────────────
   const addTipRow = () => {
@@ -328,28 +327,29 @@ export const PaymentModal = ({
     });
   };
 
-  // callbacks estables para no recrear RowInput en cada render
+  const payments: Payment[] = payRows
+    .filter(r => parseFloat(r.amount) > 0)
+    .map(r => ({ method: r.method, amount: Math.round(parseFloat(r.amount)) }));
+  // Hotfix #256 (D3): no se puede cobrar mientras la suma de pagos no cubra la venta
+  const confirmBlocked = loading || missing || (saleTotal > 0.5 && payments.length === 0);
+
   const handleConfirm = async () => {
     setError('');
-    // Cobro insuficiente: doble confirmación antes de permitir el cierre
-    if (payTotal < finalTotal - 0.5) {
-      if (!window.confirm('Falta saldo por pagar. ¿Estás seguro de que deseas cerrar la mesa?')) return;
-    }
-    const payments: Payment[] = payRows
+    if (confirmBlocked) return;
+    const tips: Payment[] = tipRows
       .filter(r => parseFloat(r.amount) > 0)
       .map(r => ({ method: r.method, amount: Math.round(parseFloat(r.amount)) }));
-    if (payments.length === 0) {
-      setError('Ingresa al menos un monto de pago');
-      return;
-    }
     try {
       setLoading(true);
+      // value 0 quita un descuento que la orden ya traía
       const discountPayload = discountEnabled && discountAmount > 0
         ? { type: discountType, value: parseFloat(discountValue) || 0 }
-        : undefined;
-      // El cupón ahora se valida e incrementa atómicamente en el backend (registerPayment)
-      // dentro de la misma transacción del pago. Ya no se necesita una llamada manual.
-      await onConfirm(payments, Math.round(tipTotal), discountPayload, appliedCouponId ?? undefined);
+        : initialDiscount
+          ? { type: 'FIXED' as const, value: 0 }
+          : undefined;
+      // El cupón se valida e incrementa atómicamente en el backend (registerPayment)
+      // dentro de la misma transacción del pago.
+      await onConfirm(payments, tips, discountPayload, appliedCouponId ?? undefined);
       setPaymentCompleted(true);
       setAppliedCouponId(null);
     } catch (e: any) {
@@ -359,15 +359,19 @@ export const PaymentModal = ({
     }
   };
 
+  const channelLabel = table
+    ? `Mesa ${table.number}`
+    : (orderType ?? '').toUpperCase() === 'DELIVERY' ? 'Delivery' : 'Mostrador';
+
   if (paymentCompleted) {
     return createPortal(
       <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle size={32} className="text-green-600" />
+          <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle size={32} className="text-orange-600" />
           </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">¡Pago Exitoso!</h3>
-          <p className="text-sm text-gray-500 mb-6">La orden ha sido cobrada correctamente</p>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">Pago registrado</h3>
+          <p className="text-sm text-slate-500 mb-6">La orden ha sido cobrada correctamente</p>
           {dteIsConfigured && lastPaidOrderId && (
             <div className="mb-6">
               <EmitBoletaButton
@@ -382,7 +386,7 @@ export const PaymentModal = ({
               setPaymentCompleted(false);
               onClose();
             }}
-            className="w-full py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+            className={`${BTN_OUTLINE} w-full`}
           >
             Cerrar
           </button>
@@ -402,285 +406,217 @@ export const PaymentModal = ({
           style={{ height: 'min(92vh, 780px)' }}
           onClick={e => e.stopPropagation()}
         >
-          {/* HEADER */}
-          <div className="flex-shrink-0 bg-gradient-to-br from-slate-800 to-slate-900 text-white px-5 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div>
-                <p className="text-slate-400 text-[10px] uppercase tracking-widest font-bold leading-none">
-                  {table ? `Mesa ${table.number}` : 'Finalizar Venta'}
-                </p>
-                {orderNumber && <p className="text-slate-500 text-[10px] mt-0.5">{orderNumber}</p>}
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                {discountAmount > 0 && (
-                  <span className="text-slate-500 text-sm line-through">${fmt(total)}</span>
-                )}
-                <span className="text-2xl font-black text-white tracking-tight">${fmt(finalTotal)}</span>
-              </div>
-            </div>
-            <button
-              onClick={onClose}
-              className="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors flex-shrink-0"
-            >
-              <X size={14} />
+          {/* HEADER — una sola línea (D4) */}
+          <div className="flex-shrink-0 flex items-center justify-between gap-3 px-5 min-h-[60px] border-b border-slate-200">
+            <h2 className="text-lg font-bold text-slate-900 truncate">
+              {channelLabel} · <span className="font-black">${fmt(finalTotal)}</span>
+              {orderNumber && <span className="ml-2 text-xs font-medium text-slate-400">{orderNumber}</span>}
+            </h2>
+            <button onClick={onClose} className={BTN_ICON} aria-label="Cerrar">
+              <X size={16} />
             </button>
           </div>
 
           {/* BODY */}
           <div className="flex flex-1 overflow-hidden min-h-0">
 
-            {/* ── COLUMNA IZQUIERDA: Resumen fijo ── */}
-            <div className="w-[38%] border-r border-gray-100 flex flex-col bg-gray-50 min-h-0">
-              <div className="px-3 pt-3 pb-1.5 flex-shrink-0 flex items-center gap-1.5">
-                <div className="w-4 h-4 bg-slate-800 rounded flex items-center justify-center">
-                  <Tag size={9} className="text-white" />
-                </div>
-                <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Cuenta</p>
-              </div>
+            {/* ── COLUMNA IZQUIERDA: Cuenta ── */}
+            <div className="w-[38%] border-r border-slate-200 flex flex-col bg-slate-50 min-h-0">
+              <p className={`${CARD_TITLE} px-3 pt-3 pb-2 flex-shrink-0`}>Cuenta</p>
 
-              {/* Items scrollable */}
-              <div className="flex-1 overflow-y-auto px-2.5 pb-1 space-y-1 min-h-0">
+              <div className="flex-1 overflow-y-auto px-3 pb-1 space-y-1 min-h-0">
                 {items.length === 0 && (
-                  <p className="text-xs text-gray-400 text-center pt-3">Sin items</p>
+                  <p className="text-xs text-slate-400 text-center pt-3">Sin items</p>
                 )}
                 {items.map((item, i) => {
                   const cancelled = !!(item as any).isCancelled;
                   return (
-                  <div
-                    key={item.id ?? i}
-                    className={`flex items-center gap-1.5 rounded-lg px-2 py-1.5 border ${
-                      cancelled
-                        ? 'bg-red-50/60 border-red-100 opacity-60'
-                        : 'bg-white border-gray-100'
-                    }`}
-                  >
-                    <span className={`w-5 h-5 rounded-md text-[10px] font-black flex items-center justify-center flex-shrink-0 ${
-                      cancelled ? 'bg-red-200 text-red-600' : 'bg-slate-800 text-white'
-                    }`}>
-                      {item.quantity}
-                    </span>
-                    <span className={`flex-1 text-xs font-medium leading-snug truncate ${
-                      cancelled ? 'text-red-500 line-through' : 'text-gray-800'
-                    }`}>{item.productName}</span>
-                    <span className={`font-black text-xs whitespace-nowrap ${
-                      cancelled ? 'text-red-400 line-through' : 'text-gray-900'
-                    }`}>
-                      ${fmt(item.total ?? item.subtotal ?? 0)}
-                    </span>
-                    {cancelled && (item as any).cancelReason && (
-                      <span className="text-[9px] text-red-500 font-semibold flex-shrink-0" title={(item as any).cancelReason}>
-                        ✕
+                    <div
+                      key={item.id ?? i}
+                      className={`flex items-center gap-2 rounded-lg px-2 py-1.5 border border-slate-200 bg-white ${cancelled ? 'opacity-50' : ''}`}
+                      title={cancelled ? (item as any).cancelReason : undefined}
+                    >
+                      <span className="w-6 h-6 rounded-md text-xs font-bold flex items-center justify-center flex-shrink-0 bg-slate-100 text-slate-700">
+                        {item.quantity}
                       </span>
-                    )}
-                  </div>
+                      <span className={`flex-1 text-sm font-medium leading-snug truncate ${cancelled ? 'text-slate-400 line-through' : 'text-slate-800'}`}>
+                        {item.productName}
+                      </span>
+                      <span className={`font-bold text-sm whitespace-nowrap ${cancelled ? 'text-slate-400 line-through' : 'text-slate-900'}`}>
+                        ${fmt(item.total ?? item.subtotal ?? 0)}
+                      </span>
+                    </div>
                   );
                 })}
               </div>
 
-              {/* Totales fijos */}
-              <div className="px-2.5 py-2 border-t border-gray-200 space-y-1 flex-shrink-0">
+              {/* Totales */}
+              <div className="px-3 py-2 border-t border-slate-200 space-y-1 flex-shrink-0 text-sm">
                 {deliveryFee > 0 && (
-                  <div className="flex justify-between text-[11px] text-gray-500">
-                    <span>Costo de envío</span><span>${fmt(deliveryFee)}</span>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Costo de envío</span><span className="font-bold">${fmt(deliveryFee)}</span>
                   </div>
                 )}
                 {discountAmount > 0 && (
-                  <div className="flex justify-between text-[11px] text-red-600 font-bold">
+                  <div className="flex justify-between text-slate-600">
                     <span>Descuento{discountType === 'PERCENTAGE' ? ` ${discountValue}%` : ''}</span>
-                    <span>-${fmt(discountAmount)}</span>
+                    <span className="font-bold">-${fmt(discountAmount)}</span>
                   </div>
                 )}
                 {tipTotal > 0 && (
-                  <div className="flex justify-between text-[11px] text-amber-600 font-bold">
-                    <span>Propina</span><span>+${fmt(tipTotal)}</span>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Propina</span><span className="font-bold">+${fmt(tipTotal)}</span>
                   </div>
                 )}
-                <div className="flex justify-between items-baseline pt-1.5 border-t border-gray-300">
-                  <span className="text-sm font-black text-gray-600 uppercase tracking-wider">Total</span>
-                  <span className="text-2xl font-black text-orange-600">${fmt(finalTotal)}</span>
+                <div className="flex justify-between items-baseline pt-1.5 border-t border-slate-300">
+                  <span className="text-sm font-bold text-slate-600 uppercase tracking-wider">Total</span>
+                  <span className="text-2xl font-black text-slate-900">${fmt(finalTotal)}</span>
                 </div>
               </div>
             </div>
 
-            {/* ── COLUMNA DERECHA: Transacciones ── */}
+            {/* ── COLUMNA DERECHA: Descuento / Propina / Pago ── */}
             <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-              <div className="flex-1 overflow-y-auto px-3.5 pt-3 pb-2 space-y-2.5 min-h-0">
+              <div className="flex-1 overflow-y-auto px-4 pt-3 pb-2 space-y-3 min-h-0">
 
-                {/* DESCUENTO */}
-                {canApplyDiscount && <section className="bg-gray-50 rounded-xl p-2.5 border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-5 rounded-md bg-red-100 flex items-center justify-center">
-                        <Tag size={10} className="text-red-500" />
+                {/* DESCUENTO — un solo slot: manual, cupón o puntos */}
+                <section className={CARD}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className={CARD_TITLE}>Descuento</p>
+                    {discountAmount > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-slate-900">-${fmt(discountAmount)}</span>
+                        <button onClick={clearDiscount} className={BTN_ICON} aria-label="Quitar descuento">
+                          <Trash2 size={14} />
+                        </button>
                       </div>
-                      <p className="text-[11px] font-black text-gray-600 uppercase tracking-wider">Descuento</p>
-                    </div>
-                    <button
-                      onClick={() => { setDiscountEnabled(v => !v); setDiscountValue(''); setAppliedCouponId(null); setCouponMsg(null); }}
-                      className="flex items-center gap-1 text-[11px] text-red-500 hover:text-red-600 font-bold px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
-                    >
-                      <Plus size={10} /> {discountEnabled ? 'Quitar' : 'Agregar'}
-                    </button>
+                    )}
                   </div>
-                  {!discountEnabled && (
-                    <p className="text-[11px] text-gray-400 mt-1">Sin descuento aplicado</p>
-                  )}
-                  {discountEnabled && (
-                    <div className="space-y-1.5 mt-2">
-                      <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-                        <button
-                          onClick={() => { setDiscountType('PERCENTAGE'); setDiscountValue(''); }}
-                          className={`flex-1 py-1.5 text-[11px] font-black transition-colors ${
-                            discountType === 'PERCENTAGE' ? 'bg-red-500 text-white' : 'bg-white text-gray-400 hover:bg-gray-50'
-                          }`}
-                        >% Porcentaje</button>
-                        <button
-                          onClick={() => { setDiscountType('FIXED'); setDiscountValue(''); }}
-                          className={`flex-1 py-1.5 text-[11px] font-black transition-colors ${
-                            discountType === 'FIXED' ? 'bg-red-500 text-white' : 'bg-white text-gray-400 hover:bg-gray-50'
-                          }`}
-                        >$ Monto fijo</button>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <div className="relative flex-1">
-                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">
-                            {discountType === 'PERCENTAGE' ? '%' : '$'}
-                          </span>
-                          <input
-                            type="number" inputMode="numeric" min="0"
-                            max={discountType === 'PERCENTAGE' ? 100 : undefined}
-                            placeholder={discountType === 'PERCENTAGE' ? 'Ej: 10' : 'Monto'}
-                            value={discountValue}
-                            onChange={e => setDiscountValue(e.target.value)}
-                            onFocus={e => e.target.select()}
-                            className="w-full pl-7 pr-2 py-2 border-2 border-gray-200 rounded-xl text-base font-black text-gray-900 focus:outline-none focus:border-red-400 bg-white"
-                          />
-                        </div>
-                        {discountAmount > 0 && (
-                          <span className="text-sm font-black text-red-600 whitespace-nowrap">-${fmt(discountAmount)}</span>
-                        )}
-                        <button
-                          onClick={() => { setDiscountEnabled(false); setDiscountValue(''); setAppliedCouponId(null); setCouponMsg(null); }}
-                          className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                        ><Trash2 size={13} /></button>
-                      </div>
-                    </div>
-                  )}
-                </section>}
 
-                {/* CUPÓN */}
-                <section className="bg-gray-50 rounded-xl p-2.5 border border-gray-100">
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <div className="w-5 h-5 rounded-md bg-purple-100 flex items-center justify-center">
-                      <Tag size={10} className="text-purple-500" />
+                  {canApplyDiscount ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex rounded-xl border border-slate-300 overflow-hidden flex-shrink-0">
+                        {(['PERCENTAGE', 'FIXED'] as const).map(t => (
+                          <button
+                            key={t}
+                            onClick={() => editManual(() => { setDiscountType(t); setDiscountValue(''); })}
+                            className={`min-h-[44px] px-3 text-sm font-bold transition-colors ${
+                              discountEnabled && discountType === t
+                                ? 'bg-white text-slate-900 underline underline-offset-4 decoration-2'
+                                : 'bg-white text-slate-400 hover:text-slate-700'
+                            }`}
+                          >{t === 'PERCENTAGE' ? '%' : '$'}</button>
+                        ))}
+                      </div>
+                      <input
+                        type="number" inputMode="numeric" min="0"
+                        max={discountType === 'PERCENTAGE' ? 100 : undefined}
+                        placeholder={discountType === 'PERCENTAGE' ? 'Porcentaje' : 'Monto'}
+                        value={discountEnabled ? discountValue : ''}
+                        onChange={e => { const v = e.target.value; editManual(() => setDiscountValue(v)); }}
+                        onFocus={e => e.target.select()}
+                        className={`${FIELD} px-3`}
+                      />
                     </div>
-                    <p className="text-[11px] font-black text-gray-600 uppercase tracking-wider">Cupón de descuento</p>
-                  </div>
-                  <div className="flex gap-1.5">
+                  ) : discountAmount === 0 && (
+                    <p className="text-sm text-slate-400">Sin descuento aplicado</p>
+                  )}
+
+                  {/* Cupón: mismo slot */}
+                  <div className="flex gap-2 mt-2">
                     <input
                       type="text"
-                      placeholder="Código del cupón"
+                      placeholder="Código de cupón"
                       value={couponCode}
                       onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponMsg(null); }}
                       onKeyDown={(e) => e.key === 'Enter' && handleValidateCoupon()}
-                      className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs font-mono font-bold outline-none focus:border-purple-400 bg-white uppercase"
+                      className={`${FIELD} px-3 font-mono uppercase`}
                     />
                     <button
                       type="button"
                       onClick={handleValidateCoupon}
                       disabled={couponLoading || !couponCode.trim()}
-                      className="px-3 py-1.5 text-[11px] font-black text-white bg-purple-500 hover:bg-purple-600 rounded-lg transition-colors disabled:opacity-50"
+                      className={`${BTN_OUTLINE} flex-shrink-0`}
                     >
                       {couponLoading ? '…' : 'Aplicar'}
                     </button>
                   </div>
                   {couponMsg && (
-                    <p className={`text-[11px] mt-1.5 font-semibold ${couponMsg.ok ? 'text-green-600' : 'text-red-500'}`}>
+                    <p className="text-xs mt-1.5 font-semibold text-slate-600">
                       {couponMsg.ok ? '✓' : '✗'} {couponMsg.text}
                     </p>
                   )}
-                </section>
 
-                {/* PUNTOS DE FIDELIDAD */}
-                {customerId && customerName && (
-                  <LoyaltyPanel
-                    customerId={customerId}
-                    customerName={customerName}
-                    onRedeem={(cashDiscount) => {
-                      setDiscountEnabled(true);
-                      setDiscountType('FIXED');
-                      setDiscountValue(String(cashDiscount));
-                    }}
-                  />
-                )}
+                  {/* Puntos de fidelidad: mismo slot */}
+                  {customerId && customerName && (
+                    <div className="mt-2">
+                      <LoyaltyPanel
+                        customerId={customerId}
+                        customerName={customerName}
+                        onRedeem={(cashDiscount) => {
+                          if (!confirmReplace('points')) return;
+                          setAppliedCouponId(null);
+                          setCouponMsg(null);
+                          setDiscountEnabled(true);
+                          setDiscountType('FIXED');
+                          setDiscountValue(String(cashDiscount));
+                          setDiscountSource('points');
+                        }}
+                      />
+                    </div>
+                  )}
+                </section>
 
                 {/* PROPINA — solo visible si el canal lo tiene habilitado (o si hay filas ya cargadas) */}
                 {(() => {
-                  // Mostrar si el tenant tiene propinas en CUALQUIER canal (o ya hay filas manuales)
-                  // Ocultar mientras carga para evitar flicker (false por defecto)
                   const anyTipEnabled = tipConfig
                     ? (tipConfig.enabled_dine_in || tipConfig.enabled_counter)
                     : false;
                   if (!anyTipEnabled && tipRows.length === 0) return null;
                   return (
-                <section className="bg-gray-50 rounded-xl p-2.5 border border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-5 rounded-md bg-amber-100 flex items-center justify-center">
-                        <Plus size={10} className="text-amber-500" />
+                    <section className={CARD}>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className={CARD_TITLE}>
+                          Propina
+                          {tipConfig && <span className="ml-1 normal-case tracking-normal font-medium text-slate-400">({tipConfig.tip_percentage}%)</span>}
+                        </p>
+                        <button onClick={addTipRow} className={BTN_OUTLINE}>
+                          <Plus size={14} /> Agregar
+                        </button>
                       </div>
-                      <p className="text-[11px] font-black text-gray-600 uppercase tracking-wider">Propina</p>
-                      {tipConfig && (
-                        <span className="text-[10px] text-amber-500 font-semibold">
-                          ({tipConfig.tip_percentage}%)
-                        </span>
+                      {tipRows.length === 0 && (
+                        <p className="text-sm text-slate-400">Sin propina</p>
                       )}
-                    </div>
-                    <button
-                      onClick={addTipRow}
-                      className="flex items-center gap-1 text-[11px] text-amber-600 hover:text-amber-700 font-bold px-2 py-1 rounded-lg hover:bg-amber-50 transition-colors"
-                    >
-                      <Plus size={10} /> Agregar
-                    </button>
-                  </div>
-                  {tipRows.length === 0 && (
-                    <p className="text-[11px] text-gray-400 mt-1">Sin propina</p>
-                  )}
-                  <div className="space-y-2.5 mt-2">
-                    {tipRows.map(r => (
-                      <RowInput
-                        key={r.id}
-                        row={r}
-                        onMethod={v => updateTip(r.id, 'method', v)}
-                        onAmount={v => updateTip(r.id, 'amount', v)}
-                        onRemove={() => removeTip(r.id)}
-                        canRemove={true}
-                        placeholder="Monto propina"
-                        activeMethods={activeMethods}
-                      />
-                    ))}
-                  </div>
-                </section>
+                      <div className="space-y-2">
+                        {tipRows.map(r => (
+                          <RowInput
+                            key={r.id}
+                            row={r}
+                            onMethod={v => updateTip(r.id, 'method', v)}
+                            onAmount={v => updateTip(r.id, 'amount', v)}
+                            onRemove={() => removeTip(r.id)}
+                            canRemove={true}
+                            placeholder="Monto propina"
+                            activeMethods={activeMethods}
+                          />
+                        ))}
+                      </div>
+                    </section>
                   );
                 })()}
 
                 {/* PAGO */}
-                <section className="bg-slate-50 rounded-xl p-2.5 border-2 border-slate-200">
+                <section className={CARD}>
                   <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-5 h-5 rounded-md bg-slate-800 flex items-center justify-center">
-                        <CreditCard size={10} className="text-white" />
-                      </div>
-                      <p className="text-[11px] font-black text-slate-700 uppercase tracking-wider">Pago</p>
-                    </div>
-                    <button
-                      onClick={addPayRow}
-                      className="flex items-center gap-1 text-[11px] text-slate-600 hover:text-slate-800 font-bold px-2 py-1 rounded-lg hover:bg-slate-200 transition-colors"
-                    >
-                      <Plus size={10} /> Agregar medio
+                    <p className={CARD_TITLE}>
+                      Pago
+                      <span className="ml-1 normal-case tracking-normal font-medium text-slate-400">· venta ${fmt(saleTotal)}</span>
+                    </p>
+                    <button onClick={addPayRow} className={BTN_OUTLINE}>
+                      <Plus size={14} /> Agregar medio
                     </button>
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     {payRows.map(r => (
                       <RowInput
                         key={r.id}
@@ -689,52 +625,40 @@ export const PaymentModal = ({
                         onAmount={v => updatePay(r.id, 'amount', v)}
                         onRemove={() => removePay(r.id)}
                         canRemove={payRows.length > 1}
-                        placeholder={`Total: $${fmt(finalTotal)}`}
+                        placeholder={`Venta: $${fmt(saleTotal)}`}
                         activeMethods={activeMethods}
-                        quickFill={payRows.length === 1 ? Math.round(finalTotal) : Math.round(Math.max(0, finalTotal - payRows.filter(x => x.id !== r.id).reduce((s, x) => s + (parseFloat(x.amount) || 0), 0)))}
+                        quickFill={payRows.length === 1 ? Math.round(saleTotal) : Math.round(Math.max(0, saleTotal - payRows.filter(x => x.id !== r.id).reduce((s, x) => s + (parseFloat(x.amount) || 0), 0)))}
                       />
                     ))}
                   </div>
-                </section>
 
-                {/* MONITOR DE BALANCE */}
-                {payTotal > 0 && (
-                  <div
-                    className={`rounded-xl px-3 py-2 flex items-center justify-between border-2 transition-all ${
-                      balance < -0.5
-                        ? 'bg-red-50 border-red-300'
-                        : 'bg-emerald-50 border-emerald-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <p className={`text-[11px] font-black uppercase tracking-wider ${ balance < -0.5 ? 'text-red-500' : 'text-emerald-600' }`}>
-                        {balance < -0.5 ? '⚠ Falta' : '✓ Vuelto'}
-                      </p>
-                      <p className={`text-xl font-black ${ balance < -0.5 ? 'text-red-600' : 'text-emerald-600' }`}>
-                        {balance < -0.5 ? '-' : '+'}${fmt(balance)}
-                      </p>
+                  {/* Balance: Faltan (ámbar) / Vuelto (neutro) */}
+                  {missing ? (
+                    <div className={`${AMBER_NOTE} mt-2`}>
+                      <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+                      <span>Faltan <span className="font-bold">${fmt(balance)}</span></span>
                     </div>
-                    {balance >= -0.5 && (
-                      <div className="w-7 h-7 rounded-lg bg-emerald-500 flex items-center justify-center">
-                        <Check size={14} className="text-white" />
-                      </div>
-                    )}
-                  </div>
-                )}
+                  ) : payTotal > 0 && balance > 0.5 && (
+                    <div className="mt-2 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                      <span className="font-medium">Vuelto</span>
+                      <span className="font-bold text-slate-900">${fmt(balance)}</span>
+                    </div>
+                  )}
+                </section>
               </div>
 
               {/* CTA — siempre visible */}
-              <div className="px-3.5 py-2.5 border-t border-gray-100 flex-shrink-0 bg-white">
+              <div className="px-4 py-3 border-t border-slate-200 flex-shrink-0 bg-white space-y-2">
                 {cashSessionActive === false && (
-                  <div className="flex items-center gap-1.5 bg-yellow-50 border border-yellow-200 rounded-lg px-2.5 py-1.5 mb-2">
-                    <span className="text-yellow-500 text-xs flex-shrink-0">⚠️</span>
-                    <p className="text-[11px] text-yellow-700 font-medium">Sin arqueo activo — la venta se registrará sin sesión de caja</p>
+                  <div className={AMBER_NOTE}>
+                    <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
+                    <span>Sin arqueo activo — la venta se registrará sin sesión de caja</span>
                   </div>
                 )}
                 {error && (
-                  <div className="flex items-start gap-1.5 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5 mb-2">
-                    <AlertCircle size={12} className="text-red-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-[11px] text-red-700 font-semibold">{error}</p>
+                  <div className={AMBER_NOTE}>
+                    <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+                    <span className="font-semibold">{error}</span>
                   </div>
                 )}
                 {dteIsConfigured && orderId && (
@@ -746,15 +670,8 @@ export const PaymentModal = ({
                 )}
                 <button
                   onClick={handleConfirm}
-                  disabled={loading}
-                  className={`w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2
-                    shadow-lg transition-all active:scale-[0.99]
-                    ${
-                      payTotal < finalTotal - 0.5
-                        ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-200'
-                        : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-orange-200'
-                    }
-                    disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none`}
+                  disabled={confirmBlocked}
+                  className="w-full min-h-[52px] rounded-xl bg-[#F97316] hover:bg-orange-600 text-white font-bold text-base flex items-center justify-center gap-2 transition-colors active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
@@ -762,10 +679,7 @@ export const PaymentModal = ({
                       Procesando...
                     </>
                   ) : (
-                    <>
-                      <Check size={20} />
-                      {table ? 'Cerrar Mesa' : 'Finalizar Venta'} &middot; ${fmt(finalTotal)}
-                    </>
+                    <>Cobrar <span className="font-black">${fmt(finalTotal)}</span></>
                   )}
                 </button>
               </div>

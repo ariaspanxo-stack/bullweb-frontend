@@ -11,7 +11,7 @@ import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   X, Search, Plus, Minus, ShoppingCart, CreditCard,
-  Clock, Star, Users, MessageSquare, UserPlus, Loader2, Tag, Pencil,
+  Clock, Star, Users, MessageSquare, UserPlus, Loader2, Pencil,
   Printer, ChefHat, ClipboardList, CheckCircle, Mail, LayoutGrid, ArrowLeft,
 } from 'lucide-react';
 import { ModifiersModal } from './ModifiersModal';
@@ -99,8 +99,8 @@ export const OrderModal = ({
   const [mobileTab, setMobileTab]                   = useState<'menu' | 'order'>('menu');
   const [discountType, setDiscountType]             = useState<'%' | '$'>('%');
   const [discountInput, setDiscountInput]           = useState('10');
+  // Hotfix #256: el descuento se captura solo en PaymentModal; aquí es de solo lectura
   const [discountApplied, setDiscountApplied]       = useState(false);
-  const [showDiscountPopover, setShowDiscountPopover] = useState(false);
   const [showWaiterPicker, setShowWaiterPicker] = useState(false);
   // Hotfix 246 CB: toggle grilla↔búsqueda (clave NUEVA, patrón gemelos #245)
   const [viewMode, setViewMode] = useState<'search' | 'grid'>(() =>
@@ -143,7 +143,6 @@ export const OrderModal = ({
   // ─── Permisos ───────────────────────────────────────────────
   const canCobrar   = usePermission('pos.cobrar');
   const canEdit     = usePermission('pos.edit_order');
-  const canDiscount = usePermission('pos.discount_table');
   const canTransfer = usePermission('pos.transfer_order');
   const canSendToKitchen = usePermission('tables.order');
 
@@ -300,32 +299,6 @@ export const OrderModal = ({
   const handlePrintPreBill = async () => {
     if (!existingOrderId) return;
     try { await posService.printPrecuenta(existingOrderId); } catch { /* silencioso */ }
-  };
-
-  const handleApplyDiscount = async () => {
-    if (discountValue <= 0) { toast.error('Ingresa un valor mayor a 0'); return; }
-    setDiscountApplied(true);
-    setShowDiscountPopover(false);
-    if (existingOrderId) {
-      try {
-        await posService.applyDiscount(existingOrderId, {
-          type: discountType === '%' ? 'PERCENTAGE' : 'FIXED',
-          value: discountValue,
-        });
-        toast.success('Descuento aplicado');
-      } catch { /* silencioso */ }
-    }
-  };
-
-  const handleRemoveDiscount = async () => {
-    setDiscountApplied(false);
-    setDiscountInput('10');
-    setShowDiscountPopover(false);
-    if (existingOrderId) {
-      try {
-        await posService.applyDiscount(existingOrderId, { type: 'FIXED', value: 0 });
-      } catch { /* silencioso */ }
-    }
   };
 
   // ══════════════════════════════════════════════════════════════
@@ -957,68 +930,14 @@ export const OrderModal = ({
                 /* (CC/CD) fila de 3 secundarios de contorno — mismos onClick/args */
                 footerExtra={
                   <div className="mt-3 space-y-2">
-                    {/* Popover descuento (mismo estado y handlers de hoy) */}
-                    {showDiscountPopover && (
-                      <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-2">
-                        <p className="text-xs font-bold text-gray-600 uppercase tracking-wide">Descuento</p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => setDiscountType('%')}
-                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold border-2 transition-colors ${
-                              discountType === '%' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300'
-                            }`}
-                          >% Porcentaje</button>
-                          <button
-                            onClick={() => setDiscountType('$')}
-                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold border-2 transition-colors ${
-                              discountType === '$' ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300'
-                            }`}
-                          >$ Monto</button>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="number" min="0" max={discountType === '%' ? 100 : undefined}
-                            value={discountInput}
-                            onChange={e => setDiscountInput(e.target.value)}
-                            className="flex-1 px-3 py-1.5 border border-gray-200 rounded-lg text-sm font-bold focus:outline-none focus:border-orange-400"
-                          />
-                          <span className="text-sm font-bold text-gray-500 w-6">{discountType}</span>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={handleApplyDiscount}
-                            className="flex-1 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-bold hover:bg-orange-600 transition-colors"
-                          >Aplicar</button>
-                          <button
-                            onClick={handleRemoveDiscount}
-                            className="flex-1 py-1.5 bg-white border border-gray-200 text-gray-600 rounded-lg text-xs font-bold hover:bg-gray-50 transition-colors"
-                          >Quitar</button>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Fila de 3 botones secundarios (contorno) */}
-                    <div className="grid grid-cols-3 gap-2">
+                    {/* Fila de botones secundarios (contorno). Hotfix #256: sin edición de descuento */}
+                    <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={handlePrintPreBill}
                         disabled={!existingOrderId || (existingItems.length === 0 && cart.length === 0)}
                         className="py-2 bg-white border-2 border-gray-300 text-gray-600 rounded-xl font-bold text-xs hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <Printer size={14} /> Pre-cuenta
-                      </button>
-                      <button
-                        onClick={() => setShowDiscountPopover(v => !v)}
-                        disabled={!canDiscount || (!existingOrderId && cart.length === 0)}
-                        className={`py-2 bg-white border-2 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed ${
-                          discountApplied && discountAmount > 0
-                            ? 'border-green-400 text-green-700'
-                            : 'border-gray-300 text-gray-600 hover:border-orange-300 hover:text-orange-600'
-                        }`}
-                      >
-                        <Tag size={14} />
-                        {discountApplied && discountAmount > 0
-                          ? `-${fmt(discountAmount)}${discountType === '%' ? ` ${discountValue}%` : ''}`
-                          : 'Descuento'}
                       </button>
                       <button
                         onClick={async () => {

@@ -151,9 +151,9 @@ interface RestaurantContextValue {
   handleAddNote:              (itemId: string, note: string) => void;
   handleUpdateModifiers:      (itemId: string, modifiers: any[], unitPrice: number) => void;
   handleCheckout:             (customerId?: string, customerName?: string, discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }) => void;
-  handleConfirmPayment:       (payments: Payment[], tip: number, discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }, couponId?: string) => Promise<void>;
+  handleConfirmPayment:       (payments: Payment[], tips: Payment[], discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }, couponId?: string) => Promise<void>;
   handlePayOrderFromCard:     (order: Sale) => void;
-  handleConfirmOrderPayment:  (payments: Payment[], tip: number, discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }, couponId?: string) => Promise<void>;
+  handleConfirmOrderPayment:  (payments: Payment[], tips: Payment[], discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }, couponId?: string) => Promise<void>;
   handleSendToKitchen:        (customerId?: string, customerName?: string, customerPhone?: string, orderNote?: string) => Promise<void>;
   handleCreateMostradorOrder: (cart: CartItem[], customerName: string, deliveryPhone: string, pickupTime?: string, paymentMethod?: string, customerId?: string) => Promise<void>;
   handleCreateDeliveryOrder:  (cart: CartItem[], customerName: string, customerPhone: string, customerAddress: string, deliveryCity: string, deliveryNotes: string, deliveryCost: number, paymentMethod?: string, customerId?: string) => Promise<void>;
@@ -739,7 +739,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
 
   const handleConfirmPayment = async (
     payments: Payment[],
-    tip: number,
+    tips: Payment[],
     discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number },
     couponId?: string,
   ) => {
@@ -780,11 +780,16 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
         setPendingOrderCustomerId(undefined);
       }
 
-      if (discount && discount.value > 0) {
+      // Hotfix #256: value 0 = quitar un descuento previo de la orden
+      if (discount) {
         await restaurantService.applyDiscount(orderId, discount);
       }
 
-      let tipAsignado = false;
+      // Hotfix #256: propinas primero, como pagos propios (isTip) con su medio
+      for (const tipPayment of tips) {
+        await restaurantService.addPayment(orderId, tipPayment, 0, undefined, true);
+      }
+
       for (const payment of payments) {
         // couponId se envía solo en el último pago para que el backend lo valide
         // e incremente dentro de la misma transacción del pago.
@@ -792,10 +797,9 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
         await restaurantService.addPayment(
           orderId,
           payment,
-          !tipAsignado ? tip : 0,
+          0,
           isLastPayment ? couponId : undefined,
         );
-        tipAsignado = true;
       }
 
       await restaurantService.closeSale(orderId);
@@ -827,17 +831,22 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
 
   const handleConfirmOrderPayment = async (
     payments: Payment[],
-    _tip: number,
+    tips: Payment[],
     discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number },
     couponId?: string,
   ) => {
     if (!orderForPayment) return;
     try {
-      if (discount && discount.value > 0) {
+      // Hotfix #256: value 0 = quitar un descuento previo de la orden
+      if (discount) {
         await restaurantService.applyDiscount(orderForPayment.id, discount);
       }
 
-      let tipAsignado2 = false;
+      // Hotfix #256: propinas primero, como pagos propios (isTip) con su medio
+      for (const tipPayment of tips) {
+        await restaurantService.addPayment(orderForPayment.id, tipPayment, 0, undefined, true);
+      }
+
       for (const payment of payments) {
         // couponId se envía solo en el último pago para que el backend lo valide
         // e incremente dentro de la misma transacción del pago.
@@ -845,10 +854,9 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
         await restaurantService.addPayment(
           orderForPayment.id,
           payment,
-          !tipAsignado2 ? _tip : 0,
+          0,
           isLastPayment ? couponId : undefined,
         );
-        tipAsignado2 = true;
       }
 
       await restaurantService.closeSale(orderForPayment.id);

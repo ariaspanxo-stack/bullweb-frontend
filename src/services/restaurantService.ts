@@ -451,13 +451,15 @@ class RestaurantService {
    * `payment.method` debe ser el UUID del payment_method (obtenido desde
    * paymentMethodsService donde PaymentMethod.id = UUID de la BD).
    */
-  async addPayment(saleId: string, payment: Payment, tip = 0, couponId?: string): Promise<void> {
+  async addPayment(saleId: string, payment: Payment, tip = 0, couponId?: string, isTip = false): Promise<void> {
     try {
       const body: Record<string, any> = {
         paymentMethodId: payment.method,   // ya es el UUID real de la BD
         amount: Math.round(payment.amount),
         tip: Math.round(tip),
       };
+      // Hotfix #256: pago de propina con su propio medio (no cuenta para el total)
+      if (isTip) body.isTip = true;
       // couponId opcional: el backend lo valida e incrementa atómicamente
       // dentro de la transacción del pago (registerPayment).
       if (couponId) body.couponId = couponId;

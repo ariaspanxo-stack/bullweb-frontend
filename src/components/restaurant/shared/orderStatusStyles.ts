@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════════════
-// orderStatusStyles — Fuente única de estilos por estado de orden
+// orderStatusStyles — Fuente única de estilos por estado de orden y de mesa
 // Usado por OrderCardCompact (badge + borde) y los chips de MostradorTab / DeliveryTab.
 // El verde de READY es color de estado informativo (exento de la regla WhatsApp).
 // ═══════════════════════════════════════════════════════════════
@@ -22,3 +22,22 @@ export const STATUS_STYLES: Record<string, OrderStatusStyle> = {
 // Umbrales (minutos) para colorear el tiempo transcurrido de una orden
 export const TIME_WARN_MIN  = 15;
 export const TIME_ALERT_MIN = 30;
+
+// Hotfix #255: estilos por estado de MESA (MesasTab). Sin verde: libre es neutro.
+export interface TableStatusStyle {
+  label:  string;
+  border: string;
+  bg:     string;
+  number: string;
+}
+
+export const TABLE_STYLES: Record<string, TableStatusStyle> = {
+  AVAILABLE: { label: 'Libre',     border: 'border-slate-200',    bg: 'bg-white',     number: 'text-slate-700'  },
+  OCCUPIED:  { label: 'Ocupada',   border: 'border-l-orange-500', bg: 'bg-orange-50', number: 'text-orange-700' },
+  RESERVED:  { label: 'Reservada', border: 'border-l-violet-500', bg: 'bg-violet-50', number: 'text-violet-700' },
+  CLEANING:  { label: 'Limpieza',  border: 'border-l-slate-400',  bg: 'bg-slate-100', number: 'text-slate-500'  },
+};
+
+// Umbrales (minutos) para colorear el tiempo de una mesa ocupada
+export const TABLE_TIME_WARN_MIN  = 60;
+export const TABLE_TIME_ALERT_MIN = 120;

@@ -1,164 +1,130 @@
 // ═══════════════════════════════════════════════════════════════
 // MesasTab — Tab de mesas del POS Restaurant
+// Hotfix #255: tarjeta de 3 zonas (encabezado, cuerpo, pie), estilos por
+// estado desde TABLE_STYLES, tiempo con useElapsed (#253), pestañas de zona
+// con conteo y barra de resumen. Solo presentación.
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect, useMemo } from 'react';
-import { Search, LayoutGrid, User, Clock, Users, ChefHat, AlertTriangle } from 'lucide-react';
+import { useMemo } from 'react';
+import { Search, LayoutGrid, User, Users, ChefHat, Sparkles } from 'lucide-react';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import type { Table } from '../../../types/restaurant.types';
+import { useElapsed } from '../shared/helpers';
+import { TABLE_STYLES, TABLE_TIME_WARN_MIN, TABLE_TIME_ALERT_MIN } from '../shared/orderStatusStyles';
 
 function formatCLP(value: number) {
   return '$' + value.toLocaleString('es-CL', { maximumFractionDigits: 0 });
 }
 
-function useElapsedTime(since: Date | string | null | undefined): string | null {
-  const [elapsed, setElapsed] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!since) { setElapsed(null); return; }
-    const compute = () => {
-      const diff = Date.now() - new Date(since).getTime();
-      if (diff < 0) { setElapsed('0m'); return; }
-      const h = Math.floor(diff / 3_600_000);
-      const m = Math.floor((diff % 3_600_000) / 60_000);
-      setElapsed(h > 0 ? `${h}h ${m}m` : `${m}m`);
-    };
-    compute();
-    const interval = setInterval(compute, 30_000);
-    return () => clearInterval(interval);
-  }, [since]);
-
-  return elapsed;
+// Fecha de apertura de la mesa ocupada (orden activa, con respaldo occupiedSince)
+function openedAtIso(table: Table): string | undefined {
+  const src = table.activeOrderCreatedAt ?? table.occupiedSince;
+  if (!src) return undefined;
+  const d = new Date(src);
+  return isNaN(d.getTime()) ? undefined : d.toISOString();
 }
 
 function TableCard({ table, onClick }: { table: Table; onClick: () => void }) {
-  const isOccupied = table.status === 'OCCUPIED';
-  const isReserved = table.status === 'RESERVED';
+  const isOccupied  = table.status === 'OCCUPIED';
+  const isReserved  = table.status === 'RESERVED';
+  const isCleaning  = table.status === 'CLEANING';
+  const isAvailable = !isOccupied && !isReserved && !isCleaning;
+  const style = TABLE_STYLES[table.status] ?? TABLE_STYLES.AVAILABLE;
 
-  // Timer real en tiempo real (cada 30s)
-  const elapsed = useElapsedTime(
-    isOccupied ? (table.activeOrderCreatedAt ?? table.occupiedSince) : null
-  );
+  // Tiempo ocupada: helper compartido del #253 (sin segundos, refresco 60 s)
+  const elapsed = useElapsed(isOccupied ? openedAtIso(table) : undefined);
 
-  // Color del tiempo según antigüedad
-  const elapsedMin = useMemo(() => {
-    const src = table.activeOrderCreatedAt ?? table.occupiedSince;
-    if (!src) return null;
-    return Math.floor((Date.now() - new Date(src).getTime()) / 60_000);
-  }, [table.activeOrderCreatedAt, table.occupiedSince]);
-
-  const timeColor =
-    elapsedMin === null ? '' :
-    elapsedMin < 30     ? 'text-green-600' :
-    elapsedMin < 60     ? 'text-yellow-600' :
-    elapsedMin < 90     ? 'text-orange-500' :
-                          'text-red-600';
-
-  const isZombie = elapsedMin !== null && elapsedMin >= 480; // > 8 horas
+  const timeClass =
+    !elapsed                               ? '' :
+    elapsed.minutes < TABLE_TIME_WARN_MIN  ? 'text-slate-600' :
+    elapsed.minutes <= TABLE_TIME_ALERT_MIN ? 'text-amber-700' :
+                                             'text-red-700 bg-red-100 px-1.5 rounded';
 
   const preparingCount = table.preparingItemsCount ?? 0;
 
-  // ── TARJETA DISPONIBLE ──
-  if (!isOccupied && !isReserved) {
-    return (
-      <button
-        onClick={onClick}
-        className="bg-emerald-50 border border-emerald-200 rounded-2xl hover:border-emerald-400 hover:shadow-md transition-all text-left w-full active:scale-95 p-4 relative overflow-hidden"
-      >
-        {/* Barra superior */}
-        <span className="absolute top-0 left-0 right-0 h-1.5 bg-emerald-400" />
-        <span className="text-5xl font-black text-emerald-700 leading-none block">
-          {table.number}
-        </span>
-        <span className="text-xs text-emerald-600 font-medium mt-2 block">
-          {table.capacity} personas
-        </span>
-      </button>
-    );
-  }
-
-  // ── TARJETA OCUPADA ──
-  if (isOccupied) {
-    return (
-      <button
-        onClick={onClick}
-        className="bg-orange-50 border border-orange-400 rounded-2xl border-l-4 border-l-orange-500 shadow-lg relative text-left w-full active:scale-95 transition-all p-4 overflow-hidden"
-      >
-        {/* Barra superior */}
-        <span className="absolute top-0 left-0 right-0 h-1.5 bg-orange-500" />
-
-        {/* Chip total en esquina superior derecha */}
-        {(table.currentTotal ?? 0) > 0 && (
-          <span className="absolute top-3 right-3 bg-gray-900 text-white text-xs font-bold px-2 py-1 rounded-full">
-            {formatCLP(table.currentTotal!)}
-          </span>
-        )}
-
-        {/* Número de mesa vibrante */}
-        <span className="text-5xl font-black text-orange-700 leading-none block">
-          {table.number}
-        </span>
-
-        {/* Garzón */}
-        {table.waiterName && (
-          <div className="flex items-center gap-1.5 mt-2">
-            <User className="w-3.5 h-3.5 text-gray-500" />
-            <span className="text-sm font-bold text-gray-800 truncate">
-              {table.waiterName.split(' ')[0]}
-            </span>
-          </div>
-        )}
-
-        {/* Tiempo */}
-        {elapsed !== null && (
-          <div className={`flex items-center gap-1 text-xs text-gray-500 mt-1 ${timeColor}`}>
-            <Clock className="w-3.5 h-3.5" /> {elapsed}
-          </div>
-        )}
-
-        {/* Badges inferiores */}
-        <div className="flex flex-wrap items-center gap-1 mt-2">
-          {/* Badge ítems en cocina */}
-          {preparingCount > 0 && (
-            <span className="flex items-center text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
-              <ChefHat className="w-3 h-3 mr-1" /> {preparingCount} en cocina
-            </span>
-          )}
-          {/* Badge zombie: mesa abierta > 8h */}
-          {isZombie && (
-            <span className="flex items-center animate-pulse text-xs font-bold px-2 py-0.5 rounded-full bg-red-200 text-red-800">
-              <AlertTriangle className="w-3 h-3 mr-1" /> +{Math.floor(elapsedMin! / 60)}h
-            </span>
-          )}
-          {/* Personas si hay */}
-          {table.numberOfPeople != null && table.numberOfPeople > 0 && (
-            <span className="flex items-center text-xs text-gray-400 gap-1">
-              <Users className="w-3.5 h-3.5 text-gray-400" /> {table.numberOfPeople} / {table.capacity}
-            </span>
-          )}
-        </div>
-      </button>
-    );
-  }
-
-  // ── TARJETA RESERVADA ──
   return (
     <button
       onClick={onClick}
-      className="bg-white border border-gray-200 rounded-2xl border-l-4 border-l-amber-500 shadow-sm hover:shadow-md transition-all text-left w-full active:scale-95 p-4"
+      className={`h-full w-full flex flex-col text-left p-4 rounded-xl border border-slate-200 hover:shadow-md transition-all active:scale-95 ${style.bg} ${
+        isAvailable ? '' : `border-l-4 ${style.border}`
+      }`}
     >
-      <span className="text-5xl font-black text-amber-600 leading-none block">
-        {table.number}
-      </span>
-      <span className="text-xs text-amber-600 font-medium mt-2 block">
-        Reservada · {table.capacity} personas
-      </span>
+      {/* ENCABEZADO: número + badge de estado */}
+      <div className="flex items-start justify-between gap-2">
+        <span className={`text-3xl font-bold tabular-nums leading-none ${style.number}`}>
+          {table.number}
+        </span>
+        {!isAvailable && (
+          <span className={`inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full border border-current text-xs font-semibold ${style.bg} ${style.number}`}>
+            <span className="w-1.5 h-1.5 rounded-full bg-current" />
+            {style.label}
+          </span>
+        )}
+      </div>
+
+      {/* CUERPO */}
+      <div className="mt-3 flex flex-col gap-1.5">
+        {isAvailable && (
+          <span className="flex items-center gap-1.5 text-sm text-slate-500">
+            <Users size={14} /> Capacidad {table.capacity}
+          </span>
+        )}
+
+        {isOccupied && (
+          <>
+            {table.waiterName && (
+              <span className="flex items-center gap-1.5 text-sm text-slate-700 min-w-0">
+                <User size={14} className="flex-shrink-0" />
+                <span className="truncate">{table.waiterName.split(' ')[0]}</span>
+              </span>
+            )}
+            {elapsed && (
+              <span className={`self-start text-sm font-semibold tabular-nums ${timeClass}`} title={`Abierta: ${elapsed.title}`}>
+                {elapsed.text}
+              </span>
+            )}
+            {(preparingCount > 0 || (table.numberOfPeople != null && table.numberOfPeople > 0)) && (
+              <div className="flex flex-wrap items-center gap-1.5">
+                {preparingCount > 0 && (
+                  <span className="flex items-center text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
+                    <ChefHat className="w-3 h-3 mr-1" /> {preparingCount} en cocina
+                  </span>
+                )}
+                {table.numberOfPeople != null && table.numberOfPeople > 0 && (
+                  <span className="flex items-center text-xs text-slate-500 gap-1">
+                    <Users size={12} /> {table.numberOfPeople} / {table.capacity}
+                  </span>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {isCleaning && (
+          <span className="flex items-center gap-1.5 text-sm text-slate-500">
+            <Sparkles size={16} /> En limpieza
+          </span>
+        )}
+      </div>
+
+      {/* PIE: total anclado abajo (solo ocupada) */}
+      {isOccupied && (
+        <div className="mt-auto pt-3">
+          <div className="border-t border-slate-200 pt-2 flex items-baseline justify-between gap-2">
+            <span className="text-[11px] font-semibold text-slate-500 tracking-wide">TOTAL</span>
+            <span className="text-[22px] font-bold text-slate-900 tabular-nums leading-none">
+              {formatCLP(table.currentTotal ?? 0)}
+            </span>
+          </div>
+        </div>
+      )}
     </button>
   );
 }
 
 export function MesasTab() {
   const {
+    tables,
     filteredTables,
     sections,
     selectedSection,
@@ -172,10 +138,40 @@ export function MesasTab() {
     handleSelectTable,
   } = useRestaurant();
 
+  // Conteo ocupadas/total por zona (datos ya cargados)
+  const zoneCounts = useMemo(() => {
+    const map = new Map<string, { occupied: number; total: number }>();
+    tables.forEach((t: Table) => {
+      const c = map.get(t.sectionId) ?? { occupied: 0, total: 0 };
+      c.total += 1;
+      if (t.status === 'OCCUPIED') c.occupied += 1;
+      map.set(t.sectionId, c);
+    });
+    return map;
+  }, [tables]);
+
+  // Resumen del local (todas las zonas)
+  const summary = useMemo(() => {
+    const occupied = tables.filter((t: Table) => t.status === 'OCCUPIED');
+    const amount = occupied.reduce((s, t) => s + (t.currentTotal ?? 0), 0);
+    const oldestMs = occupied.reduce<number | null>((min, t) => {
+      const iso = openedAtIso(t);
+      if (!iso) return min;
+      const ms = new Date(iso).getTime();
+      return min === null || ms < min ? ms : min;
+    }, null);
+    let oldest = '—';
+    if (oldestMs !== null) {
+      const totalMin = Math.max(0, Math.floor((Date.now() - oldestMs) / 60_000));
+      oldest = `${Math.floor(totalMin / 60)}h ${totalMin % 60}min`;
+    }
+    return { occupied: occupied.length, total: tables.length, amount, oldest };
+  }, [tables]);
+
   return (
     <div>
       {/* Filtros */}
-      <div className="mb-6 flex items-center gap-4">
+      <div className="mb-4 flex items-center gap-4">
         {/* Buscador */}
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
@@ -188,22 +184,25 @@ export function MesasTab() {
           />
         </div>
 
-        {/* Secciones */}
+        {/* Secciones (pestañas con conteo ocupadas/total) */}
         {sections.length > 0 && (
           <div className="flex gap-1">
-            {sections.map((section: any) => (
-              <button
-                key={section.id}
-                onClick={() => setSelectedSection(section.id)}
-                className={`px-5 py-2.5 rounded-md font-medium text-sm tracking-wide transition-all ${
-                  selectedSection === section.id
-                    ? 'bg-slate-100 text-slate-900 font-semibold'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                {section.name.toUpperCase()}
-              </button>
-            ))}
+            {sections.map((section: any) => {
+              const c = zoneCounts.get(section.id) ?? { occupied: 0, total: 0 };
+              return (
+                <button
+                  key={section.id}
+                  onClick={() => setSelectedSection(section.id)}
+                  className={`px-5 py-2.5 rounded-md font-medium text-sm tracking-wide transition-all border-[1.5px] tabular-nums ${
+                    selectedSection === section.id
+                      ? 'bg-blue-50 border-slate-800 text-slate-800 font-semibold'
+                      : 'border-transparent text-slate-500 hover:text-slate-900'
+                  }`}
+                >
+                  {section.name} · {c.occupied}/{c.total}
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -242,6 +241,22 @@ export function MesasTab() {
         </div>
       </div>
 
+      {/* Barra de resumen */}
+      <div className="mb-4 flex items-center gap-8">
+        <div className="flex flex-col">
+          <span className="text-xs text-slate-500">Ocupadas</span>
+          <span className="text-lg font-bold tabular-nums text-slate-900">{summary.occupied}/{summary.total}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-xs text-slate-500">En mesas</span>
+          <span className="text-lg font-bold tabular-nums text-slate-900">{formatCLP(summary.amount)}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-xs text-slate-500">Más antigua</span>
+          <span className="text-lg font-bold tabular-nums text-slate-900">{summary.oldest}</span>
+        </div>
+      </div>
+
       {/* Grid de mesas */}
       {filteredTables.length === 0 ? (
         <div className="text-center py-12">
@@ -252,7 +267,7 @@ export function MesasTab() {
           <p className="text-gray-400 text-sm">Ajusta los filtros o contacta al administrador</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 items-stretch">
           {filteredTables.map((table: Table) => (
             <TableCard
               key={table.id}

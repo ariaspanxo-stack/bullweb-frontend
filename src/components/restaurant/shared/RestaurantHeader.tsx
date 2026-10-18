@@ -39,13 +39,13 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
   return (
     <div className="bg-white border-b border-slate-200 shadow-sm">
       {showShiftBanner && !dismissed && (
-        <div className="bg-amber-50 border-b border-amber-200 px-4 py-1 flex items-center justify-between gap-2">
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm px-4 py-1.5 flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="text-amber-500 text-xs">⚠️</span>
-            <p className="text-xs text-amber-700">Sin turno activo</p>
+            <span className="text-sm">⚠️</span>
+            <p className="text-sm text-amber-900">Sin turno activo</p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={onOpenShift} className="text-xs font-medium text-amber-700 border border-amber-300 bg-white hover:bg-amber-50 rounded px-2 py-0.5 transition-colors">💰 Abrir</button>
+            <button onClick={onOpenShift} className="h-9 px-3 rounded-lg bg-[#F97316] hover:bg-orange-600 text-white text-sm font-semibold transition-colors">Abrir</button>
             <button onClick={() => setDismissed(true)} className="text-amber-400 hover:text-amber-600 text-sm leading-none">✕</button>
           </div>
         </div>
@@ -146,8 +146,8 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
 
           {cashSession?.isOpen && cashSession.session && (
             <>
-              <div className="flex items-center gap-1.5 bg-green-500/20 text-green-700 text-xs font-medium px-3 py-1.5 rounded-full border border-green-200">
-                <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+              <div className="flex items-center gap-1.5 bg-[#1E2A4A] text-white text-xs font-semibold h-7 px-3 rounded-full">
+                <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                 Turno abierto
               </div>
               <button

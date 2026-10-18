@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon } from 'lucide-react';
+import { PlusIcon, PencilIcon, ChevronRight, ChevronDown } from 'lucide-react';
 import type { ModifierGroup } from '../../types/modifier.types';
 import type { Product } from '../../types/product.types';
 import { formatCurrency } from '../../lib/utils';
+import { BTN_ICON, BTN_OUTLINE, BTN_PRIMARY, CARD, SUBTITLE, TITLE, TrashButton } from '../products/productsUi';
 
 interface ModifiersListTabProps {
   modifierGroups: ModifierGroup[];
@@ -14,6 +15,10 @@ interface ModifiersListTabProps {
   onEditOption: (groupId: string, optionId: string) => void;
   onDeleteOption: (groupId: string, optionId: string) => void;
 }
+
+// Hotfix #258: badges neutros (Requerido oscuro; tipo en gris claro) — el rojo se leía como error
+const BADGE_NEUTRAL = 'text-xs font-semibold px-2 py-1 rounded-full bg-[#F1F5F9] text-[#475569]';
+const BADGE_REQUIRED = 'text-xs font-semibold px-2 py-1 rounded-full bg-[#1E2A4A] text-white';
 
 export const ModifiersListTab: React.FC<ModifiersListTabProps> = ({
   modifierGroups,
@@ -45,28 +50,28 @@ export const ModifiersListTab: React.FC<ModifiersListTabProps> = ({
       .join(', ');
   };
 
+  // Las acciones de la fila no deben desplegar/plegar el grupo
+  const stop = (fn: () => void) => (e: React.MouseEvent) => { e.stopPropagation(); fn(); };
+
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Encabezado — A4/A5 */}
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Modificadores</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className={TITLE}>Modificadores</h2>
+          <p className={SUBTITLE}>
             {modifierGroups.length} grupo{modifierGroups.length !== 1 ? 's' : ''} de modificadores
           </p>
         </div>
-        <button
-          onClick={onAddGroup}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
+        <button onClick={onAddGroup} className={BTN_PRIMARY}>
           <PlusIcon className="w-5 h-5" />
-          Nuevo Grupo
+          Nuevo grupo
         </button>
       </div>
 
       {/* Info */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
+      <div className="bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl p-4">
+        <p className="text-sm text-[#475569]">
           💡 Los modificadores permiten que tus clientes personalicen productos.
           Ejemplos: tamaños, ingredientes extra, nivel de cocción, etc.
         </p>
@@ -74,19 +79,13 @@ export const ModifiersListTab: React.FC<ModifiersListTabProps> = ({
 
       {/* Lista */}
       {modifierGroups.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-gray-200">
+        <div className={`${CARD} text-center py-12`}>
           <div className="text-6xl mb-4">🔧</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            No hay grupos de modificadores
-          </h3>
-          <p className="text-gray-600 mb-4">
-            Crea tu primer grupo para permitir personalización de productos
-          </p>
-          <button
-            onClick={onAddGroup}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Crear Grupo
+          <h3 className="text-lg font-bold text-[#0F172A] mb-2">No hay grupos de modificadores</h3>
+          <p className="text-[#64748B] mb-4">Crea tu primer grupo para permitir personalización de productos</p>
+          <button onClick={onAddGroup} className={BTN_PRIMARY}>
+            <PlusIcon className="w-5 h-5" />
+            Crear grupo
           </button>
         </div>
       ) : (
@@ -95,112 +94,90 @@ export const ModifiersListTab: React.FC<ModifiersListTabProps> = ({
             const isExpanded = expandedGroups.includes(group.id);
 
             return (
-              <div
-                key={group.id}
-                className="bg-white rounded-lg border border-gray-200 overflow-hidden"
-              >
-                {/* Header del grupo */}
-                <div className="p-4 bg-gray-50 border-b border-gray-200">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <button
-                          onClick={() => toggleGroup(group.id)}
-                          className="text-gray-600 hover:text-gray-900"
-                        >
-                          {isExpanded ? '▼' : '▶'}
-                        </button>
-                        <h3 className="text-lg font-bold text-gray-900">
-                          {group.name}
-                        </h3>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            group.selectionType === 'single'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-purple-100 text-purple-800'
-                          }`}
-                        >
+              <div key={group.id} className={`${CARD} overflow-hidden`}>
+                {/* Toda la fila despliega */}
+                <div
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
+                  onClick={() => toggleGroup(group.id)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGroup(group.id); } }}
+                  className="p-4 cursor-pointer hover:bg-[#F8FAFC] transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1 flex-wrap">
+                        {isExpanded
+                          ? <ChevronDown className="w-5 h-5 text-[#64748B] flex-shrink-0" />
+                          : <ChevronRight className="w-5 h-5 text-[#64748B] flex-shrink-0" />}
+                        <h3 className="text-lg font-bold text-[#0F172A]">{group.name}</h3>
+                        <span className={BADGE_NEUTRAL}>
                           {group.selectionType === 'single' ? 'Una opción' : 'Múltiples'}
                         </span>
-                        {group.isRequired && (
-                          <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800">
-                            Requerido
-                          </span>
-                        )}
+                        {group.isRequired && <span className={BADGE_REQUIRED}>Requerido</span>}
                       </div>
-                      <p className="text-sm text-gray-600 ml-8">{group.description}</p>
-                      <p className="text-xs text-gray-500 ml-8 mt-1">
+                      {group.description && <p className="text-sm text-[#475569] ml-8">{group.description}</p>}
+                      <p className="text-xs text-[#64748B] ml-8 mt-1">
                         📦 Aplica a: {getProductNames(group.productIds) || 'Ningún producto'}
                       </p>
-                      <p className="text-xs text-gray-500 ml-8">
+                      <p className="text-xs text-[#64748B] ml-8">
                         {group.options.length} opción{group.options.length !== 1 ? 'es' : ''}
                       </p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2 flex-shrink-0">
                       <button
-                        onClick={() => onEditGroup(group)}
-                        className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                        onClick={stop(() => onEditGroup(group))}
+                        className={BTN_ICON}
+                        title="Editar grupo"
+                        aria-label={`Editar grupo ${group.name}`}
                       >
                         <PencilIcon className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => onDeleteGroup(group)}
-                        className="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </button>
+                      <span onClick={(e) => e.stopPropagation()}>
+                        <TrashButton onClick={() => onDeleteGroup(group)} label={`Eliminar grupo ${group.name}`} className="ml-4" />
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Opciones (expandible) */}
                 {isExpanded && (
-                  <div className="p-4 space-y-2">
+                  <div className="p-4 space-y-2 border-t border-[#E2E8F0]">
                     {(group.options ?? []).map((option) => (
-                      <div
-                        key={option.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                      >
-                        <div className="flex-1">
+                      <div key={option.id} className="flex items-center justify-between gap-3 p-3 bg-[#F8FAFC] rounded-lg">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <h4 className="font-medium text-gray-900">{option.name}</h4>
-                            {option.isDefault && (
-                              <span className="text-xs px-2 py-0.5 rounded bg-green-100 text-green-800">
-                                Por defecto
-                              </span>
-                            )}
+                            <h4 className="font-semibold text-[#0F172A]">{option.name}</h4>
+                            {option.isDefault && <span className={BADGE_NEUTRAL}>Por defecto</span>}
                           </div>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-[#475569]">
                             {option.priceAdjustment === 0
                               ? 'Sin costo adicional'
                               : option.priceAdjustment > 0
-                              ? `+${formatCurrency(option.priceAdjustment)}`
-                              : formatCurrency(option.priceAdjustment)}
+                              ? <span className="font-bold">+{formatCurrency(option.priceAdjustment)}</span>
+                              : <span className="font-bold">{formatCurrency(option.priceAdjustment)}</span>}
                           </p>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => onEditOption(group.id, option.id)}
-                            className="px-2 py-1 text-xs text-blue-600 hover:bg-blue-50 rounded"
+                            className={BTN_OUTLINE}
+                            aria-label={`Editar opción ${option.name}`}
                           >
+                            <PencilIcon className="w-4 h-4" />
                             Editar
                           </button>
-                          <button
-                            onClick={() => onDeleteOption(group.id, option.id)}
-                            className="px-2 py-1 text-xs text-red-600 hover:bg-red-50 rounded"
-                          >
-                            Eliminar
-                          </button>
+                          <TrashButton onClick={() => onDeleteOption(group.id, option.id)} label={`Eliminar opción ${option.name}`} className="ml-4" />
                         </div>
                       </div>
                     ))}
 
                     <button
                       onClick={() => onAddOption(group.id)}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+                      className="w-full h-11 flex items-center justify-center gap-2 px-4 border-[1.5px] border-dashed border-[#CBD5E1] rounded-lg text-sm font-semibold text-[#1E2A4A] hover:bg-slate-50 transition-colors"
                     >
                       <PlusIcon className="w-4 h-4" />
-                      Agregar Opción
+                      Agregar opción
                     </button>
                   </div>
                 )}

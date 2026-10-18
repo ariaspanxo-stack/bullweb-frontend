@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import type { Product } from '../../types/product.types';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, Pencil, X } from 'lucide-react';
+import { Plus, Pencil, X } from 'lucide-react';
 import { formatCurrency } from '../../lib/utils';
+import { BTN_OUTLINE, BTN_PRIMARY, CARD, MarginBadge, SUBTITLE, TITLE, TrashButton, formatQty, formatUnit } from '../products/productsUi';
 
 interface Props {
   recipes: any[];
@@ -36,6 +37,8 @@ interface RecipeRow {
   yieldUnit?: string | null;
 }
 
+const FIELD = 'h-11 border border-[#CBD5E1] rounded-lg px-3 bg-white text-sm text-[#0F172A] focus:outline-none focus:border-[#F97316]';
+
 export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [], recipes = [] }) => {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [items, setItems] = useState<{ ingredientId: string; quantity: number }[]>([{ ingredientId: '', quantity: 1 }]);
@@ -45,6 +48,9 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
   const [localRecipes, setLocalRecipes] = useState<RecipeRow[]>([]);
   const [editingRecipeId, setEditingRecipeId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // Hotfix #258: el formulario queda arriba pero colapsado; se abre con "Nueva ficha" o al editar
+  const [formOpen, setFormOpen] = useState(false);
+  const showForm = formOpen || editingRecipeId !== null;
 
   // H128: la prop recipes del padre es la fuente inicial; el re-fetch local la mantiene viva tras crear/editar/eliminar
   useEffect(() => {
@@ -86,6 +92,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
   // H128: botón ✏️ — carga la ficha en el formulario inline (producto bloqueado, items restaurados)
   const handleEdit = (recipe: RecipeRow) => {
     setEditingRecipeId(recipe.id);
+    setFormOpen(true);
     setSelectedProduct(recipe.productId);
     const loaded = (recipe.recipe_items ?? []).map(ri => ({
       ingredientId: ri.ingredientId,
@@ -99,6 +106,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
   // H128: restaurar el formulario a su estado de creación
   const handleCancelEdit = () => {
     setEditingRecipeId(null);
+    setFormOpen(false);
     setSelectedProduct('');
     setItems([{ ingredientId: '', quantity: 1 }]);
   };
@@ -150,6 +158,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
         toast.success('Vinculación creada. El stock se descontará automáticamente.');
         setSelectedProduct('');
         setItems([{ ingredientId: '', quantity: 1 }]);
+        setFormOpen(false);
       }
       await loadRecipes();
     } catch (e: any) {
@@ -161,138 +170,148 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
 
   return (
     <div className="p-6 space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Vincular Inventario</h2>
-      <p className="text-gray-600">Selecciona un producto y agrega los ingredientes que se descontarán al venderlo.</p>
+      {/* Encabezado — A4/A5: el título coincide con la pestaña */}
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h2 className={TITLE}>Fichas técnicas</h2>
+          <p className={SUBTITLE}>Ingredientes que se descuentan del inventario al vender cada producto.</p>
+        </div>
+        {!showForm && (
+          <button onClick={() => setFormOpen(true)} className={BTN_PRIMARY}>
+            <Plus className="w-5 h-5" />
+            Nueva ficha
+          </button>
+        )}
+      </div>
 
-      <div className="bg-white p-6 rounded-xl border border-gray-200 space-y-4">
-        {editingRecipeId && (
-          <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg px-4 py-2">
-            <span className="text-sm font-medium text-blue-900">
-              Editando ficha — el producto no se puede cambiar
-            </span>
+      {/* Formulario colapsable (misma lógica de guardado) */}
+      {showForm && (
+        <div className={`${CARD} p-6 space-y-4`}>
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-base font-bold text-[#0F172A]">
+              {editingRecipeId ? 'Editar ficha — el producto no se puede cambiar' : 'Nueva ficha'}
+            </h3>
             <button
               onClick={handleCancelEdit}
-              className="flex items-center gap-1 text-sm font-medium text-blue-700 hover:text-blue-900"
-              title="Cancelar edición"
-              aria-label="Cancelar edición"
+              className={BTN_OUTLINE}
+              title={editingRecipeId ? 'Cancelar edición' : 'Cerrar formulario'}
+              aria-label={editingRecipeId ? 'Cancelar edición' : 'Cerrar formulario'}
             >
-              <X className="w-4 h-4" /> Cancelar edición
+              <X className="w-4 h-4" /> {editingRecipeId ? 'Cancelar edición' : 'Cerrar'}
             </button>
           </div>
-        )}
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Producto a vincular</label>
-          <select
-            value={selectedProduct}
-            onChange={e => setSelectedProduct(e.target.value)}
-            disabled={!!editingRecipeId}
-            className="w-full border rounded-lg p-2 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
-          >
-            <option value="">Seleccionar producto...</option>
-            {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-        </div>
+          <div>
+            <label className="block text-sm font-semibold text-[#475569] mb-1">Producto</label>
+            <select
+              value={selectedProduct}
+              onChange={e => setSelectedProduct(e.target.value)}
+              disabled={!!editingRecipeId}
+              className={`${FIELD} w-full disabled:bg-[#F1F5F9] disabled:text-[#64748B] disabled:cursor-not-allowed`}
+            >
+              <option value="">Seleccionar producto...</option>
+              {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+          </div>
 
-        <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700">Ingredientes a descontar</label>
-          {items.map((item, index) => {
-            const selectedIngredientData = ingredients.find(i => i.id === item.ingredientId);
-            const ingredientUnit = selectedIngredientData?.unit || '';
-            return (
-              <div key={index} className="flex items-center gap-2">
-                <select 
-                  value={item.ingredientId} 
-                  onChange={e => handleItemChange(index, 'ingredientId', e.target.value)} 
-                  className="flex-1 border rounded-lg p-2"
-                >
-                  <option value="">Seleccionar ingrediente...</option>
-                  {ingredients.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
-                </select>
-                <input
-                  type="number"
-                  min="0.001"
-                  step="0.001"
-                  value={item.quantity}
-                  onChange={e => handleItemChange(index, 'quantity', Number(e.target.value))}
-                  className="w-24 border rounded-lg p-2"
-                  placeholder="Cant."
-                />
-                <span className="bg-gray-100 border border-l-0 border-gray-300 rounded-r-lg p-2 text-gray-600 text-sm font-medium w-14 text-center">
-                  {ingredientUnit}
-                </span>
-                {/* H126: hint de equivalencia — la celda descuenta en la unidad del ingrediente (0.12 kg = 120 gr) */}
-                {(ingredientUnit === 'kg' || ingredientUnit === 'L') && (
-                  <span className="text-xs text-gray-500 w-32 flex-shrink-0">
-                    = {Number(item.quantity * 1000).toLocaleString('es-CL')} {ingredientUnit === 'kg' ? 'gr' : 'ml'}
+          <div className="space-y-3">
+            <label className="block text-sm font-semibold text-[#475569]">Ingredientes a descontar</label>
+            {items.map((item, index) => {
+              const selectedIngredientData = ingredients.find(i => i.id === item.ingredientId);
+              const rawUnit = selectedIngredientData?.unit || '';
+              const ingredientUnit = formatUnit(rawUnit);
+              return (
+                <div key={index} className="flex items-center gap-2 flex-wrap">
+                  <select
+                    value={item.ingredientId}
+                    onChange={e => handleItemChange(index, 'ingredientId', e.target.value)}
+                    className={`${FIELD} flex-1 min-w-[180px]`}
+                  >
+                    <option value="">Seleccionar ingrediente...</option>
+                    {ingredients.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}
+                  </select>
+                  <input
+                    type="number"
+                    min="0.001"
+                    step="0.001"
+                    value={item.quantity}
+                    onChange={e => handleItemChange(index, 'quantity', Number(e.target.value))}
+                    className={`${FIELD} w-24`}
+                    placeholder="Cant."
+                  />
+                  <span className="h-11 inline-flex items-center justify-center bg-[#F1F5F9] rounded-lg px-2 text-[#475569] text-sm font-semibold min-w-[56px]">
+                    {ingredientUnit}
                   </span>
-                )}
-                {(ingredientUnit === 'g' || ingredientUnit === 'ml') && (
-                  <span className="text-xs text-gray-500 w-32 flex-shrink-0">
-                    = {Number(item.quantity).toLocaleString('es-CL')} {ingredientUnit === 'g' ? 'gr' : 'ml'}
-                  </span>
-                )}
-                {(ingredientUnit === 'unit' || ingredientUnit === 'unidad') && (
-                  <span className="text-xs text-gray-500 w-32 flex-shrink-0">
-                    unidades
-                  </span>
-                )}
-                {/* H235: costo en vivo de la línea — qty × unitCost del ingrediente seleccionado */}
-                {selectedIngredientData?.unitCost != null && (
-                  <span className="text-xs text-gray-600 tabular-nums w-24 flex-shrink-0">
-                    {formatCurrency(item.quantity * selectedIngredientData.unitCost)}
-                  </span>
-                )}
-                <button
-                  onClick={() => handleRemoveItem(index)}
-                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg"
-                  disabled={items.length === 1}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            );
-          })}
-        </div>
+                  {/* H126: hint de equivalencia — la celda descuenta en la unidad del ingrediente (0.12 kg = 120 gr) */}
+                  {(ingredientUnit === 'kg' || ingredientUnit === 'L') && (
+                    <span className="text-xs text-[#64748B] w-28 flex-shrink-0">
+                      = {formatQty(item.quantity * 1000)} {ingredientUnit === 'kg' ? 'g' : 'ml'}
+                    </span>
+                  )}
+                  {(ingredientUnit === 'g' || ingredientUnit === 'ml') && (
+                    <span className="text-xs text-[#64748B] w-28 flex-shrink-0">
+                      = {formatQty(item.quantity)} {ingredientUnit}
+                    </span>
+                  )}
+                  {ingredientUnit === 'unidad' && (
+                    <span className="text-xs text-[#64748B] w-28 flex-shrink-0">unidades</span>
+                  )}
+                  {/* H235: costo en vivo de la línea — qty × unitCost del ingrediente seleccionado */}
+                  {selectedIngredientData?.unitCost != null && (
+                    <span className="text-xs font-bold text-[#0F172A] tabular-nums w-24 flex-shrink-0">
+                      {formatCurrency(item.quantity * selectedIngredientData.unitCost)}
+                    </span>
+                  )}
+                  <TrashButton
+                    onClick={() => handleRemoveItem(index)}
+                    label="Quitar ingrediente"
+                    disabled={items.length === 1}
+                    className="ml-4"
+                  />
+                </div>
+              );
+            })}
+          </div>
 
-        <button onClick={handleAddItem} className="text-sm text-orange-600 font-medium flex items-center gap-1">
-          <Plus className="w-4 h-4" /> Agregar otro ingrediente
-        </button>
-
-        {/* H235: costo estimado en vivo — Σ de líneas válidas (ingredientId + quantity > 0), se confirma al guardar */}
-        <div className="bg-gray-50 rounded-lg p-3">
-          <p className="font-bold text-gray-900 tabular-nums">
-            Costo estimado: {formatCurrency(
-              items.reduce((sum, it) => {
-                const ing = ingredients.find(i => i.id === it.ingredientId);
-                if (it.ingredientId && it.quantity > 0 && ing?.unitCost != null) return sum + it.quantity * ing.unitCost;
-                return sum;
-              }, 0)
-            )}
-          </p>
-          <p className="text-xs text-gray-500 mt-0.5">se confirma al guardar</p>
-        </div>
-
-        <div className="pt-4 border-t">
-          <button onClick={handleLink} disabled={loading} className="bg-orange-500 text-white px-6 py-2.5 rounded-lg font-medium disabled:opacity-50">
-            {loading ? 'Guardando...' : editingRecipeId ? 'Actualizar ficha' : 'Guardar Vinculación'}
+          <button onClick={handleAddItem} className={BTN_OUTLINE}>
+            <Plus className="w-4 h-4" /> Agregar otro ingrediente
           </button>
+
+          {/* H235: costo estimado en vivo — Σ de líneas válidas (ingredientId + quantity > 0), se confirma al guardar */}
+          <div className="bg-[#F8FAFC] rounded-lg p-3">
+            <p className="font-bold text-[#0F172A] tabular-nums">
+              Costo estimado: {formatCurrency(
+                items.reduce((sum, it) => {
+                  const ing = ingredients.find(i => i.id === it.ingredientId);
+                  if (it.ingredientId && it.quantity > 0 && ing?.unitCost != null) return sum + it.quantity * ing.unitCost;
+                  return sum;
+                }, 0)
+              )}
+            </p>
+            <p className="text-xs text-[#64748B] mt-0.5">se confirma al guardar</p>
+          </div>
+
+          <div className="pt-4 border-t border-[#E2E8F0]">
+            <button onClick={handleLink} disabled={loading} className={BTN_PRIMARY}>
+              {loading ? 'Guardando...' : editingRecipeId ? 'Actualizar ficha' : 'Guardar ficha'}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* H128: LA LISTA — las fichas creadas, con costo total del backend, editar y eliminar */}
       <div>
-        <h3 className="text-lg font-bold text-gray-900 mb-1">Fichas técnicas creadas</h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <h3 className="text-lg font-bold text-[#0F172A] mb-1">Fichas creadas</h3>
+        <p className="text-sm text-[#64748B] mb-4">
           {localRecipes.length} ficha{localRecipes.length !== 1 ? 's' : ''} — el costo total lo calcula el sistema con los costos de los ingredientes.
-          {refreshing && <span className="ml-2 text-xs text-gray-400">Actualizando lista…</span>}
+          {refreshing && <span className="ml-2 text-xs text-[#94A3B8]">Actualizando lista…</span>}
         </p>
 
         {localRecipes.length === 0 ? (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+          <div className={`${CARD} text-center py-12`}>
             <div className="text-5xl mb-3">📋</div>
-            <h4 className="text-base font-semibold text-gray-900 mb-1">Aún no hay fichas técnicas</h4>
-            <p className="text-sm text-gray-600">Crea la primera con el formulario de arriba</p>
+            <h4 className="text-base font-bold text-[#0F172A] mb-1">Aún no hay fichas técnicas</h4>
+            <p className="text-sm text-[#64748B]">Crea la primera con "Nueva ficha"</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -301,90 +320,76 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
               const productName = recipe.products?.name
                 ?? products.find(p => p.id === recipe.productId)?.name
                 ?? 'Producto';
+              const totalCost = Number(recipe.totalCost ?? 0);
+              const venta = recipe.products?.price ?? products.find(p => p.id === recipe.productId)?.price;
               return (
                 <div
                   key={recipe.id}
-                  className={`bg-white rounded-xl border overflow-hidden transition-all ${
-                    editingRecipeId === recipe.id
-                      ? 'border-blue-500 ring-2 ring-blue-200'
-                      : 'border-gray-200 hover:shadow-lg'
+                  className={`${CARD} overflow-hidden flex flex-col transition-shadow ${
+                    editingRecipeId === recipe.id ? 'ring-2 ring-[#F97316] border-[#F97316]' : 'hover:shadow-md'
                   }`}
                 >
-                  <div className="p-4 space-y-3">
+                  <div className="p-4 space-y-3 flex flex-col flex-1">
                     <div>
-                      <h4 className="font-semibold text-gray-900 leading-tight">{productName}</h4>
-                      <p className="text-xs text-gray-600 mt-0.5">
+                      <h4 className="font-bold text-[#0F172A] leading-tight">{productName}</h4>
+                      <p className="text-xs text-[#64748B] mt-0.5">
                         {itemCount} ingrediente{itemCount !== 1 ? 's' : ''}
                       </p>
                     </div>
 
-                    {/* Items resumidos */}
+                    {/* Items resumidos — cantidades con máximo 2 decimales y unidad única */}
                     <div className="space-y-1">
                       {recipe.recipe_items?.slice(0, 3).map((ri) => (
-                        <p key={ri.id} className="text-xs text-gray-600 truncate">
-                          • {ri.ingredients?.name ?? 'Ingrediente'} — {ri.quantity} {ri.ingredients?.unit ?? ri.unit ?? ''}
+                        <p key={ri.id} className="text-xs text-[#475569] truncate">
+                          • {ri.ingredients?.name ?? 'Ingrediente'} — {formatQty(ri.quantity)} {formatUnit(ri.ingredients?.unit ?? ri.unit ?? '')}
                         </p>
                       ))}
-                      {itemCount > 3 && (
-                        <p className="text-xs text-gray-500">+ {itemCount - 3} más</p>
-                      )}
+                      {itemCount > 3 && <p className="text-xs text-[#94A3B8]">+ {itemCount - 3} más</p>}
                     </div>
 
-                    {/* Costo total (del GET — tal cual llega del backend, sin adornos) */}
-                    <div className="bg-gray-50 rounded-lg p-2.5">
-                      <p className="text-xs text-gray-600">Costo total</p>
-                      <p className="text-lg font-bold text-gray-900 tabular-nums">
-                        {formatCurrency(Number(recipe.totalCost ?? 0))}
-                      </p>
+                    {/* Costo total grande */}
+                    <div className="bg-[#F8FAFC] rounded-lg p-2.5">
+                      <p className="text-xs text-[#64748B]">Costo total</p>
+                      <p className="text-2xl font-bold text-[#0F172A] tabular-nums">{formatCurrency(totalCost)}</p>
                     </div>
 
-                    {/* H235: margen — venta del payload (con fallback a la prop products) menos costo total */}
-                    {(() => {
-                      const venta = recipe.products?.price ?? products.find(p => p.id === recipe.productId)?.price;
-                      if (venta != null && venta > 0) {
-                        const margen = venta - Number(recipe.totalCost ?? 0);
-                        const pct = Math.round((margen / venta) * 100);
-                        return (
-                          <p className={`text-xs font-medium tabular-nums ${margen > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                            Venta {formatCurrency(venta)} · Margen {formatCurrency(margen)} ({pct}%)
-                          </p>
-                        );
-                      }
-                      return <p className="text-xs text-gray-400">Sin precio de venta</p>;
-                    })()}
+                    {/* Venta y margen (13px, color por rango; costo 0 => "Sin costo cargado") */}
+                    {venta != null && venta > 0 ? (
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <span className="text-[13px] text-[#475569]">
+                          Venta <span className="font-bold text-[#0F172A]">{formatCurrency(venta)}</span>
+                        </span>
+                        <MarginBadge price={venta} cost={totalCost} />
+                      </div>
+                    ) : (
+                      <p className="text-[13px] text-[#94A3B8]">Sin precio de venta</p>
+                    )}
 
                     {/* H235: rinde condicional — solo si el GET trae yield > 1, sin ceros ni guiones */}
                     {Number(recipe.yield) > 1 && (
-                      <p className="text-xs text-gray-600">
-                        Rinde {recipe.yield} {recipe.yieldUnit ?? ''}
-                      </p>
+                      <p className="text-xs text-[#475569]">Rinde {formatQty(Number(recipe.yield))} {formatUnit(recipe.yieldUnit ?? '')}</p>
                     )}
 
                     {/* Notas (solo si el GET las trae) */}
-                    {recipe.notes && (
-                      <p className="text-xs text-gray-600 line-clamp-1">{recipe.notes}</p>
-                    )}
+                    {recipe.notes && <p className="text-xs text-[#64748B] line-clamp-1">{recipe.notes}</p>}
 
-                    {/* Acciones */}
-                    <div className="flex gap-2 pt-1">
+                    {/* Acciones — A6/A7 */}
+                    <div className="flex items-center gap-2 pt-1 mt-auto">
                       <button
                         onClick={() => handleEdit(recipe)}
                         disabled={editingRecipeId !== null || deletingId !== null}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`${BTN_OUTLINE} flex-1`}
                         title="Editar ficha"
                         aria-label={`Editar ficha de ${productName}`}
                       >
                         <Pencil className="w-4 h-4" /> Editar
                       </button>
-                      <button
+                      <TrashButton
                         onClick={() => handleDelete(recipe)}
                         disabled={deletingId !== null || editingRecipeId !== null}
-                        className="flex items-center justify-center px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Eliminar ficha"
-                        aria-label={`Eliminar ficha de ${productName}`}
-                      >
-                        <Trash2 className={`w-4 h-4 ${deletingId === recipe.id ? 'animate-pulse' : ''}`} />
-                      </button>
+                        label={`Eliminar ficha de ${productName}`}
+                        className={`ml-4 ${deletingId === recipe.id ? 'animate-pulse' : ''}`}
+                      />
                     </div>
                   </div>
                 </div>

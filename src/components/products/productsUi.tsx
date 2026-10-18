@@ -85,3 +85,27 @@ export function formatQty(n: number | null | undefined, maxDecimals = 2): string
 export function formatPct(n: number): string {
   return `${formatQty(n, 1)}%`;
 }
+
+/** B Fichas/Ingredientes: unidades en un solo formato ("unidad", "kg", "L", ...) */
+export function formatUnit(unit: string | null | undefined): string {
+  const u = String(unit ?? '').trim();
+  const k = u.toLowerCase();
+  if (['unit', 'units', 'unidad', 'unidades', 'un', 'und', 'u'].includes(k)) return 'unidad';
+  if (['l', 'lt', 'lts', 'litro', 'litros'].includes(k)) return 'L';
+  if (['ml', 'cc'].includes(k)) return 'ml';
+  if (['kg', 'kilo', 'kilos'].includes(k)) return 'kg';
+  if (['g', 'gr', 'grs', 'gramo', 'gramos'].includes(k)) return 'g';
+  return u;
+}
+
+/**
+ * Hotfix #258 (regla del Comandante): nivel de stock único para banner, filtros y tarjetas.
+ * <= 0 -> 'out' (negativo se rotula "Stock negativo"); > 0 y <= mínimo -> 'low'; > mínimo -> 'ok'.
+ */
+export type StockLevel = 'out' | 'low' | 'ok';
+export function stockLevel(current: number | null | undefined, min: number | null | undefined): StockLevel {
+  const c = Number(current ?? 0);
+  if (c <= 0) return 'out';
+  if (c <= Number(min ?? 0)) return 'low';
+  return 'ok';
+}

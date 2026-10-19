@@ -7,7 +7,28 @@ import toast from 'react-hot-toast';
 // ─── Constantes ───────────────────────────────────────────────────────────────
 const PRINTER_TYPES    = ['receipt', 'kitchen', 'kds', 'label'] as const;
 const PROTOCOLS        = ['escpos', 'star', 'zpl'] as const;
-const PAPER_WIDTHS     = [58, 62, 80] as const;
+const PAPER_WIDTHS     = [58, 62, 72, 80] as const;
+
+// HOTFIX #260: caracteres por línea (printers.chars_per_line). '' = automático según papel.
+// '42-80' es la opción explícita "80 mm fuente grande": guarda 42 y fija el papel en 80.
+const CHARS_PER_LINE_OPTIONS = [
+  { key: '',      label: 'Automático según papel' },
+  { key: '32',    label: '58 mm — 32 caracteres' },
+  { key: '42',    label: '62 / 72 mm — 42 caracteres' },
+  { key: '42-80', label: '80 mm fuente grande — 42 caracteres' },
+  { key: '48',    label: '80 mm — 48 caracteres' },
+] as const;
+
+function autoCharsPerLine(paperWidth: number): number {
+  if (paperWidth <= 58) return 32;
+  if (paperWidth < 80)  return 42;
+  return 48;
+}
+
+function charsPerLineKey(cpl: number | null | undefined, paperWidth: number): string {
+  if (cpl === 42 && paperWidth >= 80) return '42-80';
+  return cpl === 32 || cpl === 42 || cpl === 48 ? String(cpl) : '';
+}
 const CONNECTION_TYPES = ['ethernet', 'usb', 'serial', 'os_driver', 'bluetooth'] as const;
 const BAUD_RATES       = [9600, 19200, 38400, 57600, 115200] as const;
 
@@ -61,7 +82,8 @@ export function PrinterModal({ printer, branches, agents, onClose, onSave, savin
     agent_id:        printer?.agent_id        ?? '',
     protocol:        printer?.protocol        ?? 'escpos',
     paper_width:     printer?.paper_width     ?? 80,
-    branch_id:       printer?.branch_id       ?? '',
+    chars_per_line:  printer?.chars_per_line  ?? null as number | null,
+    branch_id:      printer?.branch_id       ?? '',
     notes:           printer?.notes           ?? '',
     print_qr:        printer?.print_qr        ?? false,
     qr_type:         printer?.qr_type         ?? 'receipt',
@@ -208,7 +230,8 @@ export function PrinterModal({ printer, branches, agents, onClose, onSave, savin
       connection_type: form.connection_type as PrinterType['connection_type'],
       protocol:        form.protocol,
       paper_width:     Number(form.paper_width),
-      branch_id:       form.branch_id    || null,
+      chars_per_line:  form.chars_per_line ?? null,
+      branch_id:      form.branch_id    || null,
       notes:           form.notes        || null,
       agent_id:        form.agent_id     || null,
       ip_address:      connType === 'ethernet'  ? (form.ip_address      || null) : null,
@@ -506,6 +529,25 @@ export function PrinterModal({ printer, branches, agents, onClose, onSave, savin
                 {PAPER_WIDTHS.map(w => <option key={w} value={w}>{w} mm</option>)}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Ancho de línea</label>
+            <select
+              value={charsPerLineKey(form.chars_per_line, Number(form.paper_width))}
+              onChange={e => {
+                const key = e.target.value;
+                if (key === '42-80') { set('chars_per_line', 42); set('paper_width', 80); return; }
+                set('chars_per_line', key ? Number(key) : null);
+              }}
+              className="w-full min-h-[44px] border border-gray-200 rounded-lg px-3 py-2 text-sm">
+              {CHARS_PER_LINE_OPTIONS.map(o => (
+                <option key={o.key} value={o.key}>
+                  {o.key === '' ? `${o.label} (${autoCharsPerLine(Number(form.paper_width))} caracteres)` : o.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">Si la comanda sale cortada o con letra muy grande, baja a 42 caracteres.</p>
           </div>
 
           <div>

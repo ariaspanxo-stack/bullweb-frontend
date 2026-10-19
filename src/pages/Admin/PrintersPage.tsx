@@ -1520,6 +1520,7 @@ export default function PrintersPage() {
         port:            printer.port,
         protocol:        printer.protocol,
         paper_width:     printer.paper_width,
+        chars_per_line:  printer.chars_per_line ?? null,
         notes:           printer.notes,
         usb_vendor_id:   printer.usb_vendor_id,
         usb_product_id:  printer.usb_product_id,

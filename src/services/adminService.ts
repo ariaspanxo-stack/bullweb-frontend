@@ -2307,6 +2307,7 @@ export interface Printer {
   port:            number;
   protocol:        string;
   paper_width:     number;
+  chars_per_line?: number | null;   // HOTFIX #260: 32/42/48, null = automático según papel
   is_active:       boolean;
   notes:           string | null;
   last_test_at:    string | null;

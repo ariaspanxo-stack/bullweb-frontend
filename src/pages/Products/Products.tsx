@@ -672,6 +672,32 @@ const Products = () => {
     }
   };
 
+  // HOTFIX 267: visibilidad en carta QR de un producto
+  const handleToggleShowInQr = async (product: Product, showInQr: boolean) => {
+    try {
+      await api.products.update(product.id, { showInQr });
+      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, showInQr } : p));
+      toast.success(showInQr ? `${product.name} visible en la carta QR` : `${product.name} oculto en la carta QR`);
+    } catch (err: any) {
+      toast.error(err.message || 'Error al actualizar la carta QR');
+    }
+  };
+
+  // HOTFIX 267: visibilidad en carta QR de todos los productos de una categoria (un solo endpoint)
+  const handleCategoryBulkShowInQr = async (categoryId: string, showInQr: boolean) => {
+    setLoadingTab('saving');
+    try {
+      const r = await api.categories.setShowInQr(categoryId, showInQr);
+      setProducts(prev => prev.map(p => p.categoryId === categoryId ? { ...p, showInQr } : p));
+      const n = r?.updated ?? 0;
+      toast.success(`${n} producto${n !== 1 ? 's' : ''} ${showInQr ? 'visible' : 'oculto'}${n !== 1 ? 's' : ''} en la carta QR`);
+    } catch (err: any) {
+      toast.error(err.message || 'Error al actualizar la carta QR');
+    } finally {
+      setLoadingTab(null);
+    }
+  };
+
   const handleBulkUpdate = async (ids: string[], data: { available: boolean }) => {
     setLoadingTab('saving');
     try {
@@ -806,6 +832,7 @@ const Products = () => {
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
             onBulkUpdate={handleBulkUpdate}
+            onToggleShowInQr={canManage ? handleToggleShowInQr : undefined}
             canManage={canManage}
           />
         ) : activeTab === 'categorias' ? (
@@ -817,6 +844,7 @@ const Products = () => {
             onReorder={handleReorderCategories}
             onDuplicate={handleDuplicateCategory}
             onBulkAvailability={handleCategoryBulkAvailability}
+            onBulkShowInQr={handleCategoryBulkShowInQr}
           />
         ) : activeTab === 'ingredientes' ? (
           <IngredientsListTab

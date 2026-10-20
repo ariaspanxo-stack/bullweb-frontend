@@ -44,6 +44,7 @@ interface ProductsListTabProps {
   selectedCategory: string | null;
   onCategoryChange: (id: string | null) => void;
   onBulkUpdate: (ids: string[], data: { available: boolean }) => Promise<void>;
+  onToggleShowInQr?: (product: Product, showInQr: boolean) => Promise<void>; // HOTFIX 267
   canManage?: boolean;
 }
 
@@ -62,6 +63,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
   selectedCategory,
   onCategoryChange,
   onBulkUpdate,
+  onToggleShowInQr,
   canManage = true,
 }) => {
   // Estados locales
@@ -505,6 +507,23 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                       <div className="mb-2">
                         <MarginBadge price={product.price} cost={product.cost} />
                       </div>
+
+                      {/* HOTFIX 267: Mostrar en carta QR */}
+                      {onToggleShowInQr && (
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={product.showInQr !== false}
+                          aria-label={`Mostrar ${product.name} en carta QR`}
+                          onClick={() => onToggleShowInQr(product, product.showInQr === false)}
+                          className="w-full h-11 mb-2 inline-flex items-center gap-2 px-2 rounded-lg hover:bg-slate-50"
+                        >
+                          <span className={`relative inline-flex w-10 h-6 rounded-full transition-colors flex-shrink-0 ${product.showInQr !== false ? 'bg-[#1E2A4A]' : 'bg-[#CBD5E1]'}`}>
+                            <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${product.showInQr !== false ? 'left-5' : 'left-1'}`} />
+                          </span>
+                          <span className="text-sm font-semibold text-[#1E2A4A]">Mostrar en carta QR</span>
+                        </button>
+                      )}
 
                       {(
                         <div className="flex items-center gap-2">

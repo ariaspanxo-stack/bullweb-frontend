@@ -38,6 +38,7 @@ const initialFormData: ProductFormData = {
   description: '',
   status: 'active',
   isPopular: false,
+  showInQr: true, // HOTFIX 267
 };
 
 const AVAILABLE_TAGS = [
@@ -90,6 +91,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         description: product.description || '',
         status:      product.available ? 'active' : 'inactive',
         isPopular:   product.popular || false,
+        showInQr:    product.showInQr !== false, // HOTFIX 267
       });
       setImagePreview(imageVal);
       setSelectedTags(product.tags ?? []);
@@ -280,6 +282,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       active: formData.status === 'active',
       available: formData.status === 'active',
       popular: formData.isPopular,
+      showInQr: formData.showInQr, // HOTFIX 267
       tags: selectedTags,
       createdAt: product?.createdAt,
       updatedAt: new Date(),
@@ -888,6 +891,24 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   </label>
                 </div>
               </div>
+
+              {/* HOTFIX 267: Mostrar en carta QR */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={formData.showInQr}
+                onClick={() => setFormData(prev => ({ ...prev, showInQr: !prev.showInQr }))}
+                disabled={isSubmitting}
+                className="w-full min-h-[44px] flex items-center gap-3 px-3 py-2 rounded-lg border border-gray-300 text-left hover:bg-slate-50 disabled:opacity-50"
+              >
+                <span className={`relative inline-flex w-10 h-6 rounded-full transition-colors flex-shrink-0 ${formData.showInQr ? 'bg-[#1E2A4A]' : 'bg-[#CBD5E1]'}`}>
+                  <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${formData.showInQr ? 'left-5' : 'left-1'}`} />
+                </span>
+                <span className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-700">Mostrar en carta QR</span>
+                  <span className="text-xs text-gray-500">Apagado: no aparece en la carta QR. Punto de venta, mostrador, delivery y app mesero lo siguen mostrando.</span>
+                </span>
+              </button>
 
               {/* Etiquetas / Tags */}
               <div>

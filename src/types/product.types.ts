@@ -43,6 +43,7 @@ export interface Product {
   
   // Control de disponibilidad
   available: boolean;         // Disponible para venta
+  showInQr?: boolean;         // HOTFIX 267: visible en la carta QR (default true)
   active: boolean;            // Activo en sistema
   
   // Adicionales para Restaurant
@@ -70,6 +71,7 @@ export interface CreateProductData {
   categoryId: string;
   stationId: string;          // REQUERIDO en backend
   available?: boolean;
+  showInQr?: boolean;         // HOTFIX 267
   active?: boolean;
   preparationTime?: number;
   popular?: boolean;
@@ -155,6 +157,7 @@ export interface ProductFormData {
   description?: string;
   status: 'active' | 'inactive';
   isPopular: boolean;
+  showInQr: boolean;          // HOTFIX 267: Mostrar en carta QR
 }
 
 export interface ProductFormErrors {

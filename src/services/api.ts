@@ -99,6 +99,7 @@ export const productsApi = {
     if (data.sku) payload.sku = data.sku;
     if (data.barcode) payload.barcode = data.barcode;
     if (data.trackInventory !== undefined) payload.trackInventory = data.trackInventory;
+    if (data.showInQr !== undefined) payload.showInQr = data.showInQr; // HOTFIX 267
     if (data.modifiers) payload.modifiers = data.modifiers;
     console.log('[api.products.create] payload enviado al backend:', payload);
     const response = await fetch(`${API_BASE_URL}/menu/products`, {
@@ -215,6 +216,16 @@ export const categoriesApi = {
       body: JSON.stringify(data)
     });
     return handleResponse(response);
+  },
+
+  // HOTFIX 267: mostrar u ocultar en la carta QR todos los productos de la categoria (un solo endpoint)
+  setShowInQr: async (id: string, showInQr: boolean) => {
+    const response = await fetch(`${API_BASE_URL}/menu/categories/${id}/show-in-qr`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ showInQr })
+    });
+    return handleResponse<{ categoryId: string; showInQr: boolean; updated: number }>(response);
   },
 
   delete: async (id: string) => {

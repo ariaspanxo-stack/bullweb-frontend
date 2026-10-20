@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PlusIcon, PencilIcon, TrashIcon, GripVertical, Copy, ToggleLeft, ToggleRight, MoreHorizontal } from 'lucide-react';
+import { PlusIcon, PencilIcon, TrashIcon, GripVertical, Copy, ToggleLeft, ToggleRight, MoreHorizontal, QrCode, EyeOff } from 'lucide-react';
 import {
   DndContext,
   closestCenter,
@@ -34,6 +34,7 @@ interface CategoriesTabProps {
   onReorder?: (orderedIds: string[]) => void;
   onDuplicate: (category: Category) => void;
   onBulkAvailability: (categoryId: string, available: boolean) => Promise<void>;
+  onBulkShowInQr?: (categoryId: string, showInQr: boolean) => Promise<void>; // HOTFIX 267
 }
 
 // ── Fila sortable ────────────────────────────────────────────
@@ -44,12 +45,13 @@ interface SortableRowProps {
   onDelete: (id: string) => void;
   onDuplicate: (c: Category) => void;
   onBulkAvailability: (categoryId: string, available: boolean) => Promise<void>;
+  onBulkShowInQr?: (categoryId: string, showInQr: boolean) => Promise<void>;
   bulkLoading: boolean;
 }
 
 const MENU_ITEM = 'w-full flex items-center gap-2 h-11 px-3 text-sm text-left text-[#1E2A4A] hover:bg-slate-50 disabled:opacity-50';
 
-const SortableRow: React.FC<SortableRowProps> = ({ category, color, onEdit, onDelete, onDuplicate, onBulkAvailability, bulkLoading }) => {
+const SortableRow: React.FC<SortableRowProps> = ({ category, color, onEdit, onDelete, onDuplicate, onBulkAvailability, onBulkShowInQr, bulkLoading }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: category.id });
   const [menuOpen, setMenuOpen] = useState(false);
@@ -124,6 +126,17 @@ const SortableRow: React.FC<SortableRowProps> = ({ category, color, onEdit, onDe
                   <button className={MENU_ITEM} disabled={bulkLoading} onClick={() => run(() => { onBulkAvailability(category.id, false); })}>
                     <ToggleLeft className="w-4 h-4" /> Deshabilitar todos
                   </button>
+                  {/* HOTFIX 267: visibilidad en carta QR de todos los productos de la categoria */}
+                  {onBulkShowInQr && (
+                    <>
+                      <button className={MENU_ITEM} disabled={bulkLoading} onClick={() => run(() => { onBulkShowInQr(category.id, false); })}>
+                        <EyeOff className="w-4 h-4" /> Ocultar en QR
+                      </button>
+                      <button className={MENU_ITEM} disabled={bulkLoading} onClick={() => run(() => { onBulkShowInQr(category.id, true); })}>
+                        <QrCode className="w-4 h-4" /> Mostrar en QR
+                      </button>
+                    </>
+                  )}
                 </>
               )}
               <div className="my-1 border-t border-[#E2E8F0]" />
@@ -150,6 +163,7 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
   onReorder,
   onDuplicate,
   onBulkAvailability,
+  onBulkShowInQr,
 }) => {
   const [ordered, setOrdered] = useState<Category[]>(categories);
   const [categoryBulkLoading, setCategoryBulkLoading] = useState<string | null>(null);
@@ -224,6 +238,7 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
                   onDelete={onDelete}
                   onDuplicate={onDuplicate}
                   onBulkAvailability={handleBulkAvailability}
+                  onBulkShowInQr={onBulkShowInQr}
                   bulkLoading={categoryBulkLoading === category.id}
                 />
               ))}

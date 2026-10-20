@@ -62,11 +62,11 @@ const UPGRADE_FLAG = 'subscription_upgrade_pending';
 
 const TODO_UNLOCKS: { icon: 'check' | 'star'; text: string }[] = [
   { icon: 'star', text: 'Boletas electrónicas al SII — $0 por documento' },
-  { icon: 'check', text: 'Pedidos desde la carta QR' },
+  // HOTFIX 262: carta QR con pedidos y App Mesero salieron de la lista — incluidas en Básico.
   { icon: 'check', text: 'KDS — pantalla de cocina en tiempo real' },
-  { icon: 'check', text: 'App Mesero: pedidos desde el celular' },
-  { icon: 'check', text: 'Inventario con alertas de stock' },
-  { icon: 'check', text: 'Fidelización, Campañas y Cupones' },
+  { icon: 'check', text: 'Inventario, fichas técnicas y alertas de stock' },
+  { icon: 'check', text: 'Clientes, Fidelización, Campañas y Cupones' },
+  { icon: 'check', text: 'Control de asistencia con kiosco' },
   { icon: 'check', text: 'Mapeo de Delivery (Uber Eats, PedidosYa)' },
 ];
 

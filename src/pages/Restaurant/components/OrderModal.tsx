@@ -7,6 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 
 import { useState, useEffect, useRef } from 'react';
+import { usePlan } from '@/hooks/usePlan';
 import { createPortal } from 'react-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -88,6 +89,8 @@ export const OrderModal = ({
   const [clientPhone, setClientPhone]               = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(undefined);
   const [saveToCustomers, setSaveToCustomers]       = useState(true);
+  // HOTFIX 262: clientes/CRM no está en Básico — sin guardar en Clientes ni find-or-create
+  const { isBasico } = usePlan();
   const [customerEmail, setCustomerEmail]           = useState('');
   const [marketingOptIn, setMarketingOptIn]         = useState(false);
   const [pendingProduct, setPendingProduct]         = useState<Product | null>(null);
@@ -926,7 +929,7 @@ export const OrderModal = ({
                         )}
                       </div>
                     </div>
-                    {clientName.trim() && !existingOrderId && (
+                    {clientName.trim() && !existingOrderId && !isBasico && (
                       <button
                         type="button"
                         onClick={() => setSaveToCustomers(v => !v)}
@@ -941,7 +944,7 @@ export const OrderModal = ({
                         <span className="font-bold">Guardar "{clientName.trim()}" en Clientes</span>
                       </button>
                     )}
-                    {clientName.trim() && !selectedCustomerId && saveToCustomers && (
+                    {clientName.trim() && !selectedCustomerId && saveToCustomers && !isBasico && (
                       <div className="mt-2 space-y-2">
                         {/* ── Hotfix #115: Email opcional (solo creación nueva) ── */}
                         <div>
@@ -979,7 +982,7 @@ export const OrderModal = ({
                 /* (CD) MISMA lógica del botón Enviar a Cocina de hoy */
                 onConfirm={async () => {
                   let customerId: string | undefined = selectedCustomerId;
-                  if (!customerId && saveToCustomers && clientName.trim().length >= 2) {
+                  if (!customerId && saveToCustomers && !isBasico && clientName.trim().length >= 2) {
                     try {
                       const customer = await customersService.findOrCreate({
                         name: clientName.trim(),
@@ -1075,7 +1078,7 @@ export const OrderModal = ({
                       <button
                         onClick={async () => {
                           let customerId: string | undefined = selectedCustomerId;
-                          if (!customerId && saveToCustomers && clientName.trim().length >= 2) {
+                          if (!customerId && saveToCustomers && !isBasico && clientName.trim().length >= 2) {
                             try {
                               const customer = await customersService.findOrCreate({
                                 name: clientName.trim(),

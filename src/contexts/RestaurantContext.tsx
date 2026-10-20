@@ -38,6 +38,7 @@ import {
   type ActiveSessionResponse,
 } from '../services/cashRegistersService';
 import { useConfirm } from '../hooks/useConfirm';
+import { usePlan } from '../hooks/usePlan';
 import type { ConfirmDialogProps } from '../components/ui/ConfirmDialog';
 import api from '../services/api';
 import { useAuthStore } from '../store/authStore';
@@ -191,6 +192,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   const location = useLocation();
   const socketRef = useRef<Socket | null>(null);
   const user = useAuthStore(s => s.user);
+  const { isBasico, planReady } = usePlan();
   const userRef = useRef(user);
   useEffect(() => { userRef.current = user; }, [user]);
 
@@ -399,6 +401,13 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
       window.history.replaceState({}, '', '/restaurant');
     }
     loadInitialData();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // HOTFIX 262: la config DTE se consulta solo cuando el plan se conoce y lo incluye
+  // (Básico no tiene boletas: sin llamada, botón de boleta oculto).
+  useEffect(() => {
+    if (!planReady) return;
+    if (isBasico) { setDteIsConfigured(false); return; }
     const perms = (user?.role?.permissions ?? []) as string[];
     const hasBillingPerm =
       perms.includes('ALL_PERMISSIONS') || perms.some(p => p.startsWith('billing.'));
@@ -413,7 +422,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
     } else {
       setDteIsConfigured(false);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [planReady, isBasico]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const openTab = (location.state as any)?.openTab as TabType | undefined;

@@ -36,6 +36,9 @@ export function usePlan(): {
   isBasico: boolean;
   /** HOTFIX #230 — true si el plan del tenant incluye la feature (plan_config). */
   hasFeature: (feature: string) => boolean;
+  /** HOTFIX 262 — true cuando el plan ya se conoce. Las llamadas a módulos que Básico
+   *  no incluye esperan este flag (enabled: planReady && !isBasico) para no disparar 403. */
+  planReady: boolean;
 } {
   const isSuperAdmin = useIsSuperAdmin();
 
@@ -64,7 +67,7 @@ export function usePlan(): {
     return features.includes('*') || features.includes(feature);
   };
 
-  if (isSuperAdmin) return { plan: 'TODO', isBasico: false, hasFeature: () => true };
+  if (isSuperAdmin) return { plan: 'TODO', isBasico: false, hasFeature: () => true, planReady: true };
 
-  return { plan, isBasico: plan === 'BASICO', hasFeature };
+  return { plan, isBasico: plan === 'BASICO', hasFeature, planReady: !!billingQ.data || billingQ.isError };
 }

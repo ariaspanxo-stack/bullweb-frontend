@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { usePlan } from '@/hooks/usePlan';
 import { createPortal } from 'react-dom';
 import { 
   X, 
@@ -55,6 +56,9 @@ export const NewMostradorModal = ({
   onConfirm,
   onClose
 }: NewMostradorModalProps) => {
+  // HOTFIX 262: clientes/CRM no está en Básico — sin búsqueda ni alta de clientes desde el POS
+  // (el backend igual registra nombre y teléfono en el pedido).
+  const { isBasico } = usePlan();
   // ========== ESTADO (drafts persistentes en el contexto) ==========
   // FIX: el carrito y los datos del cliente viven en el contexto para sobrevivir
   // al cierre del modal (antes se perdían porque eran useState local).
@@ -120,7 +124,7 @@ export const NewMostradorModal = ({
     setCustomerName(value);
     setError('');
     if (customerSearchTimeout.current) clearTimeout(customerSearchTimeout.current);
-    if (value.trim().length >= 2) {
+    if (!isBasico && value.trim().length >= 2) {
       setSearchingCustomer(true);
       customerSearchTimeout.current = setTimeout(async () => {
         try {
@@ -144,7 +148,7 @@ export const NewMostradorModal = ({
       setShowSuggestions(false);
       setSearchingCustomer(false);
     }
-  }, []);
+  }, [isBasico]);
 
   const handleSelectCustomer = (customer: any) => {
     setCustomerName(customer.name || '');
@@ -305,7 +309,7 @@ export const NewMostradorModal = ({
     try {
       // PRIMERO: find-or-create cliente SIEMPRE cuando hay nombre (mostrador siempre tiene nombre+teléfono)
       let customerId: string | undefined;
-      if (customerName.trim().length >= 2) {
+      if (!isBasico && customerName.trim().length >= 2) {
         try {
           const customer = await customersService.findOrCreate({
             name: customerName.trim(),
@@ -331,7 +335,7 @@ export const NewMostradorModal = ({
     setError('');
     try {
       let customerId: string | undefined;
-      if (customerName.trim().length >= 2) {
+      if (!isBasico && customerName.trim().length >= 2) {
         try {
           const customer = await customersService.findOrCreate({
             name: customerName.trim(),

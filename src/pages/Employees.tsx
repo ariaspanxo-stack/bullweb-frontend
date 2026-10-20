@@ -26,6 +26,7 @@ import {
 import toast from 'react-hot-toast';
 import { exportToExcel, fmtDateTime } from '@/utils/exportExcel';
 import { exportAttendanceDT } from '@/utils/exportAttendanceDT';
+import { usePlan } from '@/hooks/usePlan';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Tab = 'employees' | 'roles' | 'attendance' | 'justificativos' | 'alertas' | 'calendario' | 'dashboard';
@@ -107,6 +108,12 @@ export default function Employees() {
   const canManage = usePermission('employees.manage');
   const { confirm: confirmDialog, dialogProps } = useConfirm();
   const [activeTab, setActiveTab] = useState<Tab>('employees');
+  // HOTFIX 262: asistencia no está en Básico — solo pestañas Empleados y Roles
+  const { isBasico, planReady } = usePlan();
+  const BASICO_TABS: Tab[] = ['employees', 'roles'];
+  useEffect(() => {
+    if (isBasico && !BASICO_TABS.includes(activeTab)) setActiveTab('employees');
+  }, [isBasico]); // eslint-disable-line react-hooks/exhaustive-deps
   const [search, setSearch]       = useState('');
 
   // ─── Employee state
@@ -501,7 +508,7 @@ export default function Employees() {
             { value: 'alertas',        label: 'Alertas',          icon: Bell         },
             { value: 'calendario',     label: 'Calendario',      icon: CalendarDays },
             { value: 'dashboard',      label: 'Dashboard',       icon: BarChart3    },
-          ] as { value: Tab; label: string; icon: any }[]).map(({ value, label, icon: Icon }) => (
+          ] as { value: Tab; label: string; icon: any }[]).filter(t => !isBasico || BASICO_TABS.includes(t.value)).map(({ value, label, icon: Icon }) => (
             <button
               key={value}
               onClick={() => setActiveTab(value)}
@@ -522,7 +529,7 @@ export default function Employees() {
               {value === 'attendance' && (
                 <span className="ml-1 text-xs bg-gray-100 text-gray-600 rounded-full px-2 py-0.5">{attRecords.length}</span>
               )}
-              {value === 'alertas' && <AlertasBadge />}
+              {value === 'alertas' && planReady && !isBasico && <AlertasBadge />}
             </button>
           ))}
         </nav>
@@ -682,9 +689,11 @@ export default function Employees() {
                           <button onClick={() => setProfilEmp(emp)} className="p-1.5 rounded hover:bg-emerald-50 text-emerald-600 transition-colors" title="Ver Perfil">
                             <Eye className="h-3.5 w-3.5" />
                           </button>
-                          <button onClick={() => setQrEmp(emp)} className="p-1.5 rounded hover:bg-purple-50 text-purple-500 transition-colors" title="QR Asistencia">
-                            <QrCode className="h-3.5 w-3.5" />
-                          </button>
+                          {!isBasico && (
+                            <button onClick={() => setQrEmp(emp)} className="p-1.5 rounded hover:bg-purple-50 text-purple-500 transition-colors" title="QR Asistencia">
+                              <QrCode className="h-3.5 w-3.5" />
+                            </button>
+                          )}
                           {canManage && (
                             <button onClick={() => confirmDeleteEmp(emp)} className="p-1.5 rounded hover:bg-red-50 text-red-500 transition-colors" title="Eliminar">
                               <Trash2 className="h-3.5 w-3.5" />

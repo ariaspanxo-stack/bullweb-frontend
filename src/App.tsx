@@ -25,6 +25,8 @@ const Sales           = lazy(() => import('@/pages/Sales/Sales').then(m => ({ de
 // H187 — E2: deferrals de rutas eager (solo App.tsx las importaba, verificado)
 const Login           = lazy(() => import('@/pages/auth/Login'));
 const Restaurant      = lazy(() => import('@/pages/Restaurant/Restaurant'));
+// HOTFIX 262: gestión de mesas (crear/editar mesas y secciones)
+const Tables          = lazy(() => import('@/pages/Tables'));
 const Orders          = lazy(() => import('@/pages/Orders'));
 const OnlineOrders    = lazy(() => import('@/pages/OnlineOrders'));
 
@@ -239,6 +241,7 @@ function AppContent() {
               
               {/* Ventas */}
               <Route path="restaurant" element={<PermissionGuard permission="pos.access"><Restaurant /></PermissionGuard>} />
+              <Route path="tables" element={<PermissionGuard permission="tables.manage"><Tables /></PermissionGuard>} />
               <Route path="orders"     element={<PermissionGuard permission="pos.access"><Orders /></PermissionGuard>} />
               <Route path="online-orders" element={<PermissionGuard permission="pos.access"><OnlineOrders /></PermissionGuard>} />
               <Route path="sales"      element={<PermissionGuard permission="sales.view"><Sales /></PermissionGuard>} />

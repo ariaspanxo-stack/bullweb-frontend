@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { employeesService } from '@/services/employeesService';
 import { attendanceService } from '@/services/attendanceService';
+import { usePlan } from '@/hooks/usePlan';
 import {
   X, User, Phone, Mail, MapPin, Calendar, Briefcase, Clock,
   CheckCircle, XCircle, TrendingUp, ShoppingBag, FileText,
@@ -41,6 +42,9 @@ function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export function EmployeeProfileModal({ employee, onClose }: EmployeeProfileModalProps) {
+  // HOTFIX 262: asistencia no está en Básico — sin calendario ni justificativos
+  const { isBasico, planReady } = usePlan();
+  const attendanceEnabled = planReady && !isBasico;
   const now   = new Date();
   const year  = now.getFullYear();
   const month = now.getMonth() + 1;
@@ -56,14 +60,14 @@ export function EmployeeProfileModal({ employee, onClose }: EmployeeProfileModal
     queryKey: ['calendario', employee.id, year, month],
     queryFn: () => attendanceService.getCalendario(employee.id, year, month),
     staleTime: 60_000,
-    enabled: !!employee.id,
+    enabled: !!employee.id && attendanceEnabled,
   });
 
   const { data: justificativos = [] } = useQuery({
     queryKey: ['justificativos', employee.id],
     queryFn: () => attendanceService.getJustificativos({ employeeId: employee.id }),
     staleTime: 60_000,
-    enabled: !!employee.id,
+    enabled: !!employee.id && attendanceEnabled,
   });
 
   const emp   = (details as any)?.employee ?? employee;

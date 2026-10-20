@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
+import { usePlan } from '@/hooks/usePlan';
 
 export interface LowStockItem {
   id: string;
@@ -20,6 +21,8 @@ export function useStockAlerts() {
   const perms = (user?.role?.permissions ?? []) as string[];
   const canViewInventory =
     perms.includes('ALL_PERMISSIONS') || perms.includes('inventory.view');
+  // HOTFIX 262: inventario no está en Básico — sin llamada (antes 403 cada 5 min)
+  const { isBasico, planReady } = usePlan();
 
   const { data } = useQuery({
     queryKey: ['stock-alerts'],
@@ -28,7 +31,7 @@ export function useStockAlerts() {
         const items: LowStockItem[] = r.data?.data?.ingredients ?? r.data?.ingredients ?? [];
         return items;
       }),
-    enabled: isAuthenticated && canViewInventory,
+    enabled: isAuthenticated && canViewInventory && planReady && !isBasico,
     staleTime: 5 * 60 * 1000,   // 5 minutos
     refetchInterval: 5 * 60 * 1000,
   });

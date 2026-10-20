@@ -19,6 +19,8 @@ import { MesasTab }     from '@/components/reports/tabs/MesasTab';
 import { MeserosTab }   from '@/components/reports/tabs/MeserosTab';
 import { CocinaTab }    from '@/components/reports/tabs/CocinaTab';
 import { formatCurrency } from '@/lib/utils';
+import { useEffect } from 'react';
+import { usePlan } from '@/hooks/usePlan';
 
 type Tab = 'ventas' | 'productos' | 'pagos' | 'stock' | 'compras' | 'gastos' | 'balance' | 'mesas' | 'meseros' | 'cocina' | 'cierre';
 
@@ -51,6 +53,12 @@ function ReportsInner() {
     avgTicket, prevAvgTicket,
     handleExport, applyPreset, handleRefresh,
   } = useReports();
+  // HOTFIX 262: Stock y Compras (inventario) no están en Básico — pestañas ocultas
+  const { isBasico } = usePlan();
+  const BASICO_HIDDEN_TABS: Tab[] = ['stock', 'compras'];
+  useEffect(() => {
+    if (isBasico && BASICO_HIDDEN_TABS.includes(activeTab)) setActiveTab('ventas');
+  }, [isBasico]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-0">
@@ -204,7 +212,7 @@ function ReportsInner() {
           {/* Fade derecho: indica que hay más tabs */}
           <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-slate-900 to-transparent pointer-events-none z-10 lg:hidden" />
           <div className="flex gap-1 overflow-x-auto px-6 pb-4 pt-1 scrollbar-hide scroll-smooth">
-            {TABS.map(tab => {
+            {TABS.filter(tab => !(isBasico && BASICO_HIDDEN_TABS.includes(tab.id))).map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               return (
@@ -232,8 +240,8 @@ function ReportsInner() {
         {activeTab === 'ventas'    && <VentasTab />}
         {activeTab === 'productos' && <ProductosTab />}
         {activeTab === 'pagos'     && <PagosTab />}
-        {activeTab === 'stock'     && <StockTab />}
-        {activeTab === 'compras'   && <ComprasTab />}
+        {activeTab === 'stock'     && !isBasico && <StockTab />}
+        {activeTab === 'compras'   && !isBasico && <ComprasTab />}
         {activeTab === 'gastos'    && <GastosTab />}
         {activeTab === 'balance'   && <BalanceTab />}
         {activeTab === 'mesas'     && <MesasTab />}

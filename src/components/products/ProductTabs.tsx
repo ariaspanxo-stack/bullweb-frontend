@@ -1,5 +1,6 @@
 import React from 'react';
 import { PackageIcon, FolderIcon, Carrot, ClipboardList, Settings, ChefHat } from 'lucide-react';
+import { usePlan } from '@/hooks/usePlan';
 
 // Hotfix #258 (A1): la pestaña "Dashboard" se elimina de Productos.
 export type TabType = 'productos' | 'categorias' | 'ingredientes' | 'fichas' | 'modificadores' | 'estaciones';
@@ -31,6 +32,8 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({
   // Para desactivar: cambiar a `false` y la pestaña desaparecerá.
   // ═══════════════════════════════════════════════════════════════
   const MODIFIERS_ENABLED = true;
+  // HOTFIX 262: inventario y fichas técnicas no están en Básico — pestañas ocultas
+  const { isBasico } = usePlan();
 
   const tabs = [
     {
@@ -80,7 +83,7 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({
   return (
     <div className="bg-white border-b border-[#E2E8F0]">
       <div className="flex gap-1 px-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {tabs.map((tab) => {
+        {tabs.filter(t => !(isBasico && (t.id === 'ingredientes' || t.id === 'fichas'))).map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
 

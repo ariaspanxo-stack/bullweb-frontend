@@ -34,6 +34,7 @@ import type {
 import ModifiersListTab from '../../components/modifiers/ModifiersListTab';
 import ModifierGroupModal from '../../components/modifiers/ModifierGroupModal';
 import ModifierOptionModal from '../../components/modifiers/ModifierOptionModal';
+import { usePlan } from '@/hooks/usePlan';
 
 // ── Componentes auxiliares ─────────────────────────────────────────────
 function TabLoadingSpinner() {
@@ -82,6 +83,12 @@ const Products = () => {
     productName: '',
   });
   const [activeTab, setActiveTab] = useState<TabType>('productos');
+  // HOTFIX 262: Ingredientes y Fichas no están en Básico (sin llamadas a /inventory)
+  const { isBasico, planReady } = usePlan();
+  const isExcludedTab = (tab: TabType) => isBasico && (tab === 'ingredientes' || tab === 'fichas');
+  useEffect(() => {
+    if (isExcludedTab(activeTab)) setActiveTab('productos');
+  }, [isBasico]); // eslint-disable-line react-hooks/exhaustive-deps
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ProductCategory | null>(null);
   
@@ -118,6 +125,7 @@ const Products = () => {
           break;
         }
         case 'ingredientes': {
+          if (isExcludedTab(tab)) break;
           try {
             const ings = await api.ingredients.getAll();
             setIngredients(ings);
@@ -134,6 +142,7 @@ const Products = () => {
           break;
         }
         case 'fichas': {
+          if (isExcludedTab(tab)) break;
           try {
             const recs = await api.recipes.getAll();
             setRecipes(recs);
@@ -182,18 +191,20 @@ const Products = () => {
 
   // Sincronizar tab con URL — M-7: loadTabData es estable en este contexto (solo mount)
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // HOTFIX 262: espera a conocer el plan (un ?tab=ingredientes en Básico no debe llamar a /inventory)
   useEffect(() => {
+    if (!planReady) return;
     const params = new URLSearchParams(window.location.search);
     const tabParam = params.get('tab') as TabType;
     // SOFT-HIDE: 'modificadores' removido de validTabs para que no se pueda
     // activar vía URL (?tab=modificadores). El código del tab se conserva.
     // Hotfix #258 (A1): sin pestaña Dashboard ('reportes')
     const validTabs = ['productos', 'categorias', 'ingredientes', 'fichas', 'estaciones'];
-    if (tabParam && validTabs.includes(tabParam)) {
+    if (tabParam && validTabs.includes(tabParam) && !isExcludedTab(tabParam)) {
       setActiveTab(tabParam);
       loadTabData(tabParam);
     }
-  }, []);
+  }, [planReady]);
 
   const handleTabChange = (tab: TabType) => {
     setActiveTab(tab);

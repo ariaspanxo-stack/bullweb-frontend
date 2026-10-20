@@ -7,6 +7,7 @@ import { cashRegistersService } from '@/services/cashRegistersService';
 import api from '@/services/api';
 import { LoyaltyPanel } from '@/components/pos/LoyaltyPanel';
 import { useAuthStore } from '@/store/authStore';
+import { usePlan } from '@/hooks/usePlan';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { EmitBoletaButton } from '../../../components/pos/EmitBoletaButton';
 import { applyOrderDiscount, discountInputAllowed, discountLimitHint, useAdminPin } from '../../../components/pos/discountControl';
@@ -152,6 +153,8 @@ export const PaymentModal = ({
   onConfirm,
 }: PaymentModalProps) => {
   const authUser = useAuthStore(s => s.user);
+  // HOTFIX 262: cupones y puntos (CRM) no están en Básico — se ocultan, sin llamadas
+  const { isBasico } = usePlan();
   const userPermsDiscount = (authUser?.role?.permissions ?? []) as string[];
   const discountPermByType: Record<string, string> = {
     DINE_IN: 'pos.discount_table', TAKEAWAY: 'pos.discount_counter', DELIVERY: 'pos.discount_delivery',
@@ -593,7 +596,7 @@ export const PaymentModal = ({
                   )}
 
                   {/* Cupón: mismo slot */}
-                  {canEditDiscount && <div className="flex gap-2 mt-2">
+                  {canEditDiscount && !isBasico && <div className="flex gap-2 mt-2">
                     <input
                       type="text"
                       placeholder="Código de cupón"
@@ -618,7 +621,7 @@ export const PaymentModal = ({
                   )}
 
                   {/* Puntos de fidelidad: mismo slot */}
-                  {canEditDiscount && customerId && customerName && (
+                  {canEditDiscount && !isBasico && customerId && customerName && (
                     <div className="mt-2">
                       <LoyaltyPanel
                         customerId={customerId}

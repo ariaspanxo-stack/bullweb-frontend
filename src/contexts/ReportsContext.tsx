@@ -7,6 +7,7 @@ import { reportsService } from '@/services/reportsService';
 import api from '@/services/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import { useAuthStore } from '@/store/authStore';
+import { usePlan } from '@/hooks/usePlan';
 import {
   format, subDays, differenceInDays, parseISO,
   startOfMonth, startOfYear, isValid,
@@ -189,6 +190,9 @@ const ReportsContext = createContext<ReportsContextValue>(null!);
 
 export function ReportsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuthStore();
+  // HOTFIX 262: compras de inventario no están en Básico — sin llamadas a /inventory
+  const { isBasico, planReady } = usePlan();
+  const inventoryEnabled = planReady && !isBasico;
 
   const [activeTab,      setActiveTab]      = useState<Tab>('ventas');
   const [dateFrom,       setDateFrom]       = useState(() => getPresetFrom('30d'));
@@ -243,7 +247,7 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
       return res.data;
     },
     staleTime: 0,
-    enabled: true,
+    enabled: inventoryEnabled,
   });
 
   const { data: prevPurchasesRaw } = useQuery({
@@ -253,7 +257,7 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
       return unwrapList(res);
     },
     staleTime: 300_000,
-    enabled: activeTab === 'balance' || activeTab === 'gastos',
+    enabled: inventoryEnabled && (activeTab === 'balance' || activeTab === 'gastos'),
   });
 
   const { data: waitersForFilterRaw } = useQuery({

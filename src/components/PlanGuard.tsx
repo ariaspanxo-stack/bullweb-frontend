@@ -26,11 +26,11 @@ interface PlanGuardProps {
 
 const TODO_UNLOCKS: string[] = [
   'Boletas y Facturación electrónica SII',
-  'Pedidos desde la carta QR',
+  // HOTFIX 262: 'Pedidos desde la carta QR' salió de la lista — incluida en BASICO (#261).
   'KDS — pantalla de cocina',
   // HOTFIX #230: 'App Mesero con PIN' salió de la lista — incluida en BASICO (#229).
-  'Inventario y alertas de stock',
-  'Fidelización, Campañas y Cupones',
+  'Inventario, fichas técnicas y alertas de stock',
+  'Clientes, Fidelización, Campañas y Cupones',
   'Mapeo de Delivery (Uber Eats, PedidosYa)',
   'Control de Asistencia con kiosco',
 ];

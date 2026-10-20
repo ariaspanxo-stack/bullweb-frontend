@@ -272,7 +272,7 @@ export default function RegisterTenant() {
                   $34.000<span className="text-xs font-semibold text-slate-400">/mes</span>
                 </p>
                 <ul className="space-y-0.5">
-                  {['POS + tienda online + carta QR', 'Boletas electrónicas SII', 'KDS cocina + App Mesero', 'Inventario y fidelización'].map(f => (
+                  {['Todo lo del Básico', 'Boletas electrónicas SII', 'KDS cocina, inventario y fichas', 'Clientes, fidelización y cupones'].map(f => (
                     <li key={f} className="flex items-center gap-1.5 text-[11px] text-slate-600">
                       <Check className="w-3 h-3 text-indigo-500 flex-shrink-0" />
                       {f}
@@ -299,7 +299,7 @@ export default function RegisterTenant() {
                   $19.900<span className="text-xs font-semibold text-slate-400">/mes</span>
                 </p>
                 <ul className="space-y-0.5">
-                  {['POS, tienda online y carta visual', 'Gestión de mesas desde el POS', 'Reportes básicos de venta', 'Sin boletas SII · sin KDS · sin app mesero'].map(f => (
+                  {['POS completo: mesas, mostrador, delivery y caja', 'Carta QR con pedidos y App Mesero', 'Impresión y reportes operativos', 'Sin boletas SII · sin KDS · sin inventario'].map(f => (
                     <li key={f} className="flex items-center gap-1.5 text-[11px] text-slate-600">
                       <Check className="w-3 h-3 text-orange-500 flex-shrink-0" />
                       {f}

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, X, Users } from 'lucide-react';
 import type { Customer } from '../pages/Restaurant/types';
 import customersService from '../services/customersService';
+import { usePlan } from '@/hooks/usePlan';
 
 interface CustomerAutocompleteProps {
   onSelect: (customer: Customer) => void;
@@ -16,9 +17,11 @@ export default function CustomerAutocomplete({ onSelect, onSaveNew, placeholder,
   const [showDropdown, setShowDropdown] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  // HOTFIX 262: clientes/CRM no está en Básico — sin búsqueda
+  const { isBasico } = usePlan();
 
   useEffect(() => {
-    if (query.length >= 2) {
+    if (!isBasico && query.length >= 2) {
       searchCustomersDebounced();
     } else {
       setResults([]);

@@ -13,6 +13,8 @@ import ProductModal from '../../components/products/ProductModal';
 import ConfirmDialog from '../../components/common/ConfirmDialog';
 import ProductTabs from '../../components/products/ProductTabs';
 import type { TabType } from '../../components/products/ProductTabs';
+import { ImportMenuModal } from '../../components/products/ImportMenuModal'; // HOTFIX 268
+import { useIsSuperAdmin } from '../../hooks/useIsSuperAdmin';
 import CategoriesTab from '../../components/products/CategoriesTab';
 import StationsTab from '../../components/products/StationsTab';
 import { PAGE_BG } from '../../components/products/productsUi';
@@ -96,6 +98,8 @@ const Products = () => {
   // F-7: queryClient para invalidar caché compartida con /inventory
   const queryClient = useQueryClient();
   const canManage = usePermission('products.manage');
+  const isSuperAdmin = useIsSuperAdmin(); // HOTFIX 268: Importar carta solo SuperAdmin
+  const [isImportOpen, setIsImportOpen] = useState(false);
 
   // Cargar datos por tab (lazy)
   const loadTabData = async (tab: string, force = false) => {
@@ -826,6 +830,7 @@ const Products = () => {
             products={products}
             categories={categoriesWithCounts}
             onAddProduct={handleCreateProduct}
+            onImportMenu={isSuperAdmin ? () => setIsImportOpen(true) : undefined}
             onEditProduct={handleEditProduct}
             onDuplicateProduct={handleDuplicateProduct}
             onDeleteProduct={handleDeleteProduct}
@@ -879,6 +884,15 @@ const Products = () => {
           <StationsTab onStationsChange={() => loadTabData('estaciones', true)} />
         )}
       </div>
+
+      {/* HOTFIX 268: Importar carta (solo SuperAdmin) */}
+      {isSuperAdmin && (
+        <ImportMenuModal
+          isOpen={isImportOpen}
+          onClose={() => setIsImportOpen(false)}
+          onImported={() => { loadTabData('productos', true); }}
+        />
+      )}
 
       {/* Modal de crear/editar producto */}
       <ProductModal

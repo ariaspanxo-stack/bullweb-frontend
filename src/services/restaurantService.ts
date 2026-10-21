@@ -261,6 +261,7 @@ class RestaurantService {
         payload.deliveryFee     = d.deliveryFee ?? 0;      // siempre enviar, aunque sea 0
         if (d.customerId)       payload.customerId = d.customerId;
         if (d.paymentMethodId)  payload.paymentMethodId = d.paymentMethodId;
+        if (d.cashAmount && d.cashAmount > 0) payload.cashAmount = Math.round(d.cashAmount); // HOTFIX 269
       }
 
       console.log('[RS] 📤 POST /pos/orders:', JSON.stringify(payload, null, 2));

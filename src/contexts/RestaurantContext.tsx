@@ -157,7 +157,7 @@ interface RestaurantContextValue {
   handleConfirmOrderPayment:  (payments: Payment[], tips: Payment[], discount?: { type: 'PERCENTAGE' | 'FIXED'; value: number }, couponId?: string) => Promise<void>;
   handleSendToKitchen:        (customerId?: string, customerName?: string, customerPhone?: string, orderNote?: string) => Promise<void>;
   handleCreateMostradorOrder: (cart: CartItem[], customerName: string, deliveryPhone: string, pickupTime?: string, paymentMethod?: string, customerId?: string) => Promise<void>;
-  handleCreateDeliveryOrder:  (cart: CartItem[], customerName: string, customerPhone: string, customerAddress: string, deliveryCity: string, deliveryNotes: string, deliveryCost: number, paymentMethod?: string, customerId?: string) => Promise<void>;
+  handleCreateDeliveryOrder:  (cart: CartItem[], customerName: string, customerPhone: string, customerAddress: string, deliveryCity: string, deliveryNotes: string, deliveryCost: number, paymentMethod?: string, customerId?: string, cashAmount?: number) => Promise<void>;
   handleCloseCart:            () => void;
   handleRemoveExistingItem:   (itemId: string, reason: string) => Promise<void>;
   handleUpdateMostradorStatus:(order: Sale, newStatus: string) => Promise<void>;
@@ -1013,6 +1013,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
     deliveryCost:    number,
     paymentMethodId?: string,
     customerId?:     string,
+    cashAmount?:     number, // HOTFIX 269: "paga con"
   ) => {
     try {
       if (!customerName || !customerPhone || !customerAddress) {
@@ -1033,6 +1034,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
         customerId:      customerId || undefined,
         deliveryFee:     deliveryCost,
         paymentMethodId: paymentMethodId || undefined,
+        cashAmount:      cashAmount && cashAmount > 0 ? cashAmount : undefined,
         items:           cartItems.map(item => ({
           productId:      item.productId,
           quantity:       item.quantity,

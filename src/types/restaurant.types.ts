@@ -170,6 +170,7 @@ export interface CreateDeliverySaleDTO {
   customerAddress: string;
   deliveryFee?: number;
   paymentMethodId?: string;
+  cashAmount?: number;          // HOTFIX 269: "paga con" (efectivo, opcional)
   items: CreateDineInSaleDTO['items'];
   notes?: string;
 }

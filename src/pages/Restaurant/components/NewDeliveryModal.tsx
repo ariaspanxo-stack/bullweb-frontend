@@ -45,7 +45,7 @@ import { useRestaurant } from '../../../contexts/RestaurantContext';
 interface NewDeliveryModalProps {
   products: Product[];
   categories: ProductCategory[];
-  onConfirm: (cart: CartItem[], customerName: string, customerPhone: string, customerAddress: string, deliveryCity: string, deliveryNotes: string, deliveryCost: number, paymentMethod?: string, customerId?: string) => Promise<void>;
+  onConfirm: (cart: CartItem[], customerName: string, customerPhone: string, customerAddress: string, deliveryCity: string, deliveryNotes: string, deliveryCost: number, paymentMethod?: string, customerId?: string, cashAmount?: number) => Promise<void>;
   onClose: () => void;
 }
 
@@ -88,6 +88,8 @@ export const NewDeliveryModal = ({
   // Medios de pago (cargados desde el backend)
   const [paymentMethods, setPaymentMethods] = useState<any[]>([]);
   const [paymentMethodId, setPaymentMethodId] = useState<string | undefined>();
+  // HOTFIX 269: "paga con" (opcional, solo si el medio elegido es efectivo)
+  const [cashAmount, setCashAmount] = useState('');
 
   const [saveToCustomers, setSaveToCustomers] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -272,6 +274,11 @@ export const NewDeliveryModal = ({
   const tax = 0;
   const deliveryFeeValue = parseInt(deliveryCost) || 0;
   const total = subtotal + deliveryFeeValue;
+  // HOTFIX 269: el vuelto se calcula sobre el total a cobrar (subtotal + despacho)
+  const selectedMethodName = (paymentMethods.find((m: any) => m.id === paymentMethodId)?.name ?? '') as string;
+  const isCash = /efectivo|cash/i.test(selectedMethodName.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
+  const cashNum = parseInt(cashAmount) || 0;
+  const cashToSend = isCash && cashNum > 0 ? cashNum : undefined;
 
   // ========== VALIDACIÓN PASO 1 (solo cliente) ==========
   const validateClient = (): boolean => {
@@ -344,7 +351,8 @@ export const NewDeliveryModal = ({
         deliveryNotes.trim(),
         deliveryFeeValue,
         paymentMethodId,
-        customerId
+        customerId,
+        cashToSend
       );
     } catch (error: any) {
       setErrors([error?.message || 'Error al crear orden. Intenta nuevamente.']);
@@ -378,7 +386,8 @@ export const NewDeliveryModal = ({
         deliveryNotes.trim(),
         deliveryFeeValue,
         paymentMethodId,
-        customerId
+        customerId,
+        cashToSend
       );
     } catch (error: any) {
       setErrors([error?.message || 'Error al guardar orden.']);
@@ -953,6 +962,28 @@ export const NewDeliveryModal = ({
                           </button>
                         );
                       })}
+                    </div>
+                  )}
+                  {/* HOTFIX 269: paga con (opcional) - solo efectivo */}
+                  {isCash && (
+                    <div className="mt-2">
+                      <label className="block text-xs font-bold text-gray-500 mb-1" htmlFor="delivery-cash-amount">Paga con (opcional)</label>
+                      <input
+                        id="delivery-cash-amount"
+                        type="text"
+                        inputMode="numeric"
+                        value={cashAmount}
+                        onChange={(e) => setCashAmount(e.target.value.replace(/[^0-9]/g, ''))}
+                        placeholder={`Ej: ${fmt(Math.ceil(total / 1000) * 1000 || 10000)}`}
+                        className="w-full min-h-[44px] px-3 border-2 border-gray-200 rounded-xl text-sm font-bold focus:border-indigo-400 focus:outline-none"
+                      />
+                      {cashNum > 0 && (
+                        <p className="text-xs mt-1 text-gray-600">
+                          {cashNum >= total
+                            ? <>Vuelto: <b>${fmt(cashNum - total)}</b></>
+                            : <span className="text-red-600">Faltan <b>${fmt(total - cashNum)}</b> para el total</span>}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>

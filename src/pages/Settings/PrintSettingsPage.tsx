@@ -6,15 +6,9 @@ import {
   printSettingsService,
   PRINT_SETTINGS_DEFAULTS,
   fmtCurrency,
-  truncateName,
-  printId,
   type PrintSettings,
   type PrintSize,
-  type PrintHeight,
-  type PrintWidth,
-  type IdMode,
 } from '@/services/printSettingsService';
-import { generateTicketHtml, openPrintWindow } from '@/utils/printUtils';
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -54,24 +48,12 @@ function Select<T extends string>({
   );
 }
 
+// HOTFIX 270: tamaño por bloque = Normal o Grande (doble alto y ancho en la impresora)
 const SIZE_OPTIONS: { value: PrintSize; label: string }[] = [
-  { value: 'SMALL',  label: 'Pequeño' },
   { value: 'NORMAL', label: 'Normal' },
   { value: 'LARGE',  label: 'Grande' },
 ];
-const HEIGHT_OPTIONS: { value: PrintHeight; label: string }[] = [
-  { value: 'SIMPLE', label: 'Simple' },
-  { value: 'DOUBLE', label: 'Doble' },
-];
-const WIDTH_OPTIONS: { value: PrintWidth; label: string }[] = [
-  { value: 'SIMPLE', label: 'Simple' },
-  { value: 'DOUBLE', label: 'Doble' },
-];
-const ID_OPTIONS: { value: IdMode; label: string }[] = [
-  { value: 'NONE',        label: 'No incluir' },
-  { value: 'FULL',        label: 'Imprimir completo' },
-  { value: 'LAST_DIGITS', label: 'Últimos N dígitos' },
-];
+const sizeValue = (v: PrintSize): PrintSize => (v === 'LARGE' ? 'LARGE' : 'NORMAL');
 
 // Card con título naranja
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
@@ -110,36 +92,18 @@ function Row({
 function SizeRow({
   label,
   size,
-  height,
-  width,
   onSize,
-  onHeight,
-  onWidth,
 }: {
   label: string;
   size: PrintSize;
-  height: PrintHeight;
-  width: PrintWidth;
   onSize: (v: PrintSize) => void;
-  onHeight: (v: PrintHeight) => void;
-  onWidth: (v: PrintWidth) => void;
 }) {
   return (
     <div className="flex items-center gap-3 px-5 py-3.5">
       <span className="text-sm font-medium text-gray-700 w-24 flex-shrink-0">{label}</span>
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-gray-400">Tamaño</span>
-          <Select value={size} onChange={onSize} options={SIZE_OPTIONS} />
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-gray-400">Alto</span>
-          <Select value={height} onChange={onHeight} options={HEIGHT_OPTIONS} />
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-gray-400">Ancho</span>
-          <Select value={width} onChange={onWidth} options={WIDTH_OPTIONS} />
-        </div>
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-gray-400">Tamaño</span>
+        <Select value={sizeValue(size)} onChange={onSize} options={SIZE_OPTIONS} />
       </div>
     </div>
   );
@@ -221,17 +185,15 @@ function PrintPreview({ cfg }: { cfg: PrintSettings }) {
   ];
 
   const total = sampleItems.reduce((s, i) => s + i.price * i.qty, 0);
-  const sampleId = '8f3a1b9c-e2d4-4f7a-b6c5-12345678abcd';
 
+  // HOTFIX 270: Normal / Grande (en la impresora Grande es doble alto y ancho)
   const SIZE_MAP: Record<PrintSize, string> = {
-    SMALL:  '10px',
+    SMALL:  '12px',
     NORMAL: '12px',
-    LARGE:  '14px',
+    LARGE:  '17px',
   };
 
-  const headerStyle = `font-size:${SIZE_MAP[cfg.cmHeaderSize]};transform:scaleY(${cfg.cmHeaderHeight === 'DOUBLE' ? 2 : 1}) scaleX(${cfg.cmHeaderWidth === 'DOUBLE' ? 2 : 1});display:inline-block;transform-origin:left top;`;
-
-  const idStr = printId(sampleId, cfg);
+  const headerStyle = `font-size:${SIZE_MAP[cfg.cmHeaderSize]};display:inline-block;`;
 
   return (
     <div className="font-mono text-xs bg-white border border-dashed border-gray-300 rounded-lg p-4 max-w-[240px] overflow-hidden">
@@ -248,7 +210,7 @@ function PrintPreview({ cfg }: { cfg: PrintSettings }) {
         <div className="border-t border-dashed border-gray-400 my-1" />
         {sampleItems.map((item, i) => (
           <div key={i} className="flex justify-between gap-1" style={{ fontSize: SIZE_MAP[cfg.cmBodySize] }}>
-            <span>{item.qty}x {truncateName(item.name, cfg)}</span>
+            <span>{item.qty}x {item.name}</span>
             <span>{fmtCurrency(item.price * item.qty, cfg)}</span>
           </div>
         ))}
@@ -257,10 +219,9 @@ function PrintPreview({ cfg }: { cfg: PrintSettings }) {
           <span>TOTAL</span>
           <span>{fmtCurrency(total, cfg)}</span>
         </div>
-        {idStr && <div className="text-center text-gray-500 mt-1"># {idStr}</div>}
         <div className="border-t border-dashed border-gray-400 my-1" />
-        <div className="text-center text-gray-500" style={{ fontSize: '10px' }}>
-          {cfg.cmFooterText || 'Este no es un documento tributario válido'}
+        <div className="text-center text-gray-500" style={{ fontSize: SIZE_MAP[cfg.cmFooterSize] }}>
+          {cfg.cmFooterText || 'Este documento no es boleta'}
         </div>
       </div>
     </div>
@@ -351,18 +312,21 @@ export default function PrintSettingsPage() {
     }
   };
 
-  const handlePrintTest = () => {
-    const sampleItems = [
-      { name: 'Hamburguesa Clásica con Queso y Tocino', quantity: 2, unitPrice: 6990 },
-      { name: 'Bebida Cola', quantity: 1, unitPrice: 1990 },
-      { name: 'Papas Fritas', quantity: 1, unitPrice: 2490 },
-    ];
-    const total = sampleItems.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
-    const html = generateTicketHtml(
-      { tableNumber: 3, orderId: '8f3a1b9c-e2d4-4f7a-b6c5-12345678abcd', items: sampleItems, total },
-      cfg,
-    );
-    openPrintWindow(html);
+  // HOTFIX 270: prueba REAL — guarda lo pendiente y encola un job a la impresora (sale por la extensión o el agente)
+  const [testing, setTesting] = useState<'precuenta' | 'comanda' | null>(null);
+  const handlePrintTest = async (template: 'precuenta' | 'comanda') => {
+    try {
+      setTesting(template);
+      if (debounceRef.current) { clearTimeout(debounceRef.current); debounceRef.current = null; }
+      await printSettingsService.update(cfg);
+      qc.setQueryData(['print-settings'], cfg);
+      const r = await printSettingsService.test(template);
+      toast.success(`Prueba enviada a "${r.printer}"`);
+    } catch (e: any) {
+      toast.error(e?.message || 'No se pudo enviar la prueba');
+    } finally {
+      setTesting(null);
+    }
   };
 
   return (
@@ -402,62 +366,21 @@ export default function PrintSettingsPage() {
 
         {/* CARD 1 — Tamaño de letra */}
         <Card title="Tamaño de letra">
-          <SizeRow
-            label="Encabezado"
-            size={cfg.cmHeaderSize}     onSize={v   => update('cmHeaderSize', v)}
-            height={cfg.cmHeaderHeight} onHeight={v => update('cmHeaderHeight', v)}
-            width={cfg.cmHeaderWidth}   onWidth={v  => update('cmHeaderWidth', v)}
-          />
-          <SizeRow
-            label="Cuerpo"
-            size={cfg.cmBodySize}       onSize={v   => update('cmBodySize', v)}
-            height={cfg.cmBodyHeight}   onHeight={v => update('cmBodyHeight', v)}
-            width={cfg.cmBodyWidth}     onWidth={v  => update('cmBodyWidth', v)}
-          />
-          <SizeRow
-            label="Pie"
-            size={cfg.cmFooterSize}     onSize={v   => update('cmFooterSize', v)}
-            height={cfg.cmFooterHeight} onHeight={v => update('cmFooterHeight', v)}
-            width={cfg.cmFooterWidth}   onWidth={v  => update('cmFooterWidth', v)}
-          />
+          <SizeRow label="Encabezado" size={cfg.cmHeaderSize} onSize={v => update('cmHeaderSize', v)} />
+          <SizeRow label="Cuerpo"     size={cfg.cmBodySize}   onSize={v => update('cmBodySize', v)} />
+          <SizeRow label="Pie"        size={cfg.cmFooterSize} onSize={v => update('cmFooterSize', v)} />
         </Card>
 
         {/* CARD 2 — Imprimir al cerrar */}
-        <Card title="Imprimir al cerrar pedido">
+        <Card title="Imprimir al cobrar o cerrar">
           <Row
             label="Imprimir automáticamente"
-            description="Imprime la pre-cuenta al cerrar desde Mostrador, Mesas y Delivery"
+            description="Imprime el ticket de venta en la impresora de caja cuando la orden queda pagada (Mesas, Mostrador y Delivery)"
             control={<Toggle value={cfg.cmPrintOnClose} onChange={v => update('cmPrintOnClose', v)} />}
           />
         </Card>
 
-        {/* CARD 3 — Modificadores sin precio */}
-        <Card title="Imprimir grupos modificadores sin precio">
-          <Row
-            label="Imprimir modificadores sin precio"
-            description="Los modificadores con precio siempre se imprimen"
-            control={<Toggle value={cfg.cmPrintModifiers} onChange={v => update('cmPrintModifiers', v)} />}
-          />
-        </Card>
-
-        {/* CARD 4 — Largo del texto */}
-        <Card title="Largo del texto de productos">
-          <Row
-            label="Máximo de caracteres por nombre"
-            description="Largo máximo antes de truncar. Mín 4, máx 100, defecto 29."
-            control={
-              <input
-                type="number"
-                min={4}
-                max={100}
-                value={cfg.cmMaxChars}
-                onChange={e => update('cmMaxChars', Math.min(100, Math.max(4, Number(e.target.value) || 29)))}
-                className="w-20 text-sm text-center border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            }
-          />
-        </Card>
-
+        {/* HOTFIX 270: modificadores, largo del nombre, ID de venta y comanda de cancelación quedan fijos (fuera de la UI) */}
         {/* CARD 5 — Símbolo de moneda */}
         <Card title="Símbolo de moneda">
           <Row
@@ -467,37 +390,11 @@ export default function PrintSettingsPage() {
           />
         </Card>
 
-        {/* CARD 6 — ID de Venta */}
-        <Card title="ID de Venta">
-          <Row
-            label="Incluir ID en el ticket"
-            description="Identificador de la venta en la Pre-cuenta"
-            control={
-              <Select value={cfg.cmIdMode} onChange={v => update('cmIdMode', v)} options={ID_OPTIONS} />
-            }
-          />
-          {cfg.cmIdMode === 'LAST_DIGITS' && (
-            <Row
-              label="Cantidad de dígitos"
-              control={
-                <input
-                  type="number"
-                  min={1}
-                  max={36}
-                  value={cfg.cmIdDigits}
-                  onChange={e => update('cmIdDigits', Math.min(36, Math.max(1, Number(e.target.value) || 4)))}
-                  className="w-20 text-sm text-center border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-              }
-            />
-          )}
-        </Card>
-
         {/* CARD 7 — Encabezado y Pie */}
         <Card title="Encabezado y Pie">
           <Row
             label="Personalizar texto"
-            description="Texto del encabezado y pie de la Pre-cuenta"
+            description="Texto del encabezado y pie de la pre-cuenta, el delivery y el ticket de venta"
             control={
               <button
                 onClick={() => setShowCmText(true)}
@@ -523,14 +420,15 @@ export default function PrintSettingsPage() {
         <Card title="Prueba de impresión">
           <Row
             label="Imprimir prueba de Pre-cuenta"
-            description="Usa la configuración actual para generar un ticket de prueba"
+            description="Guarda y envía una pre-cuenta de ejemplo a la impresora de caja"
             control={
               <button
-                onClick={handlePrintTest}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-800 hover:bg-gray-900 text-white rounded-lg transition-colors"
+                onClick={() => handlePrintTest('precuenta')}
+                disabled={testing !== null}
+                className="flex items-center gap-1.5 min-h-[44px] px-4 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors disabled:opacity-60"
               >
-                <Printer className="w-3.5 h-3.5" />
-                Imprimir prueba
+                <Printer className="w-4 h-4" />
+                {testing === 'precuenta' ? 'Enviando...' : 'Imprimir prueba'}
               </button>
             }
           />
@@ -542,31 +440,16 @@ export default function PrintSettingsPage() {
 
         {/* CARD 1 — Tamaño de letra */}
         <Card title="Tamaño de letra">
-          <SizeRow
-            label="Encabezado"
-            size={cfg.kdHeaderSize}     onSize={v   => update('kdHeaderSize', v)}
-            height={cfg.kdHeaderHeight} onHeight={v => update('kdHeaderHeight', v)}
-            width={cfg.kdHeaderWidth}   onWidth={v  => update('kdHeaderWidth', v)}
-          />
-          <SizeRow
-            label="Cuerpo"
-            size={cfg.kdBodySize}       onSize={v   => update('kdBodySize', v)}
-            height={cfg.kdBodyHeight}   onHeight={v => update('kdBodyHeight', v)}
-            width={cfg.kdBodyWidth}     onWidth={v  => update('kdBodyWidth', v)}
-          />
-          <SizeRow
-            label="Pie"
-            size={cfg.kdFooterSize}     onSize={v   => update('kdFooterSize', v)}
-            height={cfg.kdFooterHeight} onHeight={v => update('kdFooterHeight', v)}
-            width={cfg.kdFooterWidth}   onWidth={v  => update('kdFooterWidth', v)}
-          />
+          <SizeRow label="Encabezado" size={cfg.kdHeaderSize} onSize={v => update('kdHeaderSize', v)} />
+          <SizeRow label="Cuerpo"     size={cfg.kdBodySize}   onSize={v => update('kdBodySize', v)} />
+          <SizeRow label="Pie"        size={cfg.kdFooterSize} onSize={v => update('kdFooterSize', v)} />
         </Card>
 
         {/* CARD 2 — Encabezado y pie */}
         <Card title="Encabezado y Pie de Comanda">
           <Row
             label="Personalizar texto"
-            description="Texto del encabezado y pie de la comanda de cocina"
+            description="Texto del encabezado y pie de la comanda de cocina y de mostrador"
             control={
               <button
                 onClick={() => setShowKdText(true)}
@@ -588,12 +471,21 @@ export default function PrintSettingsPage() {
           )}
         </Card>
 
-        {/* CARD 3 — Comanda de cancelación */}
-        <Card title="Comanda de cancelación">
+        {/* HOTFIX 270 — Prueba de impresión de comanda (job real) */}
+        <Card title="Prueba de impresión">
           <Row
-            label="Habilitar comanda de cancelación"
-            description="Imprime una comanda cuando se cancela un ítem de la orden"
-            control={<Toggle value={cfg.kdPrintCancel} onChange={v => update('kdPrintCancel', v)} />}
+            label="Imprimir prueba de Comanda"
+            description="Guarda y envía una comanda de ejemplo a la impresora de cocina (o a la de caja si no hay)"
+            control={
+              <button
+                onClick={() => handlePrintTest('comanda')}
+                disabled={testing !== null}
+                className="flex items-center gap-1.5 min-h-[44px] px-4 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors disabled:opacity-60"
+              >
+                <Printer className="w-4 h-4" />
+                {testing === 'comanda' ? 'Enviando...' : 'Imprimir prueba'}
+              </button>
+            }
           />
         </Card>
       </SectionBlock>

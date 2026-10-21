@@ -91,6 +91,12 @@ export const printSettingsService = {
     const { data } = await api.patch<PrintSettings>('/settings/print', patch);
     return { ...PRINT_SETTINGS_DEFAULTS, ...data };
   },
+
+  /** HOTFIX 270: prueba de impresion REAL (job a una impresora del tenant con la config guardada). */
+  async test(template: 'precuenta' | 'comanda'): Promise<{ job_id: string; printer: string; printer_type: string; template: string }> {
+    const { data } = await api.post<{ job_id: string; printer: string; printer_type: string; template: string }>('/settings/print/test', { template });
+    return data;
+  },
 };
 
 // ─── Helpers para generar HTML ─────────────────────────────────────────────

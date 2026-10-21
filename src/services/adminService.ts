@@ -1518,6 +1518,24 @@ export const adminService = {
     const { data } = await api.get('/admin/tenants/stats');
     return data;
   },
+  // ── HOTFIX 268: importar carta (solo SuperAdmin) ──────────────────────────
+  async menuImportParse(files: File[]): Promise<MenuImportParseResult> {
+    const fd = new FormData();
+    files.forEach(f => fd.append('files', f));
+    const { data } = await api.postForm<MenuImportParseResult>('/admin/menu-import/parse', fd, 120_000);
+    return data;
+  },
+
+  async menuImportCommit(tenantId: string, items: MenuImportCommitItem[]): Promise<MenuImportCommitResult> {
+    const { data } = await api.post<MenuImportCommitResult>('/admin/menu-import/commit', { tenantId, items }, { timeoutMs: 180_000 });
+    return data;
+  },
+
+  async menuImportStations(tenantId: string): Promise<{ id: string; name: string }[]> {
+    const { data } = await api.get<{ id: string; name: string }[]>('/admin/menu-import/stations', { params: { tenantId } });
+    return data;
+  },
+
   async listTenants(search?: string): Promise<Tenant[]> {
     const { data } = await api.get('/admin/tenants', { params: search ? { search } : {} });
     return data;
@@ -2420,6 +2438,12 @@ export interface PrintersHealth {
 }
 
 // ── Fase 6: Notificaciones + Routing + QR ─────────────────────────────────────
+
+// HOTFIX 268
+export interface MenuImportRow { categoria: string; nombre: string; precio: number; descripcion: string; avisos?: string[] }
+export interface MenuImportParseResult { fuente: 'imagen' | 'pdf' | 'excel'; filas: MenuImportRow[]; costo: { model: string; promptTokens: number; outputTokens: number; costUsd: number } | null }
+export interface MenuImportCommitItem { categoria: string; nombre: string; precio: number; descripcion?: string; stationId?: string | null }
+export interface MenuImportCommitResult { tenantId: string; categoriasCreadas: number; productosCreados: number; productosActualizados: number; conflictos: { nombre: string; motivo: string }[]; errores: { nombre: string; error: string }[] }
 
 export interface PrintNotificationSettings {
   id?:              string;

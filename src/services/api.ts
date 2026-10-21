@@ -758,11 +758,11 @@ const httpClient = {
   post: async <T = any>(
     url: string,
     body?: any,
-    options?: { responseType?: 'blob' }
+    options?: { responseType?: 'blob'; timeoutMs?: number } // HOTFIX 268: timeoutMs opcional
   ): Promise<{ data: T }> => {
     const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
     // P0-3: el POST de pago viaja con 60s (flujo Flow); el resto, 10s.
-    const timeoutMs = isPaymentCreateUrl(fullUrl) ? PAYMENT_TIMEOUT_MS : DEFAULT_TIMEOUT_MS;
+    const timeoutMs = options?.timeoutMs ?? (isPaymentCreateUrl(fullUrl) ? PAYMENT_TIMEOUT_MS : DEFAULT_TIMEOUT_MS);
     const response = await fetchWithRefresh(() =>
       fetch(fullUrl, {
         method:  'POST',
@@ -782,7 +782,7 @@ const httpClient = {
 
   // Subida de archivos (multipart/form-data).
   // NO setea Content-Type: el navegador debe generar el boundary automáticamente.
-  postForm: async <T = any>(url: string, formData: FormData): Promise<{ data: T }> => {
+  postForm: async <T = any>(url: string, formData: FormData, timeoutMs?: number): Promise<{ data: T }> => { // HOTFIX 268: timeoutMs opcional
     const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
     // Headers de auth SIN Content-Type application/json
     const headers: HeadersInit = {};
@@ -798,7 +798,8 @@ const httpClient = {
         method:  'POST',
         headers,
         body:    formData,
-      })
+      }),
+      timeoutMs
     );
     const data = await handleResponse<T>(response);
     return { data };

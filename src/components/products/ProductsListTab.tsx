@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
   Plus,
+  FileUp,
   Grid3x3,
   Table as TableIcon,
   Package,
@@ -38,6 +39,7 @@ interface ProductsListTabProps {
   products: Product[];
   categories: ProductCategory[];
   onAddProduct: () => void;
+  onImportMenu?: () => void; // HOTFIX 268: solo SuperAdmin
   onEditProduct: (product: Product) => void;
   onDuplicateProduct: (product: Product) => void;
   onDeleteProduct: (product: Product) => void;
@@ -57,6 +59,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
   products,
   categories,
   onAddProduct,
+  onImportMenu,
   onEditProduct,
   onDuplicateProduct,
   onDeleteProduct,
@@ -239,12 +242,20 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
               {filteredProducts.length !== products.length && ` (${products.length} en total)`}
             </p>
           </div>
-          {canManage && (
-            <button onClick={onAddProduct} className={BTN_PRIMARY}>
-              <Plus className="w-5 h-5" />
-              Nuevo producto
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {onImportMenu && (
+              <button onClick={onImportMenu} className={BTN_OUTLINE}>
+                <FileUp className="w-5 h-5" />
+                Importar carta
+              </button>
+            )}
+            {canManage && (
+              <button onClick={onAddProduct} className={BTN_PRIMARY}>
+                <Plus className="w-5 h-5" />
+                Nuevo producto
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Búsqueda, exportar y vista */}

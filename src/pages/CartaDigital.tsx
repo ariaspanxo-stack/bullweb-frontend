@@ -521,6 +521,118 @@ function normalizeWhatsAppPhone(raw: string): string | null {
   return null;
 }
 
+// HOTFIX 273 — "¿Cómo estuvo tu experiencia?": 5 estrellas (44 px, naranja) + comentario opcional.
+// POST /api/public/qr-orders/:id/review. >= 4 → gracias + "Dejar reseña en Google" (si el local configuró el enlace);
+// <= 3 → gracias sin enlace. 409 (ya reseñado) se muestra como ya recibido. Definido fuera de CartSheet (estado propio).
+const REVIEW_ORANGE = '#F97316';
+function QrReviewBlock({ orderId, tenantSlug }: { orderId: string; tenantSlug: string | null }) {
+  const [rating,     setRating]     = useState(0);
+  const [comment,    setComment]    = useState('');
+  const [sending,    setSending]    = useState(false);
+  const [error,      setError]      = useState<string | null>(null);
+  const [done,       setDone]       = useState<null | { rating: number; googleReviewUrl: string | null; already?: boolean }>(null);
+
+  const send = async () => {
+    if (rating < 1) return;
+    setSending(true);
+    setError(null);
+    try {
+      const res  = await fetch(`/api/public/qr-orders/${orderId}/review`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ rating, comment: comment.trim() || undefined, tenantSlug: tenantSlug ?? undefined }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.status === 201 && json?.success) {
+        setDone({ rating, googleReviewUrl: json.data?.googleReviewUrl ?? null });
+      } else if (res.status === 409) {
+        setDone({ rating, googleReviewUrl: null, already: true });
+      } else {
+        setError(json?.error ?? 'No pudimos guardar tu opinión. Intenta nuevamente.');
+      }
+    } catch {
+      setError('No pudimos guardar tu opinión. Revisa tu conexión.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  if (done) {
+    return (
+      <div className="rounded-xl px-3 py-3 space-y-2" style={{ backgroundColor: 'rgba(249,115,22,0.10)', border: '1px solid rgba(249,115,22,0.35)' }}>
+        <p className="text-sm font-semibold text-orange-300">
+          {done.already
+            ? 'Ya recibimos tu opinión sobre este pedido. ¡Gracias!'
+            : done.rating >= 4 ? '¡Gracias por tu opinión! Nos alegra que te haya gustado.' : 'Gracias por contarnos. Tu comentario nos ayuda a mejorar.'}
+        </p>
+        {!done.already && done.rating >= 4 && done.googleReviewUrl && (
+          <a
+            href={done.googleReviewUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full min-h-[44px] rounded-2xl font-bold text-base flex items-center justify-center gap-2 text-white transition-colors"
+            style={{ background: REVIEW_ORANGE }}
+          >
+            Dejar reseña en Google
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl px-3 py-3 space-y-3" style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)' }}>
+      <p className="text-sm font-semibold text-zinc-200">¿Cómo estuvo tu experiencia?</p>
+      <div className="flex items-center gap-1" role="radiogroup" aria-label="Calificación">
+        {[1, 2, 3, 4, 5].map(n => (
+          <button
+            key={n}
+            type="button"
+            role="radio"
+            aria-checked={rating === n}
+            aria-label={`${n} estrella${n === 1 ? '' : 's'}`}
+            onClick={() => setRating(n)}
+            disabled={sending}
+            className="w-11 h-11 flex items-center justify-center rounded-lg transition-transform active:scale-90"
+          >
+            <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true">
+              <path
+                d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"
+                fill={n <= rating ? REVIEW_ORANGE : 'none'}
+                stroke={REVIEW_ORANGE}
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        ))}
+      </div>
+      {rating > 0 && (
+        <>
+          <textarea
+            value={comment}
+            onChange={e => setComment(e.target.value.slice(0, 500))}
+            rows={2}
+            placeholder="Cuéntanos más (opcional)"
+            className="w-full rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 outline-none"
+            style={{ backgroundColor: '#27272a', border: '1px solid rgba(255,255,255,0.10)' }}
+          />
+          <button
+            type="button"
+            onClick={send}
+            disabled={sending}
+            className="w-full min-h-[44px] rounded-2xl font-bold text-base text-white transition-opacity disabled:opacity-50"
+            style={{ background: REVIEW_ORANGE }}
+          >
+            {sending ? 'Enviando…' : 'Enviar opinión'}
+          </button>
+        </>
+      )}
+      {error && <p className="text-xs text-red-400">{error}</p>}
+    </div>
+  );
+}
+
 // ── Definidos FUERA de CartSheet para evitar que React los destruya
 // en cada re-render, causando pérdida de foco en inputs ─────────────
 // HOTFIX #240 — Sheet delimitado al VIEWPORT real (segundo reo del
@@ -1189,6 +1301,11 @@ function CartSheet({
                     {ok}
                     <p className="text-base font-bold text-green-400">Pedido entregado. ¡Gracias!</p>
                   </div>
+                )}
+
+                {/* HOTFIX 273 — reseña al llegar a listo/entregado, una sola vez por pedido */}
+                {(st === 'READY' || st === 'DELIVERED') && !liveStatus.reviewed && orderId && (
+                  <QrReviewBlock orderId={orderId} tenantSlug={tenantSlug} />
                 )}
 
                 {st === 'REJECTED' && (

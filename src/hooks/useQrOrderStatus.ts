@@ -25,6 +25,8 @@ export interface QrOrderLiveStatus {
   reason:           string | null;
   whatsapp:         string | null;
   minutesSinceSent: number;
+  /** HOTFIX 273 — el pedido ya tiene reseña (la carta no la vuelve a pedir). */
+  reviewed:         boolean;
   /** Momento (ms) en que se leyó minutesSinceSent, para contar el tiempo entre polls. */
   fetchedAt:        number;
 }
@@ -34,7 +36,7 @@ export const QR_STATUS_POLL_MS = 10_000;
 
 const INITIAL: QrOrderLiveStatus = {
   status: 'PENDING', orderType: null, code: null, estimatedMinutes: null, deliveryFee: null,
-  subtotal: null, total: null, reason: null, whatsapp: null, minutesSinceSent: 0, fetchedAt: Date.now(),
+  subtotal: null, total: null, reason: null, whatsapp: null, minutesSinceSent: 0, reviewed: false, fetchedAt: Date.now(),
 };
 
 export function useQrOrderStatus(orderId: string | null): QrOrderLiveStatus {
@@ -68,6 +70,7 @@ export function useQrOrderStatus(orderId: string | null): QrOrderLiveStatus {
           reason:           d.reason ?? null,
           whatsapp:         d.whatsapp ?? null,
           minutesSinceSent: Number(d.minutesSinceSent ?? 0),
+          reviewed:         d.reviewed === true,
           fetchedAt:        Date.now(),
         });
         if (TERMINAL.includes(d.status)) {

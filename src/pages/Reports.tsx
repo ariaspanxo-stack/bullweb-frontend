@@ -18,11 +18,12 @@ import { BalanceTab }   from '@/components/reports/tabs/BalanceTab';
 import { MesasTab }     from '@/components/reports/tabs/MesasTab';
 import { MeserosTab }   from '@/components/reports/tabs/MeserosTab';
 import { CocinaTab }    from '@/components/reports/tabs/CocinaTab';
+import { ResenasTab }   from '@/components/reports/tabs/ResenasTab'; // HOTFIX 273
 import { formatCurrency } from '@/lib/utils';
 import { useEffect } from 'react';
 import { usePlan } from '@/hooks/usePlan';
 
-type Tab = 'ventas' | 'productos' | 'pagos' | 'stock' | 'compras' | 'gastos' | 'balance' | 'mesas' | 'meseros' | 'cocina' | 'cierre';
+type Tab = 'ventas' | 'productos' | 'pagos' | 'stock' | 'compras' | 'gastos' | 'balance' | 'mesas' | 'meseros' | 'cocina' | 'resenas' | 'cierre';
 
 const TABS: Array<{ id: Tab; label: string; icon: React.ElementType }> = [
   { id: 'ventas',    label: 'Ventas',     icon: TrendingUp    },
@@ -35,6 +36,7 @@ const TABS: Array<{ id: Tab; label: string; icon: React.ElementType }> = [
   { id: 'mesas',     label: 'Mesas',      icon: LayoutGrid    },
   { id: 'meseros',   label: 'Meseros',    icon: Users         },
   { id: 'cocina',    label: 'Cocina',     icon: ChefHat       },
+  { id: 'resenas',   label: 'Reseñas',    icon: Star          }, // HOTFIX 273
   { id: 'cierre',    label: 'Cierre Mes', icon: CalendarRange },
 ];
 
@@ -247,6 +249,7 @@ function ReportsInner() {
         {activeTab === 'mesas'     && <MesasTab />}
         {activeTab === 'meseros'   && <MeserosTab />}
         {activeTab === 'cocina'    && <CocinaTab />}
+        {activeTab === 'resenas'   && <ResenasTab />}
         {activeTab === 'cierre'    && <MonthlyClose />}
       </div>
     </div>

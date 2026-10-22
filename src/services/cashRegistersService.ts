@@ -204,8 +204,9 @@ export const cashRegistersService = {
 
   // HOTFIX 271 — imprimir arqueo (cerrado o parcial) en la impresora de caja del tenant
   async printArqueo(sessionId: string): Promise<{ job_id: string; printer: string; partial: boolean }> {
-    const { data } = await api.post<ApiResponse>(`/cash-registers/sessions/${sessionId}/print-arqueo`, {});
-    return data.data;
+    const { data } = await api.post<any>(`/cash-registers/sessions/${sessionId}/print-arqueo`, {});
+    // HOTFIX 273: api.post ya desenvuelve { success, data }; antes data.data era undefined (toast sin impresora ni "parcial")
+    return (data?.job_id ? data : data?.data) as { job_id: string; printer: string; partial: boolean };
   },
 
   async getSessionCuadre(registerId: string) {

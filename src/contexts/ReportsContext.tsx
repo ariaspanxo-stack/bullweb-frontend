@@ -40,7 +40,7 @@ export const PURCHASES_PAGE_SIZE = 50;
 
 export const CHART_COLORS = ['#f97316', '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6'];
 
-export type Tab = 'ventas' | 'productos' | 'pagos' | 'stock' | 'compras' | 'gastos' | 'balance' | 'mesas' | 'meseros' | 'cocina' | 'cierre';
+export type Tab = 'ventas' | 'productos' | 'pagos' | 'stock' | 'compras' | 'gastos' | 'balance' | 'mesas' | 'meseros' | 'cocina' | 'resenas' | 'cierre'; // HOTFIX 273: resenas
 
 // ============================================================================
 // HELPERS (exportados para uso en tabs)
@@ -329,6 +329,10 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
         toast.error('Export de cocina no disponible — tiempos en calibración');
         return;
       }
+      if (activeTab === 'resenas') { // HOTFIX 273
+        toast.error('Export de reseñas no disponible');
+        return;
+      }
       const typeMap: Record<Tab, string> = {
         ventas:    'sales',
         productos: 'products',
@@ -340,6 +344,7 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
         balance:   'balance',
         meseros:   'waiters',
         cocina:    'kitchen',
+        resenas:   'sales', // HOTFIX 273: no se usa (export bloqueado arriba)
         cierre:    'sales',
       };
       await reportsService.exportReport(typeMap[activeTab] ?? 'sales', {

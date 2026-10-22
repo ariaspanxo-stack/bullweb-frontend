@@ -22,7 +22,8 @@ export function useQrAcceptDefaults(): QrAcceptDefaults {
   useEffect(() => {
     let alive = true;
     api.get<any>('/qr-orders/defaults')
-      .then(r => { const d = r.data?.data; if (alive && d) setDefaults({ ...FALLBACK_DEFAULTS, ...d }); })
+      // HOTFIX 273: api.get ya desenvuelve { success, data } (handleResponse); antes se leía r.data.data (undefined)
+      .then(r => { const d = r.data?.pickupMinutes != null ? r.data : r.data?.data; if (alive && d) setDefaults({ ...FALLBACK_DEFAULTS, ...d }); })
       .catch(() => { /* sin red: quedan 15/45/2000 */ });
     return () => { alive = false; };
   }, []);

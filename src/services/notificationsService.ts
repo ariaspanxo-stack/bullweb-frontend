@@ -6,7 +6,8 @@ export type NotifEventType =
   | 'LOW_STOCK'
   | 'OUT_OF_STOCK'
   | 'CASH_CLOSE'
-  | 'TABLE_REQUEST';
+  | 'TABLE_REQUEST'
+  | 'LOW_REVIEW'; // HOTFIX 273 — reseña QR de 1 o 2 estrellas
 
 export interface RecentNotification {
   id:        string;

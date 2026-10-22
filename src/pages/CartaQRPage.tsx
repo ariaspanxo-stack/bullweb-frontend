@@ -145,6 +145,8 @@ export default function CartaQRPage() {
   const [cartaAddress, setCartaAddress] = useState('');
   const [cartaPhone,   setCartaPhone]   = useState('');
   const [cartaWhatsApp, setCartaWhatsApp] = useState('');
+  const [googleReviewUrl, setGoogleReviewUrl] = useState(''); // HOTFIX 273
+  const [googleReviewUrlError, setGoogleReviewUrlError] = useState<string | null>(null);
   const [cartaEmail,   setCartaEmail]   = useState('');
 
   // ── Estado: Analíticas ───────────────────────────────────────
@@ -189,6 +191,7 @@ export default function CartaQRPage() {
         if (s.cartaAddress !== undefined) setCartaAddress(s.cartaAddress ?? '');
         if (s.cartaPhone  !== undefined) setCartaPhone(s.cartaPhone ?? '');
         if (s.cartaWhatsApp !== undefined) setCartaWhatsApp(s.cartaWhatsApp ?? '');
+        if (s.googleReviewUrl !== undefined) setGoogleReviewUrl(s.googleReviewUrl ?? ''); // HOTFIX 273
         if (s.cartaEmail  !== undefined) setCartaEmail(s.cartaEmail ?? '');
         // HOTFIX 272 — minutos por defecto al aceptar (el backend ya entrega 15/45 si no hay)
         if (s.qrPickupMinutesDefault   != null) setQrPickupMinutes(String(s.qrPickupMinutesDefault));
@@ -300,6 +303,12 @@ export default function CartaQRPage() {
   };
 
   const handleSavePersonal = async () => {
+    // HOTFIX 273 — el enlace de Google debe ser https:// (el backend también lo valida)
+    if (googleReviewUrl.trim() && !/^https:[/][/][^ ]+$/i.test(googleReviewUrl.trim())) {
+      setGoogleReviewUrlError('El enlace debe empezar con https:// y no tener espacios.');
+      return;
+    }
+    setGoogleReviewUrlError(null);
     setSavingPersonal(true);
     try {
       await api.patch('/menu/carta-settings', {
@@ -311,6 +320,7 @@ export default function CartaQRPage() {
         cartaAddress:            cartaAddress || null,
         cartaPhone:              cartaPhone   || null,
         cartaWhatsApp:           cartaWhatsApp || null,
+        googleReviewUrl:         googleReviewUrl.trim() || null, // HOTFIX 273
         cartaEmail:              cartaEmail   || null,
       });
       setSavedPersonal(true);
@@ -1550,6 +1560,20 @@ export default function CartaQRPage() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
                 <p className="text-xs text-gray-400 mt-1">Si lo completas, la carta muestra el botón Pedir por WhatsApp con el pedido armado.</p>
+              </div>
+              {/* HOTFIX 273 — enlace de reseñas de Google: se ofrece al cliente que califica 4 o 5 estrellas */}
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Enlace de reseñas de Google</label>
+                <input
+                  type="url"
+                  value={googleReviewUrl}
+                  onChange={e => setGoogleReviewUrl(e.target.value.slice(0, 500))}
+                  placeholder="https://g.page/r/..."
+                  maxLength={500}
+                  className="w-full min-h-[44px] border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+                <p className="text-xs text-gray-400 mt-1">Si lo completas, quien califique 4 o 5 estrellas verá el botón Dejar reseña en Google. Debe empezar con https://</p>
+                {googleReviewUrlError && <p className="text-xs text-red-600 mt-1">{googleReviewUrlError}</p>}
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Email</label>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { RefreshCw, Loader2, FileDown, ChevronRight, Check, PlusCircle, Trash2, TrendingUp, TrendingDown, AlertTriangle, Clock, User, Info } from 'lucide-react';
+import { RefreshCw, Loader2, FileDown, ChevronRight, Check, PlusCircle, Trash2, TrendingUp, TrendingDown, AlertTriangle, Clock, User, Info, Printer } from 'lucide-react';
 import { exportSheet } from '@/utils/exportExcel';
 import { cashRegistersService } from '@/services/cashRegistersService';
 import toast from 'react-hot-toast';
@@ -253,6 +253,13 @@ export const TabArqueos = () => {
     onError: (e: any) => toast.error(e?.response?.data?.error ?? 'Error al confirmar arqueo'),
   });
 
+  // HOTFIX 271 — imprimir arqueo en la impresora de caja (la de pre-cuenta); sin impresora el backend avisa
+  const printArqueoMutation = useMutation({
+    mutationFn: (sessionId: string) => cashRegistersService.printArqueo(sessionId),
+    onSuccess: (r: any) => toast.success(`${r?.partial ? 'Arqueo parcial' : 'Arqueo'} enviado a ${r?.printer ?? 'la impresora'}.`),
+    onError: (e: any) => toast.error(e?.data?.error ?? e?.response?.data?.error ?? e?.message ?? 'No se pudo imprimir el arqueo'),
+  });
+
   const addMovementMutation = useMutation({
     mutationFn: () =>
       cashRegistersService.addMovement(selectedSession!.id, {
@@ -470,7 +477,20 @@ export const TabArqueos = () => {
                           </span>
                         )}
                       </td>
-                      <td className="px-3 py-3" onClick={e => e.stopPropagation()}>
+                      <td className="px-3 py-3 whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                        {!isDeleted && (
+                          <button
+                            onClick={() => printArqueoMutation.mutate(s.id)}
+                            disabled={printArqueoMutation.isPending}
+                            title="Imprimir arqueo"
+                            aria-label="Imprimir arqueo"
+                            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] rounded text-gray-400 hover:text-orange-500 hover:bg-orange-50 transition-colors disabled:opacity-40"
+                          >
+                            {printArqueoMutation.isPending && printArqueoMutation.variables === s.id
+                              ? <Loader2 size={16} className="animate-spin" />
+                              : <Printer size={16} />}
+                          </button>
+                        )}
                         {!isDeleted && (
                           <button
                             onClick={() => setConfirmDeleteId(s.id)}
@@ -578,6 +598,16 @@ export const TabArqueos = () => {
                 {selectedSession.status === 'OPEN' ? 'Abierto' : 'Cerrado'}
               </span>
             </div>
+            {!selectedSession.deletedAt && (
+              <button
+                onClick={() => printArqueoMutation.mutate(selectedSession.id)}
+                disabled={printArqueoMutation.isPending}
+                className="w-full min-h-[44px] mt-1 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors disabled:opacity-50"
+              >
+                {printArqueoMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
+                {isActiveSelected ? 'Imprimir arqueo parcial' : 'Imprimir arqueo'}
+              </button>
+            )}
             {cancellations?.count > 0 && (
               <div className="flex items-center justify-between bg-orange-50 rounded px-3 py-2 border border-orange-100">
                 <span className="text-orange-700 text-xs font-medium">Cancelaciones</span>

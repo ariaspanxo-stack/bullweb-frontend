@@ -202,6 +202,12 @@ export const cashRegistersService = {
     return data as { queued: number; warnings: string[] };
   },
 
+  // HOTFIX 271 — imprimir arqueo (cerrado o parcial) en la impresora de caja del tenant
+  async printArqueo(sessionId: string): Promise<{ job_id: string; printer: string; partial: boolean }> {
+    const { data } = await api.post<ApiResponse>(`/cash-registers/sessions/${sessionId}/print-arqueo`, {});
+    return data.data;
+  },
+
   async getSessionCuadre(registerId: string) {
     const { data } = await api.get<ApiResponse>(`/cash-registers/${registerId}/cuadre`);
     return data;

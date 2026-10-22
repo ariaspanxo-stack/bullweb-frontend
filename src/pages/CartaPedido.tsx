@@ -65,7 +65,7 @@ export default function CartaPedido() {
           className="w-full min-h-[44px] py-4 rounded-2xl font-bold text-white flex items-center justify-center transition-all active:scale-[0.98]"
           style={{ background: themeColor, boxShadow: `0 8px 24px ${themeColor}40` }}
         >
-          Hacer otro pedido
+          {notFound ? 'Volver al menú' : 'Hacer otro pedido'}
         </Link>
       </div>
     </div>

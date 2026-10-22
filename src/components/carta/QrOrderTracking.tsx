@@ -23,13 +23,13 @@ export function normalizeWhatsAppPhone(raw: string): string | null {
 }
 
 // ── HOTFIX 272b — pedido activo por carta en localStorage (barra fija del menú) ──
-export interface ActiveQrOrder { id: string; code: string | null; savedAt: number }
+export interface ActiveQrOrder { id: string; code: string | null; createdAt: number }
 const ACTIVE_TTL_MS = 12 * 60 * 60 * 1000; // a las 12 h se olvida aunque no haya terminado
 const activeKey = (slug: string) => `bullweb:qr-order:${slug}`;
 
 export function saveActiveQrOrder(slug: string | null, id: string, code: string | null) {
   if (!slug) return;
-  try { localStorage.setItem(activeKey(slug), JSON.stringify({ id, code, savedAt: Date.now() })); } catch { /* sin storage */ }
+  try { localStorage.setItem(activeKey(slug), JSON.stringify({ id, code, createdAt: Date.now() })); } catch { /* sin storage */ }
 }
 export function readActiveQrOrder(slug: string | null): ActiveQrOrder | null {
   if (!slug) return null;
@@ -37,7 +37,7 @@ export function readActiveQrOrder(slug: string | null): ActiveQrOrder | null {
     const raw = localStorage.getItem(activeKey(slug));
     if (!raw) return null;
     const v = JSON.parse(raw) as ActiveQrOrder;
-    if (!v?.id || !/^[0-9a-f-]{36}$/i.test(v.id) || Date.now() - Number(v.savedAt) > ACTIVE_TTL_MS) {
+    if (!v?.id || !/^[0-9a-f-]{36}$/i.test(v.id) || Date.now() - Number(v.createdAt) > ACTIVE_TTL_MS) {
       localStorage.removeItem(activeKey(slug));
       return null;
     }

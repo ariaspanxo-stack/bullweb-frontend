@@ -39,7 +39,8 @@ const INITIAL: QrOrderLiveStatus = {
   subtotal: null, total: null, reason: null, whatsapp: null, minutesSinceSent: 0, reviewed: false, fetchedAt: Date.now(),
 };
 
-export function useQrOrderStatus(orderId: string | null): QrOrderLiveStatus {
+/** HOTFIX 272b: terminal opcional (la barra fija sigue consultando en READY hasta DELIVERED o REJECTED). */
+export function useQrOrderStatus(orderId: string | null, terminal: QrOrderPhase[] = TERMINAL): QrOrderLiveStatus {
   const [state, setState] = useState<QrOrderLiveStatus>(INITIAL);
   const terminalRef = useRef(false);
 
@@ -73,7 +74,7 @@ export function useQrOrderStatus(orderId: string | null): QrOrderLiveStatus {
           reviewed:         d.reviewed === true,
           fetchedAt:        Date.now(),
         });
-        if (TERMINAL.includes(d.status)) {
+        if (terminal.includes(d.status)) {
           terminalRef.current = true;
           if (timer) clearInterval(timer);
         }

@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import * as Sentry from '@sentry/react';
 import { QrOrderTracking, normalizeWhatsAppPhone, saveActiveQrOrder, readActiveQrOrder, clearActiveQrOrder, qrTrackingPath } from '../components/carta/QrOrderTracking'; // HOTFIX 272b
-import { useQrOrderStatus } from '../hooks/useQrOrderStatus'; // HOTFIX 272b — barra fija
+import { useQrOrderStatus, type QrOrderPhase } from '../hooks/useQrOrderStatus'; // HOTFIX 272b — barra fija
 import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail, Instagram, Facebook, Globe, MessageCircle } from 'lucide-react';
 
 const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
@@ -1659,50 +1659,76 @@ function CartSheet({
   );
 }
 
-// HOTFIX 272b — barra fija con el pedido QR activo de esta carta (localStorage). Muestra el estado vivo y lleva a
-// /carta/:slug/pedido/:id. Se oculta y se olvida al entregarse; X la descarta. Portal fijo arriba + espaciador en el flujo
-// (el div raíz lleva .bw-reveal con transform: un fixed sin portal quedaría anclado al documento, ver #239/#240).
-function ActiveQrOrderBar({ tenantSlug, themeColor }: { tenantSlug: string | null; themeColor: string }) {
-  const [active, setActive] = useState(() => readActiveQrOrder(tenantSlug));
-  const live = useQrOrderStatus(active?.id ?? null);
+// HOTFIX 272b — barra fija con el pedido QR activo de esta carta (localStorage {code, createdAt} por tenant).
+// "Tu pedido CODE · estado · Ver" en naranja suave (44 px); tocar lleva a /carta/:slug/pedido/:id. Sigue consultando en
+// "listo" y se limpia sola al quedar entregado o rechazado; la ✕ pide confirmación. Portal fijo arriba + espaciador en el
+// flujo (el div raíz lleva .bw-reveal con transform: un fixed sin portal quedaría anclado al documento, ver #239/#240).
+const BAR_ORANGE = '#F97316';
+const BAR_TERMINAL: QrOrderPhase[] = ['DELIVERED', 'REJECTED'];
+function ActiveQrOrderBar({ tenantSlug }: { tenantSlug: string | null }) {
+  const [active, setActive]   = useState(() => readActiveQrOrder(tenantSlug));
+  const [confirm, setConfirm] = useState(false);
+  const live = useQrOrderStatus(active?.id ?? null, BAR_TERMINAL);
+  const ended = live.status === 'DELIVERED' || live.status === 'REJECTED';
   useEffect(() => {
-    if (active && live.status === 'DELIVERED') { clearActiveQrOrder(tenantSlug); setActive(null); }
-  }, [active, live.status, tenantSlug]);
-  if (!active || !tenantSlug || live.status === 'DELIVERED') return null;
+    if (active && ended) { clearActiveQrOrder(tenantSlug); setActive(null); }
+  }, [active, ended, tenantSlug]);
+  if (!active || !tenantSlug || ended) return null;
   const isDel = live.orderType === 'delivery';
   const label =
-    live.status === 'PENDING'   ? 'Esperando confirmación del local'
+    live.status === 'PENDING'   ? 'Esperando confirmación'
   : live.status === 'ACCEPTED'  ? `Aceptado${live.estimatedMinutes != null ? ` · ${live.estimatedMinutes} min` : ''}`
   : live.status === 'PREPARING' ? 'En cocina'
   : live.status === 'READY'     ? (isDel ? '¡Va en camino!' : '¡Listo para retirar!')
-  : live.status === 'REJECTED'  ? 'No pudo ser aceptado'
   : '';
   const code = live.code ?? active.code ?? 'Tu pedido';
+  const href = qrTrackingPath(tenantSlug, active.id);
   return (
     <>
       <div style={{ height: 60 }} aria-hidden="true" />
       {createPortal(
         <div className="fixed top-0 inset-x-0 z-[55] px-3 pt-2" role="status" aria-live="polite">
-          <div className="max-w-xl mx-auto flex items-center gap-2 rounded-2xl pl-4 pr-1 py-1 shadow-lg" style={{ backgroundColor: '#18181b', border: `1px solid ${themeColor}66` }}>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-zinc-400 truncate">Tu pedido {code}</p>
-              <p className={`text-sm font-bold truncate ${live.status === 'REJECTED' ? 'text-red-400' : live.status === 'READY' ? 'text-green-400' : 'text-white'}`}>{label}</p>
-            </div>
-            <a
-              href={qrTrackingPath(tenantSlug, active.id)}
-              className="min-h-[44px] px-4 rounded-xl font-bold text-sm text-white flex items-center"
-              style={{ background: themeColor }}
-            >
-              Ver pedido
-            </a>
-            <button
-              type="button"
-              onClick={() => { clearActiveQrOrder(tenantSlug); setActive(null); }}
-              aria-label="Ocultar seguimiento del pedido"
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-white"
-            >
-              <X className="w-4 h-4" />
-            </button>
+          <div
+            className="max-w-xl mx-auto flex items-center gap-1 rounded-2xl pl-1 pr-1 shadow-lg"
+            style={{ backgroundColor: 'rgba(249,115,22,0.16)', border: '1px solid rgba(249,115,22,0.45)', backdropFilter: 'blur(8px)' }}
+          >
+            {confirm ? (
+              <>
+                <p className="flex-1 min-w-0 pl-3 text-sm font-semibold text-orange-100 truncate">¿Ocultar el seguimiento de {code}?</p>
+                <button
+                  type="button"
+                  onClick={() => { clearActiveQrOrder(tenantSlug); setActive(null); setConfirm(false); }}
+                  className="min-h-[44px] px-4 rounded-xl font-bold text-sm text-white"
+                  style={{ background: BAR_ORANGE }}
+                >
+                  Sí, ocultar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirm(false)}
+                  className="min-h-[44px] px-3 rounded-xl font-semibold text-sm text-orange-100"
+                >
+                  No
+                </button>
+              </>
+            ) : (
+              <>
+                <a href={href} className="flex-1 min-w-0 min-h-[44px] flex items-center gap-2 pl-3 text-sm text-orange-50">
+                  <span className="font-bold truncate">Tu pedido {code}</span>
+                  <span className="text-orange-300">·</span>
+                  <span className={`truncate ${live.status === 'READY' ? 'font-bold text-green-300' : ''}`}>{label}</span>
+                  <span className="ml-auto pr-1 font-bold" style={{ color: BAR_ORANGE }}>Ver</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setConfirm(true)}
+                  aria-label="Ocultar seguimiento del pedido"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-orange-200 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>,
         document.body,
@@ -1999,7 +2025,7 @@ export default function CartaDigital() {
   return (
     <div className="min-h-screen text-white bw-reveal" style={{ backgroundColor: '#09090b' }}>
       {/* HOTFIX 272b — pedido QR activo (oculta mientras el sheet del carrito está abierto) */}
-      {!showCart && <ActiveQrOrderBar tenantSlug={tenantSlug} themeColor={themeColor} />}
+      {!showCart && <ActiveQrOrderBar tenantSlug={tenantSlug} />}
 
       {/* ── Header con Banner integrado (Hotfix #197: nombre con sufijo técnico limpio — fix de raíz → #199) ──────────── */}
       <CartaHero

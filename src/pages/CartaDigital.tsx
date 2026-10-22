@@ -2,7 +2,8 @@
 import { useParams, useSearchParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import * as Sentry from '@sentry/react';
-import { useQrOrderStatus } from '../hooks/useQrOrderStatus';
+import { QrOrderTracking, normalizeWhatsAppPhone, saveActiveQrOrder, readActiveQrOrder, clearActiveQrOrder, qrTrackingPath } from '../components/carta/QrOrderTracking'; // HOTFIX 272b
+import { useQrOrderStatus } from '../hooks/useQrOrderStatus'; // HOTFIX 272b — barra fija
 import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail, Instagram, Facebook, Globe, MessageCircle } from 'lucide-react';
 
 const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
@@ -510,128 +511,7 @@ const PAYMENT_DESC: Record<string, string> = {
   transferencia: 'Depósito / Transbank',
 };
 
-// HOTFIX 250 T2 (F5) - normaliza un teléfono chileno para wa.me:
-// strip no-dígitos → 9 dígitos empezando en 9 → anteponer 56;
-// empieza con 56 → dejar; cualquier otro caso → null.
-// (Lógica del patrón de SuperAdminTenants.tsx :91, copiada la LÓGICA, no el código.)
-function normalizeWhatsAppPhone(raw: string): string | null {
-  const digits = raw.replace(/\D/g, '');
-  if (/^9\d{8}$/.test(digits)) return `56${digits}`;
-  if (digits.startsWith('56')) return digits;
-  return null;
-}
-
-// HOTFIX 273 — "¿Cómo estuvo tu experiencia?": 5 estrellas (44 px, naranja) + comentario opcional.
-// POST /api/public/qr-orders/:id/review. >= 4 → gracias + "Dejar reseña en Google" (si el local configuró el enlace);
-// <= 3 → gracias sin enlace. 409 (ya reseñado) se muestra como ya recibido. Definido fuera de CartSheet (estado propio).
-const REVIEW_ORANGE = '#F97316';
-function QrReviewBlock({ orderId, tenantSlug }: { orderId: string; tenantSlug: string | null }) {
-  const [rating,     setRating]     = useState(0);
-  const [comment,    setComment]    = useState('');
-  const [sending,    setSending]    = useState(false);
-  const [error,      setError]      = useState<string | null>(null);
-  const [done,       setDone]       = useState<null | { rating: number; googleReviewUrl: string | null; already?: boolean }>(null);
-
-  const send = async () => {
-    if (rating < 1) return;
-    setSending(true);
-    setError(null);
-    try {
-      const res  = await fetch(`/api/public/qr-orders/${orderId}/review`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ rating, comment: comment.trim() || undefined, tenantSlug: tenantSlug ?? undefined }),
-      });
-      const json = await res.json().catch(() => ({}));
-      if (res.status === 201 && json?.success) {
-        setDone({ rating, googleReviewUrl: json.data?.googleReviewUrl ?? null });
-      } else if (res.status === 409) {
-        setDone({ rating, googleReviewUrl: null, already: true });
-      } else {
-        setError(json?.error ?? 'No pudimos guardar tu opinión. Intenta nuevamente.');
-      }
-    } catch {
-      setError('No pudimos guardar tu opinión. Revisa tu conexión.');
-    } finally {
-      setSending(false);
-    }
-  };
-
-  if (done) {
-    return (
-      <div className="rounded-xl px-3 py-3 space-y-2" style={{ backgroundColor: 'rgba(249,115,22,0.10)', border: '1px solid rgba(249,115,22,0.35)' }}>
-        <p className="text-sm font-semibold text-orange-300">
-          {done.already
-            ? 'Ya recibimos tu opinión sobre este pedido. ¡Gracias!'
-            : done.rating >= 4 ? '¡Gracias por tu opinión! Nos alegra que te haya gustado.' : 'Gracias por contarnos. Tu comentario nos ayuda a mejorar.'}
-        </p>
-        {!done.already && done.rating >= 4 && done.googleReviewUrl && (
-          <a
-            href={done.googleReviewUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full min-h-[44px] rounded-2xl font-bold text-base flex items-center justify-center gap-2 text-white transition-colors"
-            style={{ background: REVIEW_ORANGE }}
-          >
-            Dejar reseña en Google
-          </a>
-        )}
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-xl px-3 py-3 space-y-3" style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.10)' }}>
-      <p className="text-sm font-semibold text-zinc-200">¿Cómo estuvo tu experiencia?</p>
-      <div className="flex items-center gap-1" role="radiogroup" aria-label="Calificación">
-        {[1, 2, 3, 4, 5].map(n => (
-          <button
-            key={n}
-            type="button"
-            role="radio"
-            aria-checked={rating === n}
-            aria-label={`${n} estrella${n === 1 ? '' : 's'}`}
-            onClick={() => setRating(n)}
-            disabled={sending}
-            className="w-11 h-11 flex items-center justify-center rounded-lg transition-transform active:scale-90"
-          >
-            <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true">
-              <path
-                d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6-4.9-4.6 6.6-.8z"
-                fill={n <= rating ? REVIEW_ORANGE : 'none'}
-                stroke={REVIEW_ORANGE}
-                strokeWidth="1.6"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </button>
-        ))}
-      </div>
-      {rating > 0 && (
-        <>
-          <textarea
-            value={comment}
-            onChange={e => setComment(e.target.value.slice(0, 500))}
-            rows={2}
-            placeholder="Cuéntanos más (opcional)"
-            className="w-full rounded-xl px-3 py-2 text-sm text-white placeholder-zinc-500 outline-none"
-            style={{ backgroundColor: '#27272a', border: '1px solid rgba(255,255,255,0.10)' }}
-          />
-          <button
-            type="button"
-            onClick={send}
-            disabled={sending}
-            className="w-full min-h-[44px] rounded-2xl font-bold text-base text-white transition-opacity disabled:opacity-50"
-            style={{ background: REVIEW_ORANGE }}
-          >
-            {sending ? 'Enviando…' : 'Enviar opinión'}
-          </button>
-        </>
-      )}
-      {error && <p className="text-xs text-red-400">{error}</p>}
-    </div>
-  );
-}
+// HOTFIX 272b: normalizeWhatsAppPhone vive en components/carta/QrOrderTracking (compartido)
 
 // ── Definidos FUERA de CartSheet para evitar que React los destruya
 // en cada re-render, causando pérdida de foco en inputs ─────────────
@@ -1046,16 +926,6 @@ function CartSheet({
   const [orderNumber,   setOrderNumber]   = useState<string | null>(null);
   const [orderId,       setOrderId]       = useState<string | null>(null);
   const [submitError,   setSubmitError]   = useState<string | null>(null);
-  // Hotfix #194 / HOTFIX 272 — seguimiento vivo del pedido (polling 10 s del estado público, solo paso success)
-  const liveStatus = useQrOrderStatus(step === 'success' ? orderId : null);
-  // HOTFIX 272 — reloj para el "hace N min" y el aviso de 3 min entre polls
-  const [statusNow, setStatusNow] = useState(() => Date.now());
-  useEffect(() => {
-    if (step !== 'success') return;
-    const t = setInterval(() => setStatusNow(Date.now()), 15_000);
-    return () => clearInterval(t);
-  }, [step]);
-
   const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', comment: '', email: '' });
   // Hotfix #88: opt-in de marketing — DESMARCADO por defecto
   const [marketingOptIn, setMarketingOptIn] = useState(false);
@@ -1178,6 +1048,7 @@ function CartSheet({
       if (json.success) {
         setOrderNumber(json.orderNumber);
         setOrderId(json.orderId ?? null);
+        if (json.orderId) saveActiveQrOrder(tenantSlug, json.orderId, json.orderNumber ?? null); // HOTFIX 272b — barra fija del menú
         setStep('success');
         onOrderSuccess();
       } else {
@@ -1206,132 +1077,27 @@ function CartSheet({
               : 'En breve el personal preparará tu pedido'}
           </p>
 
-          {/* HOTFIX 272 — Seguimiento del pedido (polling 10 s de /public/qr-orders/:id/status) */}
-          {(() => {
-            const st         = liveStatus.status;
-            const elapsedMin = Math.max(0, Math.floor(liveStatus.minutesSinceSent + (statusNow - liveStatus.fetchedAt) / 60000));
-            const isDel      = (liveStatus.orderType ?? (orderType === 'delivery' ? 'delivery' : 'pickup')) === 'delivery';
-            const liveTotal  = liveStatus.total ?? total;
-            const code       = liveStatus.code ?? orderNumber ?? '';
-            const waNumber   = normalizeWhatsAppPhone(liveStatus.whatsapp ?? whatsapp ?? '');
-            // patrón #250: wa.me con mensaje prearmado (código y total)
-            const waHref     = waNumber
-              ? `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hola! Quiero coordinar mi pedido ${code} de la carta. Total: ${fmtCLP(liveTotal)}`)}`
-              : null;
-            const waButton   = (label: string) => waHref ? (
-              <a
-                href={waHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1 w-full min-h-[44px] py-3 rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition-colors bg-transparent border border-[#128C7E] text-[#128C7E] hover:bg-[#128C7E]/10"
-              >
-                <MessageCircle className="w-5 h-5" />
-                {label}
-              </a>
-            ) : null;
-            const ok      = <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />;
-            const spinner = (
-              <span
-                className="w-5 h-5 shrink-0 rounded-full border-2 border-zinc-600 animate-spin inline-block"
-                style={{ borderTopColor: themeColor }}
-              />
-            );
-            const acceptedText = liveStatus.estimatedMinutes != null
-              ? `Tu tiempo de demora es de ${liveStatus.estimatedMinutes} minutos`
-                + (isDel && liveStatus.deliveryFee != null
-                  ? ` y el costo de envío es de ${fmtCLP(liveStatus.deliveryFee)}. Total: ${fmtCLP(liveTotal)}`
-                  : '')
-              : null;
-            return (
-              <div
-                className="w-full rounded-2xl px-5 py-4 mb-4 fade-up fade-up-2 space-y-3 text-left"
-                style={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.07)' }}
-              >
-                <div className="flex items-center gap-3">
-                  {ok}
-                  <p className="text-sm text-zinc-300 font-medium">
-                    Enviado{code ? ` — ${code}` : ''}{tableNumber ? ` · Mesa ${tableNumber}` : ''}
-                    {st === 'PENDING' ? ` · hace ${elapsedMin} min` : ''}
-                  </p>
-                </div>
-
-                {st === 'PENDING' && (
-                  <>
-                    <div className="flex items-center gap-3">
-                      {spinner}
-                      <p className="text-sm font-medium text-zinc-400">Esperando confirmación del local…</p>
-                    </div>
-                    {elapsedMin >= 3 && (
-                      <div className="rounded-xl px-3 py-3 space-y-2" style={{ backgroundColor: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.35)' }}>
-                        <p className="text-sm font-semibold text-amber-300">El local aún no confirma</p>
-                        {waButton('Coordinar por WhatsApp')}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {(st === 'ACCEPTED' || st === 'PREPARING') && (
-                  <>
-                    <div className="flex items-start gap-3">
-                      {ok}
-                      <p className="text-sm font-medium text-green-400">
-                        Pedido aceptado.{acceptedText ? ` ${acceptedText}` : ''}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {st === 'PREPARING' ? ok : spinner}
-                      <p className={`text-sm font-medium ${st === 'PREPARING' ? 'text-green-400' : 'text-zinc-400'}`}>
-                        {st === 'PREPARING' ? 'Tu pedido está en cocina' : 'Pronto pasa a cocina…'}
-                      </p>
-                    </div>
-                  </>
-                )}
-
-                {st === 'READY' && (
-                  <div className="flex items-center gap-3">
-                    {ok}
-                    <p className="text-base font-bold text-green-400">
-                      {isDel ? '¡Tu pedido va en camino!' : '¡Tu pedido está listo para retirar!'}
-                    </p>
-                  </div>
-                )}
-
-                {st === 'DELIVERED' && (
-                  <div className="flex items-center gap-3">
-                    {ok}
-                    <p className="text-base font-bold text-green-400">Pedido entregado. ¡Gracias!</p>
-                  </div>
-                )}
-
-                {/* HOTFIX 273 — reseña al llegar a listo/entregado, una sola vez por pedido */}
-                {(st === 'READY' || st === 'DELIVERED') && !liveStatus.reviewed && orderId && (
-                  <QrReviewBlock orderId={orderId} tenantSlug={tenantSlug} />
-                )}
-
-                {st === 'REJECTED' && (
-                  <div className="space-y-2">
-                    <div className="flex items-start gap-3">
-                      <X className="w-5 h-5 text-red-400 shrink-0" />
-                      <div>
-                        <p className="text-sm font-bold text-red-400">El local no pudo aceptar tu pedido</p>
-                        {liveStatus.reason && (
-                          <p className="text-sm text-zinc-300 mt-0.5">Motivo: {liveStatus.reason}</p>
-                        )}
-                      </div>
-                    </div>
-                    {waButton('Escribir por WhatsApp')}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+          {/* HOTFIX 272/272b — Seguimiento del pedido (componente compartido con la ruta /carta/:slug/pedido/:id) */}
+          {orderId && (
+            <QrOrderTracking
+              orderId={orderId}
+              tenantSlug={tenantSlug}
+              themeColor={themeColor}
+              fallbackWhatsapp={whatsapp}
+              fallbackOrderType={orderType === 'delivery' ? 'delivery' : 'pickup'}
+              fallbackTotal={total}
+              fallbackCode={orderNumber}
+              tableNumber={tableNumber}
+              className="mb-4 fade-up fade-up-2"
+            />
+          )}
           {/* (Hotfix #194: número de pedido y mesa ahora viven en el bloque de seguimiento vivo) */}
           <button
             onClick={onClose}
             className="w-full py-4 text-white rounded-2xl font-bold transition-all active:scale-[0.98] fade-up fade-up-3"
             style={{ background: themeColor, boxShadow: `0 8px 24px ${themeColor}40` }}
           >
-            Volver al menú
+            Hacer otro pedido
           </button>
         </div>
       </SheetWrap>
@@ -1893,6 +1659,58 @@ function CartSheet({
   );
 }
 
+// HOTFIX 272b — barra fija con el pedido QR activo de esta carta (localStorage). Muestra el estado vivo y lleva a
+// /carta/:slug/pedido/:id. Se oculta y se olvida al entregarse; X la descarta. Portal fijo arriba + espaciador en el flujo
+// (el div raíz lleva .bw-reveal con transform: un fixed sin portal quedaría anclado al documento, ver #239/#240).
+function ActiveQrOrderBar({ tenantSlug, themeColor }: { tenantSlug: string | null; themeColor: string }) {
+  const [active, setActive] = useState(() => readActiveQrOrder(tenantSlug));
+  const live = useQrOrderStatus(active?.id ?? null);
+  useEffect(() => {
+    if (active && live.status === 'DELIVERED') { clearActiveQrOrder(tenantSlug); setActive(null); }
+  }, [active, live.status, tenantSlug]);
+  if (!active || !tenantSlug || live.status === 'DELIVERED') return null;
+  const isDel = live.orderType === 'delivery';
+  const label =
+    live.status === 'PENDING'   ? 'Esperando confirmación del local'
+  : live.status === 'ACCEPTED'  ? `Aceptado${live.estimatedMinutes != null ? ` · ${live.estimatedMinutes} min` : ''}`
+  : live.status === 'PREPARING' ? 'En cocina'
+  : live.status === 'READY'     ? (isDel ? '¡Va en camino!' : '¡Listo para retirar!')
+  : live.status === 'REJECTED'  ? 'No pudo ser aceptado'
+  : '';
+  const code = live.code ?? active.code ?? 'Tu pedido';
+  return (
+    <>
+      <div style={{ height: 60 }} aria-hidden="true" />
+      {createPortal(
+        <div className="fixed top-0 inset-x-0 z-[55] px-3 pt-2" role="status" aria-live="polite">
+          <div className="max-w-xl mx-auto flex items-center gap-2 rounded-2xl pl-4 pr-1 py-1 shadow-lg" style={{ backgroundColor: '#18181b', border: `1px solid ${themeColor}66` }}>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-zinc-400 truncate">Tu pedido {code}</p>
+              <p className={`text-sm font-bold truncate ${live.status === 'REJECTED' ? 'text-red-400' : live.status === 'READY' ? 'text-green-400' : 'text-white'}`}>{label}</p>
+            </div>
+            <a
+              href={qrTrackingPath(tenantSlug, active.id)}
+              className="min-h-[44px] px-4 rounded-xl font-bold text-sm text-white flex items-center"
+              style={{ background: themeColor }}
+            >
+              Ver pedido
+            </a>
+            <button
+              type="button"
+              onClick={() => { clearActiveQrOrder(tenantSlug); setActive(null); }}
+              aria-label="Ocultar seguimiento del pedido"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-zinc-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
 /** Página pública de carta digital — /carta */
 export default function CartaDigital() {
   const { slug: slugFromPath } = useParams<{ slug?: string }>();
@@ -2180,6 +1998,8 @@ export default function CartaDigital() {
 
   return (
     <div className="min-h-screen text-white bw-reveal" style={{ backgroundColor: '#09090b' }}>
+      {/* HOTFIX 272b — pedido QR activo (oculta mientras el sheet del carrito está abierto) */}
+      {!showCart && <ActiveQrOrderBar tenantSlug={tenantSlug} themeColor={themeColor} />}
 
       {/* ── Header con Banner integrado (Hotfix #197: nombre con sufijo técnico limpio — fix de raíz → #199) ──────────── */}
       <CartaHero

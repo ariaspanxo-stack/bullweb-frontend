@@ -81,6 +81,7 @@ const AttendanceKiosk = lazy(() => import('@/pages/AttendanceKiosk'));
 const AttendanceCheckin = lazy(() => import('@/pages/AttendanceCheckin'));
 const KioskPage       = lazy(() => import('@/pages/KioskPage'));
 const CartaDigital    = lazy(() => import('@/pages/CartaDigital'));
+const CartaPedido     = lazy(() => import('@/pages/CartaPedido')); // HOTFIX 272b
 const ReceiptPage     = lazy(() => import('@/pages/ReceiptPage'));
 const CartaQRPage     = lazy(() => import('@/pages/CartaQRPage'));
 const MesaQR          = lazy(() => import('@/pages/MesaQR'));
@@ -208,6 +209,7 @@ function AppContent() {
             <Route path="/checkin"            element={<AttendanceCheckin />} />
             <Route path="/kiosk/:slug"         element={<KioskPage />} />          <Route path="/carta"      element={<CartaDigital />} />
             <Route path="/carta/:slug" element={<CartaDigital />} />
+            <Route path="/carta/:slug/pedido/:orderId" element={<CartaPedido />} /> {/* HOTFIX 272b */}
             <Route path="/mesa/:slug"  element={<MesaQR />} />
             <Route path="/r/:orderId"  element={<ReceiptPage />} />
 

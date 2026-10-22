@@ -417,19 +417,21 @@ export const TabArqueos = () => {
                   const isOpen = s.status === 'OPEN';
                   const isDeleted = !!s.deletedAt;
                   const isSelected = s.id === effectiveSelectedId;
-                  // FIX (Arqueos): la diferencia debe provenir SIEMPRE del backend.
-                  // El campo `difference` se persiste al cerrar la sesión y ya considera
-                  // openingCash + cashSales + cash_movements (CASH_IN/CASH_OUT).
-                  // Evita el bug de recalcular (closingCash - snapshotTotalSales) que
-                  // ignora los movimientos manuales y produce un valor distinto.
-                  // Solo para la sesión OPEN seleccionada se calcula en vivo.
+                  // HOTFIX 271: diferencia con el criterio del panel lateral (declarado - total sistema).
+                  // Total sistema por fila desde el backend (s.sistemaTotal); la fila seleccionada usa el cuadre en vivo.
+                  // Si el backend aún no envía sistemaTotal, se mantiene la diferencia persistida al cerrar.
                   const sysAmt = isSelected && cuadre
                     ? sistemaTotal
                     : ((s.snapshotTotalSales ?? s.openingCash ?? 0) as number);
                   const userAmt: number | null = s.closingCash ?? null;
+                  const rowSistema: number | null = isSelected && cuadre
+                    ? sistemaTotal
+                    : (s.sistemaTotal != null ? Number(s.sistemaTotal) : null);
                   let diff: number | null;
                   if (s.status === 'CLOSED') {
-                    diff = s.difference != null ? Number(s.difference) : null;
+                    diff = userAmt != null && rowSistema != null
+                      ? Number(userAmt) - rowSistema
+                      : (s.difference != null ? Number(s.difference) : null);
                   } else if (isSelected && cuadre) {
                     diff = userAmt != null ? userAmt - sistemaTotal : null;
                   } else {

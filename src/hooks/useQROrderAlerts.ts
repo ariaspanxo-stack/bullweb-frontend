@@ -31,6 +31,9 @@ export interface QROrder {
    *  El WS new_qr_order la envía desde #241; el modal del panel la muestra.
    *  Sin mesa (retiro en mostrador/delivery) → null: NO se renderiza fila. */
   tableNumber?:         string | null;
+  /** HOTFIX 272 — instante (ms, reloj del navegador) en que llegó el aviso por socket. created_at viaja sin
+   *  zona horaria y no sirve para contar minutos en el cliente; el aviso llega en el momento del envío. */
+  receivedAt?:          number;
 }
 
 /** Lee el tenantId del usuario almacenado en localStorage (mismo origen que authService).
@@ -112,6 +115,7 @@ export function useQROrderAlerts() {
         cashAmount: order.cashAmount != null ? Number(order.cashAmount) : null,
         deliveryFee:        Number(order.deliveryFee ?? 0) || 0,
         deliveryFeeDefault: Number(order.deliveryFeeDefault ?? 2000) || 2000,
+        receivedAt: Date.now(),
         items:      (order.items ?? []).map(i => ({
           ...i,
           price: Number(i.price) || 0,
@@ -166,9 +170,11 @@ export function useQROrderAlerts() {
   // respuesta real del endpoint (aceptar/rechazar). Si el fetch falla (red
   // caída), el pedido PERMANECE en pantalla — jamás optimista-sin-restore.
   // Misma filosofía del guard del #158: si algo no viajó, el usuario lo ve.
-  const acceptOrder = useCallback(async (orderId: string, deliveryFee?: number) => {
+  const acceptOrder = useCallback(async (orderId: string, deliveryFee?: number, estimatedMinutes?: number) => {
     try {
       const order = pendingOrdersRef.current.find(o => o.orderId === orderId);
+      // HOTFIX 272 — pedidos QR nativos: POST /accept con minutos de demora; integraciones siguen con PATCH
+      const isQrNative = !order?.platform || order.platform === 'qr';
       // Sanitizar campos numéricos: el backend puede guardar strings con ceros
       // extra (ej. "4.6000") si llegan como string. Envolver con Number() garantiza
       // que total, cashAmount y precios de items viajen como número real.
@@ -183,14 +189,15 @@ export function useQROrderAlerts() {
             })),
             // Hotfix #166 — envío editable del modal. Solo para pedidos QR nativos
             // (las integraciones tienen su propio flujo — no se les envía el campo).
-            ...(order.platform == null || order.platform === 'qr'
-              ? { deliveryFee: Math.max(0, Math.round(Number(deliveryFee ?? 0) || 0)) }
+            ...(isQrNative && deliveryFee != null
+              ? { deliveryFee: Math.max(0, Math.round(Number(deliveryFee) || 0)) }
               : {}),
+            ...(isQrNative && estimatedMinutes != null ? { estimatedMinutes } : {}),
           }
         : {};
 
       const res = await fetch(`${buildBasePath(orderId)}/${orderId}/accept`, {
-        method:  'PATCH',
+        method:  isQrNative ? 'POST' : 'PATCH',
         headers: {
           Authorization:  `Bearer ${getToken()}`,
           'Content-Type': 'application/json',
@@ -203,8 +210,11 @@ export function useQROrderAlerts() {
 
   const cancelOrder = useCallback(async (orderId: string, reason?: string) => {
     try {
-      const res = await fetch(`${buildBasePath(orderId)}/${orderId}/cancel`, {
-        method:  'PATCH',
+      // HOTFIX 272 — pedidos QR nativos: POST /reject (motivo opcional); integraciones siguen con PATCH /cancel
+      const order = pendingOrdersRef.current.find(o => o.orderId === orderId);
+      const isQrNative = !order?.platform || order.platform === 'qr';
+      const res = await fetch(`${buildBasePath(orderId)}/${orderId}/${isQrNative ? 'reject' : 'cancel'}`, {
+        method:  isQrNative ? 'POST' : 'PATCH',
         headers: {
           Authorization:  `Bearer ${getToken()}`,
           'Content-Type': 'application/json',

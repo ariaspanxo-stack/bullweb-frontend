@@ -1,59 +1,92 @@
 // ═══════════════════════════════════════════════════════════════
-// Hotfix #194 — useQrOrderStatus
-// Polling del receipt público (GET /api/public/receipt/:orderId)
-// para el paso success del CartSheet de la Carta Digital.
+// Hotfix #194 / HOTFIX 272 — useQrOrderStatus
+// Seguimiento del pedido QR para la pantalla "Pedido enviado" de la Carta Digital.
 //
-// CONTRATO REAL (bullweb-backend public.routes.ts:609):
-//   - El receipt consulta la tabla `orders`; el orderId que recibe el
-//     comensal es el de `qr_pending_orders`. Mientras el local no acepta,
-//     responde 404 → "waiting". Cuando responde 200, la orden fue creada
-//     y aceptada → "accepted".
-//   - El rechazo NO es entregable por este contrato (quedará para el
-//     batch backend de la carta, #196).
-//
-// Mecánica: poll inmediato + intervala 18s (~3.3 req/min, muy por bajo
-// el rate limit de 30/min del endpoint). Error de red → retry silencioso
-// en el próximo tick (nunca rompe la pantalla). Estado terminal detiene
-// el polling y lo blindá con un ref (no revive si cambia el orderId).
+// HOTFIX 272: polling de GET /api/public/qr-orders/:id/status cada 10 s (el id es el de
+// qr_pending_orders que devuelve POST /api/public/orders). Antes (#194) consultaba el receipt de
+// `orders` con ese id y nunca salía de "esperando". Estados: PENDING | ACCEPTED | PREPARING | READY |
+// DELIVERED | REJECTED. READY, DELIVERED y REJECTED son terminales: detienen el polling (cierre).
+// Error de red → retry silencioso en el próximo tick (nunca rompe la pantalla).
+// ~6 req/min, bajo el límite de 30/min del endpoint.
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useRef } from 'react';
 
-export type QrOrderLiveStatus = 'waiting' | 'accepted';
+export type QrOrderPhase = 'PENDING' | 'ACCEPTED' | 'PREPARING' | 'READY' | 'DELIVERED' | 'REJECTED';
+
+export interface QrOrderLiveStatus {
+  status:           QrOrderPhase;
+  orderType:        'delivery' | 'pickup' | null;
+  code:             string | null;
+  estimatedMinutes: number | null;
+  deliveryFee:      number | null;
+  subtotal:         number | null;
+  total:            number | null;
+  reason:           string | null;
+  whatsapp:         string | null;
+  minutesSinceSent: number;
+  /** Momento (ms) en que se leyó minutesSinceSent, para contar el tiempo entre polls. */
+  fetchedAt:        number;
+}
+
+const TERMINAL: QrOrderPhase[] = ['READY', 'DELIVERED', 'REJECTED'];
+export const QR_STATUS_POLL_MS = 10_000;
+
+const INITIAL: QrOrderLiveStatus = {
+  status: 'PENDING', orderType: null, code: null, estimatedMinutes: null, deliveryFee: null,
+  subtotal: null, total: null, reason: null, whatsapp: null, minutesSinceSent: 0, fetchedAt: Date.now(),
+};
 
 export function useQrOrderStatus(orderId: string | null): QrOrderLiveStatus {
-  const [status, setStatus] = useState<QrOrderLiveStatus>('waiting');
+  const [state, setState] = useState<QrOrderLiveStatus>(INITIAL);
   const terminalRef = useRef(false);
 
   useEffect(() => {
     if (!orderId) return;
+    terminalRef.current = false;
+    setState({ ...INITIAL, fetchedAt: Date.now() });
 
     let cancelled = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
 
     const poll = async () => {
       if (cancelled || terminalRef.current) return;
       try {
-        const res = await fetch(`/api/public/receipt/${orderId}`);
-        if (cancelled || terminalRef.current) return;
-        if (res.status === 200) {
-          // La orden existe en `orders` → el local aceptó el pedido
+        const res = await fetch(`/api/public/qr-orders/${orderId}/status`);
+        if (cancelled || terminalRef.current || !res.ok) return;
+        const json = await res.json();
+        const d = json?.data;
+        if (!d?.status) return;
+        setState({
+          status:           d.status,
+          orderType:        d.orderType ?? null,
+          code:             d.code ?? null,
+          estimatedMinutes: d.estimatedMinutes ?? null,
+          deliveryFee:      d.deliveryFee ?? null,
+          subtotal:         d.subtotal ?? null,
+          total:            d.total ?? null,
+          reason:           d.reason ?? null,
+          whatsapp:         d.whatsapp ?? null,
+          minutesSinceSent: Number(d.minutesSinceSent ?? 0),
+          fetchedAt:        Date.now(),
+        });
+        if (TERMINAL.includes(d.status)) {
           terminalRef.current = true;
-          setStatus('accepted');
+          if (timer) clearInterval(timer);
         }
-        // 404/400 u otro código: sigue esperando — retry silencioso
       } catch {
         // Error de red: retry silencioso en el próximo tick
       }
     };
 
     poll();
-    const timer = setInterval(poll, 18000);
+    timer = setInterval(poll, QR_STATUS_POLL_MS);
 
     return () => {
       cancelled = true;
-      clearInterval(timer);
+      if (timer) clearInterval(timer);
     };
   }, [orderId]);
 
-  return status;
+  return state;
 }

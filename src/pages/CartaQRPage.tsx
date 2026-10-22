@@ -168,6 +168,13 @@ export default function CartaQRPage() {
   const [payRetiroRaw,      setPayRetiroRaw]      = useState<string[] | null>(null);
   const [payDeliveryRaw,    setPayDeliveryRaw]    = useState<string[] | null>(null);
 
+  // ── Estado: minutos por defecto al aceptar pedidos QR (HOTFIX 272) ──
+  const [qrPickupMinutes,   setQrPickupMinutes]   = useState('15');
+  const [qrDeliveryMinutes, setQrDeliveryMinutes] = useState('45');
+  const [savingQrMinutes,   setSavingQrMinutes]   = useState(false);
+  const [savedQrMinutes,    setSavedQrMinutes]    = useState(false);
+  const [qrMinutesError,    setQrMinutesError]    = useState<string | null>(null);
+
   // Cargar settings de carta al montar
   useEffect(() => {
     api.get('/menu/carta-settings')
@@ -183,6 +190,9 @@ export default function CartaQRPage() {
         if (s.cartaPhone  !== undefined) setCartaPhone(s.cartaPhone ?? '');
         if (s.cartaWhatsApp !== undefined) setCartaWhatsApp(s.cartaWhatsApp ?? '');
         if (s.cartaEmail  !== undefined) setCartaEmail(s.cartaEmail ?? '');
+        // HOTFIX 272 — minutos por defecto al aceptar (el backend ya entrega 15/45 si no hay)
+        if (s.qrPickupMinutesDefault   != null) setQrPickupMinutes(String(s.qrPickupMinutesDefault));
+        if (s.qrDeliveryMinutesDefault != null) setQrDeliveryMinutes(String(s.qrDeliveryMinutesDefault));
         // HOTFIX 248 T2 — ids por canal guardados ([] = todos)
         setPayRetiroRaw(Array.isArray(s.cartaPayRetiro) ? s.cartaPayRetiro : null);
         setPayDeliveryRaw(Array.isArray(s.cartaPayDelivery) ? s.cartaPayDelivery : null);
@@ -309,6 +319,29 @@ export default function CartaQRPage() {
       // silencioso
     } finally {
       setSavingPersonal(false);
+    }
+  };
+
+  // HOTFIX 272 — guardar minutos por defecto (misma vía PATCH; el backend valida 1..999)
+  const handleSaveQrMinutes = async () => {
+    const pickup = Number(qrPickupMinutes), delivery = Number(qrDeliveryMinutes);
+    if (!(pickup >= 1 && pickup <= 999) || !(delivery >= 1 && delivery <= 999)) {
+      setQrMinutesError('Ingresa minutos entre 1 y 999.');
+      return;
+    }
+    setQrMinutesError(null);
+    setSavingQrMinutes(true);
+    try {
+      await api.patch('/menu/carta-settings', {
+        qrPickupMinutesDefault:   pickup,
+        qrDeliveryMinutesDefault: delivery,
+      });
+      setSavedQrMinutes(true);
+      setTimeout(() => setSavedQrMinutes(false), 2500);
+    } catch (e: any) {
+      setQrMinutesError(e?.data?.error ?? e?.response?.data?.error ?? 'No se pudo guardar.');
+    } finally {
+      setSavingQrMinutes(false);
     }
   };
 
@@ -1313,6 +1346,44 @@ export default function CartaQRPage() {
               </button>
             </>
           )}
+
+          {/* HOTFIX 272 — minutos de demora con que se prellena "Aceptar" en el POS (editables al aceptar) */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mt-4">
+            <p className="font-semibold text-gray-800 text-sm">Tiempo de demora al aceptar pedidos</p>
+            <p className="text-xs text-gray-500 mt-0.5 mb-3">
+              El formulario de aceptar se prellena con estos minutos; el local puede cambiarlos en cada pedido.
+            </p>
+            {([
+              { key: 'retiro',   label: 'Retiro (minutos)',   value: qrPickupMinutes,   set: setQrPickupMinutes   },
+              { key: 'delivery', label: 'Delivery (minutos)', value: qrDeliveryMinutes, set: setQrDeliveryMinutes },
+            ] as const).map(f => (
+              <label key={f.key} className="flex items-center justify-between gap-3" style={{ minHeight: '44px' }}>
+                <span className="text-sm text-gray-700">{f.label}</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={f.value}
+                  onChange={e => f.set(e.target.value.replace(/[^\d]/g, '').slice(0, 3))}
+                  aria-label={f.label}
+                  className="w-24 min-h-[44px] px-3 border border-gray-300 rounded-lg text-right font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+              </label>
+            ))}
+            {qrMinutesError && <p className="text-xs text-red-600 mt-1">{qrMinutesError}</p>}
+            <button
+              onClick={handleSaveQrMinutes}
+              disabled={savingQrMinutes}
+              className="w-full min-h-[44px] mt-3 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+            >
+              {savingQrMinutes ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
+              ) : savedQrMinutes ? (
+                <><Check className="w-4 h-4" /> ¡Guardado!</>
+              ) : (
+                <><Save className="w-4 h-4" /> Guardar tiempos</>
+              )}
+            </button>
+          </div>
         </div>
       )}
 

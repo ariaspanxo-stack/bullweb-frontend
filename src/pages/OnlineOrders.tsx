@@ -8,7 +8,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { RefreshCw, ChefHat, X, CheckCircle, ShoppingBag, Phone } from 'lucide-react';
 import api from '../services/api';
+import toast from 'react-hot-toast';
 import { CustomerSegmentBadge } from '@/components/customers/CustomerSegmentBadge';
+import {
+  QrAcceptForm, QrRejectForm, SinResponderBadge, useQrAcceptDefaults, qrOrderTypeLabel,
+  QR_UNANSWERED_MINUTES, type QrAcceptDefaults,
+} from '@/components/orders/QrDecisionForms';
 
 // ──────────────────────────────
 // Tipos
@@ -36,6 +41,8 @@ interface QROnlineOrder {
   viewedAt:      string | null;
   createdAt:     string;
   minutesAgo:    number;
+  deliveryFee:   number;        // HOTFIX 272 — envío informado (prellena el formulario de aceptar)
+  estimatedMinutes: number | null;
 }
 
 // ──────────────────────────────
@@ -76,14 +83,19 @@ function StatusBadge({ status }: { status: string }) {
 // ──────────────────────────────
 interface OrderCardProps {
   order:        QROnlineOrder;
-  onPreparing:  (id: string) => Promise<void>;
+  defaults:     QrAcceptDefaults;
+  onAccept:     (id: string, estimatedMinutes: number, deliveryFee?: number) => Promise<void>;
   onDone:       (id: string) => Promise<void>;
   onReject:     (id: string, reason?: string) => Promise<void>;
   processing:   string | null;
 }
 
-function OrderCard({ order, onPreparing, onDone, onReject, processing }: OrderCardProps) {
+function OrderCard({ order, defaults, onAccept, onDone, onReject, processing }: OrderCardProps) {
   const isLoading        = processing === order.id;
+  // HOTFIX 272 — Aceptar abre minutos (+ envío si delivery); Rechazar abre motivos
+  const [mode, setMode]  = useState<'idle' | 'accept' | 'reject'>('idle');
+  const isDelivery       = String(order.orderType ?? '').toLowerCase() === 'delivery';
+  const unanswered       = order.onlineStatus === 'pending' && order.minutesAgo > QR_UNANSWERED_MINUTES;
   const borderByStatus   = {
     pending:   'border-orange-400 shadow-orange-100',
     preparing: 'border-blue-400 shadow-blue-100',
@@ -98,10 +110,10 @@ function OrderCard({ order, onPreparing, onDone, onReject, processing }: OrderCa
         <div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-bold text-base text-gray-900">
-              {order.orderType === 'delivery' ? '🛵' : '🍽️'} Pedido
-              {order.orderType ? ` (${order.orderType})` : ''}
+              {isDelivery ? '🛵' : '🍽️'} Pedido · {qrOrderTypeLabel(order.orderType, order.tableNumber)}
             </span>
             <StatusBadge status={order.onlineStatus} />
+            {unanswered && <SinResponderBadge />}
             {!order.viewedAt && (
               <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold animate-pulse">
                 NUEVO
@@ -154,28 +166,54 @@ function OrderCard({ order, onPreparing, onDone, onReject, processing }: OrderCa
       )}
 
       {/* Acciones */}
-      {order.onlineStatus === 'pending' && (
+      {order.onlineStatus === 'pending' && mode === 'idle' && (
         <div className="flex gap-2 mt-3">
           <button
-            onClick={() => onPreparing(order.id)}
+            onClick={() => setMode('accept')}
             disabled={isLoading}
-            className="flex-1 flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-bold py-2 rounded-lg text-sm transition-colors"
+            className="flex-1 min-h-[44px] flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white font-bold rounded-lg text-sm transition-colors"
           >
             {isLoading ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
             ) : (
               <ChefHat className="w-4 h-4" />
             )}
-            Aceptar y preparar
+            Aceptar
           </button>
           <button
-            onClick={() => onReject(order.id)}
+            onClick={() => setMode('reject')}
             disabled={isLoading}
-            className="px-4 border border-red-300 text-red-500 hover:bg-red-50 disabled:opacity-50 rounded-lg text-sm transition-colors"
+            className="min-h-[44px] px-4 flex items-center gap-1.5 border-2 border-red-300 text-red-500 hover:bg-red-50 disabled:opacity-50 rounded-lg text-sm font-semibold transition-colors"
           >
             <X className="w-4 h-4" />
+            Rechazar
           </button>
         </div>
+      )}
+      {order.onlineStatus === 'pending' && mode === 'accept' && (
+        <div className="mt-3">
+          <QrAcceptForm
+            isDelivery={isDelivery}
+            subtotal={order.total}
+            defaults={defaults}
+            initialFee={order.deliveryFee}
+            busy={isLoading}
+            onBack={() => setMode('idle')}
+            onConfirm={(minutes, fee) => onAccept(order.id, minutes, fee)}
+          />
+        </div>
+      )}
+      {order.onlineStatus === 'pending' && mode === 'reject' && (
+        <div className="mt-3">
+          <QrRejectForm
+            busy={isLoading}
+            onBack={() => setMode('idle')}
+            onConfirm={reason => onReject(order.id, reason)}
+          />
+        </div>
+      )}
+      {order.onlineStatus === 'done' && order.estimatedMinutes != null && (
+        <p className="text-xs text-gray-500 mt-2">Aceptado con demora de <span className="font-bold">{order.estimatedMinutes} min</span></p>
       )}
 
       {order.onlineStatus === 'preparing' && (
@@ -260,7 +298,10 @@ export default function OnlineOrders() {
         paymentMethod: r.paymentMethod ?? null,
         viewedAt:      r.viewedAt ?? null,
         createdAt:     r.createdAt,
-        minutesAgo:    (now - new Date(r.createdAt).getTime()) / 60000,
+        // HOTFIX 272: minutos calculados en la BD (created_at sin zona); el cálculo local queda de respaldo
+        minutesAgo:    r.minutesAgo != null ? Number(r.minutesAgo) : (now - new Date(r.createdAt).getTime()) / 60000,
+        deliveryFee:   Number(r.deliveryFee ?? 0) || 0,
+        estimatedMinutes: r.estimatedMinutes != null ? Number(r.estimatedMinutes) : null,
       }));
       // Filtro 'preparing' no existe en backend → mostrar vacío
       setOrders(filter === 'preparing' ? [] : mapped);
@@ -296,6 +337,8 @@ export default function OnlineOrders() {
   const paginated  = dateFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   // ── Acciones ─────────────────────────────────────────────────────────
+  const acceptDefaults = useQrAcceptDefaults(); // HOTFIX 272 — prellenado de minutos y envío
+
   const handleStatus = async (orderId: string, status: 'preparing' | 'done' | 'rejected', reason?: string) => {
     setProcessing(orderId);
     // Actualización optimista
@@ -312,6 +355,34 @@ export default function OnlineOrders() {
     } catch {
       await fetchOrders(true);
     } finally {
+      setProcessing(null);
+    }
+  };
+
+  // HOTFIX 272 — aceptar con minutos (+ envío si delivery) y rechazar con motivo opcional; sin optimismo:
+  // la tarjeta cambia solo con la respuesta del backend, y un error se avisa.
+  const handleAccept = async (orderId: string, estimatedMinutes: number, deliveryFee?: number) => {
+    setProcessing(orderId);
+    try {
+      await api.post(`/qr-orders/${orderId}/accept`, { estimatedMinutes, ...(deliveryFee != null ? { deliveryFee } : {}) });
+      toast.success(`Pedido aceptado: ${estimatedMinutes} min`);
+    } catch (e: any) {
+      toast.error(e?.data?.error ?? e?.message ?? 'No se pudo aceptar el pedido');
+    } finally {
+      await fetchOrders(true);
+      setProcessing(null);
+    }
+  };
+
+  const handleReject = async (orderId: string, reason?: string) => {
+    setProcessing(orderId);
+    try {
+      await api.post(`/qr-orders/${orderId}/reject`, reason ? { reason } : {});
+      toast.success('Pedido rechazado');
+    } catch (e: any) {
+      toast.error(e?.data?.error ?? e?.message ?? 'No se pudo rechazar el pedido');
+    } finally {
+      await fetchOrders(true);
       setProcessing(null);
     }
   };
@@ -409,10 +480,11 @@ export default function OnlineOrders() {
               <OrderCard
                 key={order.id}
                 order={order}
+                defaults={acceptDefaults}
                 processing={processing}
-                onPreparing={id => handleStatus(id, 'preparing')}
+                onAccept={handleAccept}
                 onDone={id => handleStatus(id, 'done')}
-                onReject={(id, reason) => handleStatus(id, 'rejected', reason)}
+                onReject={handleReject}
               />
             ))}
           </div>

@@ -934,8 +934,15 @@ function CartSheet({
   const [orderNumber,   setOrderNumber]   = useState<string | null>(null);
   const [orderId,       setOrderId]       = useState<string | null>(null);
   const [submitError,   setSubmitError]   = useState<string | null>(null);
-  // Hotfix #194 — seguimiento vivo del pedido (polling receipt público, solo paso success)
+  // Hotfix #194 / HOTFIX 272 — seguimiento vivo del pedido (polling 10 s del estado público, solo paso success)
   const liveStatus = useQrOrderStatus(step === 'success' ? orderId : null);
+  // HOTFIX 272 — reloj para el "hace N min" y el aviso de 3 min entre polls
+  const [statusNow, setStatusNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (step !== 'success') return;
+    const t = setInterval(() => setStatusNow(Date.now()), 15_000);
+    return () => clearInterval(t);
+  }, [step]);
 
   const [form, setForm] = useState({ name: '', phone: '', address: '', city: '', comment: '', email: '' });
   // Hotfix #88: opt-in de marketing — DESMARCADO por defecto
@@ -1087,33 +1094,120 @@ function CartSheet({
               : 'En breve el personal preparará tu pedido'}
           </p>
 
-          {/* Hotfix #194 — Seguimiento vivo del pedido (polling del receipt público) */}
-          <div
-            className="w-full rounded-2xl px-5 py-4 mb-4 fade-up fade-up-2 space-y-3 text-left"
-            style={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.07)' }}
-          >
-            <div className="flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
-              <p className="text-sm text-zinc-300 font-medium">
-                Enviado{orderNumber ? ` — ${orderNumber}` : ''}{tableNumber ? ` · Mesa ${tableNumber}` : ''}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              {liveStatus === 'accepted' ? (
-                <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />
-              ) : (
-                <span
-                  className="w-5 h-5 shrink-0 rounded-full border-2 border-zinc-600 animate-spin inline-block"
-                  style={{ borderTopColor: themeColor }}
-                />
-              )}
-              <p className={`text-sm font-medium ${liveStatus === 'accepted' ? 'text-green-400' : 'text-zinc-400'}`}>
-                {liveStatus === 'accepted'
-                  ? 'Aceptado por el restaurante — en preparación'
-                  : 'Esperando confirmación del restaurante…'}
-              </p>
-            </div>
-          </div>
+          {/* HOTFIX 272 — Seguimiento del pedido (polling 10 s de /public/qr-orders/:id/status) */}
+          {(() => {
+            const st         = liveStatus.status;
+            const elapsedMin = Math.max(0, Math.floor(liveStatus.minutesSinceSent + (statusNow - liveStatus.fetchedAt) / 60000));
+            const isDel      = (liveStatus.orderType ?? (orderType === 'delivery' ? 'delivery' : 'pickup')) === 'delivery';
+            const liveTotal  = liveStatus.total ?? total;
+            const code       = liveStatus.code ?? orderNumber ?? '';
+            const waNumber   = normalizeWhatsAppPhone(liveStatus.whatsapp ?? whatsapp ?? '');
+            // patrón #250: wa.me con mensaje prearmado (código y total)
+            const waHref     = waNumber
+              ? `https://wa.me/${waNumber}?text=${encodeURIComponent(`Hola! Quiero coordinar mi pedido ${code} de la carta. Total: ${fmtCLP(liveTotal)}`)}`
+              : null;
+            const waButton   = (label: string) => waHref ? (
+              <a
+                href={waHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-1 w-full min-h-[44px] py-3 rounded-2xl font-bold text-base flex items-center justify-center gap-2 transition-colors bg-transparent border border-[#128C7E] text-[#128C7E] hover:bg-[#128C7E]/10"
+              >
+                <MessageCircle className="w-5 h-5" />
+                {label}
+              </a>
+            ) : null;
+            const ok      = <CheckCircle className="w-5 h-5 text-green-400 shrink-0" />;
+            const spinner = (
+              <span
+                className="w-5 h-5 shrink-0 rounded-full border-2 border-zinc-600 animate-spin inline-block"
+                style={{ borderTopColor: themeColor }}
+              />
+            );
+            const acceptedText = liveStatus.estimatedMinutes != null
+              ? `Tu tiempo de demora es de ${liveStatus.estimatedMinutes} minutos`
+                + (isDel && liveStatus.deliveryFee != null
+                  ? ` y el costo de envío es de ${fmtCLP(liveStatus.deliveryFee)}. Total: ${fmtCLP(liveTotal)}`
+                  : '')
+              : null;
+            return (
+              <div
+                className="w-full rounded-2xl px-5 py-4 mb-4 fade-up fade-up-2 space-y-3 text-left"
+                style={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.07)' }}
+              >
+                <div className="flex items-center gap-3">
+                  {ok}
+                  <p className="text-sm text-zinc-300 font-medium">
+                    Enviado{code ? ` — ${code}` : ''}{tableNumber ? ` · Mesa ${tableNumber}` : ''}
+                    {st === 'PENDING' ? ` · hace ${elapsedMin} min` : ''}
+                  </p>
+                </div>
+
+                {st === 'PENDING' && (
+                  <>
+                    <div className="flex items-center gap-3">
+                      {spinner}
+                      <p className="text-sm font-medium text-zinc-400">Esperando confirmación del local…</p>
+                    </div>
+                    {elapsedMin >= 3 && (
+                      <div className="rounded-xl px-3 py-3 space-y-2" style={{ backgroundColor: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.35)' }}>
+                        <p className="text-sm font-semibold text-amber-300">El local aún no confirma</p>
+                        {waButton('Coordinar por WhatsApp')}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {(st === 'ACCEPTED' || st === 'PREPARING') && (
+                  <>
+                    <div className="flex items-start gap-3">
+                      {ok}
+                      <p className="text-sm font-medium text-green-400">
+                        Pedido aceptado.{acceptedText ? ` ${acceptedText}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {st === 'PREPARING' ? ok : spinner}
+                      <p className={`text-sm font-medium ${st === 'PREPARING' ? 'text-green-400' : 'text-zinc-400'}`}>
+                        {st === 'PREPARING' ? 'Tu pedido está en cocina' : 'Pronto pasa a cocina…'}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {st === 'READY' && (
+                  <div className="flex items-center gap-3">
+                    {ok}
+                    <p className="text-base font-bold text-green-400">
+                      {isDel ? '¡Tu pedido va en camino!' : '¡Tu pedido está listo para retirar!'}
+                    </p>
+                  </div>
+                )}
+
+                {st === 'DELIVERED' && (
+                  <div className="flex items-center gap-3">
+                    {ok}
+                    <p className="text-base font-bold text-green-400">Pedido entregado. ¡Gracias!</p>
+                  </div>
+                )}
+
+                {st === 'REJECTED' && (
+                  <div className="space-y-2">
+                    <div className="flex items-start gap-3">
+                      <X className="w-5 h-5 text-red-400 shrink-0" />
+                      <div>
+                        <p className="text-sm font-bold text-red-400">El local no pudo aceptar tu pedido</p>
+                        {liveStatus.reason && (
+                          <p className="text-sm text-zinc-300 mt-0.5">Motivo: {liveStatus.reason}</p>
+                        )}
+                      </div>
+                    </div>
+                    {waButton('Escribir por WhatsApp')}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
           {/* (Hotfix #194: número de pedido y mesa ahora viven en el bloque de seguimiento vivo) */}
           <button
             onClick={onClose}

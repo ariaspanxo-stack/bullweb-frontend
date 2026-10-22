@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { RefreshCw, ChefHat, X, CheckCircle, ShoppingBag, Phone } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { chileDateStr } from '@/lib/chileDate';
 import { CustomerSegmentBadge } from '@/components/customers/CustomerSegmentBadge';
 import {
   QrAcceptForm, QrRejectForm, SinResponderBadge, useQrAcceptDefaults, qrOrderTypeLabel,
@@ -40,6 +41,7 @@ interface QROnlineOrder {
   paymentMethod: string | null;
   viewedAt:      string | null;
   createdAt:     string;
+  createdDateCl: string | null; // HOTFIX 272 lote — día en hora Chile (BD)
   minutesAgo:    number;
   deliveryFee:   number;        // HOTFIX 272 — envío informado (prellena el formulario de aceptar)
   estimatedMinutes: number | null;
@@ -251,12 +253,13 @@ export default function OnlineOrders() {
   const [loading,     setLoading]    = useState(true);
   const [processing,  setProcessing] = useState<string | null>(null);
   const [_unread,      _setUnread]    = useState(0);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  // HOTFIX 272 lote: "hoy" en hora Chile (antes día UTC)
+  const [selectedDate, setSelectedDate] = useState(() => chileDateStr());
   const [page,        setPage]       = useState(1);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const PAGE_SIZE = 10;
-  const todayStr  = new Date().toISOString().split('T')[0];
+  const todayStr  = chileDateStr();
 
   // Reset página al cambiar cualquier filtro
   useEffect(() => { setPage(1); }, [selectedDate, filter]);
@@ -298,6 +301,7 @@ export default function OnlineOrders() {
         paymentMethod: r.paymentMethod ?? null,
         viewedAt:      r.viewedAt ?? null,
         createdAt:     r.createdAt,
+        createdDateCl: r.createdDateCl ?? null,
         // HOTFIX 272: minutos calculados en la BD (created_at sin zona); el cálculo local queda de respaldo
         minutesAgo:    r.minutesAgo != null ? Number(r.minutesAgo) : (now - new Date(r.createdAt).getTime()) / 60000,
         deliveryFee:   Number(r.deliveryFee ?? 0) || 0,
@@ -327,8 +331,9 @@ export default function OnlineOrders() {
   }, [fetchOrders]);
 
   // ── Filtro por fecha (local) ──────────────────────────────────────────
+  // HOTFIX 272 lote: día del pedido en hora Chile calculado en la BD (createdDateCl); respaldo en el navegador
   const dateFiltered = orders.filter(order => {
-    const orderDate = new Date(order.createdAt).toISOString().split('T')[0];
+    const orderDate = order.createdDateCl ?? chileDateStr(new Date(order.createdAt));
     return orderDate === selectedDate;
   });
 

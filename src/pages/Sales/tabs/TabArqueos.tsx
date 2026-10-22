@@ -417,16 +417,15 @@ export const TabArqueos = () => {
                   const isOpen = s.status === 'OPEN';
                   const isDeleted = !!s.deletedAt;
                   const isSelected = s.id === effectiveSelectedId;
-                  // HOTFIX 271: diferencia con el criterio del panel lateral (declarado - total sistema).
+                  // HOTFIX 271: Sistema y Diferencia con el criterio del panel lateral: total sistema = inicial + ventas
+                  // (todos los medios) + propinas + ingresos - egresos; diferencia = declarado - total sistema.
                   // Total sistema por fila desde el backend (s.sistemaTotal); la fila seleccionada usa el cuadre en vivo.
-                  // Si el backend aún no envía sistemaTotal, se mantiene la diferencia persistida al cerrar.
-                  const sysAmt = isSelected && cuadre
-                    ? sistemaTotal
-                    : ((s.snapshotTotalSales ?? s.openingCash ?? 0) as number);
+                  // Si el backend aún no envía sistemaTotal, se mantienen los valores anteriores (ventas y diferencia persistida).
                   const userAmt: number | null = s.closingCash ?? null;
                   const rowSistema: number | null = isSelected && cuadre
                     ? sistemaTotal
                     : (s.sistemaTotal != null ? Number(s.sistemaTotal) : null);
+                  const sysAmt = rowSistema ?? ((s.snapshotTotalSales ?? s.openingCash ?? 0) as number);
                   let diff: number | null;
                   if (s.status === 'CLOSED') {
                     diff = userAmt != null && rowSistema != null
@@ -453,7 +452,7 @@ export const TabArqueos = () => {
                         {isOpen ? <span className="text-amber-500 font-medium"><LiveDuration openedAt={s.openedAt} /></span> : dur}
                       </td>
                       <td className={`px-4 py-3 font-semibold ${lineClass || 'text-gray-800'}`}>
-                        {!isSelected && s.status === 'CLOSED' && s.snapshotTotalSales == null ? '—' : fmt(sysAmt)}
+                        {rowSistema == null && s.status === 'CLOSED' && s.snapshotTotalSales == null ? '—' : fmt(sysAmt)}
                       </td>
                       <td className={`px-4 py-3 ${lineClass || 'text-gray-600'}`}>{userAmt != null ? fmt(userAmt) : '-'}</td>
                       <td

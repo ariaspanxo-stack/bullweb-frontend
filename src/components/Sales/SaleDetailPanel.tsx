@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { formatSaleNumber } from '@/utils/formatSaleNumber';
@@ -7,9 +7,10 @@ import { QuickActionBar } from './QuickActionBar';
 import { StatusBadge } from './StatusBadge';
 import { PaymentBreakdown } from './PaymentBreakdown';
 import { SmartSuggestions } from './SmartSuggestions';
-import { User, MapPin, FileText, Users, Calendar, X, CheckCircle, XCircle, CreditCard, Clock, AlertCircle, Tag, Gift, ChefHat } from 'lucide-react';
+import { User, MapPin, FileText, Users, Calendar, X, CheckCircle, XCircle, CreditCard, Clock, AlertCircle, Tag, Gift, ChefHat, ArrowLeftRight } from 'lucide-react';
 import toast from 'react-hot-toast';
-import salesService from '@/services/salesService';
+import salesService, { type PaymentMethodEvent } from '@/services/salesService';
+import { ChangePaymentMethodModal } from './ChangePaymentMethodModal';
 import { ReprintModal } from '@/components/print/ReprintModal';
 import { CustomerSegmentBadge } from '@/components/customers/CustomerSegmentBadge';
 
@@ -31,6 +32,17 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
   const [cancelReason, setCancelReason] = useState('');
   const [cancelLoading, setCancelLoading] = useState(false);
   const [showReprintModal, setShowReprintModal] = useState(false);
+
+  // Hotfix #274: cambio de medio de pago y sus eventos en el historial
+  const [showChangeMethod, setShowChangeMethod] = useState(false);
+  const [paymentEvents, setPaymentEvents] = useState<PaymentMethodEvent[]>([]);
+  const [eventsTick, setEventsTick] = useState(0);
+  useEffect(() => {
+    if (!sale?.id) { setPaymentEvents([]); return; }
+    let alive = true;
+    salesService.getPaymentEvents(sale.id).then(ev => { if (alive) setPaymentEvents(ev); });
+    return () => { alive = false; };
+  }, [sale?.id, eventsTick]);
 
   const formatDateTime = (date: Date) => {
     return new Intl.DateTimeFormat('es-CL', {
@@ -328,6 +340,15 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
         {sale.payments && sale.payments.length > 0 && (
           <div className="mt-6 pt-4 border-t border-gray-200">
             <PaymentBreakdown sale={sale} />
+            {/* Hotfix #274: cambiar medio de pago de una venta cerrada */}
+            {sale.status === 'closed' && (
+              <button
+                onClick={() => setShowChangeMethod(true)}
+                className="mt-3 w-full min-h-[44px] flex items-center justify-center gap-2 rounded-lg border border-[#F97316] text-[#F97316] text-sm font-bold hover:bg-orange-50"
+              >
+                <ArrowLeftRight className="w-4 h-4" /> Cambiar medio de pago
+              </button>
+            )}
           </div>
         )}
 
@@ -357,6 +378,23 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                 detail: new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(p.amount),
                 time:  p.createdAt ? new Date(p.createdAt) : undefined,
                 colorClass: 'bg-green-100 text-green-700',
+              });
+            });
+
+            // 2a — Hotfix #274: cambios de medio de pago (audit_logs)
+            paymentEvents.forEach(ev => {
+              entries.push({
+                icon: <ArrowLeftRight className="w-3.5 h-3.5" />,
+                label: `${ev.isTip ? 'Medio de propina cambiado' : 'Medio de pago cambiado'} — ${ev.from ?? '?'} → ${ev.to ?? '?'}`,
+                detail: [
+                  ev.amount != null ? formatCurrency(ev.amount) : null,
+                  ev.userName ? `por ${ev.userName}` : null,
+                  ev.approvedByName && ev.approvedByName !== ev.userName ? `autorizó ${ev.approvedByName}` : null,
+                  ev.cashSessionClosed ? 'arqueo cerrado' : null,
+                  ev.reason ? `"${ev.reason}"` : null,
+                ].filter(Boolean).join(' · ') || undefined,
+                time: new Date(ev.at),
+                colorClass: 'bg-orange-100 text-orange-700',
               });
             });
 
@@ -679,6 +717,14 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
           </div>
         </div>
       </div>
+    )}
+
+    {showChangeMethod && sale && (
+      <ChangePaymentMethodModal
+        sale={sale}
+        onClose={() => setShowChangeMethod(false)}
+        onDone={() => { setShowChangeMethod(false); setEventsTick(t => t + 1); onRefresh?.(); }}
+      />
     )}
 
     {showReprintModal && sale && (

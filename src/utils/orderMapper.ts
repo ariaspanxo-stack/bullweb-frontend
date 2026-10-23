@@ -53,6 +53,7 @@ interface BackendPayment {
   amount: number;
   reference?: string;
   createdAt: string;
+  isTip?: boolean;       // Hotfix #256: pago de propina
   payment_methods?: {    // incluido por Prisma include
     id: string;
     name: string;
@@ -153,7 +154,10 @@ export function mapOrderToSale(order: BackendOrder): Sale {
     method: extractPaymentMethodName(payment),
     amount: payment.amount,
     reference: payment.reference,
-    createdAt: new Date(payment.createdAt)
+    createdAt: new Date(payment.createdAt),
+    // Hotfix #274: medio editable en Ventas
+    paymentMethodId: payment.paymentMethodId ?? payment.payment_methods?.id,
+    isTip: !!payment.isTip,
   }));
 
   // Tips (temporalmente vacío, agregar lógica después)

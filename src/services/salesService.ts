@@ -23,6 +23,21 @@ interface UpdateSaleDto {
   paymentMethodId?: string | null;
 }
 
+// Hotfix #274: evento de cambio de medio de pago (audit_logs PAYMENT_METHOD_CHANGED)
+export interface PaymentMethodEvent {
+  id: string;
+  at: string;
+  userName: string | null;
+  from: string | null;
+  to: string | null;
+  paymentId: string | null;
+  amount: number | null;
+  isTip: boolean;
+  reason: string | null;
+  approvedByName: string | null;
+  cashSessionClosed: boolean;
+}
+
 class SalesService {
   private baseUrl = '/pos/orders';
 
@@ -145,6 +160,26 @@ class SalesService {
       return mapOrderToSale(response.data.data || response.data);
     } catch (error: any) {
       throw error;
+    }
+  }
+
+  // Hotfix #274: cambiar el medio de un pago de una venta cerrada (el monto no cambia)
+  async changePaymentMethod(
+    orderId: string,
+    paymentId: string,
+    body: { paymentMethodId: string; reason?: string; pin?: string },
+  ): Promise<{ warnings: string[] }> {
+    const response = await api.patch(`${this.baseUrl}/${orderId}/payments/${paymentId}/method`, body);
+    return { warnings: Array.isArray(response.data?.warnings) ? response.data.warnings : [] };
+  }
+
+  // Hotfix #274: eventos de cambio de medio de pago (historial del panel)
+  async getPaymentEvents(orderId: string): Promise<PaymentMethodEvent[]> {
+    try {
+      const response = await api.get(`${this.baseUrl}/${orderId}/payment-events`);
+      return Array.isArray(response.data) ? response.data : [];
+    } catch {
+      return [];
     }
   }
 

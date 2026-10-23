@@ -91,6 +91,8 @@ export interface Payment {
   amount: number;
   reference?: string;
   createdAt?: Date;
+  paymentMethodId?: string;  // Hotfix #274
+  isTip?: boolean;           // Hotfix #274: propina (Hotfix #256)
 }
 
 export interface PaymentSplit {

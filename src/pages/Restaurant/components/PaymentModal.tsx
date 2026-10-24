@@ -337,9 +337,17 @@ export const PaymentModal = ({
         if (!confirmReplace('coupon')) return;
         const cType = d.coupon.type as 'PERCENTAGE' | 'FIXED';
         const cValue = cType === 'PERCENTAGE' ? d.coupon.value : d.discountAmount;
-        // Hotfix #257: el cupón usa el mismo slot, topes y PIN, y queda guardado en la orden
-        if (!(await persistDiscount({ type: cType, value: cValue }, `Cupón ${couponCode.trim()}`))) {
+        // Hotfix #279: el cupón se aplica en el servidor (sin PIN del descuento manual) y queda
+        // ligado a la orden; el backend calcula el descuento y consume el uso al cobrar.
+        if (!discountOrderId) {
           setCouponMsg({ ok: false, text: 'Cupón no aplicado' });
+          return;
+        }
+        try {
+          await api.post(`/pos/orders/${discountOrderId}/coupon`, { code: couponCode.trim() });
+          setSavedDiscount({ type: cType, value: cValue });
+        } catch (e: any) {
+          setCouponMsg({ ok: false, text: e?.message || 'Cupón no aplicado' });
           return;
         }
         setDiscountEnabled(true);

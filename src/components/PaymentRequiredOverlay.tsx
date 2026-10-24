@@ -27,7 +27,9 @@ import { useBillingStatus } from '@/hooks/useBillingStatus';
  *          retryAfter (el backend lo expone en el body) — no más clicks ciegos.
  */
 export default function PaymentRequiredOverlay() {
-  const { isSuperAdmin } = useAuthStore();
+  const { isSuperAdmin, user } = useAuthStore();
+  // Hotfix #277: solo el administrador paga (mismo criterio que el backend: ALL_PERMISSIONS o rol /admin/)
+  const isAdmin = (user?.role?.permissions ?? []).includes('ALL_PERMISSIONS') || /admin/i.test(user?.role?.name ?? '');
   const [open,      setOpen]      = useState(false);
   const [paying,    setPaying]    = useState(false);
   const [verifying, setVerifying] = useState(false);
@@ -50,6 +52,10 @@ export default function PaymentRequiredOverlay() {
     : planRaw ? planRaw.charAt(0).toUpperCase() + planRaw.slice(1).toLowerCase()
     : 'tu plan';
   const priceFmt = priceCLP ? `$${priceCLP.toLocaleString('es-CL')}` : '';
+  // Hotfix #277: titulo segun el estado real (cliente que pagaba vs trial terminado)
+  const title = billingQ.data?.expiredReason === 'SUBSCRIPTION_EXPIRED'
+    ? 'Tu suscripción venció'
+    : 'Tu período de prueba terminó';
 
   // ── Escuchar evento 'billing:payment_required' ──────────────────────────────
   useEffect(() => {
@@ -147,12 +153,14 @@ export default function PaymentRequiredOverlay() {
 
           {/* Título */}
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Tu período de prueba ha terminado
+            {title}
           </h2>
 
-          {/* Descripción — (P1-5) plan y precio dinámicos de la ficha */}
+          {/* Descripción — (P1-5) plan y precio dinámicos de la ficha; Hotfix #277: no admin sin pago */}
           <p className="text-gray-500 text-sm mb-6">
-            Para continuar operando y no perder tus ventas, activa tu plan {planLabel}{priceFmt ? ` (${priceFmt}/mes)` : ''}.
+            {isAdmin
+              ? <>Para continuar operando y no perder tus ventas, activa tu plan {planLabel}{priceFmt ? ` (${priceFmt}/mes)` : ''}.</>
+              : <>El servicio está pausado. <span className="font-semibold text-gray-700">Contacta al administrador</span> de tu local para reactivarlo.</>}
           </p>
 
           {/* Error */}
@@ -168,21 +176,23 @@ export default function PaymentRequiredOverlay() {
             </div>
           )}
 
-          {/* Botón principal — deshabilitado mientras corre el countdown 429 */}
-          <button
-            onClick={handlePay}
-            disabled={paying || rateLimitSecs !== null}
-            className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors mb-3"
-          >
-            {paying ? (
-              <>
-                <Loader2 size={18} className="animate-spin" />
-                Generando link...
-              </>
-            ) : (
-              priceFmt ? `Pagar ${priceFmt} / mes` : 'Pagar suscripción'
-            )}
-          </button>
+          {/* Botón principal — deshabilitado mientras corre el countdown 429. Hotfix #277: solo admin */}
+          {isAdmin && (
+            <button
+              onClick={handlePay}
+              disabled={paying || rateLimitSecs !== null}
+              className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold py-3 px-6 rounded-xl flex items-center justify-center gap-2 transition-colors mb-3 min-h-[44px]"
+            >
+              {paying ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  Generando link...
+                </>
+              ) : (
+                priceFmt ? `Pagar ${priceFmt} / mes` : 'Pagar suscripción'
+              )}
+            </button>
+          )}
 
           {/* Verificación manual */}
           <button
@@ -196,7 +206,7 @@ export default function PaymentRequiredOverlay() {
                 Verificando...
               </>
             ) : (
-              'Ya pagué, verificar ahora'
+              isAdmin ? 'Ya pagué, verificar ahora' : 'Verificar ahora'
             )}
           </button>
 

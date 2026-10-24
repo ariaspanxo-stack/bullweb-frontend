@@ -6,6 +6,7 @@ import { useState, useEffect }              from 'react';
 import { useNavigate }                   from 'react-router-dom';
 import { useQuery, useMutation }         from '@tanstack/react-query';
 import { ChevronLeft }                   from 'lucide-react';
+import { WaiterPaymentBlocked, notifyWaiterPaymentRequired } from '@/features/mesero/components/WaiterPaymentBlocked';
 
 interface WaiterProfile {
   id:          string;
@@ -73,6 +74,7 @@ export function WaiterLoginPage() {
         body:    JSON.stringify(data),
       });
       const json = await res.json();
+      if (res.status === 402) notifyWaiterPaymentRequired(json); // Hotfix #277
       if (!res.ok || !json.success) throw new Error(json.error ?? 'Error de autenticación');
       return json.data;
     },
@@ -217,6 +219,8 @@ export function WaiterLoginPage() {
           </button>
         </div>
       )}
+      {/* Hotfix #277: login con suscripcion vencida -> aviso "Contacta al administrador" */}
+      <WaiterPaymentBlocked />
     </div>
   );
 }

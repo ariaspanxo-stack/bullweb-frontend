@@ -8,6 +8,7 @@ import { InstallPWA, useInstallPWA } from '@/components/pwa/InstallPWA';
 import { ConnectionIndicator }  from './ConnectionIndicator';
 import { useTableRequestAlerts } from '@/hooks/useTableRequestAlerts';
 import TableRequestAlert from '@/components/TableRequestAlert';
+import { WaiterPaymentBlocked } from './WaiterPaymentBlocked';
 
 interface Props {
   children:       React.ReactNode;
@@ -107,6 +108,9 @@ export function MeseroLayout({
       </nav>
     </div>
     <InstallPWA />
+
+    {/* Hotfix #277: suscripcion vencida -> aviso bloqueante "Contacta al administrador" */}
+    <WaiterPaymentBlocked />
 
     {/* Alertas de solicitudes de mesa (mesero/cuenta) vía Socket.IO */}
     <TableRequestAlert

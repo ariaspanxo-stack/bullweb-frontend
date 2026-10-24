@@ -11,6 +11,7 @@ import toast                     from 'react-hot-toast';
 import { useWaiterPermission }   from '../hooks/useWaiterPermission';
 import { meseroService }         from '../meseroService';
 import { PaymentMethodGrid }     from './PaymentMethodGrid';
+import { notifyWaiterPaymentRequired } from './WaiterPaymentBlocked';
 
 const API_BASE = (import.meta as any).env?.VITE_API_URL ?? '/api';
 
@@ -94,6 +95,7 @@ export function MeseroCheckout({
         body: JSON.stringify({ paymentMethod, discountPct }),
       });
       const json = await res.json();
+      if (res.status === 402) notifyWaiterPaymentRequired(json); // Hotfix #277
       if (!res.ok || !json.success) throw new Error(json.error ?? 'Error al cobrar');
       return json.data;
     },
@@ -113,6 +115,7 @@ export function MeseroCheckout({
         headers: { Authorization: `Bearer ${getWaiterToken()}` },
       });
       const json = await res.json();
+      if (res.status === 402) notifyWaiterPaymentRequired(json); // Hotfix #277
       if (!res.ok || !json.success) throw new Error(json.error ?? 'Error al cerrar mesa');
     },
     onSuccess: () => {
@@ -129,6 +132,7 @@ export function MeseroCheckout({
         method:  'POST',
         headers: { Authorization: `Bearer ${getWaiterToken()}` },
       });
+      if (res.status === 402) notifyWaiterPaymentRequired(await res.json().catch(() => null)); // Hotfix #277
       if (!res.ok) throw new Error('Error al solicitar impresión');
     },
     onSuccess: () => toast.success('Boleta solicitada a impresora 🖨️'),

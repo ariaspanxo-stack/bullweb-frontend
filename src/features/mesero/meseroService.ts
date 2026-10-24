@@ -3,6 +3,8 @@
 // Todas las llamadas usan el waiterToken (JWT de mesero).
 // ═══════════════════════════════════════════════════════════════
 
+import { notifyWaiterPaymentRequired } from './components/WaiterPaymentBlocked';
+
 const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
 
 function getWaiterHeaders(): Record<string, string> {
@@ -25,6 +27,8 @@ async function waiterFetch(path: string, init?: RequestInit): Promise<any> {
     headers: { ...getWaiterHeaders(), ...(init?.headers ?? {}) },
   });
   const json = await res.json();
+  // Hotfix #277: suscripcion vencida -> aviso bloqueante "Contacta al administrador"
+  if (res.status === 402) notifyWaiterPaymentRequired(json);
   if (!res.ok) throw new Error(json.error ?? json.message ?? 'Error de red');
   return json;
 }

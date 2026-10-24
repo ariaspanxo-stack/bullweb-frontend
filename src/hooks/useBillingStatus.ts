@@ -29,6 +29,8 @@ export interface BillingStatusData {
   trialEndsAt?:  string | null;
   /** Hotfix #199-1: precio EFECTIVO de la ficha (DISPLAY = COBRO). */
   priceCLP?:     number;
+  /** Hotfix #277: motivo del bloqueo (null si no esta bloqueado). */
+  expiredReason?: 'TRIAL_ENDED' | 'SUBSCRIPTION_EXPIRED' | null;
   /** HOTFIX #230: features del plan EFECTIVO (plan_config via getStatus) —
    *  las consume hasFeature() de usePlan. null si el backend aún no las sirve. */
   features?:     string[] | null;

@@ -22,6 +22,8 @@ import { usePlan } from '@/hooks/usePlan';
 
 interface PlanGuardProps {
   children: React.ReactNode;
+  /** HOTFIX 278: si el plan BASICO incluye esta feature (plan_config), el guard es transparente. */
+  feature?: string;
 }
 
 const TODO_UNLOCKS: string[] = [
@@ -30,15 +32,15 @@ const TODO_UNLOCKS: string[] = [
   'KDS — pantalla de cocina',
   // HOTFIX #230: 'App Mesero con PIN' salió de la lista — incluida en BASICO (#229).
   'Inventario, fichas técnicas y alertas de stock',
-  'Clientes, Fidelización, Campañas y Cupones',
+  'Clientes, Fidelización y Campañas', // HOTFIX 278: Cupones incluidos en BASICO
   'Mapeo de Delivery (Uber Eats, PedidosYa)',
   'Control de Asistencia con kiosco',
 ];
 
-export function PlanGuard({ children }: PlanGuardProps) {
-  const { isBasico } = usePlan();
+export function PlanGuard({ children, feature }: PlanGuardProps) {
+  const { isBasico, hasFeature } = usePlan();
 
-  if (!isBasico) {
+  if (!isBasico || (feature && hasFeature(feature))) {
     return <>{children}</>;
   }
 

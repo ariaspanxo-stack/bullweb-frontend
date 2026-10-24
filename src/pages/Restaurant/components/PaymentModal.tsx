@@ -153,8 +153,9 @@ export const PaymentModal = ({
   onConfirm,
 }: PaymentModalProps) => {
   const authUser = useAuthStore(s => s.user);
-  // HOTFIX 262: cupones y puntos (CRM) no están en Básico — se ocultan, sin llamadas
-  const { isBasico } = usePlan();
+  // HOTFIX 262: puntos (CRM) no están en Básico — se ocultan, sin llamadas.
+  // HOTFIX 278: cupones sí (gate por feature 'coupons' de plan_config).
+  const { isBasico, hasFeature } = usePlan();
   const userPermsDiscount = (authUser?.role?.permissions ?? []) as string[];
   const discountPermByType: Record<string, string> = {
     DINE_IN: 'pos.discount_table', TAKEAWAY: 'pos.discount_counter', DELIVERY: 'pos.discount_delivery',
@@ -595,8 +596,8 @@ export const PaymentModal = ({
                     <p className="text-sm text-slate-400">Sin descuento aplicado</p>
                   )}
 
-                  {/* Cupón: mismo slot */}
-                  {canEditDiscount && !isBasico && <div className="flex gap-2 mt-2">
+                  {/* Cupón: mismo slot — HOTFIX 278: visible si el plan incluye la feature coupons (Básico incluido) */}
+                  {canEditDiscount && hasFeature('coupons') && <div className="flex gap-2 mt-2">
                     <input
                       type="text"
                       placeholder="Código de cupón"

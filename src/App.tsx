@@ -281,7 +281,7 @@ function AppContent() {
               <Route path="apps/dte" element={<PermissionGuard permission="billing.config"><PlanGuard><DteConfigPage /></PlanGuard></PermissionGuard>} />
               <Route path="apps" element={<PermissionGuard permission="apps.view"><AppsPage /></PermissionGuard>} />
               <Route path="dte/documentos" element={<PermissionGuard permission="billing.view"><PlanGuard><DteDocumentsPage /></PlanGuard></PermissionGuard>} />
-              <Route path="coupons" element={<PermissionGuard permission="coupons.view"><PlanGuard><CouponsPage /></PlanGuard></PermissionGuard>} />
+              <Route path="coupons" element={<PermissionGuard permission="coupons.view"><PlanGuard feature="coupons"><CouponsPage /></PlanGuard></PermissionGuard>} /> {/* HOTFIX 278: Cupones en BASICO */}
               <Route path="promotions" element={<PermissionGuard permission="products.view"><PromotionsPage /></PermissionGuard>} />
 
             {/* Administración — usa el Layout principal con Sidebar.tsx */}

@@ -152,7 +152,8 @@ const menuSections: MenuSection[] = [
       { name: 'Mapeo Delivery',  icon: Truck,             path: '/delivery/mappings', permission: 'delivery.view', planRequired: 'TODO' },
       { name: 'Fidelización', icon: Heart,             path: '/campaigns',        permission: 'marketing.view', planRequired: 'TODO', visibleLocked: true },
       { name: 'Carta QR',    icon: QrCode,            path: '/carta-qr',         permission: 'marketing.view' },
-      { name: 'Cupones',     icon: Tag,               path: '/coupons',          permission: 'coupons.view', planRequired: 'TODO' },
+      // HOTFIX 278: Cupones incluidos en BASICO — gate por feature plan_config (hasFeature('coupons'))
+      { name: 'Cupones',     icon: Tag,               path: '/coupons',          permission: 'coupons.view', featureRequired: 'coupons' },
       { name: 'Promociones', icon: Percent,           path: '/promotions',       permission: 'products.view', badge: 'Nuevo' },
     ]
   },

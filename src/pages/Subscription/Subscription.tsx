@@ -65,7 +65,7 @@ const TODO_UNLOCKS: { icon: 'check' | 'star'; text: string }[] = [
   // HOTFIX 262: carta QR con pedidos y App Mesero salieron de la lista — incluidas en Básico.
   { icon: 'check', text: 'KDS — pantalla de cocina en tiempo real' },
   { icon: 'check', text: 'Inventario, fichas técnicas y alertas de stock' },
-  { icon: 'check', text: 'Clientes, Fidelización, Campañas y Cupones' },
+  { icon: 'check', text: 'Clientes, Fidelización y Campañas' }, // HOTFIX 278: Cupones incluidos en Básico
   { icon: 'check', text: 'Control de asistencia con kiosco' },
   { icon: 'check', text: 'Mapeo de Delivery (Uber Eats, PedidosYa)' },
 ];

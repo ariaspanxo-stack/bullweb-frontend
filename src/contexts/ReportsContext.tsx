@@ -243,7 +243,8 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
   const { data: purchasesRaw, isLoading: purchasesLoading } = useQuery({
     queryKey: ['rpt-purchases', dateFrom, dateTo, purchasesPage],
     queryFn: async () => {
-      const res = await api.get<any>(`/inventory/purchases?page=${purchasesPage}&perPage=${PURCHASES_PAGE_SIZE}&dateFrom=${dateFrom}T00:00:00.000Z&dateTo=${dateTo}T23:59:59.999Z`);
+      // Hotfix #275: fechas YYYY-MM-DD = día completo en hora Chile (antes día UTC)
+      const res = await api.get<any>(`/inventory/purchases?page=${purchasesPage}&perPage=${PURCHASES_PAGE_SIZE}&dateFrom=${dateFrom}&dateTo=${dateTo}`);
       return res.data;
     },
     staleTime: 0,
@@ -253,7 +254,7 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
   const { data: prevPurchasesRaw } = useQuery({
     queryKey: ['rpt-prev-purchases', prevDates.from, prevDates.to],
     queryFn: async () => {
-      const res = await api.get<any>(`/inventory/purchases?perPage=500&dateFrom=${prevDates.from}T00:00:00.000Z&dateTo=${prevDates.to}T23:59:59.999Z`);
+      const res = await api.get<any>(`/inventory/purchases?perPage=500&dateFrom=${prevDates.from}&dateTo=${prevDates.to}`); // Hotfix #275
       return unwrapList(res);
     },
     staleTime: 300_000,

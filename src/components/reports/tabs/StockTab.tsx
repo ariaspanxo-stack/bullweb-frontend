@@ -21,7 +21,7 @@ export function StockTab() {
     queryFn: async () => {
       const [ingRes, movRes] = await Promise.all([
         api.get<any>(`/inventory/ingredients?page=${stockPage}&perPage=${STOCK_PAGE_SIZE}`),
-        api.get<any>(`/inventory/movements?perPage=50&dateFrom=${dateFrom}T00:00:00.000Z&dateTo=${dateTo}T23:59:59.999Z`),
+        api.get<any>(`/inventory/movements?perPage=50&dateFrom=${dateFrom}&dateTo=${dateTo}`), // Hotfix #275: día en hora Chile
       ]);
       const ingPayload      = ingRes?.data;
       const ingredients     = Array.isArray(ingPayload) ? ingPayload

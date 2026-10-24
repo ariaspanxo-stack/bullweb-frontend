@@ -14,18 +14,22 @@ export function ProductosTab() {
 
   const { data: productsData, isLoading: prodLoading } = useQuery({
     queryKey: ['rpt-products', dateFrom, dateTo, waiterId],
-    queryFn: () => reportsService.getTopProducts({ dateFrom, dateTo, limit: 100, waiterId: waiterId || undefined }),
+    // Hotfix #275: top 50 (la tabla muestra 50; el gráfico los 10 primeros)
+    queryFn: () => reportsService.getTopProducts({ dateFrom, dateTo, limit: 50, waiterId: waiterId || undefined }),
     staleTime: 0,
   });
 
+  // Hotfix #275: nombre y categoría vienen resueltos del backend (incluye productos eliminados);
+  // sin costo cargado, costo/ganancia/margen quedan en null (antes margen 100%)
+  const toNum = (v: any) => (v === null || v === undefined ? null : Number(v));
   const allProducts = ((productsData as any)?.products ?? []).map((item: any) => ({
-    name:      item.product?.name ?? 'N/A',
+    name:      item.name ?? item.product?.name ?? 'Producto eliminado',
     quantity:  item.quantity ?? 0,
     revenue:   Number(item.revenue) || 0,
-    category:  item.product?.categories?.name ?? '—',
-    totalCost: Number(item.totalCost) || 0,
-    profit:    Number(item.profit) || 0,
-    margin:    Number(item.margin) || 0,
+    category:  item.categoryName ?? item.product?.categories?.name ?? 'Sin categoría',
+    totalCost: toNum(item.totalCost),
+    profit:    toNum(item.profit),
+    margin:    toNum(item.margin),
   }));
 
   // Gráfico de barras: limitado a 10 para que no se vea amontonado
@@ -79,18 +83,22 @@ export function ProductosTab() {
                   </div>
                 </td>
                 <td className="px-5 py-3.5 text-right tabular-nums text-gray-700">
-                  {p.totalCost > 0 ? formatCurrency(p.totalCost) : '—'}
+                  {p.totalCost != null
+                    ? <span className="font-bold">{formatCurrency(p.totalCost)}</span>
+                    : <span className="text-xs text-gray-400">Sin costo cargado</span>}
                 </td>
-                <td className={cn('px-5 py-3.5 text-right font-semibold tabular-nums', p.profit >= 0 ? 'text-green-600' : 'text-red-600')}>
-                  {formatCurrency(p.profit)}
+                <td className={cn('px-5 py-3.5 text-right font-semibold tabular-nums', p.profit == null ? 'text-gray-400' : p.profit >= 0 ? 'text-green-600' : 'text-red-600')}>
+                  {p.profit != null ? formatCurrency(p.profit) : '—'}
                 </td>
                 <td className="px-5 py-3.5 text-right tabular-nums">
-                  <span className={cn('inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold',
-                    p.margin >= 60 ? 'bg-green-100 text-green-700' :
-                    p.margin >= 30 ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-red-100 text-red-700')}>
-                    {p.margin.toFixed(0)}%
-                  </span>
+                  {p.margin != null ? (
+                    <span className={cn('inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold',
+                      p.margin >= 60 ? 'bg-green-100 text-green-700' :
+                      p.margin >= 30 ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-red-100 text-red-700')}>
+                      {p.margin.toFixed(0)}%
+                    </span>
+                  ) : <span className="text-gray-400">—</span>}
                 </td>
               </tr>
             ))}

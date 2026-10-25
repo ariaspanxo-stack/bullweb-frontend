@@ -40,6 +40,8 @@ export interface Table {
   currentTotal?: number;
   activeOrderCreatedAt?: string | Date | null;   // createdAt de la orden activa
   preparingItemsCount?: number;                  // ítems en preparación
+  readyItemsCount?: number;                      // TAREA 280: ítems listos de la orden activa
+  activeItemsCount?: number;                     // TAREA 280: ítems no anulados de la orden activa
 }
 
 export type TableStatus = 'AVAILABLE' | 'OCCUPIED' | 'RESERVED' | 'CLEANING';

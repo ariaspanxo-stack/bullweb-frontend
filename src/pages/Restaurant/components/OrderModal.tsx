@@ -34,6 +34,7 @@ import tablesService from '../../../services/tablesService';
 import { useRemovalReason } from '../../../hooks/useRemovalReason';
 import { formatCurrency } from '../../../lib/utils';
 import { OrderTicket } from '../../../components/restaurant/shared/OrderTicket';
+import { ItemPrepList, ItemsProgress } from '../../../components/restaurant/shared/ItemPrepList'; // TAREA 280
 import { colorForCategory, emojiForCategory, categoryLabel } from '../../../lib/categoryHelpers';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 
@@ -97,6 +98,8 @@ export const OrderModal = ({
   const [showModifiersModal, setShowModifiersModal] = useState(false);
   const [orderNote, setOrderNote]                 = useState('');
   const [existingStatus, setExistingStatus]       = useState<string | null>(null);
+  // TAREA 280: ítems del pedido leídos del servidor para marcar su preparación (Básico)
+  const [prepItems, setPrepItems]                 = useState<SaleItem[]>([]);
   const [updatingStatus, setUpdatingStatus]       = useState(false);
   const [showTransferModal, setShowTransferModal]   = useState(false);
   const [isTransferring, setIsTransferring]         = useState(false);
@@ -177,6 +180,23 @@ export const OrderModal = ({
       setIsTransferring(false);
     }
   };
+
+  // TAREA 280: estado por ítem desde el servidor (al abrir, al enviar ítems nuevos, tras cada cambio y cada 10 s)
+  const refreshPrepItems = () => {
+    if (!existingOrderId) return;
+    restaurantService.getSaleById(existingOrderId).then(sale => {
+      if (!sale) return;
+      setPrepItems(sale.items ?? []);
+      if (sale.status) setExistingStatus(sale.status);
+    }).catch(() => { /* silencioso */ });
+  };
+  useEffect(() => {
+    if (!existingOrderId || !isBasico) { setPrepItems([]); return; }
+    refreshPrepItems();
+    const t = setInterval(refreshPrepItems, 10_000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingOrderId, isBasico, existingItems.length]);
 
   // Cargar datos de orden existente
   useEffect(() => {
@@ -802,6 +822,17 @@ export const OrderModal = ({
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider py-2 flex items-center gap-1.5">
                       <ChefHat size={12} /> En cocina
                     </p>
+                    {/* TAREA 280: preparación por ítem en Básico (mismo componente que la tarjeta de Mostrador) */}
+                    {isBasico && existingOrderId && prepItems.length > 0
+                      && ['PENDING', 'PREPARING', 'READY'].includes(existingStatus ?? '') && (
+                      <div className="pb-2 mb-1 border-b border-gray-200">
+                        <ItemsProgress items={prepItems} />
+                        <ItemPrepList orderId={existingOrderId} items={prepItems} onChanged={() => {
+                          refreshPrepItems();
+                          queryClient.invalidateQueries({ queryKey: ['tables'] });
+                        }} />
+                      </div>
+                    )}
                     {existingItems.map(item => (
                       <div
                         key={item.id}

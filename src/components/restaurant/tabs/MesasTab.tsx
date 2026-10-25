@@ -41,6 +41,7 @@ function TableCard({ table, onClick }: { table: Table; onClick: () => void }) {
                                              'text-red-700 bg-red-100 px-1.5 rounded';
 
   const preparingCount = table.preparingItemsCount ?? 0;
+  const totalItems     = table.activeItemsCount ?? 0;  // TAREA 280
 
   return (
     <button
@@ -83,8 +84,14 @@ function TableCard({ table, onClick }: { table: Table; onClick: () => void }) {
                 {elapsed.text}
               </span>
             )}
-            {(preparingCount > 0 || (table.numberOfPeople != null && table.numberOfPeople > 0)) && (
+            {(preparingCount > 0 || totalItems > 0 || (table.numberOfPeople != null && table.numberOfPeople > 0)) && (
               <div className="flex flex-wrap items-center gap-1.5">
+                {/* TAREA 280: avance por ítem (neutro) */}
+                {totalItems > 0 && (
+                  <span className="flex items-center text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 tabular-nums">
+                    {table.readyItemsCount ?? 0}/{totalItems} listos
+                  </span>
+                )}
                 {preparingCount > 0 && (
                   <span className="flex items-center text-xs font-semibold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700">
                     <ChefHat className="w-3 h-3 mr-1" /> {preparingCount} en cocina

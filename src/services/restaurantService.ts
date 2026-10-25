@@ -119,6 +119,9 @@ class RestaurantService {
           ?.reduce((s: number, i: any) => s + Number(i.subtotal ?? 0), 0) ?? 0;
         const preparingCount = activeOrder?.order_items
           ?.filter((i: any) => i.status === 'PREPARING' || i.status === 'SENT').length ?? 0;
+        // TAREA 280: avance por ítem en el mosaico de la mesa ("X/Y listos")
+        const activeItems = (activeOrder?.order_items ?? []).filter((i: any) => !i.isCancelled);
+        const readyCount  = activeItems.filter((i: any) => i.status === 'READY' || i.status === 'DELIVERED').length;
         return {
           ...t,
           waiterName:          activeOrder?.users_orders_waiterIdTousers?.name
@@ -128,6 +131,8 @@ class RestaurantService {
           currentTotal:        itemsTotal > 0 ? itemsTotal : Number(activeOrder?.total ?? 0),
           activeOrderCreatedAt: activeOrder?.createdAt ?? null,
           preparingItemsCount: preparingCount,
+          readyItemsCount:     readyCount,
+          activeItemsCount:    activeItems.length,
         };
       });
 

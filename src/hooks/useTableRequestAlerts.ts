@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { contextSocketAuth } from '@/lib/socketAuth';
 import { playOrderAlert } from '@/lib/alert-sound';
 
 export interface TableRequest {
@@ -58,6 +59,7 @@ export function useTableRequestAlerts() {
 
     const socket = io(apiUrl, {
       path:                 '/socket.io',
+      auth:                 contextSocketAuth, // TAREA 281: handshake autenticado
       transports:           ['websocket', 'polling'],
       reconnection:         true,
       reconnectionAttempts: 10,

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import io, { Socket } from 'socket.io-client';
+import { staffSocketAuth } from '@/lib/socketAuth';
 import {
   Maximize,
   Volume2,
@@ -215,6 +216,7 @@ export default function KDS() {
     const socket = io(SOCKET_URL, {
       transports: ['polling', 'websocket'], // polling primero → más estable detrás de Nginx
       path: '/socket.io',
+      auth: staffSocketAuth, // TAREA 281: handshake autenticado
     });
     socketRef.current = socket;
 

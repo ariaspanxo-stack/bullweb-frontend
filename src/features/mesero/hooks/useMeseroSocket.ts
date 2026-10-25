@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { waiterSocketAuth } from '@/lib/socketAuth';
 import { playOrderAlert } from '@/lib/alert-sound';
 
 // ── Tipos de solicitudes de mesa ──
@@ -61,6 +62,7 @@ export function useMeseroSocket(events: MeseroSocketEvents) {
 
     const socket = io(apiUrl, {
       path:                '/socket.io',
+      auth:                waiterSocketAuth, // TAREA 281: handshake autenticado
       transports:          ['websocket', 'polling'],
       reconnection:        true,
       reconnectionAttempts: 5,

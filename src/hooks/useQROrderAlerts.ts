@@ -4,6 +4,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { staffSocketAuth } from '@/lib/socketAuth';
 import { playOrderAlert } from '@/lib/alert-sound';
 
 export interface QROrder {
@@ -89,6 +90,7 @@ export function useQROrderAlerts() {
 
     const socket = io(apiUrl, {
       path:                 '/socket.io',
+      auth:                 staffSocketAuth, // TAREA 281: handshake autenticado
       transports:           ['websocket', 'polling'],
       reconnection:         true,
       reconnectionAttempts: 10,

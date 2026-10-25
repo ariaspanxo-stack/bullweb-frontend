@@ -1,6 +1,7 @@
 ﻿import { useState, useEffect, useCallback, useRef } from 'react';
 import QRCode from 'qrcode';
 import { io as socketIo } from 'socket.io-client';
+import { kioskSocketAuth } from '@/lib/socketAuth';
 import { AlertTriangle, WifiOff, Maximize2, Minimize2, Users } from 'lucide-react';
 import { attendancePublicService, type KioskEmployee, type RecentAction, type TodaySummary } from '@/services/attendancePublicService';
 
@@ -178,6 +179,7 @@ export default function AttendanceKiosk() {
     if (!tenantId) return;
     const socket = socketIo(BASE_URL, {
       path:       '/socket.io',
+      auth:       kioskSocketAuth(tenantId), // TAREA 281: handshake autenticado
       transports: ['websocket', 'polling'],
     });
     socket.on('connect', () => {

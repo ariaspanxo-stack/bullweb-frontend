@@ -15,6 +15,7 @@ import {
 import { useLocation } from 'react-router-dom';
 import hotToast from 'react-hot-toast';
 import io, { type Socket } from 'socket.io-client';
+import { staffSocketAuth } from '@/lib/socketAuth';
 import { AlertCircle, X } from 'lucide-react';
 import type {
   Table,
@@ -449,6 +450,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
     socketRef.current = io(SOCKET_URL, {
       transports: ['websocket', 'polling'],
       path:       '/socket.io',
+      auth:       staffSocketAuth, // TAREA 281: handshake autenticado
     });
 
     socketRef.current.on('connect', () => {

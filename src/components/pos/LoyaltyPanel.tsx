@@ -1,18 +1,32 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// ═══════════════════════════════════════════════════════════════
+// LoyaltyPanel — puntos del cliente en el cobro
+// HOTFIX #282: el canje se aplica EN EL SERVIDOR sobre el descuento de la orden
+// (POST /pos/orders/:id/points: atómico, idempotente; quitar/reemplazar el descuento o anular devuelve los puntos).
+// La regla (bloque, valor, mínimo) viene del saldo del cliente: un solo lugar, el backend.
+// ═══════════════════════════════════════════════════════════════
+import { useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Gift, Loader2, AlertCircle } from 'lucide-react';
 import { customersApi } from '@/services/api';
+import api from '@/services/api';
 
 interface LoyaltyPanelProps {
+  orderId: string;
   customerId: string;
   customerName: string;
-  onRedeem: (cashDiscount: number) => void;
+  /** Pregunta antes de reemplazar otro descuento; false = cancelar */
+  beforeRedeem: () => boolean;
+  /** El servidor ya guardó el descuento en la orden */
+  onApplied: (cashDiscount: number, points: number) => void;
 }
 
-export const LoyaltyPanel = ({ customerId, customerName, onRedeem }: LoyaltyPanelProps) => {
+const DEFAULT_RULES = { redeemBlockPoints: 100, redeemBlockValue: 500, minRedeemPoints: 100 };
+
+export const LoyaltyPanel = ({ orderId, customerId, customerName, beforeRedeem, onApplied }: LoyaltyPanelProps) => {
   const queryClient = useQueryClient();
-  const [pointsInput, setPointsInput] = useState<number>(100);
+  const [pointsInput, setPointsInput] = useState<number>(DEFAULT_RULES.minRedeemPoints);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [applying, setApplying] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ['pointsBalance', customerId],
@@ -20,109 +34,96 @@ export const LoyaltyPanel = ({ customerId, customerName, onRedeem }: LoyaltyPane
     enabled: !!customerId,
   });
 
-  const balance = data?.data ?? data;
+  const balance: any = (data as any)?.data ?? data;
+  const rules = { ...DEFAULT_RULES, ...(balance?.rules ?? {}) };
+  const block = rules.redeemBlockPoints;
+  const currentPoints = Number(balance?.points ?? 0);
+  const maxRedeemable = Math.floor(currentPoints / block) * block;
+  const cashPreview = Math.floor(pointsInput / block) * rules.redeemBlockValue;
 
-  const redeemMutation = useMutation({
-    mutationFn: (pts: number) => customersApi.redeemPoints(customerId, pts),
-    onSuccess: (res: any) => {
-      const result = res?.data ?? res;
-      queryClient.invalidateQueries({ queryKey: ['pointsBalance', customerId] });
-      setErrorMsg(null);
-      onRedeem(result.cashValue ?? 0);
-    },
-    onError: (err: any) => {
-      setErrorMsg(err?.message || 'Error al canjear puntos');
-    },
-  });
+  useEffect(() => { setPointsInput(rules.minRedeemPoints); }, [rules.minRedeemPoints]);
 
-  const currentPoints = balance?.points ?? 0;
-  const totalEarned   = balance?.totalEarned ?? 0;
-  const totalSpent    = balance?.totalSpent  ?? 0;
-
-  const maxRedeemable = Math.floor(currentPoints / 100) * 100;
-  const cashPreview   = Math.floor(pointsInput / 100) * 1000;
-
-  const handleRedeem = () => {
+  const handleRedeem = async () => {
     setErrorMsg(null);
-    if (pointsInput < 100 || pointsInput > currentPoints || pointsInput % 100 !== 0) {
-      setErrorMsg('Ingresa un múltiplo de 100 ≤ saldo actual');
+    if (!Number.isInteger(pointsInput) || pointsInput < rules.minRedeemPoints || pointsInput > currentPoints || pointsInput % block !== 0) {
+      setErrorMsg(`Ingresa un múltiplo de ${block}, desde ${rules.minRedeemPoints} y hasta tu saldo`);
       return;
     }
-    redeemMutation.mutate(pointsInput);
+    if (!beforeRedeem()) return;
+    setApplying(true);
+    try {
+      const res: any = await api.post(`/pos/orders/${orderId}/points`, { points: pointsInput });
+      const r = res?.data ?? res;
+      queryClient.invalidateQueries({ queryKey: ['pointsBalance', customerId] });
+      onApplied(Number(r?.discountAmount ?? cashPreview), pointsInput);
+    } catch (err: any) {
+      setErrorMsg(err?.response?.data?.error || err?.message || 'No se pudo canjear');
+    } finally {
+      setApplying(false);
+    }
   };
 
   return (
-    <div className="border border-amber-300 bg-amber-50 rounded-lg p-3 space-y-2">
-      <div className="flex items-center gap-2 text-amber-700 font-semibold text-sm">
-        <Gift size={16} />
+    <div className="border border-slate-200 bg-white rounded-lg p-3 space-y-2">
+      <div className="flex items-center gap-2 text-slate-800 font-semibold text-sm">
+        <Gift size={16} className="text-[#F97316]" />
         <span>Puntos de {customerName}</span>
       </div>
 
       {isLoading ? (
-        <div className="flex items-center gap-2 text-amber-600 text-xs">
+        <div className="flex items-center gap-2 text-slate-500 text-xs">
           <Loader2 size={14} className="animate-spin" />
           Cargando saldo...
         </div>
       ) : (
         <>
           <div className="flex gap-2 text-center">
-            <div className="flex-1 bg-white rounded-lg p-1.5">
-              <div className="text-xl font-bold text-amber-700">{currentPoints}</div>
-              <div className="text-xs text-gray-500">Saldo actual</div>
+            <div className="flex-1 bg-slate-50 rounded-lg p-1.5">
+              <div className="text-xl font-bold text-slate-900">{currentPoints.toLocaleString('es-CL')}</div>
+              <div className="text-xs text-slate-500">Saldo</div>
             </div>
-            <div className="flex-1 bg-white rounded-lg p-1.5">
-              <div className="text-base font-semibold text-green-600">{totalEarned}</div>
-              <div className="text-xs text-gray-500">Ganados</div>
-            </div>
-            <div className="flex-1 bg-white rounded-lg p-1.5">
-              <div className="text-base font-semibold text-gray-500">{totalSpent}</div>
-              <div className="text-xs text-gray-500">Canjeados</div>
+            <div className="flex-1 bg-slate-50 rounded-lg p-1.5">
+              <div className="text-xl font-bold text-slate-900">${Number(balance?.cashValue ?? 0).toLocaleString('es-CL')}</div>
+              <div className="text-xs text-slate-500">Equivale a</div>
             </div>
           </div>
 
-          {maxRedeemable >= 100 && (
+          {maxRedeemable >= rules.minRedeemPoints ? (
             <div className="space-y-1.5">
-              <p className="text-xs text-amber-700 font-medium">
-                Cada 100 pts = $1.000 descuento
+              <p className="text-xs text-slate-600">
+                Cada {block} pts = ${rules.redeemBlockValue.toLocaleString('es-CL')} de descuento
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <input
                   type="number"
-                  min={100}
+                  min={rules.minRedeemPoints}
                   max={maxRedeemable}
-                  step={100}
+                  step={block}
                   value={pointsInput}
-                  onChange={(e) => setPointsInput(Number(e.target.value))}
-                  className="w-24 border border-amber-300 rounded px-2 py-1 text-sm text-center bg-white"
+                  onChange={(e) => setPointsInput(Math.trunc(Number(e.target.value)))}
+                  className="w-28 h-11 border border-slate-300 rounded-lg px-2 text-sm text-center font-semibold bg-white"
+                  aria-label="Puntos a canjear"
                 />
-                <span className="flex items-center text-sm text-gray-600">
-                  pts = ${cashPreview.toLocaleString('es-CL')} desc.
-                </span>
+                <button
+                  type="button"
+                  onClick={handleRedeem}
+                  disabled={applying || pointsInput > currentPoints || pointsInput < rules.minRedeemPoints}
+                  className="flex-1 h-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-slate-800 bg-white border-[1.5px] border-slate-300 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                >
+                  {applying
+                    ? <><Loader2 size={14} className="animate-spin" /> Canjeando...</>
+                    : <>Canjear {pointsInput} pts → <strong>-${cashPreview.toLocaleString('es-CL')}</strong></>}
+                </button>
               </div>
-              {errorMsg && (
-                <p className="flex items-center gap-1 text-xs text-red-600">
-                  <AlertCircle size={12} /> {errorMsg}
-                </p>
-              )}
-              <button
-                onClick={handleRedeem}
-                disabled={redeemMutation.isPending || pointsInput > currentPoints || pointsInput < 100}
-                className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white text-sm font-semibold py-2 rounded-lg transition-colors"
-              >
-                {redeemMutation.isPending ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <Loader2 size={14} className="animate-spin" /> Canjeando...
-                  </span>
-                ) : (
-                  `Canjear ${pointsInput} pts → -$${cashPreview.toLocaleString('es-CL')}`
-                )}
-              </button>
             </div>
+          ) : (
+            <p className="text-xs text-slate-500">
+              Necesita al menos {rules.minRedeemPoints} puntos para canjear (tiene {currentPoints.toLocaleString('es-CL')})
+            </p>
           )}
-
-          {maxRedeemable < 100 && currentPoints > 0 && (
-            <p className="text-xs text-amber-600">
-              Necesita al menos 100 puntos para canjear (tienes {currentPoints})
+          {errorMsg && (
+            <p className="flex items-center gap-1 text-xs text-red-600">
+              <AlertCircle size={12} /> {errorMsg}
             </p>
           )}
         </>

@@ -1,5 +1,14 @@
 import api from './api';
 
+// HOTFIX #282: regla única de puntos (1 pt cada $100, 100 pts = $500, mínimo 100, vencen a los 12 meses sin compras)
+export interface LoyaltyRules {
+  pesosPerPoint:     number;
+  redeemBlockPoints: number;
+  redeemBlockValue:  number;
+  minRedeemPoints:   number;
+  expiryMonths:      number;
+}
+
 export interface AutomationSettings {
   autoInactiveEnabled: boolean;
   autoBirthdayEnabled: boolean;
@@ -8,8 +17,10 @@ export interface AutomationSettings {
   inactiveDays:        number;
   inactiveDiscountPct: number;
   birthdayGift:        string;
-  pointsPerPeso:       number;
   vipMinSpend:         number;
+  loyalty?:            LoyaltyRules;   // HOTFIX #282
+  returnPct?:          number;         // % del gasto que vuelve como descuento
+  maxReturnPct?:       number;
 }
 
 export interface FidelizacionStats {
@@ -37,7 +48,7 @@ const fidelizacionService = {
     return res.data;
   },
 
-  async updateSettings(patch: Partial<AutomationSettings>): Promise<AutomationSettings> {
+  async updateSettings(patch: Partial<Omit<AutomationSettings, 'loyalty'>> & { loyalty?: Partial<LoyaltyRules> }): Promise<AutomationSettings> {
     const res = await api.patch('/fidelizacion/settings', patch);
     return res.data;
   },

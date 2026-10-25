@@ -383,12 +383,15 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                     </div>
                   </div>
 
-                  {pointsBalance?.points >= 100 && (
+                  {pointsBalance?.points >= (pointsBalance?.rules?.minRedeemPoints ?? 100) && (
                     <div className="bg-amber-100 border border-amber-300 rounded-lg p-4 text-center">
                       <p className="text-sm text-amber-700 font-medium">
                         Valor de canje disponible: <strong>{pointsBalance?.cashFormatted}</strong>
                       </p>
-                      <p className="text-xs text-amber-600 mt-1">100 pts = $1.000 descuento</p>
+                      {/* HOTFIX #282: regla del backend (100 pts = $500 por defecto) */}
+                      <p className="text-xs text-amber-600 mt-1">
+                        {pointsBalance?.rules?.redeemBlockPoints ?? 100} pts = ${Number(pointsBalance?.rules?.redeemBlockValue ?? 500).toLocaleString('es-CL')} descuento
+                      </p>
                     </div>
                   )}
 

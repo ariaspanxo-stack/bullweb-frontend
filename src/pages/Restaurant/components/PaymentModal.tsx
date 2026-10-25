@@ -630,15 +630,16 @@ export const PaymentModal = ({
                   )}
 
                   {/* Puntos de fidelidad: mismo slot */}
-                  {canEditDiscount && !isBasico && customerId && customerName && (
+                  {canEditDiscount && !isBasico && customerId && customerName && discountOrderId && (
                     <div className="mt-2">
                       <LoyaltyPanel
+                        orderId={discountOrderId}
                         customerId={customerId}
                         customerName={customerName}
-                        onRedeem={async (cashDiscount) => {
-                          if (!confirmReplace('points')) return;
-                          // Hotfix #257: puntos en el mismo slot, con topes y PIN, guardados en la orden
-                          if (!(await persistDiscount({ type: 'FIXED', value: cashDiscount }, 'Canje de puntos'))) return;
+                        beforeRedeem={() => confirmReplace('points')}
+                        onApplied={(cashDiscount) => {
+                          // HOTFIX #282: el servidor ya descontó los puntos y guardó el descuento en la orden
+                          setSavedDiscount({ type: 'FIXED', value: cashDiscount });
                           setAppliedCouponId(null);
                           setCouponMsg(null);
                           setDiscountEnabled(true);

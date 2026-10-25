@@ -121,7 +121,6 @@ function AutomationEditModal({ automationType, settings, onSave, onClose }: Edit
     inactiveDiscountPct: settings.inactiveDiscountPct,
     birthdayGift:        settings.birthdayGift,
     vipMinSpend:         settings.vipMinSpend,
-    pointsPerPeso:       settings.pointsPerPeso,
   });
 
   const handleSave = async () => {

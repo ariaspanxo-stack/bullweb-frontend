@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Gift, Crown, TrendingUp, Save, Loader2, Coins, RefreshCw } from 'lucide-react';
 import fidelizacionService from '@/services/fidelizacionService';
 import { safeArray } from '@/utils/safeArray';
-import type { AutomationSettings } from '@/services/fidelizacionService';
+import type { AutomationSettings, LoyaltyRules } from '@/services/fidelizacionService';
 import api from '@/services/api';
 
 interface CustomerRow {
@@ -32,13 +32,27 @@ const SEG_LABEL: Record<string, string> = {
 
 function fmt(n: number | undefined | null) { return Number(n ?? 0).toLocaleString('es-CL'); }
 
+// HOTFIX #282: regla única (mismos valores por defecto que el backend) y % de devolución
+const DEFAULT_RULES: LoyaltyRules = { pesosPerPoint: 100, redeemBlockPoints: 100, redeemBlockValue: 500, minRedeemPoints: 100, expiryMonths: 12 };
+const returnPctOf = (r: LoyaltyRules) =>
+  r.pesosPerPoint > 0 && r.redeemBlockPoints > 0 ? Math.round((r.redeemBlockValue / (r.redeemBlockPoints * r.pesosPerPoint)) * 10000) / 100 : 0;
+const cashOf = (r: LoyaltyRules, pts: number) => Math.floor(pts / r.redeemBlockPoints) * r.redeemBlockValue;
+const RULE_FIELDS: { key: keyof LoyaltyRules; label: string; suffix: string; min: number }[] = [
+  { key: 'pesosPerPoint',     label: '1 punto por cada',        suffix: '$ gastados', min: 1 },
+  { key: 'redeemBlockPoints', label: 'Bloque de canje',         suffix: 'puntos',     min: 1 },
+  { key: 'redeemBlockValue',  label: 'Descuento por bloque',    suffix: '$',          min: 1 },
+  { key: 'minRedeemPoints',   label: 'Canje mínimo',            suffix: 'puntos',     min: 1 },
+  { key: 'expiryMonths',      label: 'Vencen tras sin compras', suffix: 'meses (0 = no vencen)', min: 0 },
+];
+
 export function LoyaltyTab() {
   const [settings, setSettings] = useState<AutomationSettings | null>(null);
   const [topByPoints, setTopByPoints] = useState<CustomerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedOk, setSavedOk] = useState(false);
-  const [editPoints, setEditPoints] = useState<number>(1);
+  const [editRules, setEditRules] = useState<LoyaltyRules>(DEFAULT_RULES);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [recalculating, setRecalculating] = useState(false);
   const [recalcResult, setRecalcResult] = useState<string | null>(null);  const [loadError, setLoadError]         = useState<string | null>(null);
   const [confirmRecalc, setConfirmRecalc] = useState(false);
@@ -55,7 +69,7 @@ export function LoyaltyTab() {
         api.get('/customers/top-by-points?limit=10'),
       ]);
       setSettings(s);
-      setEditPoints(s.pointsPerPeso ?? 1);
+      setEditRules(s.loyalty ?? DEFAULT_RULES);
 
       const rawTop = Array.isArray(topRes.data) ? topRes.data : (topRes.data?.data ?? []);
       const cleaned: CustomerRow[] = rawTop.map((c: any) => ({
@@ -79,13 +93,14 @@ export function LoyaltyTab() {
   const handleSaveConfig = async () => {
     if (!settings) return;
     setSaving(true);
+    setSaveError(null);
     try {
-      const updated = await fidelizacionService.updateSettings({ pointsPerPeso: editPoints });
-      setSettings(updated);
+      await fidelizacionService.updateSettings({ loyalty: editRules });
+      await load();
       setSavedOk(true);
       setTimeout(() => setSavedOk(false), 2000);
-    } catch {
-      // noop
+    } catch (err: any) {
+      setSaveError(err?.response?.data?.error || err?.message || 'No se pudo guardar la configuración');
     } finally {
       setSaving(false);
     }
@@ -149,7 +164,7 @@ export function LoyaltyTab() {
           { label: 'Puntos emitidos',     value: fmt(totalPointsIssued),  icon: Coins,      color: 'bg-amber-50 text-amber-700 border-amber-100' },
           { label: 'Clientes con puntos', value: fmt(customersWithPoints), icon: Gift,       color: 'bg-green-50 text-green-700 border-green-100' },
           { label: 'En ranking top 10',    value: fmt(topByPoints.length),  icon: Crown,      color: 'bg-blue-50  text-blue-700  border-blue-100'  },
-          { label: 'Pts/$ en acumulación', value: `×${settings?.pointsPerPeso ?? 1}`, icon: TrendingUp, color: 'bg-purple-50 text-purple-700 border-purple-100' },
+          { label: 'Devolución sobre lo gastado', value: `${returnPctOf(settings?.loyalty ?? DEFAULT_RULES)}%`, icon: TrendingUp, color: 'bg-purple-50 text-purple-700 border-purple-100' },
         ].map((m) => {
           const Icon = m.icon;
           return (
@@ -170,46 +185,51 @@ export function LoyaltyTab() {
           <Gift className="h-4 w-4 text-amber-500" />
           Configuración del programa de puntos
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-          {/* Puntos por peso */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Puntos por cada $1 gastado
+        {/* HOTFIX #282: regla única editable con rangos; el servidor valida y rechaza devoluciones sobre el máximo */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {RULE_FIELDS.map((f) => (
+            <label key={f.key} className="block">
+              <span className="block text-sm font-medium text-gray-700 mb-1.5">{f.label}</span>
+              <span className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={f.min}
+                  step={1}
+                  value={editRules[f.key]}
+                  onChange={(e) => setEditRules((r) => ({ ...r, [f.key]: Math.trunc(Number(e.target.value)) }))}
+                  className="w-28 h-11 border border-gray-300 rounded-lg px-3 text-sm font-semibold focus:ring-2 focus:ring-[#F97316]"
+                />
+                <span className="text-sm text-gray-500">{f.suffix}</span>
+              </span>
             </label>
-            <div className="flex items-center gap-3">
-              <input
-                type="number"
-                min={0.1}
-                max={100}
-                step={0.5}
-                value={editPoints}
-                onChange={(e) => setEditPoints(Number(e.target.value))}
-                className="w-28 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-400"
-              />
-              <span className="text-sm text-gray-500">pts por $1</span>
-            </div>
-            <p className="text-xs text-gray-400 mt-1">
-              Con {editPoints} pts/$, una compra de $10.000 genera {fmt(editPoints * 10000)} pts
-            </p>
-          </div>
-
-          {/* Regla de canje (info) */}
-          <div className="bg-amber-50 border border-amber-100 rounded-xl p-3">
-            <p className="text-xs font-semibold text-amber-800 mb-1">Regla de canje</p>
-            <p className="text-xs text-amber-700">
-              Cada <strong>100 puntos</strong> equivalen a <strong>$1.000 de descuento</strong>
-            </p>
-            <p className="text-xs text-amber-600 mt-0.5">
-              Los clientes pueden canjear desde 100 pts (múltiplos de 100)
-            </p>
-          </div>
+          ))}
         </div>
+
+        {(() => {
+          const pct = returnPctOf(editRules);
+          const max = settings?.maxReturnPct ?? 20;
+          const over = pct > max;
+          return (
+            <div className={`mt-4 rounded-xl border p-3 text-sm ${over ? 'bg-red-50 border-red-200 text-red-800' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+              <p>
+                Una compra de <strong>$10.000</strong> da <strong>{fmt(Math.floor(10000 / Math.max(1, editRules.pesosPerPoint)))} pts</strong>
+                {' '}= <strong>${fmt(cashOf(editRules, Math.floor(10000 / Math.max(1, editRules.pesosPerPoint))))}</strong> de descuento.
+              </p>
+              <p className="mt-1">
+                Devolución: <strong>{pct}% de lo gastado</strong>
+                {over ? ` — supera el máximo permitido (${max}%), no se puede guardar.` : pct > 10 ? ' — alta: revisa que el negocio la soporte.' : ''}
+              </p>
+            </div>
+          );
+        })()}
+
+        {saveError && <p className="mt-2 text-sm font-medium text-red-700">{saveError}</p>}
 
         <div className="mt-4 flex justify-end">
           <button
             onClick={handleSaveConfig}
-            disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 text-sm font-medium disabled:opacity-50 transition-colors"
+            disabled={saving || returnPctOf(editRules) > (settings?.maxReturnPct ?? 20)}
+            className="flex items-center gap-2 h-11 px-4 bg-[#F97316] text-white rounded-lg hover:bg-[#EA580C] text-sm font-semibold disabled:opacity-50 transition-colors"
           >
             {saving ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -312,8 +332,8 @@ export function LoyaltyTab() {
                     <td className="py-2.5 text-right text-gray-500">
                       {fmt(c.totalOrders)}
                     </td>
-                    <td className="py-2.5 text-right font-semibold text-emerald-600">
-                      ${fmt(Math.floor(c.points / 100) * 1000)}
+                    <td className="py-2.5 text-right font-bold text-gray-900">
+                      ${fmt(cashOf(settings?.loyalty ?? DEFAULT_RULES, c.points))}
                     </td>
                   </tr>
                 ))}

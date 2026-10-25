@@ -216,12 +216,12 @@ export default function AttendanceCheckin() {
         setColResult(null);
         playCheckinSound(res.data.data.type === 'ENTRY' ? 'entry' : 'exit');
       } else if (action === 'colacion_start') {
-        const res = await attendancePublicService.startColacion(selected!.id, tenantResolved);
+        const res = await attendancePublicService.startColacion(selected!.id, tenantResolved, pin || undefined, token || undefined); // HOTFIX #283
         setColResult(res.data.data);
         setResult(null);
         playCheckinSound('colacion');
       } else {
-        const res = await attendancePublicService.endColacion(selected!.id, tenantResolved);
+        const res = await attendancePublicService.endColacion(selected!.id, tenantResolved, pin || undefined, token || undefined); // HOTFIX #283
         setColResult(res.data.data);
         setResult(null);
         playCheckinSound('colacion');

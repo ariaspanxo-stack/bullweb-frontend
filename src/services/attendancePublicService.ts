@@ -63,11 +63,12 @@ export const attendancePublicService = {
       employeeId, token, tenant: tenantRef, notes, pin, lat, lon,
     }),
 
-  startColacion: (employeeId: string, tenantRef: string) =>
-    publicApi.post<{ success: boolean; data: { message: string; entryId: string } }>('/attendance/colacion/start', { employeeId, tenant: tenantRef }),
+  // HOTFIX #283: la colación exige el PIN del empleado o el token QR vigente
+  startColacion: (employeeId: string, tenantRef: string, pin?: string, token?: string) =>
+    publicApi.post<{ success: boolean; data: { message: string; entryId: string } }>('/attendance/colacion/start', { employeeId, tenant: tenantRef, pin, token }),
 
-  endColacion: (employeeId: string, tenantRef: string) =>
-    publicApi.post<{ success: boolean; data: { message: string; minutos: number } }>('/attendance/colacion/end', { employeeId, tenant: tenantRef }),
+  endColacion: (employeeId: string, tenantRef: string, pin?: string, token?: string) =>
+    publicApi.post<{ success: boolean; data: { message: string; minutos: number } }>('/attendance/colacion/end', { employeeId, tenant: tenantRef, pin, token }),
 
   getEmployeeStatus: (employeeId: string, tenantRef: string) =>
     publicApi.get<{ success: boolean; data: EmployeeStatus }>(`/attendance/employee-status/${employeeId}?tenant=${encodeURIComponent(tenantRef)}`),

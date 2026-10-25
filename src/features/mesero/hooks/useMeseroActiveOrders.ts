@@ -87,9 +87,29 @@ export function useMeseroActiveOrders() {
     }));
   }, []);
 
+  // TAREA 280: estado por ítem y del pedido en vivo ("2/4 listos")
+  const handleItemsProgress = useCallback((data: any) => {
+    if (!data?.orderId) return;
+    const byId = new Map<string, string>((data.items ?? []).map((i: any) => [i.id, i.status]));
+    setTables(prev => prev.map(t => {
+      if (t.activeOrder?.id !== data.orderId) return t;
+      const patch = (list: any[] | undefined) => list?.map((i: any) => (byId.has(i.id) ? { ...i, status: byId.get(i.id) } : i));
+      return {
+        ...t,
+        activeOrder: {
+          ...t.activeOrder,
+          status:      data.status ?? t.activeOrder.status,
+          items:       patch(t.activeOrder.items),
+          order_items: patch(t.activeOrder.order_items),
+        },
+      };
+    }));
+  }, []);
+
   useMeseroSocket({
-    onOrderUpdated: handleOrderUpdated,
-    onOrderReady:   handleOrderReady,
+    onOrderUpdated:  handleOrderUpdated,
+    onOrderReady:    handleOrderReady,
+    onItemsProgress: handleItemsProgress,
   });
 
   const readyCount     = tables.filter(t => t.activeOrder?.status === 'READY').length;

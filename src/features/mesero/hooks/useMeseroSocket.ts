@@ -22,6 +22,7 @@ export interface MeseroTableRequest {
 interface MeseroSocketEvents {
   onOrderUpdated?: (order: any) => void;
   onOrderReady?:   (data: { orderId: string; order: any }) => void;
+  onItemsProgress?: (data: { orderId: string; status: string; items: { id: string; status: string }[] }) => void; // TAREA 280
 }
 
 let _idCounter = 0;
@@ -97,6 +98,11 @@ export function useMeseroSocket(events: MeseroSocketEvents) {
 
     socket.on('order.ready', (data: { orderId: string; order: any }) => {
       eventsRef.current.onOrderReady?.(data);
+    });
+
+    // TAREA 280: avance por ítem (cocina marca PREPARANDO / LISTO)
+    socket.on('order.items.progress', (data: any) => {
+      eventsRef.current.onItemsProgress?.(data);
     });
 
     // ── Escuchar solicitudes de mesa (mesero/cuenta) ──

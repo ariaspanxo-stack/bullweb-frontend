@@ -20,6 +20,8 @@ import { posService } from '../../../services/posService';
 import { EditCustomerModal } from './EditCustomerModal';
 import type { Sale } from '../../../types/restaurant.types';
 import { usePermission } from '../../../hooks/usePermission';
+import { usePlan } from '../../../hooks/usePlan';
+import { ItemPrepList, ItemsProgress } from './ItemPrepList';
 import toast from 'react-hot-toast';
 
 // ─── Clases de botones (fila de acciones, todos 44px) ─────────
@@ -122,6 +124,10 @@ export function OrderCardCompact({
   const canCancelAny = usePermission('pos.cancel_order_any');
   const canCancel    = canCancelOwn || canCancelAny;
   const canCreateOrder = usePermission('pos.create_order');
+
+  const { isBasico: planBasico, planReady } = usePlan();
+  const isBasico  = planReady && planBasico;
+  const inKitchen = ['PENDING', 'PREPARING', 'READY'].includes(order.status);
 
   const statusStyle     = STATUS_STYLES[order.status] ?? STATUS_STYLES.PENDING;
   const leftColor       = STATUS_STYLES[order.status]?.border ?? 'border-l-gray-300';
@@ -230,7 +236,11 @@ export function OrderCardCompact({
           </div>
         )}
 
-        <ItemsSummaryInline items={order.items as any || []} />
+        {/* TAREA 280: avance por ítem; en Básico (sin KDS) la cocina marca cada ítem desde aquí */}
+        {inKitchen && <ItemsProgress items={order.items as any} />}
+        {inKitchen && isBasico
+          ? <ItemPrepList orderId={order.id} items={order.items as any || []} onChanged={onRefresh} />
+          : <ItemsSummaryInline items={order.items as any || []} />}
 
         {/* Nota del cliente (ambas variantes) */}
         {order.notes && (

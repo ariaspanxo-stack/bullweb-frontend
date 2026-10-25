@@ -223,6 +223,12 @@ export function QrOrderTracking({
         : '')
     : null;
 
+  // TAREA 280 — texto simple del avance por ítem
+  const pr = liveStatus.progress;
+  const progressText = pr
+    ? `${pr.current ? `Preparando tu ${pr.current.toLocaleLowerCase('es')}… ` : ''}${pr.ready} de ${pr.total} ${pr.ready === 1 ? 'listo' : 'listos'}`
+    : null;
+
   return (
     <div
       className={`w-full rounded-2xl px-5 py-4 space-y-3 text-left ${className}`}
@@ -265,6 +271,13 @@ export function QrOrderTracking({
               {st === 'PREPARING' ? 'Tu pedido está en cocina' : 'Pronto pasa a cocina…'}
             </p>
           </div>
+          {/* TAREA 280 — avance por ítem ("Preparando tu pizza… 1 de 3 listo"); se actualiza con el polling */}
+          {st === 'PREPARING' && progressText && (
+            <div className="flex items-center gap-3">
+              {spinner}
+              <p className="text-sm font-medium text-zinc-200" aria-live="polite">{progressText}</p>
+            </div>
+          )}
         </>
       )}
 

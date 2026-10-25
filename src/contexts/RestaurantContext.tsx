@@ -505,6 +505,12 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
       loadOrders();
     });
 
+    // TAREA 280: avance por ítem (KDS, tarjeta Básico, cascada) → la tarjeta pasa sola a Listo
+    socketRef.current.on('order.items.progress', () => {
+      restaurantService.invalidateCache();
+      loadOrders();
+    });
+
     socketRef.current.on('qr_order_confirmed', () => {
       restaurantService.invalidateCache();
       loadOrders();

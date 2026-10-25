@@ -279,6 +279,11 @@ export default function KDS() {
       }
     });
 
+    // TAREA 280: avance por ítem marcado desde otra pantalla (otra estación o la tarjeta del POS)
+    socket.on('order.items.progress', () => {
+      queryClient.invalidateQueries({ queryKey: ['kds'] });
+    });
+
     // Orden marcada urgente desde otra estación
     socket.on('order.urgent', (data: { orderId: string }) => {
       setOrders(prev => prev.map(o => o.id === data.orderId ? { ...o, _urgent: true } : o));

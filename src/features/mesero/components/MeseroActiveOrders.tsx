@@ -168,7 +168,8 @@ export function MeseroActiveOrders({
           // total desde subtotales de ítems (orders.total = 0 hasta el cobro)
           const total   = items.reduce((s: number, i: any) => s + Number(i.subtotal ?? 0), 0)
                           || Number(order.total) || 0;
-          const readyQ  = items.filter((i: any) => i.status === 'READY').length;
+          // TAREA 280: DELIVERED cuenta como listo (mismo criterio que el backend)
+          const readyQ  = items.filter((i: any) => i.status === 'READY' || i.status === 'DELIVERED').length;
           const isReady = order.status === 'READY';
           const billRequested = (order.notes ?? '').includes('CUENTA SOLICITADA');
           const MAX_VISIBLE = 4;
@@ -212,7 +213,7 @@ export function MeseroActiveOrders({
                 {items.length > 0 && (
                   <div className="mb-2">
                     <div className="flex justify-between text-xs text-gray-500 mb-0.5">
-                      <span>{readyQ}/{items.length} platos</span>
+                      <span>{readyQ}/{items.length} listos</span>
                     </div>
                     <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                       <div

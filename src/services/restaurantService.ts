@@ -43,6 +43,10 @@ function mapOrder(raw: any): Sale {
     notes: i.notes || undefined,
     // Soft-delete (bug fix: antes se perdían al recargar y el PaymentModal cobraba de más)
     isCancelled:  !!i.isCancelled,
+    // TAREA 280: estado de preparación por ítem (sin estado = PENDING)
+    status:       i.status ?? 'PENDING',
+    stationId:    i.stationId ?? null,
+    createdAt:    i.createdAt ?? null,
     cancelReason: i.cancelReason ?? null,
     cancelledAt:  i.cancelledAt ?? null,
   }));
@@ -393,6 +397,13 @@ class RestaurantService {
       console.error('[RS] ❌ updateSaleStatus:', error);
       throw error;
     }
+  }
+
+  // TAREA 280: estado de preparación de un ítem (Básico, desde la tarjeta del pedido)
+  async setItemStatus(saleId: string, itemId: string, status: 'PENDING' | 'PREPARING' | 'READY'): Promise<void> {
+    await api.patch(`/pos/orders/${saleId}/items/${itemId}/status`, { status });
+    _ordersCache = [];
+    _ordersCacheTs = 0;
   }
 
   async cancelOrder(saleId: string): Promise<void> {

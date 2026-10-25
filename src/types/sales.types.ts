@@ -74,6 +74,9 @@ export interface SaleItem {
   isCancelled?: boolean;   // Soft-delete visual: el backend ya canceló el item
   cancelReason?: string;   // Motivo de la cancelación (para mostrar en UI)
   cancelledAt?: string | null;  // Fecha de cancelación (ISO string)
+  status?: string;              // TAREA 280: PENDING | PREPARING | READY | DELIVERED
+  stationId?: string | null;    // TAREA 280: estación de cocina del ítem
+  createdAt?: string | null;    // TAREA 280: orden estable de los ítems en la tarjeta
 }
 
 // ADD: Tipo para modificadores estructurados

@@ -138,10 +138,13 @@ export function useMeseroOrder(_table: any | null) {
         await withRetry(() => meseroService.addItems(activeOrder.id, itemsPayload));
       } else {
         // Mesa libre → crear orden nueva
+        // HOTFIX #284: misma clave en todos los reintentos (un timeout ya no duplica la orden)
+        const idempotencyKey = crypto.randomUUID();
         const newOrder = await withRetry(() => meseroService.createOrder({
           tableId,
           items: itemsPayload,
           persons,
+          idempotencyKey,
         }));
         setActiveOrder(newOrder);
       }

@@ -86,10 +86,11 @@ export const meseroService = {
     items: { productId: string; quantity: number; modifiers?: any[]; notes?: string }[];
     persons?: number;
     customerId?: string;
+    idempotencyKey?: string; // HOTFIX #284: el llamador la crea una vez y la repite en cada reintento
   }): Promise<any> => {
     const d = await waiterFetch('/waiter/orders', {
       method: 'POST',
-      body:   JSON.stringify({ type: 'DINE_IN', idempotencyKey: crypto.randomUUID(), ...payload }),
+      body:   JSON.stringify({ type: 'DINE_IN', ...payload, idempotencyKey: payload.idempotencyKey ?? crypto.randomUUID() }),
     });
     return d?.data !== undefined ? d.data : d;
   },

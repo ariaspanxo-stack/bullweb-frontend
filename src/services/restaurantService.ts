@@ -273,6 +273,9 @@ class RestaurantService {
         if (d.cashAmount && d.cashAmount > 0) payload.cashAmount = Math.round(d.cashAmount); // HOTFIX 269
       }
 
+      // HOTFIX #284: una clave por pedido, creada UNA vez: los reintentos de withRetry y la cola offline
+      // (Background Sync) reenvían el mismo cuerpo y el backend devuelve la orden ya creada en vez de duplicarla
+      payload.idempotencyKey = crypto.randomUUID();
       console.log('[RS] 📤 POST /pos/orders:', JSON.stringify(payload, null, 2));
       const response = await withRetry(() => api.post('/pos/orders', payload));
       const raw = response.data?.data || response.data;

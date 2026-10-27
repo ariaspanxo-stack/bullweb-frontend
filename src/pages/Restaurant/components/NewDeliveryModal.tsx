@@ -606,6 +606,7 @@ export const NewDeliveryModal = ({
                 </label>
                 <input
                   type="email"
+                  autoComplete="off" // Hotfix #285: el navegador no debe rellenar el correo de otro cliente
                   placeholder="cliente@email.com"
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}

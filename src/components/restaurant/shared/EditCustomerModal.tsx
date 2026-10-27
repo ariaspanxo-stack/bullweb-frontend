@@ -38,8 +38,11 @@ export function EditCustomerModal({
     setSaving(true);
     setError(null);
     try {
+      // Hotfix #285: telefono distinto = otra persona -> se desliga el cliente vinculado
+      const phoneChanged = customerPhone.trim() !== (order.customerPhone ?? '').trim();
       // Enviar siempre los 3 campos (backend maneja null/vacío correctamente)
       await restaurantService.updateOrderCustomer(order.id, {
+        ...(phoneChanged ? { customerId: null } : {}),
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
         // deliveryAddress solo aplica para pedidos delivery, pero enviarlo

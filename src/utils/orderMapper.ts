@@ -179,7 +179,8 @@ export function mapOrderToSale(order: BackendOrder): Sale {
     type: mapOrderType(order.type),
     tableNumber: order.tables?.number ?? order.table?.number,
     waiterName: order.users_orders_waiterIdTousers?.name ?? order.waiter?.name ?? 'Sin asignar',
-    customerName: order.customers?.name ?? order.customer?.name ?? order.customerName,
+    // Hotfix #285: el nombre guardado en la venta (editable con el lapiz) manda sobre el del cliente ligado
+    customerName: order.customerName || order.customers?.name || order.customer?.name,
     // Mejora P4 — customerId para el link al CRM (include customers: { id, name })
     customerId: (order as any).customers?.id ?? (order as any).customerId ?? undefined,
     // Hotfix #200 (B1) — segment CRM para el badge ⭐ VIP (include backend customers.segment)

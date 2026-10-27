@@ -428,7 +428,9 @@ class RestaurantService {
 
   async addItemsToSale(saleId: string, items: AddSaleItemDTO[]): Promise<void> {
     try {
-      await withRetry(() => api.post(`/pos/orders/${saleId}/items`, { items }));
+      // Hotfix #286: clave por item creada UNA vez; withRetry la repite y el backend no duplica tras un timeout
+      const keyed = items.map(item => ({ ...item, idempotencyKey: item.idempotencyKey || crypto.randomUUID() }));
+      await withRetry(() => api.post(`/pos/orders/${saleId}/items`, { items: keyed }));
       _ordersCache = [];
       _ordersCacheTs = 0;
       console.log(`[RS] ✅ Items agregados a ${saleId}`);

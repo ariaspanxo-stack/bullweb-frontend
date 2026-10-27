@@ -9,6 +9,7 @@ import type { Product, ProductCategory, CartItem } from '../../../types/restaura
 import type { Sale, SaleItem } from '../../../types/sales.types';
 import { restaurantService } from '../../../services/restaurantService';
 import { useRemovalReason } from '../../../hooks/useRemovalReason';
+import { useConfirmVoidOrder, leavesOrderEmpty } from '../../../components/restaurant/shared/ConfirmVoidOrderModal';
 
 interface EditOrderModalProps {
   order: Sale;
@@ -34,6 +35,14 @@ export const EditOrderModal = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const searchRef = useRef<HTMLInputElement>(null);
+  // Hotfix #286: clave por item del carrito, estable entre reintentos de "Guardar" (el backend no duplica)
+  const itemKeys = useRef<Map<string, string>>(new Map());
+  const keyFor = (cartId: string) => {
+    if (!itemKeys.current.has(cartId)) itemKeys.current.set(cartId, crypto.randomUUID());
+    return itemKeys.current.get(cartId)!;
+  };
+  // Hotfix #286: confirmacion antes de quitar el ultimo producto (el backend anula el pedido)
+  const { askVoid, voidModal } = useConfirmVoidOrder();
 
   // ── Hook para pedir motivo de eliminación (batch) ──
   const { promptReason, modalElement: removalReasonModal } = useRemovalReason();
@@ -100,6 +109,10 @@ export const EditOrderModal = ({
   const handleSave = async () => {
     if (!hasChanges) { onClose(); return; }
 
+    // Hotfix #286: quitar todos los productos sin agregar otros anula el pedido -> confirmar antes
+    const voidsOrder = newCart.length === 0 && leavesOrderEmpty(existingItems, Array.from(pendingDeletes));
+    if (voidsOrder && !(await askVoid(`#${orderNum}`))) return;
+
     // Si hay eliminaciones, pedir motivo obligatorio (único para todo el lote)
     let reason = '';
     if (pendingDeletes.size > 0) {
@@ -110,9 +123,8 @@ export const EditOrderModal = ({
     setLoading(true);
     setError('');
     try {
-      for (const itemId of Array.from(pendingDeletes)) {
-        await restaurantService.removeItemFromOrder(order.id, itemId, reason);
-      }
+      // Hotfix #286: primero agregar y despues quitar; al reves, quitar el unico producto anula el pedido
+      // y el agregado siguiente recibe 409 (caso real 5-estrellas 25-10)
       if (newCart.length > 0) {
         await restaurantService.addItemsToSale(order.id, newCart.map(item => ({
           productId: item.productId,
@@ -121,7 +133,13 @@ export const EditOrderModal = ({
           modifiers: [],
           modifiersPrice: 0,
           notes: item.notes || '',
+          idempotencyKey: keyFor(item.id), // un reintento de "Guardar" repite la clave: el backend no duplica
         })));
+      }
+      for (const itemId of Array.from(pendingDeletes)) {
+        await restaurantService.removeItemFromOrder(order.id, itemId, reason);
+        // ya quitado: si falla el siguiente, un reintento no lo vuelve a quitar
+        setPendingDeletes(prev => { const next = new Set(prev); next.delete(itemId); return next; });
       }
       onUpdated();
       onClose();
@@ -403,6 +421,9 @@ export const EditOrderModal = ({
 
       {/* Modal de motivo de eliminación (batch) */}
       {removalReasonModal}
+
+      {/* Hotfix #286: confirmacion al quitar el ultimo producto (anula el pedido) */}
+      {voidModal}
     </>
   );
 };

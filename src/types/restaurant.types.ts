@@ -184,6 +184,7 @@ export interface AddSaleItemDTO {
   modifiers?: ProductModifier[];
   modifiersPrice?: number;
   notes?: string;
+  idempotencyKey?: string; // Hotfix #286: clave por item, repetida en reintentos
 }
 
 export interface UpdateSaleItemDTO {

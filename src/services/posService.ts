@@ -101,7 +101,8 @@ export const posService = {
   async addItems(orderId: string, items: CreateOrderDTO['items']): Promise<Order> {
     const { data } = await api.post<ApiResponse<Order>>(
       `/pos/orders/${orderId}/items`,
-      { items }
+      // Hotfix #286: clave por item (el backend no duplica un reenvio con la misma clave)
+      { items: items.map(item => ({ ...item, idempotencyKey: crypto.randomUUID() })) }
     );
 
     if (!data.success || !data.data) {

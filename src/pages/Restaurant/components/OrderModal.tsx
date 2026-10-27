@@ -32,6 +32,7 @@ import toast from 'react-hot-toast';
 import { usePermission } from '../../../hooks/usePermission';
 import tablesService from '../../../services/tablesService';
 import { useRemovalReason } from '../../../hooks/useRemovalReason';
+import { useConfirmVoidOrder, leavesOrderEmpty } from '../../../components/restaurant/shared/ConfirmVoidOrderModal';
 import { formatCurrency } from '../../../lib/utils';
 import { OrderTicket } from '../../../components/restaurant/shared/OrderTicket';
 import { ItemPrepList, ItemsProgress } from '../../../components/restaurant/shared/ItemPrepList'; // TAREA 280
@@ -135,6 +136,8 @@ export const OrderModal = ({
 
   // ── Hook para pedir motivo de eliminación ──
   const { promptReason, modalElement: removalReasonModal } = useRemovalReason();
+  // Hotfix #286: quitar el ultimo producto anula el pedido (backend) -> confirmar antes
+  const { askVoid, voidModal } = useConfirmVoidOrder();
   // Hotfix #257: PIN de administrador para descuentos sobre el umbral
   const { requestPin, pinModal } = useAdminPin();
 
@@ -864,8 +867,13 @@ export const OrderModal = ({
                         {onRemoveExistingItem && !item.isCancelled && (
                           <button
                             onClick={async () => {
+                              // Hotfix #286: el ultimo producto anula el pedido y libera la mesa
+                              const voidsOrder = leavesOrderEmpty(existingItems, [item.id]);
+                              if (voidsOrder && !(await askVoid(`de la mesa ${table.number}`))) return;
                               const reason = await promptReason(item.productName);
-                              if (reason) onRemoveExistingItem(item.id, reason);
+                              if (!reason) return;
+                              await onRemoveExistingItem(item.id, reason);
+                              if (voidsOrder) onClose(); // pedido anulado: no se le puede agregar (409)
                             }}
                             className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
                           >
@@ -1286,6 +1294,8 @@ export const OrderModal = ({
 
       {/* Modal de motivo de eliminación */}
       {removalReasonModal}
+      {/* Hotfix #286: confirmacion al quitar el ultimo producto */}
+      {voidModal}
       {pinModal}
 
     </>,

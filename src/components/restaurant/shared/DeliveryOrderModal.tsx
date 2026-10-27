@@ -20,6 +20,7 @@ import { emojiForCategory, categoryLabel, colorForCategory } from '../../../lib/
 import toast from 'react-hot-toast';
 import { usePermission } from '../../../hooks/usePermission';
 import { useRemovalReason } from '../../../hooks/useRemovalReason';
+import { useConfirmVoidOrder, leavesOrderEmpty } from './ConfirmVoidOrderModal';
 import { applyOrderDiscount, discountInputAllowed, discountLimitHint, useAdminPin } from '../../pos/discountControl';
 
 // ─── Props ──────────────────────────────────────────────────────
@@ -110,6 +111,8 @@ export function DeliveryOrderModal({
 
   // ── Hook para pedir motivo de eliminación ──
   const { promptReason, modalElement: removalReasonModal } = useRemovalReason();
+  // Hotfix #286: quitar el ultimo producto anula el pedido (backend) -> confirmar antes
+  const { askVoid, voidModal } = useConfirmVoidOrder();
   // Hotfix #257: PIN de administrador para descuentos sobre el umbral
   const { requestPin, pinModal } = useAdminPin();
 
@@ -243,6 +246,10 @@ export function DeliveryOrderModal({
 
   /** Quitar un item de la orden */
   async function handleRemoveItem(item: SaleItem) {
+    // Hotfix #286: si es el ultimo producto, el pedido se anula (caso real 5-estrellas 25-10)
+    const voidsOrder = leavesOrderEmpty(currentOrder.items ?? [], [item.id]);
+    if (voidsOrder && !(await askVoid(`#${currentOrder.saleNumber ?? currentOrder.orderNumber ?? currentOrder.id.slice(-6)}`))) return;
+
     // Pedir motivo obligatorio antes de eliminar
     const reason = await promptReason(item.productName);
     if (!reason) return; // cancelado
@@ -250,6 +257,13 @@ export function DeliveryOrderModal({
     setSubmitting(true);
     try {
       await restaurantService.removeItemFromOrder(currentOrder.id, item.id, reason);
+      if (voidsOrder) {
+        // el pedido ya esta anulado: cerrar para no intentar agregarle productos (409)
+        toast.success('Pedido anulado');
+        onUpdate();
+        onClose();
+        return;
+      }
       // Soft-delete visual: marcar como cancelado en estado local
       // NO recargar del servidor porque pisaría el flag isCancelled
       setCurrentOrder(prev => prev
@@ -986,6 +1000,8 @@ export function DeliveryOrderModal({
       {/* Modal de motivo de eliminación */}
       {removalReasonModal}
       {pinModal}
+      {/* Hotfix #286: confirmacion al quitar el ultimo producto */}
+      {voidModal}
     </>,
     document.body
   );

@@ -614,7 +614,14 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
       return;
     }
     if (table.status === 'OCCUPIED') {
-      let existingOrder = dineInOrders.find(o => o.tableId === table.id);
+      // Hotfix #287: primero el pedido registrado como actual de la mesa (tables.currentOrderId); si la mesa
+      // tuviera otro pedido abierto mas viejo, buscar por tableId podia abrir ese (y agregarle o cobrarlo)
+      let existingOrder: Sale | undefined;
+      if (table.currentOrderId) {
+        existingOrder = dineInOrders.find(o => o.id === table.currentOrderId)
+          ?? (await restaurantService.getActiveOrderById(table.currentOrderId)) ?? undefined;
+      }
+      if (!existingOrder) existingOrder = dineInOrders.find(o => o.tableId === table.id);
 
       if (!existingOrder) {
         toast.info(`Cargando orden de Mesa ${table.number}...`);

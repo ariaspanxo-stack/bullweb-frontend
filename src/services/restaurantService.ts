@@ -354,6 +354,20 @@ class RestaurantService {
     return this.getSales(filters);
   }
 
+  /** Hotfix #287: la orden por id, solo si sigue abierta (pedido actual de la mesa que no esta en memoria) */
+  async getActiveOrderById(orderId: string): Promise<Sale | null> {
+    const ACTIVE = ['PENDING', 'PREPARING', 'READY', 'DELIVERED'];
+    try {
+      const response = await api.get(`/pos/orders/${orderId}`);
+      const raw = response.data?.data ?? response.data;
+      const order = raw?.id ? mapOrder(raw) : null;
+      return order && ACTIVE.includes(order.status as string) ? order : null;
+    } catch (error) {
+      console.error('[RS] ❌ getActiveOrderById:', error);
+      return null;
+    }
+  }
+
   /** Obtener la orden activa de una mesa específica */
   async getActiveOrderByTable(tableId: string): Promise<Sale | null> {
     const ACTIVE = ['PENDING', 'PREPARING', 'READY', 'DELIVERED'];

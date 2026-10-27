@@ -31,6 +31,7 @@ export interface Table {
   section?: Section;    // alias frontend
   sections?: Section;   // nombre real del backend (plural)
   status: TableStatus;
+  currentOrderId?: string | null; // Hotfix #287: pedido registrado como actual de la mesa (backend)
   currentSaleId?: string;
   currentSale?: Sale;
   occupiedSince?: Date;

@@ -55,7 +55,8 @@ export interface Product {
   hasStock?: boolean;         // Si controla inventario
   currentStock?: number;      // Stock actual
   minStock?: number;          // Stock mínimo (alerta)
-  
+  stockReason?: string;       // HOTFIX 288: motivo del ajuste al cambiar el stock actual
+
   // Metadatos
   sku?: string;               // Código único
   tags?: string[];            // Etiquetas (vegano, picante, etc)
@@ -153,6 +154,9 @@ export interface ProductFormData {
   price: string;
   cost: string;
   stock: string;
+  trackStock: boolean;        // HOTFIX 288: controlar stock del producto
+  minStock: string;           // HOTFIX 288: stock mínimo (alerta en la lista)
+  stockReason: string;        // HOTFIX 288: motivo del ajuste (al cambiar el stock actual)
   image?: string;
   description?: string;
   status: 'active' | 'inactive';
@@ -168,6 +172,8 @@ export interface ProductFormErrors {
   price?: string;
   cost?: string;
   stock?: string;
+  minStock?: string;
+  stockReason?: string;
   image?: string;
 }
 

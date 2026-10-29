@@ -34,6 +34,9 @@ const initialFormData: ProductFormData = {
   price: '',
   cost: '',
   stock: '',
+  trackStock: false, // HOTFIX 288
+  minStock: '',
+  stockReason: '',
   image: '',
   description: '',
   status: 'active',
@@ -87,6 +90,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         price:       product.price.toString(),
         cost:        (product.cost || 0).toString(),
         stock:       (product.currentStock || 0).toString(),
+        trackStock:  product.hasStock === true, // HOTFIX 288
+        minStock:    (product.minStock || 0).toString(),
+        stockReason: '',
         image:       imageVal,
         description: product.description || '',
         status:      product.available ? 'active' : 'inactive',
@@ -109,6 +115,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
   // Reset imgError cuando cambia la URL de imagen
   useEffect(() => { setImgError(false); }, [formData.image]);
+
+  // HOTFIX 288: en edición, cambiar el stock actual es un ajuste manual (pide motivo)
+  const stockChanged = isEditMode
+    && formData.stock.trim() !== ''
+    && parseInt(formData.stock) !== Number(product?.currentStock ?? 0);
 
   // Validaciones
   const validateForm = (): boolean => {
@@ -157,6 +168,15 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     const stock = parseInt(formData.stock);
     if (formData.stock && !isNaN(stock) && stock < 0) {
       newErrors.stock = 'El stock no puede ser negativo';
+    }
+
+    // HOTFIX 288: stock mínimo y motivo obligatorio al cambiar el stock actual de un producto existente
+    const minStock = parseInt(formData.minStock);
+    if (formData.minStock && !isNaN(minStock) && minStock < 0) {
+      newErrors.minStock = 'El stock mínimo no puede ser negativo';
+    }
+    if (stockChanged && !formData.stockReason.trim()) {
+      newErrors.stockReason = 'Indica el motivo del ajuste de stock';
     }
 
     setErrors(newErrors);
@@ -277,6 +297,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       price: parseFloat(formData.price),
       cost: formData.cost.trim() ? parseFloat(formData.cost) : undefined,
       currentStock: formData.stock.trim() ? parseInt(formData.stock) : undefined,
+      // HOTFIX 288: stock simple por producto (se guarda de verdad)
+      hasStock: formData.trackStock,
+      minStock: formData.minStock.trim() ? parseInt(formData.minStock) : undefined,
+      stockReason: stockChanged ? formData.stockReason.trim() : undefined,
       imageUrl: formData.image?.trim() || undefined,
       description: formData.description?.trim() || undefined,
       active: formData.status === 'active',
@@ -716,29 +740,100 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 </div>
               )}
 
-              {/* Stock */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Stock Inicial
-                </label>
-                <input
-                  type="number"
-                  name="stock"
-                  value={formData.stock}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
-                    errors.stock ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="0"
-                  min="0"
-                  step="1"
+              {/* HOTFIX 288: stock simple por producto (se guarda y se descuenta al cobrar) */}
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={formData.trackStock}
+                  onClick={() => setFormData(prev => ({ ...prev, trackStock: !prev.trackStock }))}
                   disabled={isSubmitting}
-                />
-                {errors.stock && (
-                  <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" />
-                    {errors.stock}
-                  </p>
+                  className="w-full min-h-[44px] flex items-center gap-3 px-3 py-2 rounded-lg border border-gray-300 text-left hover:bg-slate-50 disabled:opacity-50"
+                >
+                  <span className={`relative inline-flex w-10 h-6 rounded-full transition-colors flex-shrink-0 ${formData.trackStock ? 'bg-[#1E2A4A]' : 'bg-[#CBD5E1]'}`}>
+                    <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${formData.trackStock ? 'left-5' : 'left-1'}`} />
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="text-sm font-medium text-gray-700">Controlar stock</span>
+                    <span className="text-xs text-gray-500">Encendido: cada venta cobrada descuenta del stock actual y anular la venta lo devuelve.</span>
+                  </span>
+                </button>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Stock actual
+                    </label>
+                    <input
+                      type="number"
+                      name="stock"
+                      value={formData.stock}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                        errors.stock ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="0"
+                      min="0"
+                      step="1"
+                      disabled={isSubmitting}
+                    />
+                    {errors.stock && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.stock}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Stock mínimo
+                    </label>
+                    <input
+                      type="number"
+                      name="minStock"
+                      value={formData.minStock}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                        errors.minStock ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="0"
+                      min="0"
+                      step="1"
+                      disabled={isSubmitting}
+                    />
+                    {errors.minStock && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.minStock}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {stockChanged && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Motivo del ajuste de stock
+                    </label>
+                    <input
+                      type="text"
+                      name="stockReason"
+                      value={formData.stockReason}
+                      onChange={handleChange}
+                      maxLength={200}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
+                        errors.stockReason ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="Ej: conteo físico, llegó mercadería, merma"
+                      disabled={isSubmitting}
+                    />
+                    {errors.stockReason && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {errors.stockReason}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
 

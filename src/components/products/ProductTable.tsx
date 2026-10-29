@@ -62,7 +62,8 @@ export const ProductTable: React.FC<ProductTableProps> = ({
           </thead>
           <tbody className="divide-y divide-[#E2E8F0] bg-white">
             {products.map((product) => {
-              const isLowStock = (product.currentStock || 0) < 10;
+              // HOTFIX 288: el stock solo aplica si el producto lo controla; bajo = bajo su stock mínimo (o en 0)
+              const isLowStock = !!product.hasStock && ((product.currentStock ?? 0) <= 0 || (product.currentStock ?? 0) < (product.minStock ?? 0));
               const metrics = calculateProductMetrics(product.price, product.cost || 0);
               const hasCost = !!product.cost && product.cost > 0;
               // Thumbnail: el backend envía 'image' (Prisma); imageUrl es el nombre frontend
@@ -117,8 +118,14 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                     <span className="text-[13px] font-semibold text-[#475569]">{hasCost ? formatPct(metrics.markupPercent) : '—'}</span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-center">
-                    <span className={`text-sm font-medium ${isLowStock ? 'text-[#B45309]' : 'text-[#0F172A]'}`}>{product.currentStock || 0}</span>
-                    {isLowStock && <span className="block text-xs text-[#B45309]">Bajo</span>}
+                    {product.hasStock ? (
+                      <>
+                        <span className={`text-sm font-bold ${isLowStock ? 'text-[#B45309]' : 'text-[#0F172A]'}`}>{product.currentStock ?? 0}</span>
+                        {isLowStock && <span className="block text-xs text-[#B45309]">Bajo</span>}
+                      </>
+                    ) : (
+                      <span className="text-sm text-[#94A3B8]">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-center">
                     <div className="flex items-center justify-center gap-2">

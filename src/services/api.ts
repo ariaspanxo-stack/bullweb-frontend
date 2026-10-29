@@ -64,20 +64,34 @@ async function handleResponse<T>(response: Response): Promise<T> {
 // ============================================
 // PRODUCTS API
 // ============================================
+// HOTFIX 288: stock simple por producto — el backend usa trackStock/stock/stockMin; la UI de productos
+// (lista, filtro "Stock bajo", modal) usa hasStock/currentStock/minStock
+const withProductStock = (p: any) => (p && typeof p === 'object'
+  ? { ...p, hasStock: p.trackStock === true, currentStock: Number(p.stock ?? 0), minStock: Number(p.stockMin ?? 0) }
+  : p);
+const productStockPayload = (data: any, payload: Record<string, any>) => {
+  if (data.hasStock !== undefined) payload.trackStock = data.hasStock;
+  if (data.currentStock !== undefined && data.currentStock !== null) payload.stock = data.currentStock;
+  if (data.minStock !== undefined && data.minStock !== null) payload.stockMin = data.minStock;
+  if (data.stockReason) payload.stockReason = data.stockReason;
+  delete payload.hasStock; delete payload.currentStock; delete payload.minStock;
+  return payload;
+};
+
 export const productsApi = {
   getAll: async () => {
     const response = await fetch(`${API_BASE_URL}/menu/products?perPage=500`, {
       headers: getAuthHeaders()
     });
     const result = await handleResponse<any>(response);
-    return Array.isArray(result) ? result : (result?.data ?? []);
+    return (Array.isArray(result) ? result : (result?.data ?? [])).map(withProductStock);
   },
 
   getById: async (id: string) => {
     const response = await fetch(`${API_BASE_URL}/menu/products/${id}`, {
       headers: getAuthHeaders()
     });
-    return handleResponse(response);
+    return withProductStock(await handleResponse(response));
   },
 
   create: async (data: any) => {
@@ -101,13 +115,14 @@ export const productsApi = {
     if (data.trackInventory !== undefined) payload.trackInventory = data.trackInventory;
     if (data.showInQr !== undefined) payload.showInQr = data.showInQr; // HOTFIX 267
     if (data.modifiers) payload.modifiers = data.modifiers;
+    productStockPayload(data, payload); // HOTFIX 288
     console.log('[api.products.create] payload enviado al backend:', payload);
     const response = await fetch(`${API_BASE_URL}/menu/products`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(payload)
     });
-    return handleResponse(response);
+    return withProductStock(await handleResponse(response));
   },
 
   update: async (id: string, data: any) => {
@@ -119,12 +134,13 @@ export const productsApi = {
     // Renombrar imageUrl → image (campo que espera el backend)
     const imageVal = data.image || data.imageUrl;
     if (imageVal) payload.image = imageVal;
+    productStockPayload(data, payload); // HOTFIX 288
     const response = await fetch(`${API_BASE_URL}/menu/products/${id}`, {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify(payload)
     });
-    return handleResponse(response);
+    return withProductStock(await handleResponse(response));
   },
 
   delete: async (id: string) => {

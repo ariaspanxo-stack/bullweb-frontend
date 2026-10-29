@@ -565,6 +565,8 @@ const Products = () => {
       price: product.price,
       cost: product.cost || 0,
       currentStock: product.currentStock || 0,
+      hasStock: product.hasStock, // HOTFIX 288
+      minStock: product.minStock,
       imageUrl: product.imageUrl,
       description: product.description,
       active: true,

@@ -23,6 +23,7 @@ export const notificationsService = {
     const { data } = await api.get<{ success: boolean; data: RecentNotification[] }>(
       '/notifications/recent',
     );
-    return data.data ?? [];
+    // HOTFIX 289: api.get ya desenvuelve { success, data } -> data es el arreglo (data.data era undefined: campana siempre vacia)
+    return Array.isArray(data) ? data : ((data as any)?.data ?? []);
   },
 };

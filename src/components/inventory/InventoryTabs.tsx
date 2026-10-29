@@ -1,13 +1,15 @@
-import { Package, ShoppingCart, Activity, Truck } from 'lucide-react';
+import { Package, ShoppingCart, Activity, Truck, Boxes } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface InventoryTabsProps {
-  activeTab: 'ingredients' | 'recipes' | 'purchases' | 'movements' | 'suppliers';
-  onTabChange: (tab: 'ingredients' | 'recipes' | 'purchases' | 'movements' | 'suppliers') => void;
+  activeTab: 'ingredients' | 'products' | 'recipes' | 'purchases' | 'movements' | 'suppliers';
+  onTabChange: (tab: 'ingredients' | 'products' | 'recipes' | 'purchases' | 'movements' | 'suppliers') => void;
 }
 
 const tabs = [
   { value: 'ingredients', label: 'Ingredientes', icon: Package },
+  // HOTFIX 289: productos con stock simple (misma fuente que Productos)
+  { value: 'products', label: 'Productos', icon: Boxes },
   // Tab "Recetas" oculto: se usa la vista premium de Productos (Fichas Técnicas).
   // { value: 'recipes', label: 'Recetas', icon: BookOpen },
   { value: 'purchases', label: 'Compras', icon: ShoppingCart },

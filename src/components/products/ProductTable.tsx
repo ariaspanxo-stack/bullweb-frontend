@@ -63,7 +63,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
           <tbody className="divide-y divide-[#E2E8F0] bg-white">
             {products.map((product) => {
               // HOTFIX 288: el stock solo aplica si el producto lo controla; bajo = bajo su stock mínimo (o en 0)
-              const isLowStock = !!product.hasStock && ((product.currentStock ?? 0) <= 0 || (product.currentStock ?? 0) < (product.minStock ?? 0));
+              const isLowStock = !!product.hasStock && ((product.currentStock ?? 0) <= 0 || (product.currentStock ?? 0) <= (product.minStock ?? 0)); // HOTFIX 289: <= minimo
               const metrics = calculateProductMetrics(product.price, product.cost || 0);
               const hasCost = !!product.cost && product.cost > 0;
               // Thumbnail: el backend envía 'image' (Prisma); imageUrl es el nombre frontend

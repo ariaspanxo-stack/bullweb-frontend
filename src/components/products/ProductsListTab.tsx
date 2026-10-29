@@ -85,7 +85,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
       p.hasStock &&
       p.currentStock !== undefined &&
       p.minStock !== undefined &&
-      p.currentStock < p.minStock
+      p.currentStock <= p.minStock // HOTFIX 289: en el minimo ya es stock bajo
     ).length
   };
 
@@ -117,7 +117,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
         product.hasStock &&
         product.currentStock !== undefined &&
         product.minStock !== undefined &&
-        product.currentStock < product.minStock
+        product.currentStock <= product.minStock // HOTFIX 289
       );
     }
 
@@ -423,7 +423,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
               const stockState = product.hasStock && product.currentStock !== undefined
                 ? product.currentStock <= 0
                   ? { label: 'Sin stock', cls: 'bg-[#FEE2E2] text-[#B91C1C]' }
-                  : product.minStock && product.currentStock < product.minStock
+                  : product.minStock && product.currentStock <= product.minStock // HOTFIX 289
                   ? { label: `Stock: ${product.currentStock}`, cls: 'bg-[#FEF3C7] text-[#92400E]' }
                   : { label: `Stock: ${product.currentStock}`, cls: 'bg-[#F1F5F9] text-[#475569]' }
                 : null;

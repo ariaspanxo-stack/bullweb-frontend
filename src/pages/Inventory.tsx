@@ -6,6 +6,7 @@ import IngredientsTable from '@/components/inventory/IngredientsTable';
 import IngredientFormModal from '@/components/inventory/IngredientFormModal';
 import RecipesList from '@/components/inventory/RecipesList';
 import RecipeFormModal from '@/components/inventory/RecipeFormModal';
+import ProductsStockTab from '@/components/inventory/ProductsStockTab';
 import Button from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useConfirm } from '@/hooks/useConfirm';
@@ -17,7 +18,7 @@ import { usePermission } from '@/hooks/usePermission';
 export default function Inventory() {
   const queryClient = useQueryClient();
   const { confirm: confirmDialog, dialogProps } = useConfirm();
-  const [activeTab, setActiveTab] = useState<'ingredients' | 'recipes' | 'purchases' | 'movements' | 'suppliers'>('ingredients');
+  const [activeTab, setActiveTab] = useState<'ingredients' | 'products' | 'recipes' | 'purchases' | 'movements' | 'suppliers'>('ingredients');
   const [searchQuery, setSearchQuery] = useState('');
   const [showLowStock, setShowLowStock] = useState(false);
 
@@ -309,6 +310,8 @@ export default function Inventory() {
         </div>
       )}
 
+      {activeTab === 'products' && <ProductsStockTab />}
+
       {activeTab === 'recipes' && (
         <RecipesList
           onEdit={handleEditRecipe}
@@ -401,7 +404,7 @@ export default function Inventory() {
                 <thead>
                   <tr className="text-left text-xs font-medium text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
                     <th className="px-4 py-3">Fecha</th>
-                    <th className="px-4 py-3">Ingrediente</th>
+                    <th className="px-4 py-3">Ingrediente / Producto</th>
                     <th className="px-4 py-3">Tipo</th>
                     <th className="px-4 py-3">Cantidad</th>
                     <th className="px-4 py-3">Stock Anterior</th>
@@ -435,7 +438,13 @@ export default function Inventory() {
                           <td className="px-4 py-3 text-sm text-gray-600">
                             {new Date(mov.createdAt).toLocaleDateString('es-CL')}
                           </td>
-                          <td className="px-4 py-3 font-medium">{mov.ingredients?.name ?? '—'}</td>
+                          <td className="px-4 py-3 font-medium">
+                            {/* HOTFIX 289: movimientos de productos con stock simple */}
+                            {mov.ingredients?.name ?? mov.products?.name ?? '—'}
+                            {mov.productId && (
+                              <span className="ml-2 inline-flex px-1.5 py-0.5 text-[10px] font-medium rounded bg-orange-50 text-orange-700">Producto</span>
+                            )}
+                          </td>
                           <td className="px-4 py-3">
                             <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${typeColor[mov.type] ?? 'bg-gray-100 text-gray-600'}`}>
                               {typeLabel[mov.type] ?? mov.type}

@@ -29,7 +29,12 @@ export function useStockAlerts() {
     queryFn: () =>
       api.get('/inventory/low-stock').then(r => {
         const items: LowStockItem[] = r.data?.data?.ingredients ?? r.data?.ingredients ?? [];
-        return items;
+        // HOTFIX 289: productos con stock simple en o bajo su minimo tambien cuentan para el badge
+        const products: any[] = r.data?.data?.products ?? r.data?.products ?? [];
+        return [
+          ...items,
+          ...products.map((p) => ({ id: p.id, name: p.name, unit: 'u', currentStock: Number(p.stock), minStock: Number(p.stockMin) })),
+        ];
       }),
     enabled: isAuthenticated && canViewInventory && planReady && !isBasico,
     staleTime: 5 * 60 * 1000,   // 5 minutos

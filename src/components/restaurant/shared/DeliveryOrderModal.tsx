@@ -10,7 +10,7 @@ import {
   Phone, User, Printer, CreditCard, Pencil, ChefHat,
   Loader2, Tag, Clock, LayoutGrid,
 } from 'lucide-react';
-import { ModifiersModal } from '../../../pages/Restaurant/components/ModifiersModal';
+import { ModifierGroupsModal, hasModifierGroups } from './ModifierGroupsModal'; // HOTFIX 291
 import { OrderTicket } from './OrderTicket';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { restaurantService } from '../../../services/restaurantService';
@@ -204,7 +204,8 @@ export function DeliveryOrderModal({
 
   /** Click sobre un producto */
   function handleProductClick(product: Product) {
-    if (product.modifiers && product.modifiers.length > 0) {
+    // HOTFIX 291: grupos de modificadores (modelo nuevo); obligatorio bloquea en el selector
+    if (hasModifierGroups(product)) {
       setPendingProduct(product);
       setShowModifiers(true);
     } else {
@@ -445,7 +446,7 @@ export function DeliveryOrderModal({
               </span>
             )}
           </div>
-          {product.modifiers && product.modifiers.length > 0 && (
+          {hasModifierGroups(product) && (
             <p className="text-[10px] text-gray-400 mt-0.5">Con opciones</p>
           )}
         </div>
@@ -986,12 +987,8 @@ export function DeliveryOrderModal({
 
       {/* ── ModifiersModal ── */}
       {showModifiers && pendingProduct && (
-        <ModifiersModal
-          isOpen={showModifiers}
-          productName={pendingProduct.name}
-          availableModifiers={pendingProduct.modifiers ?? []}
-          selectedModifiers={[]}
-          basePrice={pendingProduct.price}
+        <ModifierGroupsModal
+          product={pendingProduct}
           onConfirm={(mods) => handleModifiersConfirm(mods)}
           onClose={() => { setShowModifiers(false); setPendingProduct(null); }}
         />

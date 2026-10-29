@@ -15,7 +15,7 @@ import {
   Clock, Star, Users, MessageSquare, UserPlus, Loader2, Tag, Pencil,
   Printer, ChefHat, ClipboardList, CheckCircle, Mail, LayoutGrid, ArrowLeft,
 } from 'lucide-react';
-import { ModifiersModal } from './ModifiersModal';
+import { ModifierGroupsModal, hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 import type {
   Table,
   Product,
@@ -248,7 +248,8 @@ export const OrderModal = ({
 
   // (1-d-i) MISMO handler de agregar que usa la lista actual
   const handleProductClick = (product: Product) => {
-    if (product.modifiers && product.modifiers.length > 0) {
+    // HOTFIX 291: grupos de modificadores (modelo nuevo); obligatorio bloquea en el selector
+    if (hasModifierGroups(product)) {
       setPendingProduct(product);
       setShowModifiersModal(true);
     } else {
@@ -652,7 +653,7 @@ export const OrderModal = ({
                             )}
                             <p className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</p>
                             <p className="text-sm font-bold text-orange-600">${fmt(product.price)}</p>
-                            {product.modifiers && product.modifiers.length > 0 && (
+                            {hasModifierGroups(product) && (
                               <p className="text-[10px] text-gray-400 mt-0.5">Con opciones</p>
                             )}
                           </button>
@@ -712,7 +713,7 @@ export const OrderModal = ({
                             <div className="flex items-center gap-1.5">
                               <p className="font-semibold text-gray-800 text-sm truncate">{product.name}</p>
                               {product.popular && <Star size={11} className="text-yellow-400 fill-yellow-400 flex-shrink-0" />}
-                              {(product.modifiers?.length ?? 0) > 0 && (
+                              {hasModifierGroups(product) && (
                                 <MessageSquare size={11} className="text-orange-400 flex-shrink-0" />
                               )}
                             </div>
@@ -1192,12 +1193,9 @@ export const OrderModal = ({
 
       {/* ModifiersModal */}
       {showModifiersModal && pendingProduct && (
-        <ModifiersModal
-          isOpen={showModifiersModal}
-          productName={pendingProduct.name}
-          availableModifiers={pendingProduct.modifiers ?? []}
-          selectedModifiers={[]}
-          basePrice={pendingProduct.price}
+        <ModifierGroupsModal
+          product={pendingProduct}
+          withNotes
           onConfirm={(modifiers, notes) => {
             onAddProduct({ ...pendingProduct, modifiers, notes } as Product);
             setSearchQuery('');

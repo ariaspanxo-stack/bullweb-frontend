@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { X, Search, ChevronRight, Loader2 } from 'lucide-react';
 import { MeseroModifiers } from './MeseroModifiers';
+import { hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 
 interface Props {
   categories:       any[];
@@ -93,7 +94,7 @@ export function MeseroMenuSheet({
                 <button
                   key={product.id}
                   onClick={() => {
-                    if (product.modifiers?.length > 0) {
+                    if (hasModifierGroups(product)) {
                       setPendingProduct(product);
                     } else {
                       onAddProduct(product, [], '');
@@ -119,7 +120,7 @@ export function MeseroMenuSheet({
                     {product.description && (
                       <p className="text-xs text-gray-400 truncate mt-0.5">{product.description}</p>
                     )}
-                    {product.modifiers?.length > 0 && (
+                    {hasModifierGroups(product) && (
                       <p className="text-xs text-orange-500 mt-0.5">+ opciones disponibles</p>
                     )}
                   </div>

@@ -40,6 +40,7 @@ import type { ProductModifier } from '../../../types/sales.types';
 import customersService from '../../../services/customersService';
 import toast from 'react-hot-toast';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
+import { ModifierGroupsModal, hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 
 interface NewMostradorModalProps {
   products: Product[];
@@ -197,10 +198,17 @@ export const NewMostradorModal = ({
     setCart([...cart, newItem]);
   };
 
-  // Al hacer click en producto, agregar directo al carrito
+  // HOTFIX 291: con grupos de modificadores abre el selector; sin grupos agrega directo
+  const [modProduct, setModProduct] = useState<Product | null>(null);
+  const pickProduct = (product: Product) => {
+    if (hasModifierGroups(product)) { setModProduct(product); return; }
+    handleAddProduct({ ...product, modifiers: [] } as any);
+  };
+
+  // Al hacer click en producto: selector si tiene grupos, si no directo al carrito
   const handleProductClick = (product: Product) => {
     setSearchQuery('');
-    handleAddProduct({ ...product, modifiers: [] } as any);
+    pickProduct(product);
   };
 
   // Toggle panel de comentario
@@ -362,6 +370,14 @@ export const NewMostradorModal = ({
 
   return createPortal(
     <>
+      {/* HOTFIX 291: selector de grupos de modificadores (obligatorio bloquea) */}
+      {modProduct && (
+        <ModifierGroupsModal
+          product={modProduct}
+          onConfirm={(mods) => { handleAddProduct({ ...modProduct, modifiers: mods } as any); setModProduct(null); }}
+          onClose={() => setModProduct(null)}
+        />
+      )}
       {/* Overlay — sin onClick para no cerrar al hacer click fuera */}
       <div 
         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
@@ -634,7 +650,7 @@ export const NewMostradorModal = ({
                           {product.popular && (
                             <Star size={14} className="text-yellow-500 fill-yellow-500 flex-shrink-0 mt-0.5" />
                           )}
-                          {product.modifiers && product.modifiers.length > 0 && (
+                          {hasModifierGroups(product) && (
                             <span className="text-xs bg-orange-100 text-orange-700 rounded px-1 py-0.5 font-medium flex-shrink-0">Extras</span>
                           )}
                         </div>
@@ -778,7 +794,7 @@ export const NewMostradorModal = ({
                       )}
                       <p className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</p>
                       <p className="text-sm font-bold text-blue-600">${fmt(product.price)}</p>
-                      {product.modifiers && product.modifiers.length > 0 && (
+                      {hasModifierGroups(product) && (
                         <p className="text-[10px] text-gray-400 mt-0.5">Con opciones</p>
                       )}
                     </button>

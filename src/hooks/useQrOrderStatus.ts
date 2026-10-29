@@ -29,6 +29,8 @@ export interface QrOrderLiveStatus {
   reviewed:         boolean;
   /** TAREA 280 — avance por ítem del pedido aceptado (conteos y el producto en curso). */
   progress:         { ready: number; total: number; current: string | null } | null;
+  /** HOTFIX 291 — detalle del pedido: productos con sus modificadores y precio por unidad (con extras). */
+  items:            { name: string; quantity: number; price: number; modifiers: { name: string; price: number }[] }[];
   /** Momento (ms) en que se leyó minutesSinceSent, para contar el tiempo entre polls. */
   fetchedAt:        number;
 }
@@ -38,7 +40,7 @@ export const QR_STATUS_POLL_MS = 10_000;
 
 const INITIAL: QrOrderLiveStatus = {
   status: 'PENDING', orderType: null, code: null, estimatedMinutes: null, deliveryFee: null,
-  subtotal: null, total: null, reason: null, whatsapp: null, minutesSinceSent: 0, reviewed: false, progress: null, fetchedAt: Date.now(),
+  subtotal: null, total: null, reason: null, whatsapp: null, minutesSinceSent: 0, reviewed: false, progress: null, items: [], fetchedAt: Date.now(),
 };
 
 /** HOTFIX 272b: terminal opcional (la barra fija sigue consultando en READY hasta DELIVERED o REJECTED). */
@@ -72,6 +74,7 @@ export function useQrOrderStatus(orderId: string | null, terminal: QrOrderPhase[
           total:            d.total ?? null,
           reason:           d.reason ?? null,
           whatsapp:         d.whatsapp ?? null,
+          items:            Array.isArray(d.items) ? d.items : [], // HOTFIX 291
           minutesSinceSent: Number(d.minutesSinceSent ?? 0),
           reviewed:         d.reviewed === true,
           progress:         d.progress && Number(d.progress.total) > 0

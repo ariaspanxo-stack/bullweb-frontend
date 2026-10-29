@@ -23,6 +23,7 @@ import { usePermission } from '../../../hooks/usePermission';
 import { usePlan } from '../../../hooks/usePlan';
 import { ItemPrepList, ItemsProgress } from './ItemPrepList';
 import toast from 'react-hot-toast';
+import { modifierNames } from './ModifierGroupsModal'; // HOTFIX 291
 
 // ─── Clases de botones (fila de acciones, todos 44px) ─────────
 const BTN_PRIMARY   = 'h-11 px-4 flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-white bg-[#F97316] hover:bg-[#EA580C] transition-colors disabled:opacity-60';
@@ -88,6 +89,8 @@ function ItemsSummaryInline({ items }: { items: any[] }) {
       {visible.map((i: any, idx: number) => (
         <p key={idx} className="text-[15px] text-slate-800 truncate leading-snug">
           <span className="font-bold text-slate-900">{i.quantity}×</span> {i.productName}
+          {/* HOTFIX 291: modificadores elegidos */}
+          {modifierNames(i.modifiers) && <span className="block text-xs text-slate-500 truncate">+ {modifierNames(i.modifiers)}</span>}
         </p>
       ))}
       {hidden > 0 && (

@@ -123,6 +123,12 @@ export const ModifiersListTab: React.FC<ModifiersListTabProps> = ({
                       <p className="text-xs text-[#64748B] ml-8">
                         {group.options.length} opción{group.options.length !== 1 ? 'es' : ''}
                       </p>
+                      {/* HOTFIX 291: obligatorio sin opciones activas no se ofrece al vender (ni bloquea) */}
+                      {group.isRequired && group.options.filter((o) => o.status === 'active').length === 0 && (
+                        <p className="text-xs font-medium text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1 ml-8 mt-1 inline-block" role="note">
+                          Este grupo no tiene opciones y no se mostrará al vender
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <button

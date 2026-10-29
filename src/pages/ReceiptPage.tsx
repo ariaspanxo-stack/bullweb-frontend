@@ -13,6 +13,7 @@ interface ReceiptItem {
   unit_price: number;
   subtotal:   number;
   notes:      string | null;
+  modifiers?:  { name: string; price: number }[]; // HOTFIX 291
 }
 
 interface ReceiptData {
@@ -149,6 +150,10 @@ export default function ReceiptPage() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 leading-snug">{item.name}</p>
+                  {/* HOTFIX 291: modificadores elegidos con su precio extra */}
+                  {(item.modifiers ?? []).map((m, j) => (
+                    <p key={j} className="text-xs text-gray-500">+ {m.name}{m.price ? ` (${m.price > 0 ? '+' : '-'}${fmt(Math.abs(m.price))})` : ''}</p>
+                  ))}
                   {item.notes && (
                     <p className="text-xs text-gray-400 italic">{item.notes}</p>
                   )}

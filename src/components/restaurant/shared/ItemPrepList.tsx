@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import { ChefHat, Check, RotateCcw, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { restaurantService } from '../../../services/restaurantService';
+import { modifierNames } from './ModifierGroupsModal'; // HOTFIX 291
 
 type PrepStatus = 'PENDING' | 'PREPARING' | 'READY';
 
@@ -75,6 +76,8 @@ export function ItemPrepList({ orderId, items, onChanged }: {
           <div key={i.id} className="flex items-center gap-2 py-1.5 min-w-0">
             <p className="flex-1 min-w-0 text-[15px] text-slate-800 truncate leading-snug">
               <span className="font-bold text-slate-900">{i.quantity}×</span> {i.productName}
+              {/* HOTFIX 291: modificadores elegidos */}
+              {modifierNames(i.modifiers) && <span className="block text-xs text-slate-500 truncate">+ {modifierNames(i.modifiers)}</span>}
               {st === 'PREPARING' && <span className="block text-xs font-semibold text-amber-700">En preparación</span>}
               {isDone(st) && <span className="block text-xs font-semibold text-green-700">Listo</span>}
             </p>

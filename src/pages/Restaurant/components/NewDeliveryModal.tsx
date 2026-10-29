@@ -41,6 +41,7 @@ import customersService from '../../../services/customersService';
 import { paymentMethodsService } from '../../../services/paymentMethodsService';
 import toast from 'react-hot-toast';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
+import { ModifierGroupsModal, hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 
 interface NewDeliveryModalProps {
   products: Product[];
@@ -196,6 +197,13 @@ export const NewDeliveryModal = ({
   }, []);
 
   // ========== FUNCIONES DE CARRITO ==========
+  // HOTFIX 291: con grupos de modificadores abre el selector; sin grupos agrega directo
+  const [modProduct, setModProduct] = useState<Product | null>(null);
+  const pickProduct = (product: Product) => {
+    if (hasModifierGroups(product)) { setModProduct(product); return; }
+    handleAddProduct({ ...product, modifiers: [] } as any);
+  };
+
   const handleAddProduct = (product: Product) => {
     const modifiers: ProductModifier[] = (product as any).modifiers ?? [];
     const hasModifiers = modifiers.length > 0;
@@ -403,6 +411,14 @@ export const NewDeliveryModal = ({
 
   return createPortal(
     <>
+      {/* HOTFIX 291: selector de grupos de modificadores (obligatorio bloquea) */}
+      {modProduct && (
+        <ModifierGroupsModal
+          product={modProduct}
+          onConfirm={(mods) => { handleAddProduct({ ...modProduct, modifiers: mods } as any); setModProduct(null); }}
+          onClose={() => setModProduct(null)}
+        />
+      )}
       {/* Overlay — sin onClick para no cerrar al hacer click fuera */}
       <div 
         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
@@ -714,7 +730,7 @@ export const NewDeliveryModal = ({
                     <button
                       key={product.id}
                       onClick={() => {
-                        handleAddProduct(product);
+                        pickProduct(product);
                         setSearchQuery('');
                       }}
                       className="w-full p-3 hover:bg-purple-50 transition-colors text-left border-b border-gray-100 last:border-0"
@@ -834,7 +850,7 @@ export const NewDeliveryModal = ({
               onClick={() => {
                 setTappedProductId(product.id);
                 setTimeout(() => setTappedProductId(null), 120);
-                handleAddProduct(product);
+                pickProduct(product);
               }}
               className={`relative text-left p-2.5 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-300 rounded-xl transition-all duration-100 ${tappedProductId === product.id ? 'scale-95' : 'scale-100'}`}
             >

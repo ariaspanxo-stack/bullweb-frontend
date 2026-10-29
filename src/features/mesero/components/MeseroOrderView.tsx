@@ -15,6 +15,7 @@ import { MeseroCheckout }      from './MeseroCheckout';
 import { MeseroModifiers }     from './MeseroModifiers';
 import { useWaiterPermission } from '../hooks/useWaiterPermission';
 import { meseroService } from '../meseroService';
+import { hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 
 // ─────────────────────────────────────────────
 // Props
@@ -338,7 +339,7 @@ export function MeseroOrderView({
         ) : (
           <div className="space-y-2 pt-1">
             {filtered.map(product => {
-              const hasMods = (product.product_modifiers ?? product.modifiers ?? []).length > 0;
+              const hasMods = hasModifierGroups(product); // HOTFIX 291: grupos (modelo nuevo)
               return (
                 <button
                   key={product.id}

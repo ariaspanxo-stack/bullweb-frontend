@@ -200,9 +200,10 @@ export default function OrderCard({ order }: OrderCardProps) {
                 {/* Modificadores */}
                 {item.modifiers && item.modifiers.length > 0 && (
                   <div className="ml-14 space-y-1">
-                    {item.modifiers.map((modifier: string, idx: number) => (
+                    {item.modifiers.map((modifier: any, idx: number) => (
                       <div key={idx} className="text-sm text-gray-700 font-medium">
-                        • {modifier}
+                        {/* HOTFIX 291: los items guardan objetos { name, price }; antes se pintaba el objeto */}
+                        • {typeof modifier === 'string' ? modifier : modifier?.name}
                       </div>
                     ))}
                   </div>

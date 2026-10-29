@@ -6,6 +6,7 @@
 
 import api from './api';
 import { withRetry } from '../utils/withRetry';
+import { toApiModifiers } from '../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 import type { 
   Table, 
   Product, 
@@ -173,17 +174,12 @@ class RestaurantService {
       const response = await api.get('/menu/products', { params: { perPage: 500 } });
       const raw: any[] = Array.isArray(response.data?.data) ? response.data.data
         : Array.isArray(response.data) ? response.data : [];
-      // Mapear product_modifiers (formato BD) → modifiers (formato frontend)
+      // HOTFIX 291: los canales usan p.modifierGroups (modelo nuevo, el de la Carta QR) con ModifierGroupsModal.
+      // El modelo viejo (product_modifiers -> modifiers) queda DEPRECADO y ya no se lee: modifiers = [].
       return raw.map((p: any) => ({
         ...p,
-        modifiers: (p.product_modifiers || [])
-          .map((pm: any) => ({
-            id:       pm.modifiers?.id    || pm.modifierId,
-            name:     pm.modifiers?.name  || '',
-            price:    Number(pm.modifiers?.price ?? 0),
-            category: pm.modifiers?.type === 'MULTIPLE' ? 'Múltiple' : 'General',
-          }))
-          .filter((m: any) => m.id && m.name),
+        modifiers: [],
+        modifierGroups: Array.isArray(p.modifierGroups) ? p.modifierGroups : [],
       }));
     } catch (error) {
       console.error('[RS] ❌ getProducts:', error);
@@ -235,15 +231,8 @@ class RestaurantService {
         items: saleData.items.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
-          // Convertir ProductModifier[] → [{modifierId, quantity}] que espera el backend
-          ...(item.modifiers?.length ? {
-            modifiers: item.modifiers.map((m: any) => ({
-              modifierId: m.id || m.modifierId,
-              name:       m.name,
-              price:      m.price ?? 0,
-              quantity:   1,
-            }))
-          } : {}),
+          // HOTFIX 291: optionId (modelo nuevo; nombre y precio los pone el backend) o modifierId (viejo, deprecado)
+          ...(item.modifiers?.length ? { modifiers: toApiModifiers(item.modifiers) } : {}),
           ...(item.notes ? { notes: item.notes } : {}),
         })),
         notes: saleData.notes || undefined,
@@ -443,7 +432,12 @@ class RestaurantService {
   async addItemsToSale(saleId: string, items: AddSaleItemDTO[]): Promise<void> {
     try {
       // Hotfix #286: clave por item creada UNA vez; withRetry la repite y el backend no duplica tras un timeout
-      const keyed = items.map(item => ({ ...item, idempotencyKey: item.idempotencyKey || crypto.randomUUID() }));
+      const keyed = items.map(item => ({
+        ...item,
+        // HOTFIX 291: mismos modificadores que createSale (optionId para el modelo nuevo)
+        ...((item as any).modifiers?.length ? { modifiers: toApiModifiers((item as any).modifiers) } : {}),
+        idempotencyKey: item.idempotencyKey || crypto.randomUUID(),
+      }));
       await withRetry(() => api.post(`/pos/orders/${saleId}/items`, { items: keyed }));
       _ordersCache = [];
       _ordersCacheTs = 0;

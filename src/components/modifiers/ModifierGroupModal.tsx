@@ -114,6 +114,11 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
         }
       }
 
+      // HOTFIX 291: obligatorio => minimo 1
+      if (updated.isRequired && updated.minSelections < 1) {
+        updated.minSelections = 1;
+      }
+
       return updated;
     });
 
@@ -134,7 +139,8 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      onSave(formData);
+      // HOTFIX 291: obligatorio => minimo 1 (el backend aplica la misma regla)
+      onSave(formData.isRequired ? { ...formData, minSelections: Math.max(1, formData.minSelections) } : formData);
     }
   };
 

@@ -1,3 +1,5 @@
+// DEPRECADO (HOTFIX 291): modelo viejo de modificadores (modifiers / product_modifiers). Ningun canal lo usa;
+// el selector vigente es components/restaurant/shared/ModifierGroupsModal (grupos y opciones). No se borra.
 // ═══════════════════════════════════════════════════════════════
 // MODIFIERS MODAL - Selección de modificadores para productos
 // Permite agregar extras y personalizaciones con precios

@@ -5,6 +5,7 @@
 import { useState }             from 'react';
 import { X, Check, Lock }       from 'lucide-react';
 import { useWaiterPermission }  from '../hooks/useWaiterPermission';
+import { sellableGroups, type SellableModifierGroup } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 
 interface Props {
   product:   any;
@@ -20,28 +21,41 @@ export function MeseroModifiers({ product, onConfirm, onClose }: Props) {
   const canModify      = useWaiterPermission('modifiers');
   const canCustomPrice = useWaiterPermission('custom_price');
 
-  const toggleModifier = (modifier: any, option: any) => {
-    const exists = selected.find(
-      s => s.modifierId === modifier.id && s.optionId === option.id
-    );
-    if (exists) {
-      setSelected(prev =>
-        prev.filter(s => !(s.modifierId === modifier.id && s.optionId === option.id))
-      );
+  // HOTFIX 291: grupos de modificadores (modelo nuevo). Los obligatorios se muestran siempre (sin ellos el backend
+  // rechaza la venta); los opcionales solo con el permiso "modifiers".
+  const groups = sellableGroups(product).filter((g) => g.minSelections > 0 || canModify);
+  const hiddenOptional = !canModify && sellableGroups(product).some((g) => g.minSelections === 0);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const toggleModifier = (group: SellableModifierGroup, option: any) => {
+    const inGroup = selected.filter(s => s.groupId === group.id);
+    if (inGroup.some(s => s.optionId === option.id)) {
+      setSelected(prev => prev.filter(s => !(s.groupId === group.id && s.optionId === option.id)));
+      return;
+    }
+    const item = { optionId: option.id, groupId: group.id, groupName: group.name, name: option.name, price: Number(option.priceAdjustment ?? 0) };
+    if (group.selectionType === 'single') {
+      setSelected(prev => [...prev.filter(s => s.groupId !== group.id), item]);
+    } else if (group.maxSelections && inGroup.length >= group.maxSelections) {
+      setErrors(e => ({ ...e, [group.id]: 'Máximo ' + group.maxSelections }));
+      return;
     } else {
-      if (!modifier.multiple) {
-        // Selección única → reemplazar en el mismo grupo
-        setSelected(prev => [
-          ...prev.filter(s => s.modifierId !== modifier.id),
-          { modifierId: modifier.id, optionId: option.id, name: option.name, price: option.price ?? 0 },
-        ]);
-      } else {
-        setSelected(prev => [...prev, {
-          modifierId: modifier.id, optionId: option.id,
-          name: option.name, price: option.price ?? 0,
-        }]);
+      setSelected(prev => [...prev, item]);
+    }
+    setErrors(e => { const n = { ...e }; delete n[group.id]; return n; });
+  };
+
+  const confirm = () => {
+    const errs: Record<string, string> = {};
+    for (const g of groups) {
+      if (selected.filter(s => s.groupId === g.id).length < g.minSelections) {
+        errs[g.id] = g.minSelections === 1 ? 'Elige una opción' : 'Elige al menos ' + g.minSelections;
       }
     }
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+    const cp = customPrice ? parseFloat(customPrice) : undefined;
+    onConfirm(selected, notes, cp);
   };
 
   const extraTotal = selected.reduce((s, m) => s + m.price, 0);
@@ -74,34 +88,35 @@ export function MeseroModifiers({ product, onConfirm, onClose }: Props) {
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
           {/* Grupos de modificadores */}
-          {!canModify && product.modifiers?.length > 0 && (
+          {hiddenOptional && (
             <div className="flex items-center gap-2 bg-amber-50 border border-amber-200
                             rounded-xl px-4 py-3 text-amber-700 text-sm">
               <Lock className="w-4 h-4 flex-shrink-0" />
-              <span>Tu rol no permite seleccionar modificadores</span>
+              <span>Tu rol no permite elegir los extras opcionales</span>
             </div>
           )}
 
-          {canModify && product.modifiers?.map((modifier: any) => (
-            <div key={modifier.id}>
+          {groups.map((group) => (
+            <div key={group.id}>
               <div className="flex items-center justify-between mb-2">
-                <p className="font-semibold text-gray-700 text-sm">{modifier.name}</p>
-                {modifier.required && (
+                <p className="font-semibold text-gray-700 text-sm">{group.name}</p>
+                {group.minSelections > 0 && (
                   <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full">
                     Requerido
                   </span>
                 )}
               </div>
+              {errors[group.id] && <p className="text-sm text-red-600 mb-2" role="alert">{errors[group.id]}</p>}
               <div className="space-y-2">
-                {modifier.options?.map((option: any) => {
+                {group.options.map((option) => {
                   const isSelected = selected.some(
-                    s => s.modifierId === modifier.id && s.optionId === option.id
+                    s => s.groupId === group.id && s.optionId === option.id
                   );
                   return (
                     <button
                       key={option.id}
-                      onClick={() => toggleModifier(modifier, option)}
-                      className={`w-full flex items-center justify-between px-4 py-3
+                      onClick={() => toggleModifier(group, option)}
+                      className={`w-full min-h-[44px] flex items-center justify-between px-4 py-3
                         rounded-xl border-2 transition-all
                         ${isSelected
                           ? 'border-orange-400 bg-orange-50'
@@ -116,9 +131,9 @@ export function MeseroModifiers({ product, onConfirm, onClose }: Props) {
                         </div>
                         <span className="text-sm font-medium text-gray-700">{option.name}</span>
                       </div>
-                      {option.price > 0 && (
-                        <span className="text-sm text-orange-600 font-medium">
-                          +${option.price.toLocaleString('es-CL', { maximumFractionDigits: 0 })}
+                      {Number(option.priceAdjustment) !== 0 && (
+                        <span className="text-sm text-orange-600 font-bold">
+                          {Number(option.priceAdjustment) > 0 ? '+' : '-'}${Math.abs(Number(option.priceAdjustment)).toLocaleString('es-CL', { maximumFractionDigits: 0 })}
                         </span>
                       )}
                     </button>
@@ -165,10 +180,7 @@ export function MeseroModifiers({ product, onConfirm, onClose }: Props) {
         {/* Confirmar */}
         <div className="flex-shrink-0 px-4 py-4 border-t border-gray-100">
           <button
-            onClick={() => {
-              const cp = customPrice ? parseFloat(customPrice) : undefined;
-              onConfirm(canModify ? selected : [], notes, cp);
-            }}
+            onClick={confirm}
             className="w-full py-4 bg-orange-500 hover:bg-orange-400 text-white font-bold
                        rounded-2xl text-lg active:scale-[0.98] transition-all"
           >

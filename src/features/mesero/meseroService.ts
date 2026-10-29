@@ -4,6 +4,10 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { notifyWaiterPaymentRequired } from './components/WaiterPaymentBlocked';
+import { toApiModifiers } from '../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
+// HOTFIX 291: optionId (modelo nuevo) al backend; nombre y precio los pone la BD
+const withApiModifiers = <T extends { modifiers?: any[] }>(items: T[]) =>
+  items.map((i) => (i.modifiers?.length ? { ...i, modifiers: toApiModifiers(i.modifiers) } : i));
 
 const API_BASE = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
 
@@ -90,7 +94,7 @@ export const meseroService = {
   }): Promise<any> => {
     const d = await waiterFetch('/waiter/orders', {
       method: 'POST',
-      body:   JSON.stringify({ type: 'DINE_IN', ...payload, idempotencyKey: payload.idempotencyKey ?? crypto.randomUUID() }),
+      body:   JSON.stringify({ type: 'DINE_IN', ...payload, items: withApiModifiers(payload.items), idempotencyKey: payload.idempotencyKey ?? crypto.randomUUID() }),
     });
     return d?.data !== undefined ? d.data : d;
   },
@@ -102,7 +106,7 @@ export const meseroService = {
   ): Promise<any> => {
     return waiterFetch(`/waiter/orders/${orderId}/items`, {
       method: 'POST',
-      body:   JSON.stringify({ items }),
+      body:   JSON.stringify({ items: withApiModifiers(items) }),
     });
   },
 

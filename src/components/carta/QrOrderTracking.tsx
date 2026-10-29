@@ -297,6 +297,23 @@ export function QrOrderTracking({
         </div>
       )}
 
+      {/* HOTFIX 291 — detalle del pedido con los modificadores elegidos (precio con extras) */}
+      {liveStatus.items.length > 0 && (
+        <div className="border-t border-zinc-800 pt-3 space-y-1.5" aria-label="Tu pedido">
+          {liveStatus.items.map((it, idx) => (
+            <div key={idx} className="flex items-start justify-between gap-3 text-sm">
+              <div className="min-w-0">
+                <p className="text-zinc-100"><span className="font-bold">{it.quantity}×</span> {it.name}</p>
+                {it.modifiers.map((m, j) => (
+                  <p key={j} className="text-xs text-zinc-400">+ {m.name}{m.price ? ` (${m.price > 0 ? '+' : '-'}${fmtCLP(Math.abs(m.price))})` : ''}</p>
+                ))}
+              </div>
+              <p className="font-bold text-zinc-100 flex-shrink-0">{fmtCLP(it.price * it.quantity)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* HOTFIX 273 — reseña al llegar a listo/entregado, una sola vez por pedido */}
       {(st === 'READY' || st === 'DELIVERED') && !liveStatus.reviewed && (
         <QrReviewBlock orderId={orderId} tenantSlug={tenantSlug} />

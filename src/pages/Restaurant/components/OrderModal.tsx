@@ -296,14 +296,8 @@ export const OrderModal = ({
     return matchCat && matchSearch && p.available;
   });
 
-  // Hotfix 246 CB: búsqueda en TODA la carta ignorando selectedCategory
-  // (patrón searchResults de los gemelos del #245)
-  const searchResults = searchQuery
-    ? products.filter(p =>
-        p.available &&
-        (p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         p.description?.toLowerCase().includes(searchQuery.toLowerCase())))
-    : [];
+  // HOTFIX 292: la búsqueda filtra dentro de la categoría seleccionada (filteredProducts combina texto y
+  // categoría); con "Todos" (sin categoría) busca en toda la carta. Antes ignoraba la categoría (Hotfix 246 CB).
 
   // Hotfix 246 CB: categoría activa del nivel 2 + su color de la paleta #245
   const activeCat = categories.find(c => c.id === selectedCategory) ?? null;
@@ -666,8 +660,8 @@ export const OrderModal = ({
                 </div>
               )}
 
-              {/* ── Modo búsqueda: chips flex-wrap + lista clásica (buscador
-                  existente conservado; al escribir busca en TODA la carta) ── */}
+              {/* ── Modo búsqueda: chips flex-wrap + lista clásica (HOTFIX 292: texto y
+                  categoría combinados; "Todos" + texto busca en toda la carta) ── */}
               {(searchQuery || viewMode === 'search') && (
                 <div className="flex-1 overflow-y-auto min-h-0 bg-gray-50">
                   <div className="flex flex-wrap gap-1.5 px-3 pt-3 pb-1">
@@ -697,13 +691,13 @@ export const OrderModal = ({
                     ))}
                   </div>
                   <div className="p-2 space-y-1.5">
-                    {(searchQuery ? searchResults : filteredProducts).length === 0 ? (
+                    {filteredProducts.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-32 text-gray-400">
                         <Search size={28} className="mb-2 opacity-50" />
                         <p className="text-sm">Sin resultados</p>
                       </div>
                     ) : (
-                      (searchQuery ? searchResults : filteredProducts).map(product => (
+                      filteredProducts.map(product => (
                         <button
                           key={product.id}
                           onClick={() => handleProductClick(product)}

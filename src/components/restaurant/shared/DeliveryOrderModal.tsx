@@ -190,9 +190,10 @@ export function DeliveryOrderModal({
 
   // ── Filtrado de productos ─────────────────────────────────────
   const filteredProducts = products.filter(p => {
-    // HOTFIX 292: texto y categoría combinados ("Todos" = sin categoría = toda la carta). Antes la condición
-    // aplicaba la categoría solo con texto y el nivel 2 sin texto mostraba toda la carta.
-    const matchCat    = !selectedCategory || p.categoryId === selectedCategory;
+    // Hotfix 251 C2: búsqueda global — al escribir busca TODA la carta (ignora selectedCategory)
+    // HOTFIX 292: la condición estaba invertida (con texto aplicaba la categoría y el nivel 2 mostraba toda la carta).
+    // La categoría solo filtra el nivel 2 (modo grid sin texto); búsqueda y grilla plana siguen sobre toda la carta.
+    const matchCat    = !!searchQuery || viewMode === 'search' || !selectedCategory || p.categoryId === selectedCategory;
     const matchSearch = !searchQuery ||
       p.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchCat && matchSearch && p.available;
@@ -573,18 +574,8 @@ export function DeliveryOrderModal({
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Buscar producto..."
-                    className="w-full pl-8 pr-24 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-purple-200"
+                    className="w-full pl-8 pr-16 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-purple-200"
                   />
-                  {/* HOTFIX 292: la X limpia solo el texto (la categoría se mantiene) */}
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      aria-label="Limpiar búsqueda"
-                      className="absolute right-[68px] top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      <X size={14} />
-                    </button>
-                  )}
                   {/* Hotfix #244: toggle Búsqueda↔Categorías, persistido por dispositivo */}
                   <div className="absolute top-1/2 -translate-y-1/2 right-2 flex gap-1">
                     <button
@@ -610,30 +601,27 @@ export function DeliveryOrderModal({
               </div>
 
               {/* Hotfix 251 C2 — catálogo de dos niveles:
-                  · búsqueda activa → resultados de la categoría elegida en los chips ("Todos" = toda la carta; HOTFIX 292)
+                  · búsqueda activa → resultados sobre TODA la carta (ignora categoría)
                   · modo search sin texto → grilla plana de disponibles
                   · modo grid sin texto → NIVEL 1 (baldosas) → NIVEL 2 (categoría) */}
               <div className="flex-1 lg:overflow-y-auto p-3">
                 {searchQuery.trim() !== '' || viewMode === 'search' ? (
-                  /* Grilla plana (búsqueda o modo search) — HOTFIX 292: chips para combinar texto y categoría */
+                  /* Grilla plana: búsqueda global o modo search */
                   <>
-                    <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label="Filtrar búsqueda por categoría">
-                      <button
-                        onClick={() => setSelectedCategory(null)}
-                        className={`h-11 px-3 rounded-full text-sm font-medium transition-colors ${!selectedCategory ? 'bg-[#F97316] text-white' : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'}`}
-                      >
-                        Todos
-                      </button>
-                      {categories.map(cat => (
-                        <button
-                          key={cat.id}
-                          onClick={() => setSelectedCategory(cat.id)}
-                          className={`h-11 px-3 rounded-full text-sm font-medium transition-colors ${selectedCategory === cat.id ? 'bg-[#F97316] text-white' : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'}`}
-                        >
-                          {categoryLabel(cat)}
-                        </button>
-                      ))}
-                    </div>
+                    {/* HOTFIX 292: con texto, tocar una categoría limpia el texto y muestra esa categoría (nivel 2) */}
+                    {searchQuery.trim() !== '' && (
+                      <div className="flex flex-wrap gap-1.5 mb-3" role="group" aria-label="Ver categoría">
+                        {categories.map(cat => (
+                          <button
+                            key={cat.id}
+                            onClick={() => { setSearchQuery(''); setSelectedCategory(cat.id); setViewMode('grid'); }}
+                            className="h-11 px-3 rounded-full text-sm font-medium transition-colors bg-white text-gray-600 border border-gray-200 hover:border-gray-300"
+                          >
+                            {categoryLabel(cat)}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     {filteredProducts.length === 0 ? (
                       <p className="text-center text-xs text-gray-400 mt-8">Sin productos</p>
                     ) : (

@@ -266,9 +266,14 @@ export const NewMostradorModal = ({
   const activeCat = categories.find(c => c.id === selectedCategory) ?? null;
   const activeCatColor = activeCat ? colorForCategory(categories, activeCat.id) : '#3B82F6';
 
-  // HOTFIX 292: la búsqueda filtra dentro de la categoría seleccionada (texto y categoría combinados, igual que
-  // filteredProducts); con "Todos" (sin categoría) busca en toda la carta. Antes ignoraba la categoría (Hotfix 245 C6).
-  const searchResults = searchQuery ? filteredProducts : [];
+  // Hotfix 245 C6: búsqueda global en TODA la carta (ignora selectedCategory)
+  // con el MISMO criterio del filtro actual (matchesSearch + available)
+  const searchResults = searchQuery
+    ? products.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      ).filter(p => p.available)
+    : [];
 
   // ========== CÁLCULOS ==========
   const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
@@ -617,40 +622,31 @@ export const NewMostradorModal = ({
                 <LayoutGrid size={16} />
               </button>
             </div>
-            {/* HOTFIX 292: la X aparece con texto en ambos modos y limpia solo el texto (la categoría se mantiene) */}
-            {searchQuery && (
+            {searchQuery && viewMode === 'search' && (
               <button
                 onClick={() => setSearchQuery('')}
-                aria-label="Limpiar búsqueda"
                 className="absolute right-20 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <X size={16} />
               </button>
             )}
 
-            {/* HOTFIX 292: con texto, chips de categoría ("Todos" = toda la carta) para combinar búsqueda y categoría */}
+            {/* HOTFIX 292: con texto, tocar una categoría limpia el texto y muestra esa categoría (nivel 2) */}
             {searchQuery && (
-              <div className="flex flex-wrap gap-1.5 pt-2" role="group" aria-label="Filtrar búsqueda por categoría">
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  className={`h-11 px-3 rounded-full text-sm font-medium transition-colors ${!selectedCategory ? 'bg-[#F97316] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-                >
-                  Todos
-                </button>
+              <div className="flex flex-wrap gap-1.5 pt-2" role="group" aria-label="Ver categoría">
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`h-11 px-3 rounded-full text-sm font-medium transition-colors ${selectedCategory === cat.id ? 'bg-[#F97316] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+                    onClick={() => { setSearchQuery(''); setSelectedCategory(cat.id); setViewMode('grid'); }}
+                    className="h-11 px-3 rounded-full text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
                   >
                     {categoryLabel(cat)}
                   </button>
                 ))}
               </div>
             )}
-
             {/* Dropdown de resultados de búsqueda — Hotfix 245 C6: visible en
-                AMBOS modos; HOTFIX 292: dentro de la categoría elegida en los chips */}
+                AMBOS modos; busca en toda la carta ignorando selectedCategory */}
             {searchQuery && searchResults.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-blue-500 rounded-lg shadow-xl max-h-[300px] overflow-y-auto z-50">
                 {searchResults.map((product) => (

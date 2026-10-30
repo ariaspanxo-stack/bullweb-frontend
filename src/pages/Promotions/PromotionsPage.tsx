@@ -65,6 +65,16 @@ function formatSchedule(p: Promotion): string {
   return `${days} · ${formatHour(p.startHour)}–${formatHour(p.endHour)}`;
 }
 
+/**
+ * HOTFIX 296: tamano de pack efectivo (misma regla que getPackGroupSize del backend):
+ * buyQuantity >= 2 → buyQuantity; si no, productos elegidos >= 2 → esa cantidad; si no 0 (sin pack).
+ */
+function packGroupSize(buyQuantity: number | string | undefined, productCount: number): number {
+  const buy = Number(buyQuantity) || 0;
+  if (buy >= 2) return Math.floor(buy);
+  return productCount >= 2 ? productCount : 0;
+}
+
 function typeBadge(p: Promotion) {
   const base = 'px-2 py-0.5 rounded-full text-xs font-medium';
   switch (p.type) {
@@ -74,8 +84,11 @@ function typeBadge(p: Promotion) {
       return <span className={`${base} bg-green-100 text-green-700`}>${p.value.toLocaleString('es-CL')}</span>;
     case 'X_FOR_Y':
       return <span className={`${base} bg-purple-100 text-purple-700`}>{p.buyQuantity}×{p.getQuantity}</span>;
-    case 'PACK_PRICE':
-      return <span className={`${base} bg-amber-100 text-amber-700`}>{p.buyQuantity}×${p.value.toLocaleString('es-CL')}</span>;
+    case 'PACK_PRICE': {
+      // HOTFIX 296: muestra el tamano de pack efectivo (igual que el backend)
+      const n = packGroupSize(p.buyQuantity, p.productIds?.length ?? 0);
+      return <span className={`${base} bg-amber-100 text-amber-700`}>{n >= 2 ? `${n}×` : 'Sin pack · '}${p.value.toLocaleString('es-CL')}</span>;
+    }
     default:
       return <span className={`${base} bg-gray-100 text-gray-700`}>—</span>;
   }
@@ -217,6 +230,11 @@ export default function PromotionsPage() {
     }
 
     const productIds = form.productIds;
+
+    // HOTFIX 296: el pack se cobra por GRUPO de N productos; N >= 2 obligatorio
+    if (form.type === 'PACK_PRICE' && packGroupSize(form.buyQuantity, productIds.length) < 2) {
+      return toast.error('Pack: indica una cantidad de 2 o más, o elige al menos 2 productos');
+    }
 
     const body = {
       name: form.name.trim(),
@@ -450,7 +468,9 @@ export default function PromotionsPage() {
                       : form.type === 'FIXED_PRICE'
                         ? 'Precio final en pesos CLP'
                         : form.type === 'PACK_PRICE'
-                          ? 'Precio TOTAL del pack (ej: 5500 = $5.500 por 2)'
+                          ? (packGroupSize(form.buyQuantity, form.productIds.length) >= 2 // HOTFIX 296
+                              ? `Precio por pack de ${packGroupSize(form.buyQuantity, form.productIds.length)} productos (no por unidad)`
+                              : 'Precio por pack: indica cantidad 2 o más, o elige al menos 2 productos')
                           : 'No aplica para este tipo'}
                   </p>
                 </div>
@@ -498,8 +518,14 @@ export default function PromotionsPage() {
                     className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-amber-400"
                     placeholder="2"
                   />
+                  {/* HOTFIX 296: precio por pack de N productos, nunca por unidad */}
+                  <p className="text-xs text-gray-600 mt-1">
+                    {packGroupSize(form.buyQuantity, form.productIds.length) >= 2
+                      ? <>Precio por pack de <span className="font-bold">{packGroupSize(form.buyQuantity, form.productIds.length)}</span> productos</>
+                      : 'Indica 2 o más, o elige al menos 2 productos abajo.'}
+                  </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Ej: si pones 2 y Valor = 5500, el cliente paga $5.500 por cada 2 unidades.
+                    Ej: si pones 2 y Valor = 5500, el cliente paga $5.500 por cada 2 unidades. Si pones 1, el tamaño del pack es la cantidad de productos elegidos. Nunca se cobra más que la suma de los precios normales.
                   </p>
                 </div>
               )}

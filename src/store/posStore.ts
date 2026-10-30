@@ -67,7 +67,11 @@ function _calculateItemSubtotal(
 ): number {
   const basePrice = product.price + _cartModifiersTotal(modifiers);
   console.log('[DEBUG PROMO] Evaluando product.id:', product.id, '| Array activePromotions:', JSON.stringify(activePromotions));
-  const promo = activePromotions.find((p) => p.productIds?.includes(product.id));
+  // HOTFIX 296: misma regla que buildPromoMap del backend — la promo con productos
+  // especificos gana (ultima del arreglo); si no hay, aplica la global (productIds vacio = todo el menu).
+  const specific = activePromotions.filter((p) => p.productIds?.includes(product.id));
+  const globals = activePromotions.filter((p) => !p.productIds || p.productIds.length === 0);
+  const promo = specific.length > 0 ? specific[specific.length - 1] : globals[globals.length - 1];
 
   // Sin promo: precio base * cantidad
   if (!promo) {
@@ -96,11 +100,15 @@ function _calculateItemSubtotal(
     return paidAmount;
   }
 
-  if (promo.type === 'PACK_PRICE' && promo.buyQuantity > 0) {
-    // Precio por pack (ej: 2 Mojitos por $5.500)
-    const totalPacks = Math.floor(quantity / promo.buyQuantity);
-    const remainingItems = quantity % promo.buyQuantity;
-    const packAmount = totalPacks * promo.value;
+  // HOTFIX 296: N efectivo (buyQuantity >= 2, o productos de la promo >= 2); pack por grupo, nunca por unidad
+  const packN = promo.buyQuantity >= 2
+    ? promo.buyQuantity
+    : ((promo.productIds?.length ?? 0) >= 2 ? promo.productIds.length : 0);
+  if (promo.type === 'PACK_PRICE' && packN >= 2) {
+    // Precio por pack (ej: 2 Mojitos por $5.500); guarda: nunca sobre la suma base del pack
+    const totalPacks = Math.floor(quantity / packN);
+    const remainingItems = quantity % packN;
+    const packAmount = totalPacks * Math.min(promo.value, packN * basePrice);
     const remainingAmount = remainingItems * basePrice;
     return packAmount + remainingAmount;
   }

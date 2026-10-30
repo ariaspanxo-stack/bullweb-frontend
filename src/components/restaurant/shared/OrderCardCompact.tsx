@@ -16,13 +16,13 @@ import { useState, useRef, useEffect } from 'react';
 import { fmt, useElapsed } from './helpers';
 import { STATUS_STYLES, TIME_WARN_MIN, TIME_ALERT_MIN } from './orderStatusStyles';
 import { formatSaleNumber } from '../../../utils/formatSaleNumber';
-import { posService } from '../../../services/posService';
+import { restaurantService } from '../../../services/restaurantService'; // HOTFIX 297
 import { EditCustomerModal } from './EditCustomerModal';
+import { CloseDeliveryOrderModal } from './CloseDeliveryOrderModal'; // HOTFIX 297
 import type { Sale } from '../../../types/restaurant.types';
 import { usePermission } from '../../../hooks/usePermission';
 import { usePlan } from '../../../hooks/usePlan';
 import { ItemPrepList, ItemsProgress } from './ItemPrepList';
-import toast from 'react-hot-toast';
 import { modifierNames } from './ModifierGroupsModal'; // HOTFIX 291
 
 // ─── Clases de botones (fila de acciones, todos 44px) ─────────
@@ -106,7 +106,7 @@ export function OrderCardCompact({
 }: OrderCardCompactProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
+  const [showCloseModal, setShowCloseModal] = useState(false); // HOTFIX 297
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Cerrar dropdown al hacer click fuera
@@ -296,41 +296,15 @@ export function OrderCardCompact({
           {canCobrar && (
             isDeliveryClose ? (
               <button
-                disabled={isClosing}
-                onClick={async (e) => {
+                onClick={(e) => {
+                  // HOTFIX 297: ya no cobra en un clic; abre confirmacion con medio de pago
                   e.stopPropagation();
-                  setIsClosing(true);
-                  try {
-                    const totalNum = Number(order.total) || 0;
-
-                    // Si la orden ya está pagada o el total es 0, cerrar directamente sin procesar pago
-                    if (order.status === 'PAID' || totalNum <= 0) {
-                      await posService.closeOrder(order.id);
-                    } else {
-                      // Si hay monto que cobrar, procesar el pago
-                      await posService.processPayment(order.id, {
-                        paymentMethodId: String((order as any).paymentMethodId),
-                        amount: totalNum,
-                        tip: 0,
-                      });
-                    }
-
-                    toast.success('Pedido cerrado y pagado correctamente.');
-                    onRefresh?.();
-                  } catch (err: any) {
-                    console.error('[Cerrar Delivery] Error DETALLADO:', err);
-                    const errorData = err?.response?.data || err?.data || err;
-                    const backendMsg = errorData?.error || errorData?.message || err?.message;
-                    console.error('[Cerrar Delivery] Mensaje Backend:', backendMsg);
-                    toast.error(backendMsg || 'Error al cerrar el pedido.');
-                  } finally {
-                    setIsClosing(false);
-                  }
+                  setShowCloseModal(true);
                 }}
                 className={slotIsPrimary ? primaryCls : secondaryCls}
               >
                 <CheckCircle size={16} />
-                <span>{isClosing ? 'Cerrando...' : 'Cerrar Pedido'}</span>
+                <span>Cerrar Pedido</span>
               </button>
             ) : (
               <button
@@ -391,6 +365,21 @@ export function OrderCardCompact({
           onSaved={() => {
             // Refrescar la lista de órdenes desde el backend
             onRefresh?.();
+          }}
+        />
+      )}
+
+      {/* ── HOTFIX 297: confirmacion de Cerrar Pedido (delivery) ── */}
+      {showCloseModal && (
+        <CloseDeliveryOrderModal
+          order={order}
+          onClose={() => setShowCloseModal(false)}
+          onDone={async () => {
+            setShowCloseModal(false);
+            // HOTFIX 297: getSales devuelve la cache de 8s si no se invalida; por eso la tarjeta
+            // seguia visible tras el cobro. Invalidar y luego recargar (patron de RestaurantContext).
+            restaurantService.invalidateCache();
+            await onRefresh?.();
           }}
         />
       )}

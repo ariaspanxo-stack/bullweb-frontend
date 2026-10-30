@@ -11,6 +11,7 @@ import { formatSaleNumber } from '../../../utils/formatSaleNumber';
 import { posService } from '../../../services/posService';
 import { paymentMethodsService } from '../../../services/paymentMethodsService';
 import type { Sale } from '../../../types/restaurant.types';
+import { CashSessionRequiredNotice, isCashSessionRequired, CASH_SESSION_REQUIRED_MSG } from '../../cash/CashSessionRequiredNotice'; // HOTFIX 299
 
 interface CloseDeliveryOrderModalProps {
   order: Sale;
@@ -27,6 +28,7 @@ export function CloseDeliveryOrderModal({ order, onClose, onDone }: CloseDeliver
   const [loadingMethods, setLoadingMethods] = useState(true);
   const [selectedId, setSelectedId] = useState('');
   const [saving, setSaving] = useState(false);
+  const [cashRequired, setCashRequired] = useState<string | null>(null); // HOTFIX 299
 
   // HOTFIX 297: medios activos reales del tenant (paymentMethodsService.getActiveAsync, igual que PaymentModal)
   useEffect(() => {
@@ -63,6 +65,11 @@ export function CloseDeliveryOrderModal({ order, onClose, onDone }: CloseDeliver
       toast.success('Pedido cerrado y pagado correctamente.');
       await onDone();
     } catch (err: any) {
+      // HOTFIX 299 (B2-01): sin turno -> aviso con "Abrir turno"; el medio elegido se conserva para reintentar
+      if (isCashSessionRequired(err)) {
+        setCashRequired(err?.data?.error || err?.response?.data?.error || CASH_SESSION_REQUIRED_MSG);
+        return;
+      }
       console.error('[Cerrar Delivery] Error DETALLADO:', err);
       const errorData = err?.response?.data || err?.data || err;
       const backendMsg = errorData?.error || errorData?.message || err?.message;
@@ -131,6 +138,15 @@ export function CloseDeliveryOrderModal({ order, onClose, onDone }: CloseDeliver
           </div>
         ) : (
           <p className="mt-4 text-sm text-gray-500">El pedido no tiene monto pendiente; solo se cerrará.</p>
+        )}
+
+        {cashRequired !== null && (
+          <div className="mt-4">
+            <CashSessionRequiredNotice
+              message={cashRequired}
+              onOpened={() => setCashRequired(null)}
+            />
+          </div>
         )}
 
         <div className="flex gap-2 mt-5">

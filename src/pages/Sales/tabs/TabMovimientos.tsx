@@ -111,7 +111,7 @@ export const TabMovimientos = () => {
           type:   mov.type === 'CASH_IN' ? 'CASH_IN' : 'CASH_OUT',
           amount: Number(mov.amount ?? 0),
           reason: mov.reason ?? mov.description,
-          user:   mov.createdBy?.name ?? mov.createdByName ?? '—',
+          user:   mov.performedByName ?? mov.createdBy?.name ?? mov.createdByName ?? '—', // HOTFIX 299
           time:   mov.createdAt,
         });
       });
@@ -225,15 +225,18 @@ export const TabMovimientos = () => {
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="px-3 py-3 w-6" />
-                {['Caja', 'Apertura', 'Estado', 'Fondo apertura', 'Fondo cierre', 'Diferencia'].map(h => (
-                  <th key={h} className={`px-4 py-3 text-xs font-semibold text-gray-600 uppercase ${['Fondo apertura','Fondo cierre','Diferencia'].includes(h) ? 'text-right' : 'text-left'}`}>{h}</th>
+                {['Caja', 'Apertura', 'Estado', 'Fondo apertura', 'Efectivo contado', 'Diferencia'].map(h => (
+                  <th key={h} className={`px-4 py-3 text-xs font-semibold text-gray-600 uppercase ${['Fondo apertura','Efectivo contado','Diferencia'].includes(h) ? 'text-right' : 'text-left'}`}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {sessions.map((s: any) => {
                 const isExpanded = expandedId === s.id;
-                const diff       = Number(s.closingCash ?? 0) - Number(s.openingCash ?? 0);
+                // HOTFIX 299 (B2-03): diferencia SOLO desde session.difference (contado - esperado), nunca cierre - apertura
+                const diff: number | null = s.status === 'CLOSED' && s.difference != null && !isNaN(Number(s.difference))
+                  ? Number(s.difference)
+                  : null;
                 const mvState    = movementsMap[s.id];
 
                 return (
@@ -260,9 +263,9 @@ export const TabMovimientos = () => {
                         {s.closingCash != null ? fmt(Number(s.closingCash)) : '—'}
                       </td>
                       <td className={`px-4 py-3 text-sm text-right font-semibold ${
-                        s.closingCash == null ? 'text-gray-400' : diff >= 0 ? 'text-green-700' : 'text-red-700'
+                        diff == null ? 'text-gray-400' : diff === 0 ? 'text-gray-700' : diff > 0 ? 'text-amber-600' : 'text-red-700'
                       }`}>
-                        {s.closingCash != null ? `${diff >= 0 ? '+' : ''}${fmt(diff)}` : '—'}
+                        {diff == null ? '—' : diff === 0 ? 'Cuadre' : `${diff > 0 ? '+' : '-'}${fmt(Math.abs(diff))}`}
                       </td>
                     </tr>
 

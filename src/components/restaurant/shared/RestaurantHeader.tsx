@@ -11,9 +11,12 @@ import {
   DollarSign,
   Bell,
   BellRing,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { useAuthStore } from '../../../store/authStore';
+import { usePermission } from '../../../hooks/usePermission'; // HOTFIX 299
+import { CashMovementModal } from '../../cash/CashMovementModal'; // HOTFIX 299
 
 export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBanner?: boolean; onOpenShift?: () => void }) {
   const [dismissed, setDismissed] = useState(false);
@@ -21,6 +24,10 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
   const userPerms = (user?.role?.permissions ?? []) as string[];
   const isAdmin   = userPerms.includes('ALL_PERMISSIONS') || user?.role?.name === 'Administrador';
   const canTab    = (tab: string) => isAdmin || userPerms.includes(`pos.${tab}`);
+  // HOTFIX 299 (B2-06)
+  const canMovIncome  = usePermission('cash_movements.income');
+  const canMovExpense = usePermission('cash_movements.expense');
+  const [showMovement, setShowMovement] = useState(false);
 
   const {
     cashSession,
@@ -150,6 +157,16 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
                 <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                 Turno abierto
               </div>
+              {/* HOTFIX 299 (B2-06): ingresos y retiros con motivo desde el turno del cajero */}
+              {(canMovIncome || canMovExpense) && (
+                <button
+                  onClick={() => setShowMovement(true)}
+                  className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-medium px-3 min-h-[44px] rounded-full transition-colors"
+                >
+                  <ArrowLeftRight className="w-3.5 h-3.5" />
+                  Movimiento de caja
+                </button>
+              )}
               <button
                 onClick={() => setShowCloseModal(true)}
                 className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-medium px-3 py-1.5 rounded-full transition-colors"
@@ -158,6 +175,14 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
                 Cerrar turno
               </button>
             </>
+          )}
+          {showMovement && cashSession?.isOpen && cashSession.session && (
+            <CashMovementModal
+              sessionId={cashSession.session.id}
+              canIncome={canMovIncome}
+              canExpense={canMovExpense}
+              onClose={() => setShowMovement(false)}
+            />
           )}
 
           <button

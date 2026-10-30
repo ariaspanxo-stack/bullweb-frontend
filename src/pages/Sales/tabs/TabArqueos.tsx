@@ -5,6 +5,8 @@ import { exportSheet } from '@/utils/exportExcel';
 import { cashRegistersService } from '@/services/cashRegistersService';
 import toast from 'react-hot-toast';
 import { usePermission } from '@/hooks/usePermission';
+import { createPortal } from 'react-dom'; // HOTFIX 299
+import { CashMovementModal } from '@/components/cash/CashMovementModal'; // HOTFIX 299
 
 const fmt = (v: number) =>
   new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(v);
@@ -66,6 +68,7 @@ export const TabArqueos = () => {
   const [userAmounts, setUserAmounts] = useState<Record<string, string>>({});
   const [comment, setComment] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleteJustification, setDeleteJustification] = useState(''); // HOTFIX 299 (B2-05)
   const [justification, setJustification] = useState('');
 
   // Modal apertura
@@ -74,19 +77,15 @@ export const TabArqueos = () => {
   const [openTime, setOpenTime] = useState('');
   const [openMonto, setOpenMonto] = useState('');
 
-  // Modal movimientos manuales
+  // Modal movimientos manuales (HOTFIX 299: componente compartido CashMovementModal)
   const [showMovementModal, setShowMovementModal] = useState(false);
   const [movementType, setMovementType] = useState<'CASH_IN' | 'CASH_OUT'>('CASH_IN');
-  const [movementAmount, setMovementAmount] = useState('');
-  const [movementReason, setMovementReason] = useState('');
 
   // Confirmar cierre con diferencia grande
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
-  // Confirmar egreso grande
-  const [showCashOutConfirm, setShowCashOutConfirm] = useState(false);
 
   const DIFF_THRESHOLD = 10000;
-  const CASH_OUT_THRESHOLD = 50000;
+  const DELETE_MIN_CHARS = 15; // HOTFIX 299 (B2-05)
   const [displayLimit, setDisplayLimit] = useState(20);
 
   // Hotfix #254: valores sugeridos al abrir el modal; si el usuario no los
@@ -172,9 +171,19 @@ export const TabArqueos = () => {
   const cancellations: any = cuadre?.cancellations ?? { count: 0, total: 0 };
 
   const totalUsuario = Object.values(userAmounts).reduce((s, v) => s + (parseFloat(v) || 0), 0);
-  const closedDeclared: number = !isActiveSelected ? (selectedSession?.closingCash ?? 0) : 0;
-  const diferencia = isActiveSelected ? (totalUsuario - sistemaTotal) : (closedDeclared - sistemaTotal);
+  // HOTFIX 299 (B2-03): la diferencia del cierre es SOLO efectivo contado - efectivo esperado.
+  // Sesion cerrada: se lee session.difference (no se recalcula). Sesion abierta: vista previa con la
+  // misma formula del backend, sobre lo declarado en Efectivo.
+  const efectivoDeclarado: number = parseFloat(userAmounts['Efectivo'] ?? '') || 0;
+  const closedDifference: number | null =
+    selectedSession?.difference != null && !isNaN(Number(selectedSession.difference))
+      ? Number(selectedSession.difference)
+      : null;
+  const diferencia: number = isActiveSelected
+    ? Math.round(efectivoDeclarado - expectedCash)
+    : (closedDifference ?? 0);
   const diffAbsLarge = Math.abs(diferencia) > DIFF_THRESHOLD && !isNaN(diferencia);
+  const fmtDiff = (d: number) => (d === 0 ? 'Cuadre' : `${d > 0 ? '+' : '-'}${fmt(Math.abs(d))}`);
   const needsJustification = diffAbsLarge && justification.trim().length < 5;
 
   // BUG-6: usar snapshot cuando no hay cuadre en vivo
@@ -198,11 +207,12 @@ export const TabArqueos = () => {
   };
 
   const deleteMutation = useMutation({
-    mutationFn: (sessionId: string) => cashRegistersService.deleteSession(sessionId),
+    mutationFn: (sessionId: string) => cashRegistersService.deleteSession(sessionId, deleteJustification.trim()),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cash-sessions-all'] });
       qc.invalidateQueries({ queryKey: ['active-register'] });
       setConfirmDeleteId(null);
+      setDeleteJustification('');
       if (selectedSessionId === confirmDeleteId) setSelectedSessionId(null);
       toast.success('Arqueo eliminado (visible como tachado).');
     },
@@ -233,11 +243,12 @@ export const TabArqueos = () => {
 
   const closeMutation = useMutation({
     mutationFn: () =>
+      // HOTFIX 299: closingCash = efectivo contado; closingByMethod = declarado por medio; esperado = efectivo esperado
       cashRegistersService.closeSession(registerId!, {
-        closingCash: totalUsuario,
+        closingCash: efectivoDeclarado,
         notes: comment || undefined,
         closingByMethod: buildClosingByMethod(),
-        expectedCash: sistemaTotal,
+        expectedCash,
         justification: diffAbsLarge ? justification.trim() : undefined,
       }),
     onSuccess: () => {
@@ -250,7 +261,7 @@ export const TabArqueos = () => {
       setShowCloseConfirm(false);
       toast.success('Arqueo confirmado. Caja cerrada correctamente.');
     },
-    onError: (e: any) => toast.error(e?.response?.data?.error ?? 'Error al confirmar arqueo'),
+    onError: (e: any) => toast.error(e?.data?.error ?? e?.response?.data?.error ?? e?.message ?? 'Error al confirmar arqueo'),
   });
 
   // HOTFIX 271 — imprimir arqueo en la impresora de caja (la de pre-cuenta); sin impresora el backend avisa
@@ -258,23 +269,6 @@ export const TabArqueos = () => {
     mutationFn: (sessionId: string) => cashRegistersService.printArqueo(sessionId),
     onSuccess: (r: any) => toast.success(`${r?.partial ? 'Arqueo parcial' : 'Arqueo'} enviado a ${r?.printer ?? 'la impresora'}.`),
     onError: (e: any) => toast.error(e?.data?.error ?? e?.response?.data?.error ?? e?.message ?? 'No se pudo imprimir el arqueo'),
-  });
-
-  const addMovementMutation = useMutation({
-    mutationFn: () =>
-      cashRegistersService.addMovement(selectedSession!.id, {
-        type: movementType,
-        amount: parseFloat(movementAmount),
-        reason: movementReason,
-      }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['cash-cuadre', selectedSession?.id] });
-      setShowMovementModal(false);
-      setMovementAmount('');
-      setMovementReason('');
-      toast.success('Movimiento registrado.');
-    },
-    onError: (e: any) => toast.error(e?.response?.data?.error ?? 'Error al registrar movimiento'),
   });
 
   const handleConfirmClose = () => {
@@ -293,7 +287,7 @@ export const TabArqueos = () => {
     // BUG-2: closingByMethod persistido en la sesión tiene prioridad
     const closingByMethod = (selectedSession as any)?.closingByMethod as Record<string, number> | null | undefined
       ?? cuadre?.closingByMethod as Record<string, number> | null | undefined;
-    const rows = byMethod.map((m: any) => ({
+    const rows: any[] = byMethod.map((m: any) => ({
       Metodo: METHOD_LABELS[m.method] ?? m.method,
       Transacciones: m.count,
       'Sistema (CLP)': m.total,
@@ -311,12 +305,23 @@ export const TabArqueos = () => {
         'Diferencia (CLP)': -t.total,
       });
     }
+    // HOTFIX 299 (B2-03): el total de todos los medios es informativo; la diferencia del arqueo
+    // es solo la de efectivo (session.difference = contado - esperado)
     rows.push({
-      Metodo: 'TOTAL',
+      Metodo: 'TOTAL (todos los medios)',
       Transacciones: byMethod.reduce((s: number, m: any) => s + m.count, 0),
       'Sistema (CLP)': sistemaTotal,
-      'Usuario (CLP)': isActiveSelected ? totalUsuario : (selectedSession?.closingCash ?? 0),
-      'Diferencia (CLP)': diferencia,
+      'Usuario (CLP)': isActiveSelected
+        ? totalUsuario
+        : Object.values(((selectedSession as any)?.closingByMethod ?? {}) as Record<string, number>).reduce((s, v) => s + (Number(v) || 0), 0),
+      'Diferencia (CLP)': '',
+    });
+    rows.push({
+      Metodo: 'EFECTIVO esperado vs contado',
+      Transacciones: '',
+      'Sistema (CLP)': isActiveSelected ? expectedCash : ((selectedSession as any)?.snapshotExpectedCash ?? ''),
+      'Usuario (CLP)': isActiveSelected ? efectivoDeclarado : (selectedSession?.closingCash ?? ''),
+      'Diferencia (CLP)': isActiveSelected ? diferencia : (closedDifference ?? ''),
     });
     const label = selectedSession ? `Arqueo_${selectedSession.openedAt?.slice(0, 10) ?? 'Caja'}` : 'Arqueo_Caja';
     exportSheet(rows, label);
@@ -405,7 +410,7 @@ export const TabArqueos = () => {
             <table className="w-full text-sm">
               <thead className="bg-gray-100 border-b border-gray-200 sticky top-0">
                 <tr>
-                  {['Hora apertura', 'Hora cierre', 'Duracion', 'Sistema', 'Usuario', 'Diferencia', 'Estado', ''].map(h => (
+                  {['Hora apertura', 'Hora cierre', 'Duracion', 'Esperado efectivo', 'Contado efectivo', 'Diferencia', 'Estado', ''].map(h => (
                     <th key={h} className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                       {h}
                     </th>
@@ -417,25 +422,15 @@ export const TabArqueos = () => {
                   const isOpen = s.status === 'OPEN';
                   const isDeleted = !!s.deletedAt;
                   const isSelected = s.id === effectiveSelectedId;
-                  // HOTFIX 271: Sistema y Diferencia con el criterio del panel lateral: total sistema = inicial + ventas
-                  // (todos los medios) + propinas + ingresos - egresos; diferencia = declarado - total sistema.
-                  // Total sistema por fila desde el backend (s.sistemaTotal); la fila seleccionada usa el cuadre en vivo.
-                  // Si el backend aún no envía sistemaTotal, se mantienen los valores anteriores (ventas y diferencia persistida).
-                  const userAmt: number | null = s.closingCash ?? null;
-                  const rowSistema: number | null = isSelected && cuadre
-                    ? sistemaTotal
-                    : (s.sistemaTotal != null ? Number(s.sistemaTotal) : null);
-                  const sysAmt = rowSistema ?? ((s.snapshotTotalSales ?? s.openingCash ?? 0) as number);
-                  let diff: number | null;
-                  if (s.status === 'CLOSED') {
-                    diff = userAmt != null && rowSistema != null
-                      ? Number(userAmt) - rowSistema
-                      : (s.difference != null ? Number(s.difference) : null);
-                  } else if (isSelected && cuadre) {
-                    diff = userAmt != null ? userAmt - sistemaTotal : null;
-                  } else {
-                    diff = null;
-                  }
+                  // HOTFIX 299 (B2-03): columnas = efectivo esperado vs efectivo contado; la diferencia
+                  // se lee SOLO de session.difference (no se recalcula). Abierta: esperado en vivo si esta seleccionada.
+                  const userAmt: number | null = s.status === 'CLOSED' && s.closingCash != null ? Number(s.closingCash) : null;
+                  const rowEsperado: number | null = s.status === 'CLOSED'
+                    ? (s.snapshotExpectedCash != null ? Number(s.snapshotExpectedCash) : null)
+                    : (isSelected && cuadre ? expectedCash : null);
+                  const diff: number | null = s.status === 'CLOSED' && s.difference != null && !isNaN(Number(s.difference))
+                    ? Number(s.difference)
+                    : null;
                   const lineClass = isDeleted ? 'line-through text-gray-400 opacity-60' : '';
                   const dur = calcDuration(s.openedAt, s.closedAt);
                   return (
@@ -443,7 +438,7 @@ export const TabArqueos = () => {
                       key={s.id}
                       onClick={() => setSelectedSessionId(s.id)}
                       className={`border-b border-gray-100 cursor-pointer transition-colors ${
-                        isDeleted ? 'bg-red-50' : isSelected ? (isOpen ? 'bg-amber-50' : 'bg-blue-50') : 'hover:bg-gray-50'
+                        isDeleted ? 'bg-red-50' : isSelected ? (isOpen ? 'bg-amber-50' : 'bg-orange-50') : 'hover:bg-gray-50'
                       }`}
                     >
                       <td className={`px-4 py-3 font-medium ${lineClass || 'text-gray-800'}`}>{fmtDate(s.openedAt)}</td>
@@ -452,20 +447,20 @@ export const TabArqueos = () => {
                         {isOpen ? <span className="text-amber-500 font-medium"><LiveDuration openedAt={s.openedAt} /></span> : dur}
                       </td>
                       <td className={`px-4 py-3 font-semibold ${lineClass || 'text-gray-800'}`}>
-                        {rowSistema == null && s.status === 'CLOSED' && s.snapshotTotalSales == null ? '—' : fmt(sysAmt)}
+                        {rowEsperado != null ? fmt(rowEsperado) : '-'}
                       </td>
-                      <td className={`px-4 py-3 ${lineClass || 'text-gray-600'}`}>{userAmt != null ? fmt(userAmt) : '-'}</td>
+                      <td className={`px-4 py-3 font-semibold ${lineClass || 'text-gray-800'}`}>{userAmt != null ? fmt(userAmt) : '-'}</td>
                       <td
                         className={`px-4 py-3 font-semibold ${
                           isDeleted ? lineClass
                           : diff == null ? 'text-gray-300'
-                          : diff === 0  ? 'text-gray-500'
-                          : diff > 0   ? 'text-yellow-600'
+                          : diff === 0  ? 'text-gray-700'
+                          : diff > 0   ? 'text-amber-600'
                           : 'text-red-600'
                         }`}
-                        title={diff == null ? '' : diff === 0 ? 'Cuadre exacto' : diff > 0 ? 'Sobrante: el usuario declaró más de lo esperado' : 'Faltante: el usuario declaró menos de lo esperado'}
+                        title={diff == null ? '' : diff === 0 ? 'Cuadre: el efectivo contado coincide con el esperado' : diff > 0 ? 'Sobrante: efectivo contado mayor al esperado' : 'Faltante: efectivo contado menor al esperado'}
                       >
-                        {diff == null ? '-' : `${diff > 0 ? '+' : ''}${fmt(diff)}`}
+                        {diff == null ? '-' : fmtDiff(diff)}
                       </td>
                       <td className="px-4 py-3">
                         {isDeleted ? (
@@ -534,7 +529,7 @@ export const TabArqueos = () => {
                   {canIncome && (
                     <button
                       onClick={() => { setMovementType('CASH_IN'); setShowMovementModal(true); }}
-                      className="flex items-center gap-1 px-2 py-1 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white rounded"
+                      className="flex items-center gap-1 px-3 min-h-[44px] text-xs font-semibold bg-white hover:bg-orange-50 text-orange-700 rounded"
                     >
                       <TrendingUp size={12} /> Ingreso
                     </button>
@@ -542,9 +537,9 @@ export const TabArqueos = () => {
                   {canExpense && (
                     <button
                       onClick={() => { setMovementType('CASH_OUT'); setShowMovementModal(true); }}
-                      className="flex items-center gap-1 px-2 py-1 text-xs font-semibold bg-red-600 hover:bg-red-700 text-white rounded"
+                      className="flex items-center gap-1 px-3 min-h-[44px] text-xs font-semibold bg-white hover:bg-orange-50 text-orange-700 rounded"
                     >
-                      <TrendingDown size={12} /> Egreso
+                      <TrendingDown size={12} /> Retiro
                     </button>
                   )}
                 </>
@@ -707,7 +702,7 @@ export const TabArqueos = () => {
                 </div>
               )}
               <div className="flex justify-between py-2 border-t-2 border-gray-300 mt-1">
-                <span className="text-gray-700 font-bold text-sm">Total</span>
+                <span className="text-gray-700 font-bold text-sm">Total todos los medios</span>
                 <span className="font-black text-gray-900 text-base">{fmt(sistemaTotal)}</span>
               </div>
               {tipsTotal > 0 && (
@@ -715,6 +710,19 @@ export const TabArqueos = () => {
                   incluye {fmt(tipsTotal)} de propinas{tipsCash > 0 ? ` (${fmt(tipsCash)} en efectivo)` : ''}
                 </p>
               )}
+              {/* HOTFIX 299 (B2-03/B2-07): base de la diferencia = efectivo esperado */}
+              <div className="flex justify-between py-2 border-t border-gray-200 mt-1">
+                <span className="text-gray-700 font-bold text-sm">Efectivo esperado</span>
+                <span className="font-black text-gray-900 text-base">
+                  {fmt(isActiveSelected || (selectedSession as any)?.snapshotExpectedCash == null
+                    ? expectedCash
+                    : Number((selectedSession as any).snapshotExpectedCash))}
+                </span>
+              </div>
+              <p className="text-xs text-gray-400 -mt-1">
+                Apertura {fmt(sistemaInicial)} + ventas en efectivo {fmt(Number((cuadre as any)?.cashSales ?? 0))}
+                {' '}+ propinas en efectivo {fmt(tipsCash)} + ingresos {fmt(totalCashIn)} - retiros {fmt(totalCashOut)}
+              </p>
               {movements.length > 0 && (
                 <div className="mt-2 border-t border-gray-100 pt-2">
                   <p className="text-xs text-gray-400 font-semibold uppercase tracking-wide mb-1.5">Movimientos manuales</p>
@@ -804,20 +812,25 @@ export const TabArqueos = () => {
                   />
                 </div>
                 <div className="flex justify-between py-2 border-t-2 border-gray-300">
-                  <span className="text-gray-700 font-bold text-sm">Total declarado</span>
+                  <span className="text-gray-700 font-bold text-sm">Total declarado (todos los medios)</span>
                   <span className="font-black text-gray-900 text-base">{fmt(totalUsuario)}</span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span className="text-gray-700 font-bold text-sm">Efectivo contado</span>
+                  <span className="font-black text-gray-900 text-base">{fmt(efectivoDeclarado)}</span>
                 </div>
               </div>
 
+              {/* HOTFIX 299: diferencia = efectivo contado - efectivo esperado (vista previa) */}
               <div className={`px-5 py-4 flex items-center justify-between flex-shrink-0 ${
-                diferencia === 0 ? 'bg-green-500' : diffAbsLarge ? 'bg-red-600' : 'bg-red-500'
+                diferencia === 0 ? 'bg-gray-700' : diffAbsLarge ? 'bg-red-600' : 'bg-amber-600'
               }`}>
                 <span className="text-white font-bold text-sm uppercase tracking-wide flex items-center gap-1.5">
                   {diffAbsLarge && <AlertTriangle size={15} />}
-                  Diferencia
+                  Diferencia efectivo
                 </span>
                 <span className="text-white font-black text-xl">
-                  {diferencia > 0 ? '+' : ''}{fmt(diferencia)}
+                  {fmtDiff(diferencia)}
                 </span>
               </div>
 
@@ -833,9 +846,7 @@ export const TabArqueos = () => {
                 <button
                   disabled={closeMutation.isPending || needsJustification}
                   onClick={handleConfirmClose}
-                  className={`w-full py-3 disabled:opacity-50 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2 ${
-                    diffAbsLarge ? 'bg-red-500 hover:bg-red-600' : 'bg-orange-500 hover:bg-orange-600'
-                  }`}
+                  className="w-full min-h-[44px] py-3 disabled:opacity-50 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600"
                 >
                   {closeMutation.isPending ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
                   {diffAbsLarge ? 'Confirmar de todas formas' : 'Confirmar Arqueo'}
@@ -873,19 +884,20 @@ export const TabArqueos = () => {
                   </div>
                 )}
                 <div className="flex justify-between py-2 border-t-2 border-gray-300 mt-2">
-                  <span className="text-gray-700 font-bold text-sm">Total declarado</span>
+                  <span className="text-gray-700 font-bold text-sm">Efectivo contado</span>
                   <span className="font-black text-gray-900 text-base">
                     {selectedSession.closingCash != null ? fmt(selectedSession.closingCash) : '-'}
                   </span>
                 </div>
               </div>
-              {selectedSession.closingCash != null && (
+              {/* HOTFIX 299 (B2-03): diferencia SOLO desde session.difference */}
+              {closedDifference != null && (
                 <div className={`px-5 py-4 flex items-center justify-between flex-shrink-0 ${
-                  diferencia === 0 ? 'bg-green-500' : diferencia > 0 ? 'bg-blue-500' : 'bg-red-500'
+                  closedDifference === 0 ? 'bg-gray-700' : Math.abs(closedDifference) > DIFF_THRESHOLD ? 'bg-red-600' : 'bg-amber-600'
                 }`}>
-                  <span className="text-white font-bold text-sm uppercase tracking-wide">Diferencia</span>
+                  <span className="text-white font-bold text-sm uppercase tracking-wide">Diferencia efectivo</span>
                   <span className="text-white font-black text-xl">
-                    {diferencia > 0 ? '+' : ''}{fmt(diferencia)}
+                    {fmtDiff(closedDifference)}
                   </span>
                 </div>
               )}
@@ -910,10 +922,11 @@ export const TabArqueos = () => {
       )}
 
       {/* ── Modal: Confirmar eliminacion ── */}
-      {confirmDeleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      {/* HOTFIX 299 (B2-05): justificacion obligatoria (min 15) enviada en body y ?justification= ; portal z-[100] */}
+      {confirmDeleteId && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className="bg-red-500 px-5 py-3">
+            <div className="bg-gray-900 px-5 py-3">
               <h3 className="text-white font-bold text-sm uppercase tracking-wide">Eliminar Arqueo</h3>
             </div>
             <div className="px-6 py-5">
@@ -921,25 +934,41 @@ export const TabArqueos = () => {
                 El arqueo quedara visible como <span className="font-semibold">tachado</span> para auditoria, pero no contara como activo.
               </p>
               <p className="text-xs text-gray-400 mt-2">Esta accion no se puede deshacer.</p>
+              <label className="block text-sm font-semibold text-gray-700 mt-4 mb-1">
+                Justificacion <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={deleteJustification}
+                onChange={e => setDeleteJustification(e.target.value)}
+                rows={3}
+                placeholder="Explica por que se elimina este arqueo (minimo 15 caracteres)"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+              />
+              <p className={`text-xs mt-1 text-right font-semibold ${
+                deleteJustification.trim().length >= DELETE_MIN_CHARS ? 'text-gray-500' : 'text-red-500'
+              }`}>
+                {deleteJustification.trim().length}/{DELETE_MIN_CHARS} caracteres minimos
+              </p>
             </div>
             <div className="px-6 pb-5 flex justify-end gap-2">
               <button
-                onClick={() => setConfirmDeleteId(null)}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                onClick={() => { setConfirmDeleteId(null); setDeleteJustification(''); }}
+                className="min-h-[44px] px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
-                disabled={deleteMutation.isPending}
+                disabled={deleteMutation.isPending || deleteJustification.trim().length < DELETE_MIN_CHARS}
                 onClick={() => deleteMutation.mutate(confirmDeleteId)}
-                className="px-4 py-2 text-sm rounded-lg bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
+                className="min-h-[44px] px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
               >
                 {deleteMutation.isPending ? <Loader2 className="animate-spin" size={15} /> : <Trash2 size={15} />}
                 Eliminar
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
 
       {/* ── Modal: Nueva Caja ── */}
@@ -1009,121 +1038,16 @@ export const TabArqueos = () => {
       )}
 
       {/* ── Modal: Movimiento manual ── */}
-      {showMovementModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className={`px-5 py-3 ${movementType === 'CASH_IN' ? 'bg-green-600' : 'bg-red-600'}`}>
-              <h3 className="text-white font-bold text-sm uppercase tracking-wide">
-                {movementType === 'CASH_IN' ? 'Registrar Ingreso Manual' : 'Registrar Egreso Manual'}
-              </h3>
-            </div>
-            <div className="px-6 py-5 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setMovementType('CASH_IN')}
-                    className={`flex-1 py-2 rounded text-sm font-medium transition-colors ${movementType === 'CASH_IN' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-                  >
-                    Ingreso
-                  </button>
-                  <button
-                    onClick={() => setMovementType('CASH_OUT')}
-                    className={`flex-1 py-2 rounded text-sm font-medium transition-colors ${movementType === 'CASH_OUT' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
-                  >
-                    Egreso
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Monto <span className="text-red-500">*</span>
-                </label>
-                <div className="flex items-center gap-1">
-                  <span className="text-gray-400 text-sm">$</span>
-                  <input
-                    type="number" min="0" step="1" placeholder="0"
-                    value={movementAmount}
-                    onChange={e => setMovementAmount(e.target.value)}
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Razon / Descripcion <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej: Pago proveedor, cambio de caja, etc."
-                  value={movementReason}
-                  onChange={e => setMovementReason(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                />
-              </div>
-            </div>
-            <div className="px-6 pb-5 flex justify-end gap-2">
-              <button
-                onClick={() => { setShowMovementModal(false); setMovementAmount(''); setMovementReason(''); }}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                disabled={addMovementMutation.isPending || !movementAmount || !movementReason || parseFloat(movementAmount) <= 0}
-                onClick={() => {
-                  if (movementType === 'CASH_OUT' && parseFloat(movementAmount) > CASH_OUT_THRESHOLD) {
-                    setShowCashOutConfirm(true);
-                  } else {
-                    addMovementMutation.mutate();
-                  }
-                }}
-                className={`px-4 py-2 text-sm rounded-lg disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2 ${
-                  movementType === 'CASH_IN' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
-                }`}
-              >
-                {addMovementMutation.isPending && <Loader2 className="animate-spin" size={15} />}
-                Registrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Modal: Confirmar egreso grande ── */}
-      {showCashOutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className="bg-red-600 px-5 py-3 flex items-center gap-2">
-              <AlertTriangle size={16} className="text-white" />
-              <h3 className="text-white font-bold text-sm uppercase tracking-wide">Egreso Grande</h3>
-            </div>
-            <div className="px-6 py-5">
-              <p className="text-sm text-gray-700 mb-2">
-                El egreso de{' '}
-                <span className="font-bold text-red-600">{fmt(parseFloat(movementAmount))}</span>
-                {' '}supera el umbral de {fmt(CASH_OUT_THRESHOLD)}.
-              </p>
-              <p className="text-xs text-gray-500">¿Confirmas que el monto es correcto?</p>
-            </div>
-            <div className="px-6 pb-5 flex justify-end gap-2">
-              <button
-                onClick={() => setShowCashOutConfirm(false)}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                Revisar monto
-              </button>
-              <button
-                disabled={addMovementMutation.isPending}
-                onClick={() => { setShowCashOutConfirm(false); addMovementMutation.mutate(); }}
-                className="px-4 py-2 text-sm rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
-              >
-                {addMovementMutation.isPending && <Loader2 className="animate-spin" size={15} />}
-                Confirmar egreso
-              </button>
-            </div>
-          </div>
-        </div>
+      {/* HOTFIX 299 (B2-06): modal compartido con el turno del cajero (confirma retiros grandes adentro) */}
+      {showMovementModal && selectedSession?.id && (
+        <CashMovementModal
+          sessionId={selectedSession.id}
+          initialType={movementType}
+          canIncome={canIncome}
+          canExpense={canExpense}
+          onClose={() => setShowMovementModal(false)}
+          onSaved={() => qc.invalidateQueries({ queryKey: ['cash-cuadre', selectedSession?.id] })}
+        />
       )}
 
       {/* ── Modal: Confirmar cierre diferencia grande ── */}

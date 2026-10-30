@@ -38,6 +38,8 @@ import { OrderTicket } from '../../../components/restaurant/shared/OrderTicket';
 import { ItemPrepList, ItemsProgress } from '../../../components/restaurant/shared/ItemPrepList'; // TAREA 280
 import { colorForCategory, emojiForCategory, categoryLabel } from '../../../lib/categoryHelpers';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
+import { useActivePromotions } from '../../../hooks/useActivePromotions'; // HOTFIX 299
+import { priceCartWithPromotions, restaurantCartToPromoLines, type PromoLineResult } from '../../../utils/promoPricing'; // HOTFIX 299
 
 interface OrderModalProps {
   table: Table;
@@ -314,7 +316,14 @@ export const OrderModal = ({
   const existingSubtotal = existingItems
     .filter(i => !i.isCancelled)
     .reduce((s, i) => s + (i.total ?? 0), 0);
-  const newSubtotal      = cart.reduce((s, i) => s + i.subtotal, 0);
+  const newListSubtotal  = cart.reduce((s, i) => s + i.subtotal, 0);
+  // HOTFIX 299: los items nuevos se muestran con las promociones vigentes (pack agrupado, 2x1, %,
+  // precio fijo), misma regla que el backend; solo mostrar: el carrito enviado no cambia.
+  const activePromotions = useActivePromotions();
+  const promoPricing     = priceCartWithPromotions(restaurantCartToPromoLines(cart, products), activePromotions);
+  const promoLines: Record<string, PromoLineResult> = Object.fromEntries(cart.map((it, i) => [it.id, promoPricing.lines[i]]));
+  const promoDiscount    = Math.min(newListSubtotal, promoPricing.discount);
+  const newSubtotal      = newListSubtotal - promoDiscount;
   const subtotal         = existingSubtotal + newSubtotal;
   const discountValue    = parseFloat(discountInput) || 0;
   const discountAmount   = discountApplied
@@ -800,8 +809,10 @@ export const OrderModal = ({
                   </div>
                 )}
                 formatPrice={fmt}
-                subtotal={subtotal}
+                subtotal={subtotal + promoDiscount}
                 total={total}
+                promoLines={promoLines}
+                promoDiscount={promoDiscount}
                 extraTotals={
                   <>
                     {/* Nota general en una línea (mismo estado y setter de hoy) */}

@@ -49,14 +49,16 @@ export const SalesHourChart = ({ sales }: Props) => {
     const map: Record<string, { count: number; total: number }> = {};
     let total = 0;
 
+    // HOTFIX 299 (B2-08): ventas por medio = solo pagos de venta (sin propinas, que van en su pestana);
+    // TOTAL MONTO = total ventas (suma de s.total de las ventas pagadas)
     activeSales.forEach(s => {
-      const payments = s.payments ?? [];
+      total += Number(s.total) || 0;
+      const payments = (s.payments ?? []).filter(p => !p.isTip);
       if (payments.length === 0) {
         const m = 'otro';
         if (!map[m]) map[m] = { count: 0, total: 0 };
         map[m].count += 1;
         map[m].total += s.total;
-        total += s.total;
         return;
       }
       payments.forEach(p => {
@@ -64,7 +66,6 @@ export const SalesHourChart = ({ sales }: Props) => {
         if (!map[method]) map[method] = { count: 0, total: 0 };
         map[method].count += 1;
         map[method].total += p.amount;
-        total += p.amount;
       });
     });
 
@@ -92,7 +93,7 @@ export const SalesHourChart = ({ sales }: Props) => {
         </div>
         <div className="bg-gray-50 rounded-lg p-2 text-center">
           <p className="text-[10px] text-gray-400 uppercase tracking-wider">Total Monto</p>
-          <p className="text-lg font-bold text-emerald-600">{formatCLP(totalMonto)}</p>
+          <p className="text-lg font-bold text-gray-800">{formatCLP(totalMonto)}</p>
         </div>
       </div>
 

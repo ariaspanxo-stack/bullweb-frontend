@@ -6,6 +6,8 @@ import { useState, useRef } from 'react';
 import { X, Search, Plus, Minus, ShoppingCart, Star } from 'lucide-react';
 import type { Product, ProductCategory, CartItem } from '../../../types/restaurant.types';
 import type { ProductModifier } from '../../../types/sales.types';
+import { useActivePromotions } from '../../../hooks/useActivePromotions'; // HOTFIX 299
+import { priceCartWithPromotions, restaurantCartToPromoLines } from '../../../utils/promoPricing'; // HOTFIX 299
 
 interface AddItemsModalProps {
   orderNumber: string;
@@ -76,7 +78,12 @@ export const AddItemsModal = ({
 
   const subtotal = cart.reduce((s, i) => s + i.subtotal, 0);
   const tax = 0;
-  const total = subtotal;
+  // HOTFIX 299: total de los nuevos con promociones vigentes (misma regla que el backend);
+  // solo mostrar: el carrito enviado no cambia y el backend cobra.
+  const activePromotions = useActivePromotions();
+  const promoPricing = priceCartWithPromotions(restaurantCartToPromoLines(cart, products), activePromotions);
+  const promoDiscount = Math.min(subtotal, promoPricing.discount);
+  const total = subtotal - promoDiscount;
 
   const handleConfirm = async () => {
     if (cart.length === 0) return;
@@ -185,8 +192,11 @@ export const AddItemsModal = ({
             </div>
           ) : (
             <div className="p-3 space-y-2">
-              {cart.map(item => (
-                <div key={item.id} className="bg-white rounded-xl border border-gray-200 flex items-center gap-2 px-3 py-2.5">
+              {cart.map((item, idx) => {
+                const promo = promoPricing.lines[idx]; // HOTFIX 299
+                return (
+                <div key={item.id} className="bg-white rounded-xl border border-gray-200 px-3 py-2.5">
+                <div className="flex items-center gap-2">
                   <button onClick={() => handleQty(item.id, item.quantity - 1)}
                     className="w-6 h-6 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors flex-shrink-0">
                     <Minus size={11} />
@@ -203,7 +213,14 @@ export const AddItemsModal = ({
                     <X size={14} />
                   </button>
                 </div>
-              ))}
+                {promo?.promoLabel && promo.discount >= 0.5 && (
+                  <p className="text-xs text-orange-700 mt-1 truncate">
+                    {promo.promoLabel} <span className="font-bold">-${Math.round(promo.discount).toLocaleString()}</span>
+                  </p>
+                )}
+                </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -214,9 +231,14 @@ export const AddItemsModal = ({
             <div className="flex justify-between text-sm text-gray-600">
               <span>Subtotal</span><span className="font-medium">${subtotal.toLocaleString()}</span>
             </div>
+            {promoDiscount >= 0.5 && (
+              <div className="flex justify-between text-sm text-orange-700">
+                <span>Promociones</span><span className="font-bold">-${Math.round(promoDiscount).toLocaleString()}</span>
+              </div>
+            )}
             <div className="flex justify-between text-base font-bold text-gray-900 pt-1 border-t border-gray-200">
               <span>Total nuevos</span>
-              <span className={accent === 'purple' ? 'text-purple-600' : 'text-blue-600'}>${total.toLocaleString()}</span>
+              <span className={accent === 'purple' ? 'text-purple-600' : 'text-blue-600'}>${Math.round(total).toLocaleString()}</span>
             </div>
             <button
               onClick={handleConfirm}

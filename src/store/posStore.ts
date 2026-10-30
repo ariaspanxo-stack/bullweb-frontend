@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Product, Table } from '@/types';
+import { priceCartWithPromotions } from '@/utils/promoPricing'; // HOTFIX 299
 
 // ============================================================================
 // TIPOS
@@ -26,6 +27,7 @@ export interface CartItem {
   modifiers: (string | CartModifier)[];
   notes?: string;
   subtotal: number;
+  promoLabel?: string | null; // HOTFIX 299: etiqueta de la promo aplicada a la linea
 }
 
 /**
@@ -233,7 +235,7 @@ export const usePosStore = create<PosState>()(
       set({ cartItems: [...cartItems, newItem] });
     }
 
-    get().calculateTotals();
+    get().recalcCartSubtotals(); // HOTFIX 299: repreciar el carrito completo (packs agrupados)
   },
 
   updateQuantity: (itemId, quantity) => {
@@ -255,12 +257,12 @@ export const usePosStore = create<PosState>()(
       )
     });
 
-    get().calculateTotals();
+    get().recalcCartSubtotals(); // HOTFIX 299
   },
 
   removeFromCart: (itemId) => {
     set({ cartItems: get().cartItems.filter(item => item.id !== itemId) });
-    get().calculateTotals();
+    get().recalcCartSubtotals(); // HOTFIX 299
   },
 
   clearCart: () => {
@@ -292,11 +294,25 @@ export const usePosStore = create<PosState>()(
   total: 0,
 
   recalcCartSubtotals: () => {
+    // HOTFIX 299: el carrito se precia COMPLETO (pack agrupado = 1 de cada producto, 2x1 agrupado,
+    // modificadores aparte del pack), misma regla que el backend; antes era item por item.
     const activePromotions = get().activePromotions;
+    const items = get().cartItems;
+    const priced = priceCartWithPromotions(
+      items.map((item) => ({
+        productId: item.product.id,
+        name: item.product.name,
+        productPrice: Number(item.product.price) || 0,
+        modifierUnit: _cartModifiersTotal(item.modifiers),
+        quantity: item.quantity,
+      })),
+      activePromotions,
+    );
     set({
-      cartItems: get().cartItems.map(item => ({
+      cartItems: items.map((item, i) => ({
         ...item,
-        subtotal: _calculateItemSubtotal(item.product, item.quantity, activePromotions, item.modifiers)
+        subtotal: priced.lines[i].subtotal,
+        promoLabel: priced.lines[i].promoLabel,
       }))
     });
     get().calculateTotals();

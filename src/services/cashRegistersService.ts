@@ -19,6 +19,9 @@ export interface CashSession {
   snapshotCashSales?:   number | null;
   snapshotExpectedCash?:number | null;
   closingByMethod?:     Record<string, number> | null;
+  // HOTFIX 299: unica fuente de la diferencia del cierre = efectivo contado - efectivo esperado
+  difference?:          number | null;
+  justification?:       string | null;
 }
 
 export interface CashRegister {
@@ -62,6 +65,10 @@ export interface CuadreResponse {
   totalOrders:   number;
   byMethod:      CuadreItem[];
   tips?:         CuadreTips;
+  // HOTFIX 299: ingresos/retiros manuales de la sesion
+  totalCashIn?:  number;
+  totalCashOut?: number;
+  movements?:    Array<{ id: string; type: 'CASH_IN' | 'CASH_OUT'; amount: number; reason: string | null; performedByName?: string | null; createdAt: string }>;
 }
 
 export interface CloseSessionSnapshot {
@@ -96,7 +103,7 @@ export const cashRegistersService = {
 
   async getRegisterById(id: string) {
     const { data } = await api.get<ApiResponse>(`/cash-registers/${id}`);
-    return data.data;
+    return data; // HOTFIX 299: api ya desenvuelve { success, data }
   },
 
   async getActiveRegister() {
@@ -141,23 +148,23 @@ export const cashRegistersService = {
 
   async createRegister(payload: any) {
     const { data } = await api.post<ApiResponse>('/cash-registers', payload);
-    return data.data;
+    return data; // HOTFIX 299: api ya desenvuelve { success, data }
   },
 
   async updateRegister(id: string, payload: any) {
     const { data } = await api.patch<ApiResponse>(`/cash-registers/${id}`, payload);
-    return data.data;
+    return data; // HOTFIX 299: api ya desenvuelve { success, data }
   },
 
   async deleteRegister(id: string) {
     const { data } = await api.delete<ApiResponse>(`/cash-registers/${id}`);
-    return data.data;
+    return data; // HOTFIX 299: api ya desenvuelve { success, data }
   },
 
   // ─── Sessions ─────────────────────────────────────────────────
   async getSessions(registerId: string, params?: any) {
     const { data } = await api.get<ApiResponse>(`/cash-registers/${registerId}/sessions${qs(params)}`);
-    return data.data;
+    return data; // HOTFIX 299: api ya desenvuelve { success, data }
   },
 
   async getAllSessions(params?: any) {
@@ -167,27 +174,31 @@ export const cashRegistersService = {
 
   async openSession(registerId: string, payload: { openingCash: number; notes?: string; openedAt?: string }) {
     const { data } = await api.post<ApiResponse>(`/cash-registers/${registerId}/open`, payload);
-    return data.data;
+    return data; // HOTFIX 299: api ya desenvuelve { success, data }
   },
 
   async closeSession(registerId: string, payload: { closingCash: number; notes?: string; closingByMethod?: Record<string, number>; expectedCash?: number; justification?: string }): Promise<{ session: CashSession; snapshot: CloseSessionSnapshot }> {
-    const { data } = await api.post<ApiResponse>(`/cash-registers/${registerId}/close`, payload);
-    return data.data;
+    const { data } = await api.post<{ session: CashSession; snapshot: CloseSessionSnapshot }>(`/cash-registers/${registerId}/close`, payload);
+    return data; // HOTFIX 299: api ya desenvuelve { success, data }
   },
 
   async addMovement(sessionId: string, payload: { type: 'CASH_IN' | 'CASH_OUT'; amount: number; reason: string }) {
     const { data } = await api.post<ApiResponse>(`/cash-registers/sessions/${sessionId}/movements`, payload);
-    return data.data;
+    return data; // HOTFIX 299: api ya desenvuelve { success, data }
   },
 
   async listMovements(sessionId: string) {
     const { data } = await api.get<ApiResponse>(`/cash-registers/sessions/${sessionId}/movements`);
-    return data.data;
+    return data; // HOTFIX 299: api ya desenvuelve { success, data }
   },
 
-  async deleteSession(sessionId: string) {
-    const { data } = await api.delete<ApiResponse>(`/cash-registers/sessions/${sessionId}`);
-    return data.data;
+  // HOTFIX 299 (B2-05): justificacion obligatoria, en el body y en ?justification=
+  async deleteSession(sessionId: string, justification: string) {
+    const { data } = await api.delete<ApiResponse>(
+      `/cash-registers/sessions/${sessionId}?justification=${encodeURIComponent(justification)}`,
+      { justification },
+    );
+    return data; // HOTFIX 299: api ya desenvuelve { success, data }
   },
 
   async printShiftClose(

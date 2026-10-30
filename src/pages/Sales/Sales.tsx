@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SalesFilters } from './SalesFilters';
 import { SalesStats } from './SalesStats';
 import { SalesMasterDetail } from '@/components/Sales/SalesMasterDetail';
@@ -37,6 +37,13 @@ export const Sales = () => {
   const [previousStats, setPreviousStats] = useState<Stats | null>(null);
   const [yesterdayStats, setYesterdayStats] = useState<Stats | null>(null);
   const [showCashModal, setShowCashModal] = useState(false);
+  // HOTFIX 299 (B2-07): estado del turno (misma query que Arqueos)
+  const { data: activeRegister } = useQuery({
+    queryKey:  ['active-register'],
+    queryFn:   () => cashRegistersService.getActiveRegister(),
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+  });
 
   // Estado modal apertura caja
   const [openDate, setOpenDate] = useState('');
@@ -239,13 +246,21 @@ export const Sales = () => {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-4xl font-bold text-gray-800">VENTAS</h1>
-        <button 
-          onClick={handleOpenCash}
-          className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors shadow-md"
-        >
-          <DollarSign size={20} />
-          Abrir la caja
-        </button>
+        {/* HOTFIX 299 (B2-07): "Abrir la caja" solo si no hay un turno abierto (/cash-registers/active) */}
+        {activeRegister?.isOpen ? (
+          <span className="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-gray-700">
+            <span className="w-2 h-2 rounded-full bg-orange-500" />
+            Turno abierto{activeRegister?.name ? ` · ${activeRegister.name}` : ''}
+          </span>
+        ) : (
+          <button
+            onClick={handleOpenCash}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors shadow-md"
+          >
+            <DollarSign size={20} />
+            Abrir la caja
+          </button>
+        )}
       </div>
 
       {/* Tabs de navegación */}

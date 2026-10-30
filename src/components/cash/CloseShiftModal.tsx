@@ -1,21 +1,21 @@
 // src/components/cash/CloseShiftModal.tsx
 // Modal de cierre con arqueo completo
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   X, Loader2, DollarSign, TrendingUp,
   CheckCircle, AlertTriangle, Clock,
-  CreditCard, Banknote, AlertCircle,
+  CreditCard, Banknote, AlertCircle, Printer,
 } from 'lucide-react';
 import {
   cashRegistersService,
   type CashSession,
   type CashRegister,
-  type CloseSessionSnapshot,
+  type CuadreItem,
   type CuadreTips,
 } from '../../services/cashRegistersService';
-import { ShiftPrinterSelect } from './ShiftPrinterSelect';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import toast from 'react-hot-toast';
 import { format, formatDistanceStrict } from 'date-fns';
@@ -34,14 +34,41 @@ function isCash(methodName: string): boolean {
   return /efectivo|cash|contado/i.test(methodName);
 }
 
+// HOTFIX 299 (B2-02/B2-03): resumen del cierre. La diferencia viene SOLO de session.difference
+// (efectivo contado - efectivo esperado); esta pantalla no la recalcula.
+interface CloseSummary {
+  totalSales:   number | null;
+  totalOrders:  number | null;
+  openingCash:  number | null;
+  expectedCash: number | null;
+  closingCash:  number | null;
+  difference:   number | null;
+  byMethod:     CuadreItem[];
+  tips?:        CuadreTips;
+  totalCashIn:  number;
+  totalCashOut: number;
+  /** true si se armo releyendo el estado de la sesion (fallo al leer la respuesta del cierre) */
+  recovered:    boolean;
+}
+
+const num = (v: unknown): number | null => {
+  if (v === null || v === undefined || v === '') return null;
+  const n = Number(v);
+  return isNaN(n) ? null : n;
+};
+
 export function CloseShiftModal({ register, session, onClosed, onCancel }: CloseShiftModalProps) {
   const [closingCash,      setClosingCash]      = useState('');
   const [notes,            setNotes]            = useState('');
   const [justification,    setJustification]    = useState('');
   const [loading,          setLoading]          = useState(false);
   const [error,            setError]            = useState<string | null>(null);
-  const [closeResult,      setCloseResult]      = useState<CloseSessionSnapshot | null>(null);
+  const [closeResult,      setCloseResult]      = useState<CloseSummary | null>(null);
   const [shiftConfirmOpen, setShiftConfirmOpen] = useState(false);
+  const [printing,         setPrinting]         = useState(false);
+  // HOTFIX 299: un segundo clic nunca vuelve a cerrar (en vuelo o ya cerrado)
+  const closingRef = useRef(false);
+  const closedRef  = useRef(false);
 
   // Cuadre en tiempo real
   const { data: cuadre, isLoading: cuadreLoading } = useQuery({
@@ -112,8 +139,58 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
     await doCloseShift();
   };
 
+  // HOTFIX 299: resumen desde la respuesta del cierre (session = fuente de la diferencia)
+  const buildFromClose = (result: any): CloseSummary | null => {
+    const snap = result?.snapshot;
+    const s    = result?.session;
+    if (!snap && !s) return null;
+    return {
+      totalSales:   num(snap?.totalSales ?? s?.snapshotTotalSales),
+      totalOrders:  num(snap?.totalOrders ?? s?.snapshotTotalOrders),
+      openingCash:  num(s?.openingCash ?? session.openingCash),
+      expectedCash: num(s?.snapshotExpectedCash ?? snap?.expectedCash),
+      closingCash:  num(s?.closingCash ?? snap?.closingCash),
+      difference:   num(s?.difference ?? snap?.difference),
+      byMethod:     Array.isArray(snap?.byMethod) ? snap.byMethod : (cuadre?.byMethod ?? []),
+      tips:         snap?.tips ?? cuadre?.tips,
+      totalCashIn:  Number(cuadre?.totalCashIn ?? 0),
+      totalCashOut: Number(cuadre?.totalCashOut ?? 0),
+      recovered:    false,
+    };
+  };
+
+  // HOTFIX 299: ante cualquier fallo al leer el resultado, recarga el estado de la sesion.
+  // Devuelve el resumen si la sesion quedo CLOSED en la BD; null si sigue abierta o no se pudo saber.
+  const recoverFromServer = async (): Promise<CloseSummary | null> => {
+    const [cq, list] = await Promise.allSettled([
+      cashRegistersService.getSessionCuadreById(session.id),
+      cashRegistersService.getAllSessions({ status: 'CLOSED', perPage: 50 }),
+    ]);
+    const c: any   = cq.status === 'fulfilled' ? cq.value : null;
+    const raw: any = list.status === 'fulfilled' ? list.value : null;
+    const rows: any[] = Array.isArray(raw?.sessions) ? raw.sessions : Array.isArray(raw) ? raw : [];
+    const row = rows.find((x: any) => x?.id === session.id);
+    const isClosed = row?.status === 'CLOSED' || c?.sessionStatus === 'CLOSED';
+    if (!isClosed) return null;
+    return {
+      totalSales:   num(row?.snapshotTotalSales ?? c?.totalSales),
+      totalOrders:  num(row?.snapshotTotalOrders ?? c?.totalOrders),
+      openingCash:  num(row?.openingCash ?? c?.openingCash ?? session.openingCash),
+      expectedCash: num(row?.snapshotExpectedCash),
+      closingCash:  num(row?.closingCash),
+      difference:   num(row?.difference),
+      byMethod:     Array.isArray(c?.byMethod) ? c.byMethod : [],
+      tips:         c?.tips,
+      totalCashIn:  Number(c?.totalCashIn ?? cuadre?.totalCashIn ?? 0),
+      totalCashOut: Number(c?.totalCashOut ?? cuadre?.totalCashOut ?? 0),
+      recovered:    true,
+    };
+  };
+
   const doCloseShift = async () => {
     setShiftConfirmOpen(false);
+    if (closingRef.current || closedRef.current) return; // HOTFIX 299: sin doble cierre
+    closingRef.current = true;
     setLoading(true);
     setError(null);
 
@@ -124,21 +201,59 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
         expectedCash,
         justification: needsJustification ? justification.trim() : undefined,
       });
-      setCloseResult(result.snapshot);
+      closedRef.current = true;
+      const built = buildFromClose(result);
+      if (built) {
+        setCloseResult(built);
+      } else {
+        // La BD cerro pero la respuesta no se pudo leer: releer la sesion
+        const recovered = await recoverFromServer().catch(() => null);
+        setCloseResult(recovered ?? {
+          totalSales: null, totalOrders: null, openingCash: session.openingCash,
+          expectedCash: null, closingCash: closingAmount, difference: null,
+          byMethod: [], totalCashIn: 0, totalCashOut: 0, recovered: true,
+        });
+      }
     } catch (err: any) {
-      // 404 → el turno ya fue cerrado (estado stale en frontend)
+      // HOTFIX 299: si la BD cerro (timeout, 5xx, 404 por estado stale) nunca se muestra error:
+      // se relee la sesion y se muestra el resumen con lo que haya.
+      const recovered = await recoverFromServer().catch(() => null);
+      if (recovered) {
+        closedRef.current = true;
+        setCloseResult(recovered);
+        return;
+      }
       if (err?.status === 404) {
         onClosed();
         return;
       }
       setError(err?.data?.error ?? err?.message ?? 'Error al cerrar el turno');
     } finally {
+      closingRef.current = false;
       setLoading(false);
     }
   };
 
-  return (
-    <>
+  // HOTFIX 299: mismo flujo/endpoint que Caja > Arqueos (POST /cash-registers/sessions/:id/print-arqueo)
+  const handlePrintArqueo = async () => {
+    if (printing) return;
+    setPrinting(true);
+    try {
+      const r: any = await cashRegistersService.printArqueo(session.id);
+      toast.success(`${r?.partial ? 'Arqueo parcial' : 'Arqueo'} enviado a ${r?.printer ?? 'la impresora'}.`);
+    } catch (e: any) {
+      toast.error(e?.data?.error ?? e?.response?.data?.error ?? e?.message ?? 'No se pudo imprimir el arqueo');
+    } finally {
+      setPrinting(false);
+    }
+  };
+
+  const cr = closeResult;
+  const crDiff = cr?.difference ?? null;
+
+  // HOTFIX 299: modal por portal z-[100]; el ConfirmModal (z-[60]) va dentro para quedar encima
+  return createPortal(
+    <div className="fixed inset-0 z-[100] bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-4">
     <ConfirmModal
       isOpen={shiftConfirmOpen}
       title="Diferencia en arqueo"
@@ -148,17 +263,16 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
       onConfirm={doCloseShift}
       onCancel={() => setShiftConfirmOpen(false)}
     />
-    <div className="fixed inset-0 z-50 bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
 
-        {/* ─── Pantalla post-cierre ─────────────────────────────── */}
-        {closeResult ? (
+        {/* ─── Pantalla post-cierre (HOTFIX 299: resumen del cierre) ─── */}
+        {cr ? (
           <>
             {/* Header éxito */}
             <div className="bg-gray-900 px-6 py-5 flex-shrink-0">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-500/20 rounded-xl">
-                  <CheckCircle className="w-5 h-5 text-green-400" />
+                <div className="p-2 bg-orange-500/20 rounded-xl">
+                  <CheckCircle className="w-5 h-5 text-orange-400" />
                 </div>
                 <div>
                   <h2 className="font-black text-white text-lg">Turno cerrado</h2>
@@ -169,22 +283,90 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
 
             {/* KPIs del cierre */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              {cr.recovered && (
+                <div className="flex items-start gap-2 text-sm font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>El turno quedó cerrado. Resumen releído desde el sistema; el detalle completo está en Ventas &gt; Arqueos.</span>
+                </div>
+              )}
+
+              {/* Arqueo de caja: esperado, contado y diferencia de la sesion */}
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Arqueo de efectivo</p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Efectivo esperado</span>
+                  <span className="font-bold text-gray-800">{cr.expectedCash != null ? formatCLP(cr.expectedCash) : '-'}</span>
+                </div>
+                <p className="text-xs text-gray-400 -mt-1">
+                  Apertura {cr.openingCash != null ? formatCLP(cr.openingCash) : '-'}
+                  {' '}+ ventas en efectivo {formatCLP(Number(cr.byMethod.find(m => isCash(m.method))?.total ?? 0))}
+                  {' '}+ propinas en efectivo {formatCLP(Number(cr.tips?.cash ?? 0))}
+                  {' '}+ ingresos {formatCLP(cr.totalCashIn)} - retiros {formatCLP(cr.totalCashOut)}
+                </p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">Efectivo contado</span>
+                  <span className="font-bold text-gray-800">{cr.closingCash != null ? formatCLP(cr.closingCash) : '-'}</span>
+                </div>
+                <div className={`flex items-center justify-between rounded-xl px-3 py-2 ${
+                  crDiff === null ? 'bg-gray-50'
+                  : crDiff === 0 ? 'bg-gray-100'
+                  : Math.abs(crDiff) <= 1000 ? 'bg-amber-50'
+                  : 'bg-red-50'
+                }`}>
+                  <span className="text-sm font-semibold text-gray-600">Diferencia</span>
+                  <div className="flex items-center gap-1.5">
+                    {crDiff === 0
+                      ? <CheckCircle className="w-4 h-4 text-gray-600" />
+                      : crDiff !== null && <AlertTriangle className="w-4 h-4 text-amber-500" />
+                    }
+                    <span className={`text-sm font-black ${
+                      crDiff === null ? 'text-gray-400'
+                      : crDiff === 0 ? 'text-gray-800'
+                      : Math.abs(crDiff) <= 1000 ? 'text-amber-600'
+                      : 'text-red-600'
+                    }`}>
+                      {crDiff === null
+                        ? '-'
+                        : crDiff === 0
+                          ? 'Cuadre'
+                          : `${crDiff > 0 ? '+' : '-'}${formatCLP(crDiff)} ${crDiff > 0 ? '(sobrante)' : '(faltante)'}`
+                      }
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 border-t border-gray-100 pt-4">
                 <div className="bg-orange-50 rounded-2xl p-4 text-center">
-                  <p className="text-lg font-black text-orange-700">{formatCLP(closeResult.totalSales)}</p>
+                  <p className="text-lg font-black text-orange-700">{cr.totalSales != null ? formatCLP(cr.totalSales) : '-'}</p>
                   <p className="text-xs text-gray-400 mt-0.5">Total ventas</p>
                 </div>
-                <div className="bg-emerald-50 rounded-2xl p-4 text-center">
-                  <p className="text-lg font-black text-emerald-700">{closeResult.totalOrders}</p>
+                <div className="bg-gray-50 rounded-2xl p-4 text-center">
+                  <p className="text-lg font-black text-gray-800">{cr.totalOrders ?? '-'}</p>
                   <p className="text-xs text-gray-400 mt-0.5">Pedidos</p>
                 </div>
               </div>
 
-              {/* Desglose por método */}
-              {closeResult.byMethod.length > 0 && (
+              {/* Ingresos / retiros manuales del turno */}
+              {(cr.totalCashIn > 0 || cr.totalCashOut > 0) && (
                 <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Desglose de ventas</p>
-                  {closeResult.byMethod.map((p) => (
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Movimientos de caja</p>
+                  <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5 text-sm">
+                    <span className="text-gray-700 font-medium">Ingresos</span>
+                    <span className="font-bold text-gray-800">+{formatCLP(cr.totalCashIn)}</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5 text-sm">
+                    <span className="text-gray-700 font-medium">Retiros</span>
+                    <span className="font-bold text-gray-800">-{formatCLP(cr.totalCashOut)}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Desglose por método (solo ventas; propinas aparte) */}
+              {cr.byMethod.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Ventas por medio de pago</p>
+                  {cr.byMethod.map((p) => (
                     <div
                       key={p.methodId}
                       className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5"
@@ -203,63 +385,26 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
                 </div>
               )}
 
-              {renderTips(closeResult.tips)}
-
-              {/* Resultado arqueológico */}
-              <div className="border-t border-gray-100 pt-4 space-y-2">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Arqueo de caja</p>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Efectivo esperado</span>
-                  <span className="font-bold text-gray-800">{formatCLP(closeResult.expectedCash)}</span>
-                </div>
-                {Number(closeResult.tips?.cash ?? 0) > 0 && (
-                  <p className="text-xs text-gray-400 -mt-1 text-right">
-                    incluye {formatCLP(Number(closeResult.tips?.cash ?? 0))} de propinas en efectivo
-                  </p>
-                )}
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">Efectivo contado</span>
-                  <span className="font-bold text-gray-800">{formatCLP(closeResult.closingCash)}</span>
-                </div>
-                <div className={`flex items-center justify-between rounded-xl px-3 py-2 ${
-                  closeResult.difference === 0 ? 'bg-green-50'
-                  : Math.abs(closeResult.difference) <= 1000 ? 'bg-amber-50'
-                  : 'bg-red-50'
-                }`}>
-                  <span className="text-sm font-semibold text-gray-600">Diferencia</span>
-                  <div className="flex items-center gap-1.5">
-                    {closeResult.difference === 0
-                      ? <CheckCircle className="w-4 h-4 text-green-500" />
-                      : <AlertTriangle className="w-4 h-4 text-amber-500" />
-                    }
-                    <span className={`text-sm font-black ${
-                      closeResult.difference === 0             ? 'text-green-600'
-                      : closeResult.difference > 0             ? 'text-emerald-600'
-                      : Math.abs(closeResult.difference) <= 1000 ? 'text-amber-600'
-                      :                                            'text-red-600'
-                    }`}>
-                      {closeResult.difference === 0
-                        ? 'Cuadre exacto'
-                        : `${closeResult.difference > 0 ? '+' : ''}${formatCLP(closeResult.difference)}`
-                      }
-                    </span>
-                  </div>
-                </div>
-              </div>
+              {renderTips(cr.tips)}
             </div>
 
             {/* Footer */}
-            <div className="flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-3xl">
-            {/* Imprimir ticket de cierre */}
-              <ShiftPrinterSelect
-                registerId={register.id}
-                sessionId={session.id}
-                variant="compact"
-              />
+            <div className="flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-3xl space-y-2">
+              {/* HOTFIX 299: imprimir arqueo con el mismo endpoint que Ventas > Arqueos */}
+              <button
+                type="button"
+                onClick={handlePrintArqueo}
+                disabled={printing}
+                className="w-full min-h-[44px] py-3 bg-[#F97316] hover:bg-[#EA580C] text-white font-bold rounded-2xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {printing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Printer className="w-5 h-5" />}
+                Imprimir arqueo
+              </button>
 
               <button
+                type="button"
                 onClick={() => { toast.success('Turno cerrado correctamente'); onClosed(); }}
-                className="w-full py-3 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-2xl transition-colors flex items-center justify-center gap-2"
+                className="w-full min-h-[44px] py-3 border-2 border-gray-200 bg-white hover:bg-gray-100 text-gray-700 font-bold rounded-2xl transition-colors flex items-center justify-center gap-2"
               >
                 <CheckCircle className="w-5 h-5" />
                 Continuar
@@ -309,7 +454,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
           {/* Cuadre en tiempo real */}
           <div className="p-6 border-b border-gray-100">
             <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-indigo-500" />
+              <TrendingUp className="w-4 h-4 text-orange-500" />
               Resumen del turno
             </h3>
 
@@ -336,14 +481,14 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
 
                 {/* KPIs */}
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-indigo-50 rounded-2xl p-3 text-center">
-                    <p className="text-sm font-black text-indigo-700 leading-tight">
+                  <div className="bg-gray-50 rounded-2xl p-3 text-center">
+                    <p className="text-sm font-black text-gray-800 leading-tight">
                       {formatCLP(cuadre.totalSales)}
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">Total ventas</p>
                   </div>
-                  <div className="bg-green-50 rounded-2xl p-3 text-center">
-                    <p className="text-sm font-black text-green-700 leading-tight">
+                  <div className="bg-gray-50 rounded-2xl p-3 text-center">
+                    <p className="text-sm font-black text-gray-800 leading-tight">
                       {formatCLP(session.openingCash)}
                     </p>
                     <p className="text-xs text-gray-400 mt-0.5">Apertura</p>
@@ -388,14 +533,14 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
                       {formatCLP(expectedCash)}
                     </span>
                   </div>
-                  <p className="text-xs text-orange-500 mt-1">
-                    Apertura {formatCLP(session.openingCash)} + ventas en efectivo
+                  {/* HOTFIX 299 (B2-07): formula del esperado con montos (mismo calculo del backend) */}
+                  <p className="text-xs text-orange-600 mt-1">
+                    Apertura {formatCLP(Number(cuadre.openingCash ?? session.openingCash))}
+                    {' '}+ ventas en efectivo {formatCLP(Number(cuadre.cashSales ?? 0))}
+                    {' '}+ propinas en efectivo {formatCLP(Number(cuadre.tips?.cash ?? 0))}
+                    {' '}+ ingresos {formatCLP(Number(cuadre.totalCashIn ?? 0))}
+                    {' '}- retiros {formatCLP(Number(cuadre.totalCashOut ?? 0))}
                   </p>
-                  {Number(cuadre.tips?.cash ?? 0) > 0 && (
-                    <p className="text-xs text-orange-500">
-                      incluye {formatCLP(Number(cuadre.tips?.cash ?? 0))} de propinas en efectivo
-                    </p>
-                  )}
                 </div>
               </div>
             ) : (
@@ -437,7 +582,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
             {closingCash && !isNaN(closingAmount) && (
               <div className={`rounded-2xl px-4 py-4 border-2 transition-all ${
                 diff === null             ? 'border-gray-100 bg-gray-50'
-                : diff === 0             ? 'border-green-200 bg-green-50'
+                : diff === 0             ? 'border-gray-200 bg-gray-50'
                 : Math.abs(diff) <= 1000 ? 'border-amber-200 bg-amber-50'
                 :                          'border-red-200 bg-red-50'
               }`}>
@@ -446,16 +591,15 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
                   {diff !== null && (
                     <div className="flex items-center gap-1.5">
                       {diff === 0
-                        ? <CheckCircle className="w-4 h-4 text-green-500" />
+                        ? <CheckCircle className="w-4 h-4 text-gray-600" />
                         : <AlertTriangle className="w-4 h-4 text-amber-500" />
                       }
                       <span className={`text-lg font-black ${
-                        diff === 0             ? 'text-green-600'
-                        : diff > 0             ? 'text-blue-600'
+                        diff === 0             ? 'text-gray-800'
                         : Math.abs(diff) <= 1000 ? 'text-amber-600'
                         :                          'text-red-600'
                       }`}>
-                        {diff === 0 ? 'Cuadre exacto' : (
+                        {diff === 0 ? 'Cuadre' : (
                           <>{diff > 0 ? '+' : ''}{formatCLP(diff)}</>
                         )}
                       </span>
@@ -536,8 +680,8 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
           <button
             type="submit"
             form="close-shift-form"
-            disabled={loading || !closingCash || (needsJustification && justification.trim().length < 5)}
-            className="flex-1 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            disabled={loading || closedRef.current || !closingCash || (needsJustification && justification.trim().length < 5)}
+            className="flex-1 min-h-[44px] py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -555,7 +699,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
       </>
       )}
       </div>
-    </div>
-    </>
+    </div>,
+    document.body,
   );
 }

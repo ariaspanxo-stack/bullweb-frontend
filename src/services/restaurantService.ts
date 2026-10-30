@@ -248,6 +248,7 @@ class RestaurantService {
       if (backendType === 'TAKEAWAY') {
         const d = saleData as CreateCounterSaleDTO;
         if (d.customerName) payload.customerName = d.customerName;
+        if (d.customerPhone) payload.customerPhone = d.customerPhone; // HOTFIX 299 (B1-09)
         if (d.customerId)   payload.customerId   = d.customerId;
       }
 

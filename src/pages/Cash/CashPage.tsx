@@ -120,11 +120,10 @@ export function CashPage() {
               const totalOrders  = hasSnapshot ? s.snapshotTotalOrders          : null;
               const expectedCash = hasSnapshot ? Number(s.snapshotExpectedCash) : null;
               const closingCash  = s.closingCash !== null ? Number(s.closingCash) : null;
-              const diff         = closingCash !== null && expectedCash !== null
-                ? closingCash - expectedCash
-                : closingCash !== null && !hasSnapshot
-                  ? closingCash - Number(s.openingCash)
-                  : null;
+              // HOTFIX 299 (B2-03): diferencia SOLO desde session.difference (contado - esperado); sin recalculo
+              const diff: number | null = s.status === 'CLOSED' && s.difference != null && !isNaN(Number(s.difference))
+                ? Number(s.difference)
+                : null;
 
               return (
                 <div key={s.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
@@ -180,11 +179,19 @@ export function CashPage() {
                         <p className="text-xs text-gray-400">apertura</p>
                       </div>
 
+                      {/* Esperado efectivo (HOTFIX 299) */}
+                      {s.status === 'CLOSED' && expectedCash !== null && !isNaN(expectedCash) && (
+                        <div>
+                          <p className="text-sm font-bold text-gray-700">{formatCLP(expectedCash)}</p>
+                          <p className="text-xs text-gray-400">esperado efectivo</p>
+                        </div>
+                      )}
+
                       {/* Cierre */}
                       {closingCash !== null && (
                         <div>
                           <p className="text-sm font-bold text-gray-800">{formatCLP(closingCash)}</p>
-                          <p className="text-xs text-gray-400">cierre</p>
+                          <p className="text-xs text-gray-400">contado efectivo</p>
                         </div>
                       )}
 
@@ -192,12 +199,12 @@ export function CashPage() {
                       {diff !== null && (
                         <div className="min-w-[80px]">
                           {diff === 0 ? (
-                            <p className="text-sm font-bold text-green-500">✓ Cuadre</p>
+                            <p className="text-sm font-bold text-gray-700">Cuadre</p>
                           ) : (
                             <p className={`text-sm font-bold ${
                               Math.abs(diff) <= 1000 ? 'text-amber-500' : 'text-red-500'
                             }`}>
-                              {diff > 0 ? '+' : ''}{formatCLP(diff)}
+                              {diff > 0 ? '+' : '-'}{formatCLP(Math.abs(diff))}
                             </p>
                           )}
                           <p className="text-xs text-gray-400">diferencia</p>
@@ -222,11 +229,9 @@ export function CashPage() {
 
       {/* Warning: diferencias grandes en la semana */}
       {sessions.some((s: any) => {
-        if (s.closingCash === null) return false;
-        const expected = s.snapshotExpectedCash !== null && s.snapshotExpectedCash !== undefined
-          ? Number(s.snapshotExpectedCash)
-          : Number(s.openingCash);
-        return Math.abs(Number(s.closingCash) - expected) > 50_000;
+        // HOTFIX 299 (B2-03): misma fuente unica (session.difference)
+        if (s.status !== 'CLOSED' || s.difference == null) return false;
+        return Math.abs(Number(s.difference)) > 50_000;
       }) && (
         <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3">
           <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />

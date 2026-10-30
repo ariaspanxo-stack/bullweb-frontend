@@ -42,6 +42,8 @@ import { paymentMethodsService } from '../../../services/paymentMethodsService';
 import toast from 'react-hot-toast';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { ModifierGroupsModal, hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
+import { useActivePromotions } from '../../../hooks/useActivePromotions'; // HOTFIX 299
+import { priceCartWithPromotions, restaurantCartToPromoLines, type PromoLineResult } from '../../../utils/promoPricing'; // HOTFIX 299
 
 interface NewDeliveryModalProps {
   products: Product[];
@@ -281,7 +283,13 @@ export const NewDeliveryModal = ({
   const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
   const tax = 0;
   const deliveryFeeValue = parseInt(deliveryCost) || 0;
-  const total = subtotal + deliveryFeeValue;
+  // HOTFIX 299: total con promociones vigentes (pack agrupado, 2x1, %, precio fijo), misma regla
+  // que el backend; solo para mostrar: el carrito enviado no cambia y el backend cobra.
+  const activePromotions = useActivePromotions();
+  const promoPricing = priceCartWithPromotions(restaurantCartToPromoLines(cart, products), activePromotions);
+  const promoLines: Record<string, PromoLineResult> = Object.fromEntries(cart.map((it, i) => [it.id, promoPricing.lines[i]]));
+  const promoDiscount = Math.min(subtotal, promoPricing.discount);
+  const total = subtotal - promoDiscount + deliveryFeeValue;
   // HOTFIX 269: el vuelto se calcula sobre el total a cobrar (subtotal + despacho)
   const selectedMethodName = (paymentMethods.find((m: any) => m.id === paymentMethodId)?.name ?? '') as string;
   const isCash = /efectivo|cash/i.test(selectedMethodName.normalize('NFD').replace(/[\u0300-\u036f]/g, ''));
@@ -929,6 +937,8 @@ export const NewDeliveryModal = ({
             formatPrice={fmt}
             subtotal={subtotal}
             total={total}
+            promoLines={promoLines}
+            promoDiscount={promoDiscount}
             extraTotals={
               <div className="flex justify-between text-sm text-purple-600">
                 <span>Delivery</span>

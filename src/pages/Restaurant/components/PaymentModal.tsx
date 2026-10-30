@@ -11,6 +11,7 @@ import { usePlan } from '@/hooks/usePlan';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { EmitBoletaButton } from '../../../components/pos/EmitBoletaButton';
 import { applyOrderDiscount, discountInputAllowed, discountLimitHint, useAdminPin } from '../../../components/pos/discountControl';
+import { CashSessionRequiredNotice, isCashSessionRequired, CASH_SESSION_REQUIRED_MSG } from '../../../components/cash/CashSessionRequiredNotice'; // HOTFIX 299
 
 interface TipSettings {
   enabled_dine_in:         boolean;
@@ -177,7 +178,8 @@ export const PaymentModal = ({
   const tipAutoAddedRef = useRef(false);
   const [loading, setLoading] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
-  const { dteIsConfigured, lastPaidOrderId } = useRestaurant();
+  const [cashRequired, setCashRequired] = useState<string | null>(null); // HOTFIX 299
+  const { dteIsConfigured, lastPaidOrderId, reloadCashSession } = useRestaurant();
 
   useEffect(() => {
     cashRegistersService.getActiveRegister()
@@ -411,7 +413,13 @@ export const PaymentModal = ({
       setPaymentCompleted(true);
       setAppliedCouponId(null);
     } catch (e: any) {
-      setError(e.message || 'Error al procesar el pago');
+      // HOTFIX 299 (B2-01): 409 CASH_SESSION_REQUIRED -> aviso con "Abrir turno"; lo ingresado se conserva
+      if (isCashSessionRequired(e)) {
+        setCashRequired(e?.data?.error || CASH_SESSION_REQUIRED_MSG);
+        setCashSessionActive(false);
+      } else {
+        setError(e.message || 'Error al procesar el pago');
+      }
     } finally {
       setLoading(false);
     }
@@ -735,11 +743,17 @@ export const PaymentModal = ({
 
               {/* CTA — siempre visible */}
               <div className="px-4 py-3 border-t border-slate-200 flex-shrink-0 bg-white space-y-2">
-                {cashSessionActive === false && (
-                  <div className={AMBER_NOTE}>
-                    <AlertTriangle size={16} className="flex-shrink-0 mt-0.5" />
-                    <span>Sin arqueo activo — la venta se registrará sin sesión de caja</span>
-                  </div>
+                {/* HOTFIX 299 (B2-01): sin turno no se cobra; se abre el turno aqui mismo y se reintenta sin perder lo ingresado */}
+                {(cashRequired !== null || cashSessionActive === false) && (
+                  <CashSessionRequiredNotice
+                    message={cashRequired || undefined}
+                    onOpened={() => {
+                      setCashRequired(null);
+                      setCashSessionActive(true);
+                      setError('');
+                      reloadCashSession();
+                    }}
+                  />
                 )}
                 {error && (
                   <div className={AMBER_NOTE}>

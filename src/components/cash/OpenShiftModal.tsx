@@ -2,6 +2,7 @@
 // Modal bloqueante — no se puede cerrar sin abrir sesión
 
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Loader2, DollarSign, Clock, AlertCircle } from 'lucide-react';
 import { cashRegistersService, type CashRegister } from '../../services/cashRegistersService';
 import toast from 'react-hot-toast';
@@ -60,9 +61,10 @@ export function OpenShiftModal({ register, isOpen, onClose, onSuccess }: OpenShi
 
   const now = new Date();
 
-  return (
+  // HOTFIX 299: modal por portal z-[100] (se abre tambien desde el cobro, que ya es un portal z-[100])
+  return createPortal(
     // Overlay bloqueante — sin onClick para cerrar
-    <div className="fixed inset-0 z-50 bg-gray-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] bg-gray-950/90 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
 
         {/* Header */}
@@ -162,7 +164,7 @@ export function OpenShiftModal({ register, isOpen, onClose, onSuccess }: OpenShi
             <button
               type="submit"
               disabled={loading || !openingCash}
-              className={`${onClose ? 'flex-1' : 'w-full'} py-4 bg-gray-900 hover:bg-gray-800 text-white font-bold text-base rounded-2xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+              className={`${onClose ? 'flex-1' : 'w-full'} py-4 bg-[#F97316] hover:bg-[#EA580C] text-white font-bold text-base rounded-2xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
             >
               {loading ? (
                 <>
@@ -179,6 +181,7 @@ export function OpenShiftModal({ register, isOpen, onClose, onSuccess }: OpenShi
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

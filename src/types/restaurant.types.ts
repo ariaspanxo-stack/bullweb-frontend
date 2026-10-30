@@ -159,6 +159,7 @@ export interface CreateCounterSaleDTO {
   waiterId?: string;
   customerId?: string;
   customerName?: string;
+  customerPhone?: string; // HOTFIX 299 (B1-09): el telefono de Mostrador llega a la orden
   items: CreateDineInSaleDTO['items'];
   notes?: string;
 }

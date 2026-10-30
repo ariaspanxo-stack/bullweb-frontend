@@ -5,7 +5,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useEffect }   from 'react';
-import { X, Receipt, Loader2 }   from 'lucide-react';
+import { X, Receipt, Loader2, AlertTriangle } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import toast                     from 'react-hot-toast';
 import { useWaiterPermission }   from '../hooks/useWaiterPermission';
@@ -22,6 +22,9 @@ function getWaiterToken(): string {
 function formatCLP(n: number): string {
   return `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
 }
+
+// HOTFIX 299 (B2-01): el mesero no abre turno de caja
+const WAITER_NO_SHIFT_MSG = 'No hay turno de caja abierto: pide al cajero que abra el turno';
 
 // IVA Chile (19%)
 const TAX_RATE  = 0.19;
@@ -76,6 +79,7 @@ export function MeseroCheckout({
   // HOTFIX 293: con select_payment se exige un medio elegido; sin ese permiso va 'cash' -> "Efectivo" (mapeo explícito del backend)
   const paymentReady = !canSelectPay || !!paymentMethodId;
   const [discountPct,   setDiscountPct]   = useState(0);
+  const [noShift,       setNoShift]       = useState(false); // HOTFIX 299
 
   const discountedTotal = discountPct > 0
     ? Math.round(total * (1 - discountPct / 100))
@@ -116,14 +120,24 @@ export function MeseroCheckout({
       });
       const json = await res.json();
       if (res.status === 402) notifyWaiterPaymentRequired(json); // Hotfix #277
+      // HOTFIX 299 (B2-01): 409 CASH_SESSION_REQUIRED -> el mesero no abre turno, avisa al cajero
+      if (json?.code === 'CASH_SESSION_REQUIRED') {
+        const e: any = new Error(WAITER_NO_SHIFT_MSG);
+        e.code = 'CASH_SESSION_REQUIRED';
+        throw e;
+      }
       if (!res.ok || !json.success) throw new Error(json.error ?? 'Error al cobrar');
       return json.data;
     },
     onSuccess: (data) => {
+      setNoShift(false);
       toast.success(`¡Cobrado ${formatCLP(data.total)}! 💰`);
       onSuccess();
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => {
+      if (err?.code === 'CASH_SESSION_REQUIRED') setNoShift(true);
+      toast.error(err.message);
+    },
   });
 
   // ── Cerrar mesa sin cobrar ────────────────────────────────
@@ -325,13 +339,19 @@ export function MeseroCheckout({
 
             {/* Acciones */}
             <div className="px-5 py-5 space-y-3">
+              {noShift && (
+                <div className="flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-3 text-sm font-semibold text-amber-200">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                  <span>{WAITER_NO_SHIFT_MSG}</span>
+                </div>
+              )}
               <button
                 onClick={() => chargeMutation.mutate()}
                 disabled={isProcessing || !paymentReady /* HOTFIX 293 */}
-                className="w-full bg-green-600 hover:bg-green-500 text-white
+                className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white
                            py-5 rounded-2xl font-bold text-xl
                            active:scale-[0.98] transition-all
-                           shadow-lg shadow-green-600/25
+                           shadow-lg shadow-orange-500/25
                            disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {chargeMutation.isPending

@@ -775,7 +775,11 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
         if (cart.length === 0)  throw new Error('El carrito está vacío');
 
         const cashRegister = await getActiveCashRegister();
-        // El arqueo es opcional — nunca bloquear el cobro
+        // HOTFIX 299 (B2-01): sin turno abierto el backend rechaza el cobro (409). Se corta ANTES de crear
+        // la orden para que un reintento (tras "Abrir turno") no duplique el pedido de la mesa.
+        if (!cashRegister.isOpen) {
+          throw Object.assign(new Error('No hay un turno de caja abierto. Abre el turno para cobrar.'), { code: 'CASH_SESSION_REQUIRED' });
+        }
 
         const saleData: CreateDineInSaleDTO = {
           type:            'dine_in',
@@ -974,7 +978,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   const handleCreateMostradorOrder = async (
     cartItems:      CartItem[],
     customerName:   string,
-    _deliveryPhone: string,
+    deliveryPhone:  string,
     pickupTime?:    string,
     _paymentMethod?:string,
     customerId?:    string,
@@ -989,6 +993,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
         type:           'counter',
         cashRegisterId: cashRegister.id,
         customerName:   customerName || 'Cliente Mostrador',
+        customerPhone:  deliveryPhone?.trim() || undefined, // HOTFIX 299 (B1-09)
         customerId:     customerId || undefined,
         items:          cartItems.map(item => ({
           productId:      item.productId,

@@ -23,6 +23,7 @@
 import type { ReactNode } from 'react';
 import { X, Plus, Minus, CreditCard, ShoppingBag, Truck } from 'lucide-react';
 import type { CartItem } from '../../../types/restaurant.types';
+import type { PromoLineResult } from '../../../utils/promoPricing'; // HOTFIX 299
 
 export interface OrderTicketProps {
   // ── Carrito y handlers EXISTENTES (nada de aritmética nueva aquí) ──
@@ -61,6 +62,11 @@ export interface OrderTicketProps {
   alwaysShowFooter?: boolean;
   /** Deshabilitar confirm (misma condición existente del modal llamador) — Mesas */
   confirmDisabled?: boolean;
+  // ── HOTFIX 299: precio con promociones antes de cobrar (solo mostrar; cobra el backend) ──
+  /** Resultado por item.id de priceCartWithPromotions */
+  promoLines?: Record<string, PromoLineResult>;
+  /** Ahorro total por promociones del carrito (fila "Promociones") */
+  promoDiscount?: number;
 }
 
 const accentText = (accent: 'blue' | 'purple' | 'orange') =>
@@ -90,6 +96,8 @@ export const OrderTicket = ({
   existingSection,
   alwaysShowFooter = false,
   confirmDisabled = false,
+  promoLines,
+  promoDiscount = 0,
 }: OrderTicketProps) => {
   return (
     <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-gray-50">
@@ -127,7 +135,11 @@ export const OrderTicket = ({
           {/* Items con −/+ h-11 (44px) — pulido 246: blanco + borde gris + signo visible */}
           {items.length > 0 && (
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {items.map((item) => (
+              {items.map((item) => {
+                // HOTFIX 299: linea con promo (pack agrupado, 2x1, %, precio fijo)
+                const promo = promoLines?.[item.id];
+                const hasPromo = !!promo?.promoLabel && promo.discount >= 0.5;
+                return (
                 <div
                   key={item.id}
                   className="bg-white rounded-lg border border-gray-200 overflow-hidden"
@@ -155,9 +167,16 @@ export const OrderTicket = ({
                     <span className="flex-1 font-semibold text-sm text-gray-900 truncate">
                       {item.productName}
                     </span>
-                    <span className="text-sm font-bold text-gray-800 whitespace-nowrap">
-                      ${formatPrice(item.subtotal)}
-                    </span>
+                    {hasPromo ? (
+                      <span className="flex flex-col items-end leading-tight whitespace-nowrap">
+                        <span className="text-xs text-gray-400 line-through">${formatPrice(promo!.listSubtotal)}</span>
+                        <span className="text-sm font-bold text-gray-800">${formatPrice(promo!.subtotal)}</span>
+                      </span>
+                    ) : (
+                      <span className="text-sm font-bold text-gray-800 whitespace-nowrap">
+                        ${formatPrice(item.subtotal)}
+                      </span>
+                    )}
                     <button
                       onClick={() => onRemoveItem(item.id)}
                       className="p-1 text-gray-400 hover:text-red-500 transition-colors"
@@ -166,10 +185,16 @@ export const OrderTicket = ({
                       <X size={14} />
                     </button>
                   </div>
+                  {hasPromo && (
+                    <p className="px-2 pb-1 pl-[7.5rem] text-xs text-orange-700 truncate">
+                      {promo!.promoLabel} <span className="font-bold">-${formatPrice(promo!.discount)}</span>
+                    </p>
+                  )}
                   {/* Modificadores/notas en líneas sangradas "+ X" (patrón actual, vía props) */}
                   {renderItemExtras && renderItemExtras(item)}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -180,6 +205,13 @@ export const OrderTicket = ({
                 <span>Subtotal</span>
                 <span className="font-medium">${formatPrice(subtotal)}</span>
               </div>
+              {/* HOTFIX 299: ahorro por promociones del carrito (el backend cobra el mismo calculo) */}
+              {promoDiscount >= 0.5 && (
+                <div className="flex justify-between text-sm text-orange-700">
+                  <span>Promociones</span>
+                  <span className="font-bold">-${formatPrice(promoDiscount)}</span>
+                </div>
+              )}
               {extraTotals}
               {/* TOTAL: el número más grande de la pantalla */}
               <div className="flex justify-between items-baseline text-3xl font-bold text-gray-900 pt-2 border-t border-gray-200">

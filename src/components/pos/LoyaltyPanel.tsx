@@ -18,11 +18,13 @@ interface LoyaltyPanelProps {
   beforeRedeem: () => boolean;
   /** El servidor ya guardó el descuento en la orden */
   onApplied: (cashDiscount: number, points: number) => void;
+  /** HOTFIX 298: total de la venta ANTES del descuento y sin propina (base del tope de canje) */
+  saleTotal?: number;
 }
 
-const DEFAULT_RULES = { redeemBlockPoints: 100, redeemBlockValue: 500, minRedeemPoints: 100 };
+const DEFAULT_RULES = { redeemBlockPoints: 100, redeemBlockValue: 500, minRedeemPoints: 100, maxRedeemPctPerSale: 50 };
 
-export const LoyaltyPanel = ({ orderId, customerId, customerName, beforeRedeem, onApplied }: LoyaltyPanelProps) => {
+export const LoyaltyPanel = ({ orderId, customerId, customerName, beforeRedeem, onApplied, saleTotal }: LoyaltyPanelProps) => {
   const queryClient = useQueryClient();
   const [pointsInput, setPointsInput] = useState<number>(DEFAULT_RULES.minRedeemPoints);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -38,15 +40,21 @@ export const LoyaltyPanel = ({ orderId, customerId, customerName, beforeRedeem, 
   const rules = { ...DEFAULT_RULES, ...(balance?.rules ?? {}) };
   const block = rules.redeemBlockPoints;
   const currentPoints = Number(balance?.points ?? 0);
-  const maxRedeemable = Math.floor(currentPoints / block) * block;
+  const balanceRedeemable = Math.floor(currentPoints / block) * block;
+  // HOTFIX 298: tope por venta = floor(total * pct / 100) en $, llevado a bloques completos (el backend igual valida)
+  const hasSaleTotal = typeof saleTotal === 'number' && Number.isFinite(saleTotal);
+  const saleCapCash = hasSaleTotal ? Math.floor((Math.max(0, saleTotal as number) * rules.maxRedeemPctPerSale) / 100) : Infinity;
+  const saleCapPoints = hasSaleTotal ? Math.floor(saleCapCash / rules.redeemBlockValue) * block : Infinity;
+  const maxRedeemable = Math.min(balanceRedeemable, saleCapPoints);
+  const maxCash = Math.floor(maxRedeemable / block) * rules.redeemBlockValue;
   const cashPreview = Math.floor(pointsInput / block) * rules.redeemBlockValue;
 
   useEffect(() => { setPointsInput(rules.minRedeemPoints); }, [rules.minRedeemPoints]);
 
   const handleRedeem = async () => {
     setErrorMsg(null);
-    if (!Number.isInteger(pointsInput) || pointsInput < rules.minRedeemPoints || pointsInput > currentPoints || pointsInput % block !== 0) {
-      setErrorMsg(`Ingresa un múltiplo de ${block}, desde ${rules.minRedeemPoints} y hasta tu saldo`);
+    if (!Number.isInteger(pointsInput) || pointsInput < rules.minRedeemPoints || pointsInput > maxRedeemable || pointsInput % block !== 0) {
+      setErrorMsg(`Ingresa un múltiplo de ${block}, desde ${rules.minRedeemPoints} y hasta ${maxRedeemable.toLocaleString('es-CL')} pts (saldo y tope de esta venta)`);
       return;
     }
     if (!beforeRedeem()) return;
@@ -93,6 +101,11 @@ export const LoyaltyPanel = ({ orderId, customerId, customerName, beforeRedeem, 
               <p className="text-xs text-slate-600">
                 Cada {block} pts = ${rules.redeemBlockValue.toLocaleString('es-CL')} de descuento
               </p>
+              {/* HOTFIX 298: máximo canjeable en esta venta */}
+              <p className="text-xs text-slate-700">
+                Máximo en esta venta: <strong>{maxRedeemable.toLocaleString('es-CL')} pts</strong> → <strong>${maxCash.toLocaleString('es-CL')}</strong>
+                {hasSaleTotal && <span className="text-slate-500"> (tope {rules.maxRedeemPctPerSale}% del total)</span>}
+              </p>
               <div className="flex gap-2 items-center">
                 <input
                   type="number"
@@ -107,7 +120,7 @@ export const LoyaltyPanel = ({ orderId, customerId, customerName, beforeRedeem, 
                 <button
                   type="button"
                   onClick={handleRedeem}
-                  disabled={applying || pointsInput > currentPoints || pointsInput < rules.minRedeemPoints}
+                  disabled={applying || pointsInput > maxRedeemable || pointsInput < rules.minRedeemPoints}
                   className="flex-1 h-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-slate-800 bg-white border-[1.5px] border-slate-300 hover:bg-slate-50 disabled:opacity-50 transition-colors"
                 >
                   {applying
@@ -116,6 +129,11 @@ export const LoyaltyPanel = ({ orderId, customerId, customerName, beforeRedeem, 
                 </button>
               </div>
             </div>
+          ) : balanceRedeemable >= rules.minRedeemPoints ? (
+            // HOTFIX 298: tiene saldo, pero el tope de esta venta no alcanza el canje mínimo
+            <p className="text-xs text-slate-500">
+              El tope de esta venta ({rules.maxRedeemPctPerSale}% del total = <strong>${(Number.isFinite(saleCapCash) ? saleCapCash : 0).toLocaleString('es-CL')}</strong>) no alcanza el canje mínimo de {rules.minRedeemPoints} pts
+            </p>
           ) : (
             <p className="text-xs text-slate-500">
               Necesita al menos {rules.minRedeemPoints} puntos para canjear (tiene {currentPoints.toLocaleString('es-CL')})

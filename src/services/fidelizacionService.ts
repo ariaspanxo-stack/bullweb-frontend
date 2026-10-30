@@ -7,6 +7,7 @@ export interface LoyaltyRules {
   redeemBlockValue:  number;
   minRedeemPoints:   number;
   expiryMonths:      number;
+  maxRedeemPctPerSale: number; // HOTFIX 298: tope de canje por venta (% del total, 1..100; default 50)
 }
 
 export interface AutomationSettings {

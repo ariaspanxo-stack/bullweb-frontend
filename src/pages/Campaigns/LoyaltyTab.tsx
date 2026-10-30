@@ -33,16 +33,19 @@ const SEG_LABEL: Record<string, string> = {
 function fmt(n: number | undefined | null) { return Number(n ?? 0).toLocaleString('es-CL'); }
 
 // HOTFIX #282: regla única (mismos valores por defecto que el backend) y % de devolución
-const DEFAULT_RULES: LoyaltyRules = { pesosPerPoint: 100, redeemBlockPoints: 100, redeemBlockValue: 500, minRedeemPoints: 100, expiryMonths: 12 };
+// HOTFIX 298: + maxRedeemPctPerSale (tope de canje por venta, default 50%)
+const DEFAULT_RULES: LoyaltyRules = { pesosPerPoint: 100, redeemBlockPoints: 100, redeemBlockValue: 500, minRedeemPoints: 100, expiryMonths: 12, maxRedeemPctPerSale: 50 };
 const returnPctOf = (r: LoyaltyRules) =>
   r.pesosPerPoint > 0 && r.redeemBlockPoints > 0 ? Math.round((r.redeemBlockValue / (r.redeemBlockPoints * r.pesosPerPoint)) * 10000) / 100 : 0;
 const cashOf = (r: LoyaltyRules, pts: number) => Math.floor(pts / r.redeemBlockPoints) * r.redeemBlockValue;
-const RULE_FIELDS: { key: keyof LoyaltyRules; label: string; suffix: string; min: number }[] = [
+const RULE_FIELDS: { key: keyof LoyaltyRules; label: string; suffix: string; min: number; max?: number }[] = [
   { key: 'pesosPerPoint',     label: '1 punto por cada',        suffix: '$ gastados', min: 1 },
   { key: 'redeemBlockPoints', label: 'Bloque de canje',         suffix: 'puntos',     min: 1 },
   { key: 'redeemBlockValue',  label: 'Descuento por bloque',    suffix: '$',          min: 1 },
   { key: 'minRedeemPoints',   label: 'Canje mínimo',            suffix: 'puntos',     min: 1 },
   { key: 'expiryMonths',      label: 'Vencen tras sin compras', suffix: 'meses (0 = no vencen)', min: 0 },
+  // HOTFIX 298: el servidor rechaza canjes sobre este % del total de la venta
+  { key: 'maxRedeemPctPerSale', label: 'Tope de canje por venta (%)', suffix: '% del total (1 a 100)', min: 1, max: 100 },
 ];
 
 export function LoyaltyTab() {
@@ -69,7 +72,7 @@ export function LoyaltyTab() {
         api.get('/customers/top-by-points?limit=10'),
       ]);
       setSettings(s);
-      setEditRules(s.loyalty ?? DEFAULT_RULES);
+      setEditRules({ ...DEFAULT_RULES, ...(s.loyalty ?? {}) }); // HOTFIX 298: sin el campo -> 50
 
       const rawTop = Array.isArray(topRes.data) ? topRes.data : (topRes.data?.data ?? []);
       const cleaned: CustomerRow[] = rawTop.map((c: any) => ({
@@ -194,6 +197,7 @@ export function LoyaltyTab() {
                 <input
                   type="number"
                   min={f.min}
+                  max={f.max}
                   step={1}
                   value={editRules[f.key]}
                   onChange={(e) => setEditRules((r) => ({ ...r, [f.key]: Math.trunc(Number(e.target.value)) }))}
@@ -219,6 +223,11 @@ export function LoyaltyTab() {
                 Devolución: <strong>{pct}% de lo gastado</strong>
                 {over ? ` — supera el máximo permitido (${max}%), no se puede guardar.` : pct > 10 ? ' — alta: revisa que el negocio la soporte.' : ''}
               </p>
+              {/* HOTFIX 298: tope de canje por venta */}
+              <p className="mt-1">
+                Tope de canje: hasta <strong>{editRules.maxRedeemPctPerSale}%</strong> del total de cada venta
+                {' '}(en una venta de <strong>$10.000</strong>, máximo <strong>${fmt(Math.floor(10000 * Math.max(0, editRules.maxRedeemPctPerSale) / 100))}</strong> en puntos).
+              </p>
             </div>
           );
         })()}
@@ -228,7 +237,8 @@ export function LoyaltyTab() {
         <div className="mt-4 flex justify-end">
           <button
             onClick={handleSaveConfig}
-            disabled={saving || returnPctOf(editRules) > (settings?.maxReturnPct ?? 20)}
+            disabled={saving || returnPctOf(editRules) > (settings?.maxReturnPct ?? 20)
+              || !(editRules.maxRedeemPctPerSale >= 1 && editRules.maxRedeemPctPerSale <= 100) /* HOTFIX 298 */}
             className="flex items-center gap-2 h-11 px-4 bg-[#F97316] text-white rounded-lg hover:bg-[#EA580C] text-sm font-semibold disabled:opacity-50 transition-colors"
           >
             {saving ? (

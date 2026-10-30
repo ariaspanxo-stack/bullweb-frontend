@@ -637,6 +637,7 @@ export const PaymentModal = ({
                         customerId={customerId}
                         customerName={customerName}
                         beforeRedeem={() => confirmReplace('points')}
+                        saleTotal={effectiveTotal} /* HOTFIX 298: total antes del descuento y sin propina */
                         onApplied={(cashDiscount) => {
                           // HOTFIX #282: el servidor ya descontó los puntos y guardó el descuento en la orden
                           setSavedDiscount({ type: 'FIXED', value: cashDiscount });

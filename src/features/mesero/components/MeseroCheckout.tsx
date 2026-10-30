@@ -4,9 +4,9 @@
 //                   close_table, print_receipt
 // ═══════════════════════════════════════════════════════════════
 
-import { useState }              from 'react';
+import { useState, useEffect }   from 'react';
 import { X, Receipt, Loader2 }   from 'lucide-react';
-import { useMutation }           from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import toast                     from 'react-hot-toast';
 import { useWaiterPermission }   from '../hooks/useWaiterPermission';
 import { meseroService }         from '../meseroService';
@@ -58,7 +58,23 @@ export function MeseroCheckout({
   const canClose       = useWaiterPermission('close_table');
   const canPrint       = useWaiterPermission('print_receipt');
 
-  const [paymentMethod, setPaymentMethod] = useState('cash');
+  // HOTFIX 293: medios de pago activos reales del tenant; se envía el UUID (paymentMethodId)
+  const [paymentMethodId, setPaymentMethodId] = useState<string | null>(null);
+  const paymentMethodsQuery = useQuery({
+    queryKey:  ['waiter-payment-methods'],
+    queryFn:   () => meseroService.getPaymentMethods(),
+    enabled:   isOpen && canCharge && canSelectPay,
+    staleTime: 60_000,
+  });
+  const paymentMethods = paymentMethodsQuery.data ?? [];
+  useEffect(() => {
+    // HOTFIX 293: preselecciona el primero (mismo orden del POS) si no hay selección válida
+    if (paymentMethods.length && !paymentMethods.some(m => m.id === paymentMethodId)) {
+      setPaymentMethodId(paymentMethods[0].id);
+    }
+  }, [paymentMethods, paymentMethodId]);
+  // HOTFIX 293: con select_payment se exige un medio elegido; sin ese permiso va 'cash' -> "Efectivo" (mapeo explícito del backend)
+  const paymentReady = !canSelectPay || !!paymentMethodId;
   const [discountPct,   setDiscountPct]   = useState(0);
 
   const discountedTotal = discountPct > 0
@@ -92,7 +108,11 @@ export function MeseroCheckout({
           'Content-Type':  'application/json',
           Authorization:   `Bearer ${getWaiterToken()}`,
         },
-        body: JSON.stringify({ paymentMethod, discountPct }),
+        body: JSON.stringify(
+          canSelectPay
+            ? { paymentMethodId, discountPct }        // HOTFIX 293
+            : { paymentMethod: 'cash', discountPct }, // HOTFIX 293: el backend lo mapea a "Efectivo"
+        ),
       });
       const json = await res.json();
       if (res.status === 402) notifyWaiterPaymentRequired(json); // Hotfix #277
@@ -241,10 +261,30 @@ export function MeseroCheckout({
                 Método de pago
               </div>
               {canSelectPay ? (
-                <PaymentMethodGrid
-                  selected={paymentMethod}
-                  onSelect={setPaymentMethod}
-                />
+                paymentMethodsQuery.isLoading ? (
+                  <div className="flex items-center gap-2 text-gray-400 text-sm py-4">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Cargando medios de pago…
+                  </div>
+                ) : paymentMethodsQuery.isError || !paymentMethods.length ? (
+                  // HOTFIX 293: sin lista no se cobra (no se adivina el medio)
+                  <div className="bg-gray-800 rounded-xl p-4 text-sm text-gray-300">
+                    {paymentMethodsQuery.isError
+                      ? 'No se pudieron cargar los medios de pago'
+                      : 'No hay medios de pago activos'}
+                    <button
+                      onClick={() => paymentMethodsQuery.refetch()}
+                      className="mt-3 w-full min-h-[44px] rounded-xl border border-orange-500 text-orange-400 font-medium"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                ) : (
+                  <PaymentMethodGrid
+                    methods={paymentMethods}
+                    selected={paymentMethodId}
+                    onSelect={setPaymentMethodId}
+                  />
+                )
               ) : (
                 <div className="bg-gray-800 rounded-xl p-4 flex items-center gap-3">
                   <span className="text-2xl">💵</span>
@@ -287,7 +327,7 @@ export function MeseroCheckout({
             <div className="px-5 py-5 space-y-3">
               <button
                 onClick={() => chargeMutation.mutate()}
-                disabled={isProcessing}
+                disabled={isProcessing || !paymentReady /* HOTFIX 293 */}
                 className="w-full bg-green-600 hover:bg-green-500 text-white
                            py-5 rounded-2xl font-bold text-xl
                            active:scale-[0.98] transition-all

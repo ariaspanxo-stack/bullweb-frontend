@@ -213,10 +213,16 @@ export const meseroService = {
     return waiterFetch(`/waiter/orders?${p}`);
   },
 
+  // ── Medios de pago activos del tenant (waiter JWT) — HOTFIX 293 ──
+  getPaymentMethods: async (): Promise<{ id: string; name: string }[]> => {
+    const d = await waiterFetch('/waiter/payment-methods');
+    return Array.isArray(d?.data) ? d.data : [];
+  },
+
   // ── Cobrar orden (waiter JWT) ─────────────────────────────
   chargeOrder: async (
     orderId:  string,
-    opts:     { paymentMethod: string; discountPct?: number }
+    opts:     { paymentMethodId?: string; paymentMethod?: string; discountPct?: number } // HOTFIX 293
   ): Promise<any> => {
     return waiterFetch(`/waiter/orders/${orderId}/charge`, {
       method: 'POST',

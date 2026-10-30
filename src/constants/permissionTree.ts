@@ -352,6 +352,7 @@ export const PERMISSION_TREE: PermModule[] = [
           { key: 'delivery.view',   label: 'Ver pedidos delivery' },
           { key: 'delivery.manage', label: 'Gestionar pedidos' },
           { key: 'delivery.assign', label: 'Asignar repartidor' },
+          { key: 'delivery.own',    label: 'Ver y actualizar solo sus repartos asignados' }, // HOTFIX 300
         ],
       },
     ],

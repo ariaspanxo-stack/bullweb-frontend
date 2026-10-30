@@ -150,6 +150,8 @@ const menuSections: MenuSection[] = [
       // (hasFeature('waiter'), decisión #229) en vez del plan-string TODO.
       { name: 'App Mesero',      icon: MonitorSmartphone, path: '/admin/mesero-app', permission: 'apps.view', badge: 'Nuevo', featureRequired: 'waiter' },
       { name: 'Mapeo Delivery',  icon: Truck,             path: '/delivery/mappings', permission: 'delivery.view', planRequired: 'TODO' },
+      // HOTFIX 300: el Repartidor (delivery.own) entra a sus repartos asignados
+      { name: 'Repartos',        icon: Truck,             path: '/delivery',          permission: 'delivery.own' },
       { name: 'Fidelización', icon: Heart,             path: '/campaigns',        permission: 'marketing.view', planRequired: 'TODO', visibleLocked: true },
       { name: 'Carta QR',    icon: QrCode,            path: '/carta-qr',         permission: 'marketing.view' },
       // HOTFIX 278: Cupones incluidos en BASICO — gate por feature plan_config (hasFeature('coupons'))

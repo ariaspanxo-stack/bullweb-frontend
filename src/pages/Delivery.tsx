@@ -164,6 +164,10 @@ export default function Delivery() {
   const queryClient = useQueryClient();
   const { confirm: confirmDialog, dialogProps } = useConfirm();
   const canManage = usePermission('delivery.manage');
+  // HOTFIX 300: Repartidor (delivery.own sin delivery.view): solo sus repartos asignados, recogido y entregado
+  const canView = usePermission('delivery.view');
+  const hasOwn = usePermission('delivery.own');
+  const ownOnly = hasOwn && !canView;
   const [statusFilter, setStatusFilter] = useState<DeliveryStatus | ''>('');
   const [assigningDelivery, setAssigningDelivery] = useState<DeliveryOrder | null>(null);
 
@@ -171,6 +175,7 @@ export default function Delivery() {
   const { data: stats } = useQuery({
     queryKey: ['delivery-stats'],
     queryFn: () => deliveryService.getStats(),
+    enabled: !ownOnly, // HOTFIX 300: el Repartidor no ve las cifras del local
     refetchInterval: 30000,
   });
 
@@ -241,8 +246,8 @@ export default function Delivery() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Delivery</h1>
-        <p className="text-gray-500 mt-1">Gestión de pedidos a domicilio</p>
+        <h1 className="text-3xl font-bold text-gray-900">{ownOnly ? 'Mis repartos' : 'Delivery'}</h1>
+        <p className="text-gray-500 mt-1">{ownOnly ? 'Repartos asignados a ti' : 'Gestión de pedidos a domicilio'}</p>
       </div>
 
       {/* Stats */}
@@ -420,7 +425,7 @@ export default function Delivery() {
                           )}
 
                           {/* Marcar recogido */}
-                          {canManage && d.status === 'ASSIGNED' && (
+                          {(canManage || ownOnly) && d.status === 'ASSIGNED' && (
                             <button
                               onClick={() => pickupMutation.mutate(d.id)}
                               disabled={pickupMutation.isPending}
@@ -433,7 +438,7 @@ export default function Delivery() {
                           )}
 
                           {/* Marcar entregado */}
-                          {canManage && d.status === 'PICKED_UP' && (
+                          {(canManage || ownOnly) && d.status === 'PICKED_UP' && (
                             <button
                               onClick={() => deliveredMutation.mutate(d.id)}
                               disabled={deliveredMutation.isPending}

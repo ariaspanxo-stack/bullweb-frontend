@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Mail, Lock, AlertCircle, Shield, ShieldCheck, Loader2 } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { homePathFor } from '@/utils/homePath'; // HOTFIX 300
 import authService from '@/services/authService';
 import Button from '@/components/ui/Button';
 import toast from 'react-hot-toast';
@@ -83,7 +84,7 @@ export default function Login() {
       toast.success(`¡Bienvenido ${result.user.name}!`);
 
       // Redirigir a la página desde donde vino o al restaurant
-      const from = (location.state as any)?.from?.pathname || '/restaurant';
+      const from = (location.state as any)?.from?.pathname || homePathFor((result as any).user?.role?.permissions); // HOTFIX 300
       navigate(from, { replace: true });
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || 
@@ -104,7 +105,7 @@ export default function Login() {
       const result = await authService.completeTwoFactorLogin(tempToken, code);
       loginStore(result.token, result.user);
       toast.success(`¡Bienvenido ${result.user.name}!`);
-      const from = (location.state as any)?.from?.pathname || '/restaurant';
+      const from = (location.state as any)?.from?.pathname || homePathFor((result as any).user?.role?.permissions); // HOTFIX 300
       navigate(from, { replace: true });
     } catch {
       toast.error('Código inválido o sesión expirada');

@@ -4,6 +4,7 @@ import { queryClient } from '@/lib/queryClient';
 import { Toaster } from 'react-hot-toast';
 import { useEffect, lazy, Suspense } from 'react';
 import { useAuthStore } from '@/store/authStore';
+import { homePathFor } from '@/utils/homePath'; // HOTFIX 300
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { PlanGuard } from '@/components/PlanGuard';
@@ -150,6 +151,12 @@ function PlaceholderPage({ title }: { title: string }) {
   );
 }
 
+// HOTFIX 300: la raiz lleva a /restaurant, o a /delivery para el Repartidor (sin acceso al POS)
+function HomeRedirect() {
+  const permissions = useAuthStore((s) => (s.user?.role?.permissions ?? []) as string[]);
+  return <Navigate to={homePathFor(permissions)} replace />;
+}
+
 function NotFound() {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -236,7 +243,7 @@ function AppContent() {
               }
             >
               {/* Redirect raíz a restaurant */}
-              <Route index element={<Navigate to="/restaurant" replace />} />
+              <Route index element={<HomeRedirect />} /> {/* HOTFIX 300: Repartidor -> /delivery */}
               
               {/* Dashboard — redirige a restaurant */}
               <Route path="dashboard" element={<Navigate to="/restaurant" replace />} />
@@ -264,7 +271,7 @@ function AppContent() {
               <Route path="customers"      element={<PermissionGuard permission="customers.view"><PlanGuard><Customers /></PlanGuard></PermissionGuard>} />
               <Route path="campaigns"      element={<PermissionGuard permission="marketing.view"><PlanGuard><Campaigns /></PlanGuard></PermissionGuard>} />
               <Route path="carta-qr"       element={<PermissionGuard permission="marketing.view"><CartaQRPage /></PermissionGuard>} />
-              <Route path="delivery"       element={<PermissionGuard permission="delivery.view"><Delivery /></PermissionGuard>} />
+              <Route path="delivery"       element={<PermissionGuard permission={['delivery.view', 'delivery.own']}><Delivery /></PermissionGuard>} />
               <Route path="delivery/mappings" element={<PermissionGuard permission="delivery.view"><PlanGuard><DeliveryMappings /></PlanGuard></PermissionGuard>} />
               <Route path="employees"      element={<PermissionGuard permission="employees.view"><Employees /></PermissionGuard>} />
               

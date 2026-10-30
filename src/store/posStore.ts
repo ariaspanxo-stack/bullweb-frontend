@@ -100,10 +100,10 @@ function _calculateItemSubtotal(
     return paidAmount;
   }
 
-  // HOTFIX 296: N efectivo (buyQuantity >= 2, o productos de la promo >= 2); pack por grupo, nunca por unidad
-  const packN = promo.buyQuantity >= 2
-    ? promo.buyQuantity
-    : ((promo.productIds?.length ?? 0) >= 2 ? promo.productIds.length : 0);
+  // HOTFIX 296: pack por grupo, nunca por unidad. Con 2+ productos el pack exige 1 de cada uno: el calculo
+  // item por item no lo arma (precio base en el carrito; el backend agrupa y cobra el pack). Con 1 producto,
+  // pack de buyQuantity (>= 2) unidades.
+  const packN = (promo.productIds?.length ?? 0) === 1 && promo.buyQuantity >= 2 ? promo.buyQuantity : 0;
   if (promo.type === 'PACK_PRICE' && packN >= 2) {
     // Precio por pack (ej: 2 Mojitos por $5.500); guarda: nunca sobre la suma base del pack
     const totalPacks = Math.floor(quantity / packN);

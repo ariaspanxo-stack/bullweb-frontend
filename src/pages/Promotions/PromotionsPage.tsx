@@ -69,10 +69,11 @@ function formatSchedule(p: Promotion): string {
  * HOTFIX 296: tamano de pack efectivo (misma regla que getPackGroupSize del backend):
  * buyQuantity >= 2 → buyQuantity; si no, productos elegidos >= 2 → esa cantidad; si no 0 (sin pack).
  */
+// HOTFIX 296 (correccion 2026-10-30): 2+ productos = pack de 1 de cada uno; 1 producto = pack de N unidades (N >= 2)
 function packGroupSize(buyQuantity: number | string | undefined, productCount: number): number {
+  if (productCount >= 2) return productCount;
   const buy = Number(buyQuantity) || 0;
-  if (buy >= 2) return Math.floor(buy);
-  return productCount >= 2 ? productCount : 0;
+  return productCount === 1 && buy >= 2 ? Math.floor(buy) : 0;
 }
 
 function typeBadge(p: Promotion) {
@@ -233,7 +234,7 @@ export default function PromotionsPage() {
 
     // HOTFIX 296: el pack se cobra por GRUPO de N productos; N >= 2 obligatorio
     if (form.type === 'PACK_PRICE' && packGroupSize(form.buyQuantity, productIds.length) < 2) {
-      return toast.error('Pack: indica una cantidad de 2 o más, o elige al menos 2 productos');
+      return toast.error('Pack: elige 2 o más productos (1 de cada uno), o 1 producto con cantidad 2 o más');
     }
 
     const body = {
@@ -469,8 +470,8 @@ export default function PromotionsPage() {
                         ? 'Precio final en pesos CLP'
                         : form.type === 'PACK_PRICE'
                           ? (packGroupSize(form.buyQuantity, form.productIds.length) >= 2 // HOTFIX 296
-                              ? `Precio por pack de ${packGroupSize(form.buyQuantity, form.productIds.length)} productos (no por unidad)`
-                              : 'Precio por pack: indica cantidad 2 o más, o elige al menos 2 productos')
+                              ? (form.productIds.length >= 2 ? `Precio por pack de 1 de cada producto elegido (${form.productIds.length} productos)` : `Precio por pack de ${packGroupSize(form.buyQuantity, form.productIds.length)} unidades del producto`)
+                              : 'Precio por pack: elige 2 o más productos (1 de cada uno), o 1 producto con cantidad 2 o más')
                           : 'No aplica para este tipo'}
                   </p>
                 </div>
@@ -521,11 +522,11 @@ export default function PromotionsPage() {
                   {/* HOTFIX 296: precio por pack de N productos, nunca por unidad */}
                   <p className="text-xs text-gray-600 mt-1">
                     {packGroupSize(form.buyQuantity, form.productIds.length) >= 2
-                      ? <>Precio por pack de <span className="font-bold">{packGroupSize(form.buyQuantity, form.productIds.length)}</span> productos</>
-                      : 'Indica 2 o más, o elige al menos 2 productos abajo.'}
+                      ? (form.productIds.length >= 2 ? <>Pack de <span className="font-bold">1 de cada</span> producto elegido (la cantidad no aplica)</> : <>Precio por pack de <span className="font-bold">{packGroupSize(form.buyQuantity, form.productIds.length)}</span> unidades</>)
+                      : 'Elige 2 o más productos abajo (1 de cada uno), o 1 producto con cantidad 2 o más.'}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    Ej: si pones 2 y Valor = 5500, el cliente paga $5.500 por cada 2 unidades. Si pones 1, el tamaño del pack es la cantidad de productos elegidos. Nunca se cobra más que la suma de los precios normales.
+                    Ej: Burger + Bebida a $6.000 cobra el pack solo si el pedido trae 1 de cada uno. Con 1 producto y cantidad 2 a $5.500, el cliente paga $5.500 por cada 2 unidades. Nunca se cobra más que la suma de los precios normales.
                   </p>
                 </div>
               )}

@@ -4,6 +4,7 @@ import { RefreshCw, ChevronUp, ChevronDown, CheckCircle } from 'lucide-react';
 import superadminService, { type AlertsResponse } from '@/services/superadmin/superadminService';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/superadmin/button';
+import { SuspendTenantConfirm } from './SuspendTenantConfirm'; // HOTFIX 294
 
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
@@ -45,6 +46,7 @@ function AlertCard({
 }) {
   const s = STYLES[alert.severity];
   const [busy, setBusy] = useState(false);
+  const [suspendConfirm, setSuspendConfirm] = useState(false); // HOTFIX 294
 
   const isTrialAlert = ['TRIAL_EXPIRED', 'TRIAL_EXPIRING_TODAY', 'TRIAL_EXPIRING_SOON'].includes(alert.type);
   const phone        = alert.data?.phone as string | undefined;
@@ -80,7 +82,7 @@ function AlertCard({
       toast.success(`${tenantName} suspendido`);
       onRefresh();
     } catch { toast.error('Error al suspender'); }
-    finally  { setBusy(false); }
+    finally  { setBusy(false); setSuspendConfirm(false); } // HOTFIX 294
   }
 
   function openWhatsApp() {
@@ -115,9 +117,17 @@ function AlertCard({
               >
                 WhatsApp
               </Button>
-              <Button variant="danger" size="sm" onClick={doSuspend} disabled={busy}>
+              <Button variant="danger" size="sm" onClick={() => setSuspendConfirm(true) /* HOTFIX 294 */} disabled={busy}>
                 Suspender
               </Button>
+              {/* HOTFIX 294: confirmación obligatoria antes de suspender */}
+              <SuspendTenantConfirm
+                open={suspendConfirm}
+                tenantName={tenantName}
+                loading={busy}
+                onConfirm={doSuspend}
+                onCancel={() => setSuspendConfirm(false)}
+              />
             </div>
           ) : alert.actionLabel && alert.actionUrl ? (
             <button

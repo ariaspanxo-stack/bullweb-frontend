@@ -15,6 +15,7 @@ import superadminService from '@/services/superadmin/superadminService';
 import { StatusBadge } from '@/components/ui/superadmin/statusBadge';
 import { Button } from '@/components/ui/superadmin/button';
 import { Modal } from '@/components/ui/superadmin/modal';
+import { SuspendTenantConfirm } from '@/components/superadmin/SuspendTenantConfirm'; // HOTFIX 294
 import { Input, Select } from '@/components/ui/superadmin/input';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -243,6 +244,7 @@ export default function SuperAdminTenantDetail() {
   const [showPayModal,   setShowPayModal]   = useState(false);
   const [changingPlan,   setChangingPlan]   = useState(false);
   const [changingStatus, setChangingStatus] = useState(false);
+  const [suspendConfirm, setSuspendConfirm] = useState(false); // HOTFIX 294
   const [modules, setModules] = useState<Record<string, boolean>>({});
   // Hotfix #219 — Administración de período
   const [extendConfirm, setExtendConfirm] = useState<ExtendConfirmState | null>(null);
@@ -333,17 +335,25 @@ export default function SuperAdminTenantDetail() {
     finally { setChangingPlan(false); }
   }
 
-  async function handleToggleStatus() {
+  // HOTFIX 294: suspender y reactivar son acciones explícitas (antes un toggle: "Activo" en
+  // Configuración rápida SUSPENDÍA un local activo sin confirmar). Suspender solo tras confirmación.
+  async function handleSuspend() {
     if (!id || !tenant) return;
     setChangingStatus(true);
     try {
-      if (tenant.status === 'ACTIVE' || tenant.status === 'TRIAL') {
-        await superadminService.suspendTenant(id);
-        toast.success('Tenant suspendido');
-      } else {
-        await superadminService.activateTenant(id);
-        toast.success('Tenant activado');
-      }
+      await superadminService.suspendTenant(id);
+      toast.success('Tenant suspendido');
+      queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenant-detail', id] });
+    } catch (e: any) { toast.error(e.message); }
+    finally { setChangingStatus(false); setSuspendConfirm(false); }
+  }
+
+  async function handleActivate() {
+    if (!id || !tenant) return;
+    setChangingStatus(true);
+    try {
+      await superadminService.activateTenant(id);
+      toast.success('Tenant activado');
       queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenant-detail', id] });
     } catch (e: any) { toast.error(e.message); }
     finally { setChangingStatus(false); }
@@ -440,6 +450,14 @@ export default function SuperAdminTenantDetail() {
           onClose={() => setShowPayModal(false)}
         />
       )}
+      {/* HOTFIX 294: confirmación obligatoria antes de suspender */}
+      <SuspendTenantConfirm
+        open={suspendConfirm}
+        tenantName={tenant.name}
+        loading={changingStatus}
+        onConfirm={handleSuspend}
+        onCancel={() => setSuspendConfirm(false)}
+      />
       {extendConfirm && (
         <ExtendPeriodModal
           tenantId={id!}
@@ -528,7 +546,7 @@ export default function SuperAdminTenantDetail() {
             </div>
             <Button
               variant={isSuspended ? 'secondary' : 'danger'}
-              onClick={handleToggleStatus}
+              onClick={() => (isSuspended ? handleActivate() : setSuspendConfirm(true))} // HOTFIX 294
               disabled={changingStatus}
             >
               {isSuspended ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
@@ -914,14 +932,19 @@ export default function SuperAdminTenantDetail() {
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Estado</label>
             <div className="flex gap-2">
+              {/* HOTFIX 294: lógica corregida — "Activo" solo reactiva un local suspendido;
+                  "Suspendido" solo suspende un local activo y siempre con confirmación.
+                  Sin verde (sistema de diseño): estado activo en naranja #F97316. */}
               <button
-                onClick={() => { if (!isSuspended) handleToggleStatus(); }}
-                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${!isSuspended ? 'bg-emerald-700 text-white' : 'bg-gray-800 text-gray-500 hover:bg-gray-700'}`}>
+                onClick={() => { if (isSuspended) handleActivate(); }}
+                disabled={changingStatus}
+                className={`flex-1 min-h-[44px] py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${!isSuspended ? 'bg-[#F97316] text-white' : 'bg-gray-800 text-gray-500 hover:bg-gray-700'}`}>
                 Activo
               </button>
               <button
-                onClick={() => { if (isSuspended) handleToggleStatus(); }}
-                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${isSuspended ? 'bg-rose-800 text-white' : 'bg-gray-800 text-gray-500 hover:bg-gray-700'}`}>
+                onClick={() => { if (!isSuspended) setSuspendConfirm(true); }}
+                disabled={changingStatus}
+                className={`flex-1 min-h-[44px] py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 ${isSuspended ? 'bg-rose-800 text-white' : 'bg-gray-800 text-gray-500 hover:bg-gray-700'}`}>
                 Suspendido
               </button>
             </div>

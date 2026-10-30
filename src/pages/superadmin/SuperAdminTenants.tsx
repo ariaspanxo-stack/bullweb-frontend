@@ -6,6 +6,7 @@ import { Building2, Plus, RefreshCw, Search, Eye, Download, Trash2, ChevronLeft,
 import superadminService, { type Tenant } from '@/services/superadmin/superadminService';
 import SuperAdminTenantModal from './SuperAdminTenantModal';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { SuspendTenantConfirm } from '@/components/superadmin/SuspendTenantConfirm'; // HOTFIX 294
 import { StatusBadge } from '@/components/ui/superadmin/statusBadge';
 import { Table, Thead, Tr, Th, Td } from '@/components/ui/superadmin/table';
 import { Button } from '@/components/ui/superadmin/button';
@@ -125,6 +126,7 @@ export default function SuperAdminTenants() {
   const [impersonateTarget, setImpersonateTarget] = useState<Tenant | null>(null);
   const [deleteTarget, setDeleteTarget]   = useState<Tenant | null>(null);
   const [planChangeConfirm, setPlanChangeConfirm] = useState<{ tenant: Tenant; plan: string } | null>(null);
+  const [suspendTarget, setSuspendTarget] = useState<Tenant | null>(null); // HOTFIX 294
 
   const { data: tenantsResp, isLoading, refetch } = useQuery({
     queryKey: ['superadmin', 'tenants', { archived: archivedFilter }],
@@ -147,7 +149,7 @@ export default function SuperAdminTenants() {
 
   const suspendMut = useMutation({
     mutationFn: (id: string) => superadminService.suspendTenant(id),
-    onSuccess:  () => { qc.invalidateQueries({ queryKey: ['superadmin'] }); toast.success('Cliente suspendido'); },
+    onSuccess:  () => { qc.invalidateQueries({ queryKey: ['superadmin'] }); toast.success('Cliente suspendido'); setSuspendTarget(null); }, // HOTFIX 294
     onError:    () => toast.error('Error al suspender'),
   });
   const activateMut = useMutation({
@@ -258,6 +260,15 @@ export default function SuperAdminTenants() {
       {selectedTenant && (
         <SuperAdminTenantModal tenant={selectedTenant} onClose={() => setSelected(null)} />
       )}
+
+      {/* HOTFIX 294: confirmación obligatoria antes de suspender */}
+      <SuspendTenantConfirm
+        open={!!suspendTarget}
+        tenantName={suspendTarget?.name ?? ''}
+        loading={suspendMut.isPending}
+        onConfirm={() => { if (suspendTarget) suspendMut.mutate(suspendTarget.id); }}
+        onCancel={() => setSuspendTarget(null)}
+      />
 
       {/* Confirm impersonar */}
       <ConfirmModal
@@ -578,7 +589,7 @@ export default function SuperAdminTenants() {
                                 Activar
                               </Button>
                             ) : (
-                              <Button variant="danger" size="sm" onClick={() => suspendMut.mutate(t.id)} disabled={isBusy}>
+                              <Button variant="danger" size="sm" onClick={() => setSuspendTarget(t) /* HOTFIX 294 */} disabled={isBusy}>
                                 Suspender
                               </Button>
                             )}

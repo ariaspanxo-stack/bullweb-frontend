@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import superadminService, { type Tenant } from '@/services/superadmin/superadminService';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { SuspendTenantConfirm } from '@/components/superadmin/SuspendTenantConfirm'; // HOTFIX 294
 import { StatusBadge } from '@/components/ui/superadmin/statusBadge';
 import { Button } from '@/components/ui/superadmin/button';
 import { Modal } from '@/components/ui/superadmin/modal';
@@ -109,6 +110,7 @@ function ModulesSection({
 export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }: Props) {
   const qc = useQueryClient();
   const [cleanConfirmOpen, setCleanConfirmOpen] = useState(false);
+  const [suspendConfirmOpen, setSuspendConfirmOpen] = useState(false); // HOTFIX 294
   const [showRoles,        setShowRoles]        = useState(false);
   const [newRoleName,      setNewRoleName]      = useState('');
   const [newRoleColor,     setNewRoleColor]     = useState('#6366f1');
@@ -124,7 +126,7 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
 
   const suspendMut = useMutation({
     mutationFn: () => superadminService.suspendTenant(initialTenant.id),
-    onSuccess:  () => { qc.invalidateQueries({ queryKey: ['superadmin'] }); toast.success('Cliente suspendido'); },
+    onSuccess:  () => { qc.invalidateQueries({ queryKey: ['superadmin'] }); toast.success('Cliente suspendido'); setSuspendConfirmOpen(false); }, // HOTFIX 294
     onError:    () => toast.error('Error al suspender'),
   });
 
@@ -466,7 +468,7 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
               <Button
                 variant="danger"
                 className="flex-1"
-                onClick={() => suspendMut.mutate()}
+                onClick={() => setSuspendConfirmOpen(true) /* HOTFIX 294 */}
                 disabled={isPending}
               >
                 Suspender
@@ -498,6 +500,15 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
         isLoading={cleanDemoMut.isPending}
         onConfirm={() => { setCleanConfirmOpen(false); cleanDemoMut.mutate(); }}
         onCancel={() => setCleanConfirmOpen(false)}
+      />
+
+      {/* HOTFIX 294: confirmación obligatoria antes de suspender */}
+      <SuspendTenantConfirm
+        open={suspendConfirmOpen}
+        tenantName={t.name}
+        loading={suspendMut.isPending}
+        onConfirm={() => suspendMut.mutate()}
+        onCancel={() => setSuspendConfirmOpen(false)}
       />
     </Modal>
   );

@@ -23,6 +23,7 @@ interface MeseroSocketEvents {
   onOrderUpdated?: (order: any) => void;
   onOrderReady?:   (data: { orderId: string; order: any }) => void;
   onItemsProgress?: (data: { orderId: string; status: string; items: { id: string; status: string }[] }) => void; // TAREA 280
+  onOrdersChanged?: () => void; // HOTFIX 300: escritura de pedidos/mesas en el tenant (POS, mesero, QR)
 }
 
 let _idCounter = 0;
@@ -103,6 +104,11 @@ export function useMeseroSocket(events: MeseroSocketEvents) {
     // TAREA 280: avance por ítem (cocina marca PREPARANDO / LISTO)
     socket.on('order.items.progress', (data: any) => {
       eventsRef.current.onItemsProgress?.(data);
+    });
+
+    // HOTFIX 300 (B1-10): cobro, liberar, abrir o cambiar un pedido desde cualquier origen -> recargar mesas
+    socket.on('orders.changed', () => {
+      eventsRef.current.onOrdersChanged?.();
     });
 
     // ── Escuchar solicitudes de mesa (mesero/cuenta) ──

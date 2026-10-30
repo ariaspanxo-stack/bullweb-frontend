@@ -26,6 +26,16 @@ import {
   X,
 } from 'lucide-react';
 
+// HOTFIX 300 (B1-07): estado de la venta (orders.status) junto al estado del reparto
+const SALE_STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Pendiente',
+  PREPARING: 'En preparación',
+  READY: 'Enviado',
+  DELIVERED: 'Entregado',
+  PAID: 'Pagada',
+  CANCELLED: 'Anulada',
+};
+
 // ─── Configuración de estados ────────────────────────────────────────────────
 const STATUS_CONFIG: Record<
   DeliveryStatus,
@@ -37,6 +47,18 @@ const STATUS_CONFIG: Record<
   DELIVERED: { label: 'Entregado', color: 'text-green-700', bg: 'bg-green-100', icon: CheckCircle2 },
   CANCELLED: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-100', icon: XCircle },
 };
+
+// HOTFIX 300 (B1-07): la columna Hora llamaba a funciones inexistentes (ReferenceError al pintar cualquier fila)
+const CONTEXTUAL_LABEL: Record<DeliveryStatus, string> = {
+  PENDING: 'Creado', ASSIGNED: 'Asignado', PICKED_UP: 'Recogido', DELIVERED: 'Entregado', CANCELLED: 'Actualizado',
+};
+const getContextualLabel = (s: DeliveryStatus) => CONTEXTUAL_LABEL[s] ?? 'Creado';
+const getContextualTime = (d: DeliveryOrder): string | null =>
+  d.status === 'ASSIGNED' ? d.assignedAt ?? d.createdAt
+  : d.status === 'PICKED_UP' ? d.pickedUpAt ?? d.createdAt
+  : d.status === 'DELIVERED' ? d.deliveredAt ?? d.updatedAt
+  : d.status === 'CANCELLED' ? d.updatedAt
+  : d.createdAt;
 
 // ─── Modal de Asignación de Repartidor ───────────────────────────────────────
 interface AssignModalProps {
@@ -174,25 +196,25 @@ export default function Delivery() {
     mutationFn: ({ id, driverId, estimatedTime }: { id: string; driverId: string; estimatedTime?: number }) =>
       deliveryService.assignDriver(id, driverId, estimatedTime),
     onSuccess: () => { invalidate(); toast.success('Repartidor asignado'); setAssigningDelivery(null); },
-    onError: () => toast.error('Error al asignar repartidor'),
+    onError: (e: any) => toast.error(e?.message || 'Error al asignar repartidor'),
   });
 
   const pickupMutation = useMutation({
     mutationFn: (id: string) => deliveryService.markPickedUp(id),
     onSuccess: () => { invalidate(); toast.success('Pedido marcado como recogido'); },
-    onError: () => toast.error('Error al actualizar estado'),
+    onError: (e: any) => toast.error(e?.message || 'Error al actualizar estado'),
   });
 
   const deliveredMutation = useMutation({
     mutationFn: (id: string) => deliveryService.markDelivered(id),
     onSuccess: () => { invalidate(); toast.success('¡Pedido entregado!'); },
-    onError: () => toast.error('Error al marcar como entregado'),
+    onError: (e: any) => toast.error(e?.message || 'Error al marcar como entregado'),
   });
 
   const cancelMutation = useMutation({
     mutationFn: (id: string) => deliveryService.cancelDelivery(id),
     onSuccess: () => { invalidate(); toast.success('Delivery cancelado'); },
-    onError: () => toast.error('Error al cancelar'),
+    onError: (e: any) => toast.error(e?.message || 'Error al cancelar'),
   });
 
   // ── Helpers ──────────────────────────────────────────────────────────────
@@ -327,6 +349,11 @@ export default function Delivery() {
                           {d.orders?.deliveryFee
                             ? ` · (incluye ${formatCurrency(Number(d.orders.deliveryFee))} envío)`
                             : ''}
+                        </div>
+                        {/* HOTFIX 300 (B1-07): estado de la venta en el POS y origen del pedido */}
+                        <div className="text-xs text-gray-500" data-testid="delivery-venta">
+                          Venta: {SALE_STATUS_LABELS[d.orders?.status ?? ''] ?? d.orders?.status ?? '—'}
+                          {' · '}{d.orders?.source === 'QR_CARTA' ? 'Carta QR' : 'POS / mesero'}
                         </div>
                       </td>
 

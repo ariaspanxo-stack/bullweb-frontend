@@ -36,6 +36,7 @@ export interface Sale {
   customerAddress?: string;    // delivery
   customerPhone?: string;      // delivery
   deliveryFee?: number;        // delivery — costo de despacho
+  delivery?: { status: string; driverName: string | null } | null; // HOTFIX 300: reparto de /delivery
   paymentMethodId?: string;     // delivery — UUID del método de pago elegido
   paymentMethod?: { id: string; name: string }; // delivery — objeto join del método
   cashRegisterId?: string;

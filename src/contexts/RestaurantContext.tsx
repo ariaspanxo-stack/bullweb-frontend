@@ -524,7 +524,23 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
       });
     });
 
+    // HOTFIX 300 (B1-10 / B1-07): toda escritura de pedidos, mesas o reparto del tenant (POS, app mesero, QR,
+    // /delivery) -> recargar pedidos y mesas sin caché (antes la mesa abierta o cobrada por el mesero no llegaba)
+    let changedTimer: ReturnType<typeof setTimeout> | null = null;
+    socketRef.current.on('orders.changed', () => {
+      if (changedTimer) clearTimeout(changedTimer);
+      changedTimer = setTimeout(() => {
+        restaurantService.invalidateCache();
+        restaurantService.invalidateTablesCache();
+        loadOrders();
+        restaurantService.getTables(true).then(t => {
+          if (t.length > 0) setTables(t);
+        });
+      }, 300);
+    });
+
     return () => {
+      if (changedTimer) clearTimeout(changedTimer);
       socketRef.current?.emit('leaveStation', 'pos');
       socketRef.current?.emit('leaveStation', 'mesero');
       socketRef.current?.off('connect');

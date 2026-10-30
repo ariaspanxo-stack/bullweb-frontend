@@ -17,16 +17,21 @@ export interface DeliveryOrder {
   deliveredAt: string | null;
   createdAt: string;
   updatedAt: string;
-  customers: { id: string; name: string; phone: string | null } | null;
+  customers: { id: string | null; name: string; phone: string | null } | null;
   users: { id: string; name: string } | null;
+  hasDeliveryRecord?: boolean; // HOTFIX 300: false = pedido sin reparto aún (se crea al primer cambio)
   orders: {
     id: string;
     orderNumber: string;
     total: number;
     status: string;
     deliveryFee: number | null;
+    source?: string | null; // HOTFIX 300: QR_CARTA = carta QR; null = POS o app mesero
   } | null;
 }
+
+// HOTFIX 300: api.get ya desenvuelve { data } (handleResponse); se toleran ambas formas
+const unwrap = <T,>(d: any, isBody: (x: any) => boolean): T => (isBody(d) ? d : d?.data) as T;
 
 export interface DeliveryStats {
   total: number;
@@ -69,7 +74,7 @@ export const deliveryService = {
    */
   async getDrivers(): Promise<DeliveryDriver[]> {
     const response = await api.get('/delivery/drivers');
-    return response.data.data;
+    return unwrap<DeliveryDriver[]>(response.data, Array.isArray) ?? [];
   },
 
   /**
@@ -80,7 +85,7 @@ export const deliveryService = {
     if (from) params.from = from;
     if (to) params.to = to;
     const response = await api.get('/delivery/stats', { params });
-    return response.data.data;
+    return unwrap<DeliveryStats>(response.data, (x) => x?.total != null);
   },
 
   /**
@@ -105,7 +110,7 @@ export const deliveryService = {
    */
   async getDeliveryOrder(id: string): Promise<DeliveryOrder> {
     const response = await api.get(`/delivery/${id}`);
-    return response.data.data;
+    return unwrap<DeliveryOrder>(response.data, (x) => x?.id != null);
   },
 
   /**
@@ -113,7 +118,7 @@ export const deliveryService = {
    */
   async createDeliveryOrder(data: CreateDeliveryDTO): Promise<DeliveryOrder> {
     const response = await api.post('/delivery', data);
-    return response.data.data;
+    return unwrap<DeliveryOrder>(response.data, (x) => x?.id != null);
   },
 
   /**
@@ -124,7 +129,7 @@ export const deliveryService = {
     data: { deliveryAddress?: string; deliveryPhone?: string; deliveryNotes?: string; estimatedTime?: number }
   ): Promise<DeliveryOrder> {
     const response = await api.put(`/delivery/${id}`, data);
-    return response.data.data;
+    return unwrap<DeliveryOrder>(response.data, (x) => x?.id != null);
   },
 
   /**
@@ -132,7 +137,7 @@ export const deliveryService = {
    */
   async assignDriver(id: string, driverId: string, estimatedTime?: number): Promise<DeliveryOrder> {
     const response = await api.patch(`/delivery/${id}/assign`, { driverId, estimatedTime });
-    return response.data.data;
+    return unwrap<DeliveryOrder>(response.data, (x) => x?.id != null);
   },
 
   /**
@@ -140,7 +145,7 @@ export const deliveryService = {
    */
   async markPickedUp(id: string): Promise<DeliveryOrder> {
     const response = await api.patch(`/delivery/${id}/picked-up`);
-    return response.data.data;
+    return unwrap<DeliveryOrder>(response.data, (x) => x?.id != null);
   },
 
   /**
@@ -148,7 +153,7 @@ export const deliveryService = {
    */
   async markDelivered(id: string): Promise<DeliveryOrder> {
     const response = await api.patch(`/delivery/${id}/delivered`);
-    return response.data.data;
+    return unwrap<DeliveryOrder>(response.data, (x) => x?.id != null);
   },
 
   /**

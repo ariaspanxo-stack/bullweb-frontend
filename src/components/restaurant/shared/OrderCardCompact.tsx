@@ -25,6 +25,15 @@ import { usePlan } from '../../../hooks/usePlan';
 import { ItemPrepList, ItemsProgress } from './ItemPrepList';
 import { modifierNames } from './ModifierGroupsModal'; // HOTFIX 291
 
+// HOTFIX 300 (B1-07): estados del reparto (mismos textos que /delivery)
+const DELIVERY_LABELS: Record<string, string> = {
+  PENDING: 'Reparto pendiente',
+  ASSIGNED: 'Repartidor asignado',
+  PICKED_UP: 'En camino',
+  DELIVERED: 'Entregado',
+  CANCELLED: 'Reparto cancelado',
+};
+
 // ─── Clases de botones (fila de acciones, todos 44px) ─────────
 const BTN_PRIMARY   = 'h-11 px-4 flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-white bg-[#F97316] hover:bg-[#EA580C] transition-colors disabled:opacity-60';
 const BTN_SECONDARY = 'h-11 px-4 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-slate-800 bg-white border-[1.5px] border-slate-300 hover:bg-slate-50 transition-colors disabled:opacity-60 flex-shrink-0';
@@ -236,6 +245,16 @@ export function OrderCardCompact({
           <div className="flex items-center gap-1.5 min-w-0">
             <Phone size={14} className="text-slate-500 flex-shrink-0" />
             <p className="text-[13px] text-slate-600 truncate tabular-nums">{formatPhoneCL(customerPhone)}</p>
+          </div>
+        )}
+        {/* HOTFIX 300 (B1-07): reparto marcado en /delivery (repartidor y estado) */}
+        {variant === 'delivery' && order.delivery && (
+          <div className="flex items-center gap-1.5 min-w-0" data-testid="delivery-reparto">
+            <Bike size={14} className="text-slate-500 flex-shrink-0" />
+            <p className="text-[13px] text-slate-700 truncate">
+              {DELIVERY_LABELS[order.delivery.status] ?? order.delivery.status}
+              {order.delivery.driverName ? ` · ${order.delivery.driverName}` : ''}
+            </p>
           </div>
         )}
 

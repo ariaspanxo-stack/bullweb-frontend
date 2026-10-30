@@ -2,7 +2,7 @@
 // HOOK: useMeseroTables — carga y polling de mesas + WebSocket
 // ═══════════════════════════════════════════════════════════════
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { meseroService }   from '../meseroService';
 import { useMeseroSocket } from './useMeseroSocket';
 
@@ -47,22 +47,17 @@ export function useMeseroTables() {
     (a, b) => (parseInt(a.number) || 0) - (parseInt(b.number) || 0)
   );
 
-  // ── WebSocket: actualización de estado optimista ────────────
-  const handleOrderUpdated = useCallback((order: any) => {
-    if (!order?.tableId) return;
-    setTables(prev => prev.map(table => {
-      if (table.id !== order.tableId) return table;
-      if (order.status === 'PAID' || order.status === 'CANCELLED')
-        return { ...table, status: 'AVAILABLE' };
-      if (['PENDING', 'PREPARING', 'READY'].includes(order.status))
-        return { ...table, status: 'OCCUPIED' };
-      return table;
-    }));
-  }, []);
+  // ── WebSocket: recarga desde el backend ─────────────────────
+  // HOTFIX 300 (B1-10): antes se marcaba la mesa libre/ocupada con el pedido del evento (una mesa con otro
+  // pedido abierto quedaba libre). Ahora se recarga: el estado lo decide el backend con la regla del POS.
+  const reloadTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reloadSoon = useCallback(() => {
+    if (reloadTimer.current) clearTimeout(reloadTimer.current);
+    reloadTimer.current = setTimeout(load, 300);
+  }, [load]);
+  useEffect(() => () => { if (reloadTimer.current) clearTimeout(reloadTimer.current); }, []);
 
-  const handleOrderReady = useCallback((_data: any) => { load(); }, [load]);
-
-  useMeseroSocket({ onOrderUpdated: handleOrderUpdated, onOrderReady: handleOrderReady });
+  useMeseroSocket({ onOrderUpdated: reloadSoon, onOrderReady: reloadSoon, onOrdersChanged: reloadSoon });
 
   return {
     tables: sortedTables,

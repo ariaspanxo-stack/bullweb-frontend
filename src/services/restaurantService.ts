@@ -69,6 +69,10 @@ function mapOrder(raw: any): Sale {
     customerAddress: raw.deliveryAddress || raw.customerAddress || undefined,
     customerPhone: raw.customerPhone || undefined,
     deliveryFee: Number(raw.deliveryFee) || 0,
+    // HOTFIX 300 (B1-07): estado del reparto y repartidor marcados en /delivery
+    delivery: raw.delivery_orders
+      ? { status: raw.delivery_orders.status, driverName: raw.delivery_orders.users?.name ?? null }
+      : null,
     paymentMethodId: raw.paymentMethodId || undefined,
     paymentMethod: raw.payment_methods || raw.paymentMethod || undefined,
     items,

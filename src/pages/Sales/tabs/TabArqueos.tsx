@@ -168,6 +168,9 @@ export const TabArqueos = () => {
   const sistemaTotal: number = sistemaInicial + sistemaIngreso + tipsTotal + totalCashIn - totalCashOut;
   const expectedCash: number = Number(cuadre?.expectedCash ?? sistemaTotal);
   const movements: any[] = cuadre?.movements ?? [];
+  // HOTFIX 303 (B4-05): devoluciones registradas al anular ventas pagadas
+  const refunds: any[] = (cuadre as any)?.refunds ?? [];
+  const totalRefunds: number = Number((cuadre as any)?.totalRefunds ?? 0);
   const cancellations: any = cuadre?.cancellations ?? { count: 0, total: 0 };
 
   const totalUsuario = Object.values(userAmounts).reduce((s, v) => s + (parseFloat(v) || 0), 0);
@@ -699,6 +702,24 @@ export const TabArqueos = () => {
                 <div className="flex justify-between py-1.5 border-t border-gray-100">
                   <span className="text-red-500 text-xs font-semibold">- Egresos manuales</span>
                   <span className="font-bold text-red-500">-{fmt(totalCashOut)}</span>
+                </div>
+              )}
+              {/* HOTFIX 303 (B4-05): devoluciones de ventas anuladas en este turno (egreso ya descontado de su medio) */}
+              {refunds.length > 0 && (
+                <div className="py-1.5 border-t border-gray-100">
+                  <div className="flex justify-between">
+                    <span className="text-red-500 text-xs font-semibold">- Devoluciones de ventas anuladas</span>
+                    <span className="font-bold text-red-500">-{fmt(totalRefunds)}</span>
+                  </div>
+                  <div className="space-y-0.5 mt-1">
+                    {refunds.map((r: any) => (
+                      <div key={`refund-${r.id}`} className="flex justify-between text-xs text-gray-500">
+                        <span>{r.orderNumber} · {METHOD_LABELS[r.method] ?? r.method}{r.reason ? ` · ${r.reason}` : ''}{r.by ? ` · ${r.by}` : ''}</span>
+                        <span className="font-bold text-gray-700">-{fmt(r.amount)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-0.5">ya restadas en el total de su medio de pago</p>
                 </div>
               )}
               <div className="flex justify-between py-2 border-t-2 border-gray-300 mt-1">

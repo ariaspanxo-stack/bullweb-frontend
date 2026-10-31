@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import React from 'react';
+import { createPortal } from 'react-dom'; // HOTFIX 303
 import { useNavigate } from 'react-router-dom';
 import { formatSaleNumber } from '@/utils/formatSaleNumber';
 import type { Sale } from '@/types/sales.types';
@@ -32,6 +33,10 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [cancelLoading, setCancelLoading] = useState(false);
+  // HOTFIX 303 (B4-05): anular una venta pagada registra la devolucion (medio y monto)
+  const [refundMethods, setRefundMethods] = useState<{ id: string; name: string }[]>([]);
+  const [refundMethodId, setRefundMethodId] = useState('');
+  const [refundAmount, setRefundAmount] = useState('');
   const [showReprintModal, setShowReprintModal] = useState(false);
 
   // Hotfix #274: cambio de medio de pago y sus eventos en el historial
@@ -132,17 +137,29 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
   const handleCancel = async () => {
     if (!sale) return;
     setCancelReason('');
+    if (sale.status === 'closed') {
+      // HOTFIX 303 (B4-05): por defecto se devuelve todo lo cobrado por el medio del primer pago
+      const cobrado = (sale.payments ?? []).reduce((s: number, p: any) => s + Number(p.amount || 0), 0);
+      setRefundAmount(String(Math.round(cobrado)));
+      setRefundMethodId((sale.payments ?? []).find((p: any) => p.paymentMethodId)?.paymentMethodId ?? '');
+      salesService.getPaymentMethods().then(list =>
+        setRefundMethods(list.filter((m: any) => m.active !== false).map((m: any) => ({ id: m.id, name: m.name }))),
+      ).catch(() => setRefundMethods([]));
+    }
     setShowCancelModal(true);
   };
 
+  const isPaidSale = sale?.status === 'closed';
+  const refundValid = !isPaidSale || (!!refundMethodId && Number(refundAmount) > 0);
+
   // Usa /anular para ventas cerradas (PAID/closed), DELETE para ventas abiertas
   const handleConfirmCancel = async () => {
-    if (!sale || !cancelReason.trim()) return;
+    if (!sale || !cancelReason.trim() || !refundValid) return;
     try {
       setCancelLoading(true);
       if (sale.status === 'closed') {
-        // Venta pagada → anular (queda en DB como ANULADA)
-        await salesService.anularSale(sale.id, cancelReason);
+        // Venta pagada → anular (queda en DB como ANULADA) con la devolucion en el turno abierto (HOTFIX 303)
+        await salesService.anularSale(sale.id, cancelReason, { paymentMethodId: refundMethodId, amount: Math.round(Number(refundAmount)) });
       } else {
         // Venta abierta → cancelar (flujo original)
         await salesService.cancelSale(sale.id, cancelReason);
@@ -152,8 +169,8 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
       onRefresh?.();
     } catch (e: any) {
       const status = (e as any)?.response?.status;
-      if (status === 409) {
-        toast.error((e as any)?.response?.data?.error || 'No se puede anular esta venta');
+      if (status === 409 || status === 400 || status === 404) {
+        toast.error((e as any)?.response?.data?.error || (e as any)?.response?.data?.message || e?.message || 'No se puede anular esta venta');
       } else {
         toast.error(e?.message || 'Error al anular venta');
       }
@@ -692,45 +709,76 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
     )}
 
     {/* ── MODAL ANULACIÓN ─────────────────────────────────── */}
-    {showCancelModal && (
-      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    {showCancelModal && createPortal(
+      <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900">Eliminar Venta</h3>
-            <button onClick={() => setShowCancelModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+            <h3 className="text-lg font-bold text-gray-900">{isPaidSale ? 'Anular venta pagada' : 'Eliminar Venta'}</h3>
+            <button onClick={() => setShowCancelModal(false)} className="p-1 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center">
               <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
 
           <p className="text-sm text-gray-600 mb-3">
-            Indica el motivo de eliminación de la venta <strong>{formatSaleNumber(sale?.saleNumber)}</strong>:
+            Indica el motivo de {isPaidSale ? 'anulación' : 'eliminación'} de la venta <strong>{formatSaleNumber(sale?.saleNumber)}</strong>:
           </p>
 
           <textarea
             value={cancelReason}
             onChange={e => setCancelReason(e.target.value)}
             rows={3}
-              placeholder="Motivo de eliminación..."
+              placeholder={isPaidSale ? 'Motivo de anulación...' : 'Motivo de eliminación...'}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500 resize-none"
           />
+
+          {/* HOTFIX 303 (B4-05): devolucion obligatoria; queda como egreso de ese medio en el turno abierto */}
+          {isPaidSale && (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs text-gray-500">
+                Devolución al cliente: queda registrada como egreso en el turno de caja abierto.
+              </p>
+              <label className="block text-sm font-medium text-gray-700">
+                Medio de la devolución
+                <select
+                  value={refundMethodId}
+                  onChange={e => setRefundMethodId(e.target.value)}
+                  className="mt-1 w-full min-h-[44px] border border-gray-300 rounded-lg px-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="">Elegir medio...</option>
+                  {refundMethods.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+              </label>
+              <label className="block text-sm font-medium text-gray-700">
+                Monto devuelto
+                <input
+                  type="number"
+                  min={1}
+                  value={refundAmount}
+                  onChange={e => setRefundAmount(e.target.value)}
+                  className="mt-1 w-full min-h-[44px] border border-gray-300 rounded-lg px-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </label>
+            </div>
+          )}
 
           <div className="flex gap-2 mt-4">
             <button
               onClick={() => setShowCancelModal(false)}
-              className="flex-1 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="flex-1 min-h-[44px] py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancelar
             </button>
             <button
               onClick={handleConfirmCancel}
-              disabled={cancelLoading || !cancelReason.trim()}
-              className="flex-1 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-bold disabled:opacity-50"
+              disabled={cancelLoading || !cancelReason.trim() || !refundValid}
+              className="flex-1 min-h-[44px] py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-bold disabled:opacity-50"
             >
-              {cancelLoading ? 'Eliminando...' : 'Eliminar Venta'}
+              {cancelLoading ? (isPaidSale ? 'Anulando...' : 'Eliminando...') : (isPaidSale ? 'Anular y registrar devolución' : 'Eliminar Venta')}
             </button>
           </div>
         </div>
-      </div>
+      </div>,
+      document.body,
     )}
 
     {showChangeMethod && sale && (

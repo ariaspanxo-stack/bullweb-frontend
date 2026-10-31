@@ -122,9 +122,10 @@ class SalesService {
   }
 
   // Anular venta cerrada (PAID) — queda marcada como ANULADA en DB
-  async anularSale(id: string, motivo: string): Promise<void> {
+  // HOTFIX 303 (B4-05): la devolucion (medio y monto) es obligatoria para anular una venta pagada
+  async anularSale(id: string, motivo: string, devolucion: { paymentMethodId: string; amount: number }): Promise<void> {
     try {
-      await api.patch(`${this.baseUrl}/${id}/anular`, { motivo });
+      await api.patch(`${this.baseUrl}/${id}/anular`, { motivo, devolucion });
     } catch (error: any) {
       throw error;
     }

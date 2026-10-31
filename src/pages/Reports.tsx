@@ -181,9 +181,9 @@ function ReportsInner() {
           const trendOrders  = prevTotalOrders > 0 ? ((totalOrders  - prevTotalOrders) / prevTotalOrders) * 100 : null;
           const trendTicket  = prevAvgTicket   > 0 ? ((avgTicket    - prevAvgTicket)   / prevAvgTicket)   * 100 : null;
           const headerKpis = [
-            { label: 'Ventas del período', value: salesError ? '—' : formatCurrency(totalSales),                                                               prevVal: formatCurrency(prevTotalSales),  trend: trendSales,  icon: TrendingUp,  color: 'text-orange-400', bg: 'bg-orange-500/20' },
-            { label: 'Órdenes',            value: salesError ? '—' : totalOrders.toLocaleString('es-CL'),                                                      prevVal: prevTotalOrders.toLocaleString('es-CL'), trend: trendOrders, icon: ShoppingCart, color: 'text-indigo-400', bg: 'bg-indigo-500/20' },
-            { label: 'Ticket promedio',    value: salesError ? '—' : formatCurrency(avgTicket),                                                                prevVal: formatCurrency(prevAvgTicket),   trend: trendTicket, icon: ArrowUpRight, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
+            { label: 'Ventas del período', value: salesError ? '—' : formatCurrency(totalSales),                                                               prevVal: salesError ? null : formatCurrency(prevTotalSales),  trend: salesError ? null : trendSales,  icon: TrendingUp,  color: 'text-orange-400', bg: 'bg-orange-500/20' },
+            { label: 'Órdenes',            value: salesError ? '—' : totalOrders.toLocaleString('es-CL'),                                                      prevVal: salesError ? null : prevTotalOrders.toLocaleString('es-CL'), trend: salesError ? null : trendOrders, icon: ShoppingCart, color: 'text-indigo-400', bg: 'bg-indigo-500/20' },
+            { label: 'Ticket promedio',    value: salesError ? '—' : formatCurrency(avgTicket),                                                                prevVal: salesError ? null : formatCurrency(prevAvgTicket),   trend: salesError ? null : trendTicket, icon: ArrowUpRight, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
             { label: 'Top producto',       value: (dashboardData as any).topProducts?.[0]?.product?.name ?? '—', prevVal: null, trend: null, icon: Star,         color: 'text-amber-400',   bg: 'bg-amber-500/20' },
           ];
           return (

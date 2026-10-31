@@ -265,7 +265,7 @@ function AppContent() {
               {/* Gestión */}
               <Route path="menu"           element={<Navigate to="/products" replace />} />
               <Route path="products"       element={<PermissionGuard permission="products.view"><Products /></PermissionGuard>} />
-              <Route path="inventory"      element={<PermissionGuard permission="inventory.view"><PlanGuard><Inventory /></PlanGuard></PermissionGuard>} />
+              <Route path="inventory"      element={<PermissionGuard permission="inventory.view"><Inventory /></PermissionGuard>} />{/* HOTFIX 305 (B6-20): Básico ve el stock simple; la página limita las pestañas */}
               <Route path="cash-registers" element={<PermissionGuard permission="cash.view"><CashRegisters /></PermissionGuard>} />
               <Route path="caja"           element={<PermissionGuard permission="pos.access"><CashPage /></PermissionGuard>} />
               <Route path="customers"      element={<PermissionGuard permission="customers.view"><PlanGuard><Customers /></PlanGuard></PermissionGuard>} />

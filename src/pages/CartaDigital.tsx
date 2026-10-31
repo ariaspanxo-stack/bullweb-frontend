@@ -42,6 +42,7 @@ interface Product {
   image: string | null;
   emoji?: string | null;
   available?: boolean;
+  soldOut?: boolean; // HOTFIX 305 (B6-04): agotado por stock controlado
   tags?: string[];
   // HOTFIX #233 (F3) — OPCIONAL: solo presente si el producto tiene grupos
   // activos vinculados. La UI debe tolerar campo ausente o vacío.
@@ -361,7 +362,7 @@ function ProductCard({
           )}
           {!isAvailable && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
-              <span className="text-[10px] font-bold text-white px-2 py-0.5 rounded-full bg-black/45">No disponible</span>
+              <span className="text-[10px] font-bold text-white px-2 py-0.5 rounded-full bg-black/45">{product.soldOut ? 'Agotado' : 'No disponible'}</span>
             </div>
           )}
           {inCart && (
@@ -387,7 +388,7 @@ function ProductCard({
           )}
           {!isAvailable && (
             <span className="inline-block mt-1.5 text-[10px] font-medium text-gray-400 px-2 py-0.5 rounded-full bg-gray-100">
-              No disponible hoy
+              {product.soldOut ? 'Agotado' : 'No disponible hoy'}
             </span>
           )}
 
@@ -2674,7 +2675,7 @@ export default function CartaDigital() {
                 )}
                 {selected.available === false && (
                   <span className="inline-block mt-3 text-xs font-medium text-gray-400 px-2 py-1 rounded-full bg-gray-100">
-                    No disponible hoy
+                    {selected.soldOut ? 'Agotado' : 'No disponible hoy'}
                   </span>
                 )}
                 <p

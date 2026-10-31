@@ -127,7 +127,7 @@ const menuSections: MenuSection[] = [
       {
         name: 'Productos', icon: Package,    path: '/products', permission: 'products.view',
         subItems: [
-          { name: 'Inventario', icon: Warehouse, path: '/inventory', permission: 'inventory.view', planRequired: 'TODO' },
+          { name: 'Inventario', icon: Warehouse, path: '/inventory', permission: 'inventory.view' }, // HOTFIX 305 (B6-20): stock simple en Básico
         ]
       },
       { name: 'Clientes',  icon: Users,     path: '/customers', permission: 'customers.view', planRequired: 'TODO' },

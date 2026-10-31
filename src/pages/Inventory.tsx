@@ -14,11 +14,15 @@ import { Plus, Search, AlertCircle, ShoppingCart, ArrowUpDown, Truck, Pencil, Tr
 import toast from 'react-hot-toast';
 import { exportToExcel, clp, fmtDateTime } from '@/utils/exportExcel';
 import { usePermission } from '@/hooks/usePermission';
+import { usePlan } from '@/hooks/usePlan';
 
 export default function Inventory() {
   const queryClient = useQueryClient();
   const { confirm: confirmDialog, dialogProps } = useConfirm();
-  const [activeTab, setActiveTab] = useState<'ingredients' | 'products' | 'recipes' | 'purchases' | 'movements' | 'suppliers'>('ingredients');
+  // HOTFIX 305 (B6-20): en Básico se ve el stock simple (Productos y su historial); ingredientes, compras y proveedores son Full
+  const { isBasico } = usePlan();
+  const [activeTab, setActiveTab] = useState<'ingredients' | 'products' | 'recipes' | 'purchases' | 'movements' | 'suppliers'>(isBasico ? 'products' : 'ingredients');
+  useEffect(() => { if (isBasico && activeTab !== 'products' && activeTab !== 'movements') setActiveTab('products'); }, [isBasico]); // eslint-disable-line react-hooks/exhaustive-deps
   const [searchQuery, setSearchQuery] = useState('');
   const [showLowStock, setShowLowStock] = useState(false);
 
@@ -36,7 +40,7 @@ export default function Inventory() {
     (activeTab === 'ingredients' && canPurchases) ||
     activeTab === 'recipes' ||
     (activeTab === 'purchases' && canPurchases) ||
-    (activeTab === 'movements' && canAdjustments) ||
+    (activeTab === 'movements' && canAdjustments && !isBasico) ||
     (activeTab === 'suppliers' && canPurchases);
 
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
@@ -63,6 +67,7 @@ export default function Inventory() {
     queryKey: ['ingredients-all'],
     queryFn: () => inventoryService.getIngredients({ perPage: 200 }),
     staleTime: 60000,
+    enabled: !isBasico,
   });
   const ingredientsList: any[] = Array.isArray(allIngredients)
     ? allIngredients
@@ -202,7 +207,7 @@ export default function Inventory() {
             Nuevo
           </Button>
         )}
-        <button
+        {!isBasico && <button
           onClick={() => {
             const purchases: any[] = (purchasesData as any)?.purchases ?? [];
             const movements: any[] = (movementsData as any)?.movements ?? [];
@@ -260,11 +265,11 @@ export default function Inventory() {
         >
           <FileDown className="w-4 h-4" />
           Exportar Excel
-        </button>
+        </button>}
       </div>
 
       {/* Tabs */}
-      <InventoryTabs activeTab={activeTab} onTabChange={setActiveTab} />
+      <InventoryTabs activeTab={activeTab} onTabChange={setActiveTab} onlyStockSimple={isBasico} />
 
       {/* Contenido por tab */}
       {activeTab === 'ingredients' && (

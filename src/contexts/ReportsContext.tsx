@@ -153,6 +153,8 @@ interface ReportsContextValue {
 
   // Loading states
   salesLoading:       boolean;
+  /** HOTFIX 305 (B6-02): error de Ventas (periodo actual o anterior); la pantalla lo muestra en vez de $0 */
+  salesError:         string | null;
   prevLoading:        boolean;
   purchasesLoading:   boolean;
 
@@ -160,6 +162,8 @@ interface ReportsContextValue {
   purchasesData:    any[];
   purchasesMeta:    any;
   totalSales:       number;
+  totalRefunds:     number;
+  refundCount:      number;
   totalOrders:      number;
   avgTicket:        number;
   totalDiscount:    number;
@@ -222,13 +226,13 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
   }, [dateFrom, dateTo]);
 
   // ── Queries compartidas ─────────────────────────────────────────────────
-  const { data: currSales, isLoading: salesLoading } = useQuery({
+  const { data: currSales, isLoading: salesLoading, error: currSalesError } = useQuery({
     queryKey: ['rpt-sales-curr', dateFrom, dateTo, waiterId, salesType],
     queryFn: () => reportsService.getSalesReport({ dateFrom, dateTo, groupBy: 'day', waiterId: waiterId || undefined, type: salesType || undefined }),
     staleTime: 0,
   });
 
-  const { data: prevSales, isLoading: prevLoading } = useQuery({
+  const { data: prevSales, isLoading: prevLoading, error: prevSalesError } = useQuery({
     queryKey: ['rpt-sales-prev', prevDates.from, prevDates.to, waiterId, salesType],
     queryFn: () => reportsService.getSalesReport({ dateFrom: prevDates.from, dateTo: prevDates.to, groupBy: 'day', waiterId: waiterId || undefined, type: salesType || undefined }),
     staleTime: 300_000,
@@ -281,6 +285,10 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
   const curr = (currSales as any)?.summary ?? {};
   const prev = (prevSales as any)?.summary ?? {};
   const totalSales        = Number(curr.totalSales)    || 0;
+  const totalRefunds      = Number(curr.totalRefunds)  || 0; // HOTFIX 305: devoluciones del periodo (negativo)
+  const refundCount       = Number(curr.refundCount)   || 0;
+  const salesErrObj: any  = currSalesError ?? prevSalesError;
+  const salesError        = salesErrObj ? String(salesErrObj?.response?.data?.error ?? salesErrObj?.message ?? 'error desconocido') : null;
   const totalOrders       = Number(curr.totalOrders)   || 0;
   const avgTicket         = Number(curr.averageTicket) || 0;
   const totalDiscount     = Number(curr.totalDiscount) || 0;
@@ -401,10 +409,10 @@ export function ReportsProvider({ children }: { children: ReactNode }) {
       purchasesRaw,
       prevPurchasesData,
       waitersForFilter,
-      salesLoading, prevLoading,
+      salesLoading, prevLoading, salesError,
       purchasesLoading,
       purchasesData, purchasesMeta,
-      totalSales, totalOrders, avgTicket,
+      totalSales, totalRefunds, refundCount, totalOrders, avgTicket,
       totalDiscount, totalTips,
       prevTotalSales, prevTotalOrders,
       prevAvgTicket, prevTotalDiscount,

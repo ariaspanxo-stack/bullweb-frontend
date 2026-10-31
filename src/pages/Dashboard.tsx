@@ -23,24 +23,27 @@ import {
   Share2,
 } from 'lucide-react';
 import { reportsService } from '@/services/reportsService';
-import { subDays, startOfDay, endOfDay } from 'date-fns';
+import { subDays, format } from 'date-fns';
 import { PrintStatusWidget } from '@/components/dashboard/PrintStatusWidget';
 import { SalesHeatmap } from '@/components/dashboard/SalesHeatmap';
 
 type TimeRange = 'today' | 'yesterday' | 'week' | 'month';
 
+// HOTFIX 305 (B6-01): dias calendario 'YYYY-MM-DD' (el backend los toma como dias Chile); antes el ISO UTC de
+// medianoche local corria un dia ("Hoy" incluia manana y "Ayer" incluia hoy)
+const ymd = (d: Date) => format(d, 'yyyy-MM-dd');
 const getDateRange = (range: TimeRange) => {
   const now = new Date();
   switch (range) {
     case 'today':
-      return { dateFrom: startOfDay(now).toISOString(), dateTo: endOfDay(now).toISOString() };
+      return { dateFrom: ymd(now), dateTo: ymd(now) };
     case 'yesterday':
-      // Hotfix #192: preset Ayer — día completo anterior (startOfDay→endOfDay de ayer)
-      return { dateFrom: startOfDay(subDays(now, 1)).toISOString(), dateTo: endOfDay(subDays(now, 1)).toISOString() };
+      // Hotfix #192: preset Ayer — día completo anterior
+      return { dateFrom: ymd(subDays(now, 1)), dateTo: ymd(subDays(now, 1)) };
     case 'week':
-      return { dateFrom: startOfDay(subDays(now, 7)).toISOString(), dateTo: endOfDay(now).toISOString() };
+      return { dateFrom: ymd(subDays(now, 6)), dateTo: ymd(now) };
     case 'month':
-      return { dateFrom: startOfDay(subDays(now, 30)).toISOString(), dateTo: endOfDay(now).toISOString() };
+      return { dateFrom: ymd(subDays(now, 29)), dateTo: ymd(now) };
   }
 };
 

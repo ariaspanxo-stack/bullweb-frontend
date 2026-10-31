@@ -481,7 +481,7 @@ export function DteDocumentsPage() {
             onClick={handleExport}
             className="flex items-center gap-2 border border-gray-200 hover:border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
           >
-            📥 Exportar Excel
+            📥 Exportar CSV
           </button>
         </div>
       </div>

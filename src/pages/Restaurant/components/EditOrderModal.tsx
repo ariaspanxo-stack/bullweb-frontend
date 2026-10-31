@@ -10,6 +10,7 @@ import type { Sale, SaleItem } from '../../../types/sales.types';
 import { restaurantService } from '../../../services/restaurantService';
 import { useRemovalReason } from '../../../hooks/useRemovalReason';
 import { useConfirmVoidOrder, leavesOrderEmpty } from '../../../components/restaurant/shared/ConfirmVoidOrderModal';
+import { useStockConfirm } from '../../../components/restaurant/shared/StockConfirm'; // HOTFIX 305
 
 interface EditOrderModalProps {
   order: Sale;
@@ -61,6 +62,7 @@ export const EditOrderModal = ({
     });
   };
 
+  const { withStockCheck, stockDialog } = useStockConfirm(); // HOTFIX 305 (B6-04): aviso de stock en 0
   /* ── Agregar producto al carrito de nuevos ── */
   const handleAddProduct = (product: Product) => {
     const existing = newCart.find(i => i.productId === product.id);
@@ -166,6 +168,7 @@ export const EditOrderModal = ({
 
   return (
     <>
+      {stockDialog}
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]" onClick={onClose} />
 
       <div className="fixed right-0 top-0 h-screen w-[480px] bg-white shadow-2xl z-[60] flex flex-col overflow-hidden">
@@ -293,7 +296,7 @@ export const EditOrderModal = ({
                   {filteredProducts.map(p => (
                     <button
                       key={p.id}
-                      onClick={() => handleAddProduct(p)}
+                      onClick={() => withStockCheck(p as any, () => handleAddProduct(p))}
                       className="w-full px-3 py-2.5 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-0 flex items-center justify-between gap-2"
                     >
                       <div className="flex-1 min-w-0">

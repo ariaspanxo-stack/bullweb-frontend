@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 interface InventoryTabsProps {
   activeTab: 'ingredients' | 'products' | 'recipes' | 'purchases' | 'movements' | 'suppliers';
   onTabChange: (tab: 'ingredients' | 'products' | 'recipes' | 'purchases' | 'movements' | 'suppliers') => void;
+  /** HOTFIX 305 (B6-20): plan Básico, solo Productos (stock simple) y Movimientos */
+  onlyStockSimple?: boolean;
 }
 
 const tabs = [
@@ -17,11 +19,11 @@ const tabs = [
   { value: 'suppliers', label: 'Proveedores', icon: Truck },
 ] as const;
 
-export default function InventoryTabs({ activeTab, onTabChange }: InventoryTabsProps) {
+export default function InventoryTabs({ activeTab, onTabChange, onlyStockSimple = false }: InventoryTabsProps) {
   return (
     <div className="border-b border-gray-200">
       <nav className="flex gap-4">
-        {tabs.map((tab) => {
+        {tabs.filter((t) => !onlyStockSimple || t.value === 'products' || t.value === 'movements').map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.value;
           

@@ -19,7 +19,7 @@ import {
 export function VentasTab() {
   const {
     currSales, salesLoading, prevLoading,
-    totalSales, totalOrders, avgTicket, totalDiscount, totalTips,
+    totalSales, totalOrders, avgTicket, totalDiscount, totalTips, salesError, totalRefunds, refundCount,
     prevTotalSales, prevTotalOrders, prevAvgTicket, prevTotalDiscount,
     mixedChartData,
     salesPage, setSalesPage,
@@ -59,6 +59,13 @@ export function VentasTab() {
         </div>
       </div>
 
+      {/* HOTFIX 305 (B6-02): si Ventas falla se dice, nunca $0 silencioso */}
+      {salesError ? (
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <p className="font-bold">No se pudieron cargar las ventas.</p>
+          <p className="mt-1">{salesError}. Las cifras de esta vista no están disponibles; prueba con Actualizar o cambia el filtro.</p>
+        </div>
+      ) : (<>
       {/* KPI Cards */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiMoneyCard label="Total Ventas"    value={totalSales}    prev={prevTotalSales}
@@ -210,7 +217,7 @@ export function VentasTab() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
-                  {['#', 'Fecha', 'Tipo', 'Mesa', 'Mesero', 'Total'].map(h => (
+                  {['#', 'Fecha cobro', 'Tipo', 'Mesa', 'Mesero', 'Total'].map(h => (
                     <th key={h} className={cn('px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide', h === 'Total' ? 'text-right' : 'text-left')}>{h}</th>
                   ))}
                 </tr>
@@ -219,7 +226,14 @@ export function VentasTab() {
                 {pagedOrders.map((o: any, i: number) => (
                   <tr key={o.id ?? i} className="hover:bg-gray-50 transition-colors">
                     <td className="px-5 py-3 text-xs text-gray-400 tabular-nums">{(salesPage - 1) * SALES_PAGE_SIZE + i + 1}</td>
-                    <td className="px-5 py-3 text-xs text-gray-600 tabular-nums whitespace-nowrap">{new Date(o.createdAt).toLocaleString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</td>
+                    <td className="px-5 py-3 text-xs text-gray-600 tabular-nums whitespace-nowrap">
+                      {/* HOTFIX 305: la venta cuenta el dia de su cobro; la fecha del pedido va como dato */}
+                      {new Date(o.saleAt ?? o.createdAt).toLocaleString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      {o.orderedAt && new Date(o.orderedAt).toDateString() !== new Date(o.saleAt ?? o.orderedAt).toDateString() && (
+                        <span className="block text-[10px] text-gray-400">Pedido {new Date(o.orderedAt).toLocaleString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                      )}
+                      {o.refunded && <span className="block text-[10px] font-semibold text-red-600">Anulada con devolución</span>}
+                    </td>
                     <td className="px-5 py-3 text-xs">
                       <span className={cn('px-2 py-0.5 rounded-full font-medium', o.type === 'DELIVERY' ? 'bg-indigo-100 text-indigo-700' : o.type === 'TAKEAWAY' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700')}>
                         {o.type === 'DELIVERY' ? 'Delivery' : o.type === 'TAKEAWAY' ? 'Para llevar' : 'Mesa'}
@@ -247,6 +261,13 @@ export function VentasTab() {
           )}
         </div>
       )}
+      {/* HOTFIX 305 (B6-10): devoluciones del periodo, restadas el dia en que se registraron */}
+      {refundCount > 0 && (
+        <div className="rounded-xl border border-gray-100 bg-white p-4 text-sm text-gray-700 shadow-sm">
+          Devoluciones registradas en el período: <span className="font-bold text-red-600">{formatCurrency(totalRefunds)}</span> ({refundCount}). Ya están restadas en Total Ventas.
+        </div>
+      )}
+      </>)}
     </div>
   );
 }

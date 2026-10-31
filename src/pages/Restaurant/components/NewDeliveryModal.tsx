@@ -41,6 +41,7 @@ import customersService from '../../../services/customersService';
 import { paymentMethodsService } from '../../../services/paymentMethodsService';
 import toast from 'react-hot-toast';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
+import { useStockConfirm } from '../../../components/restaurant/shared/StockConfirm'; // HOTFIX 305
 import { ModifierGroupsModal, hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 import { useActivePromotions } from '../../../hooks/useActivePromotions'; // HOTFIX 299
 import { priceCartWithPromotions, restaurantCartToPromoLines, type PromoLineResult } from '../../../utils/promoPricing'; // HOTFIX 299
@@ -201,10 +202,11 @@ export const NewDeliveryModal = ({
   // ========== FUNCIONES DE CARRITO ==========
   // HOTFIX 291: con grupos de modificadores abre el selector; sin grupos agrega directo
   const [modProduct, setModProduct] = useState<Product | null>(null);
-  const pickProduct = (product: Product) => {
+  const { withStockCheck, stockDialog } = useStockConfirm(); // HOTFIX 305 (B6-04): aviso de stock en 0
+  const pickProduct = (product: Product) => withStockCheck(product as any, () => {
     if (hasModifierGroups(product)) { setModProduct(product); return; }
     handleAddProduct({ ...product, modifiers: [] } as any);
-  };
+  });
 
   const handleAddProduct = (product: Product) => {
     const modifiers: ProductModifier[] = (product as any).modifiers ?? [];
@@ -419,6 +421,7 @@ export const NewDeliveryModal = ({
 
   return createPortal(
     <>
+      {stockDialog}
       {/* HOTFIX 291: selector de grupos de modificadores (obligatorio bloquea) */}
       {modProduct && (
         <ModifierGroupsModal

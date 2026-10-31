@@ -8,6 +8,7 @@ import type { Product, ProductCategory, CartItem } from '../../../types/restaura
 import type { ProductModifier } from '../../../types/sales.types';
 import { useActivePromotions } from '../../../hooks/useActivePromotions'; // HOTFIX 299
 import { priceCartWithPromotions, restaurantCartToPromoLines } from '../../../utils/promoPricing'; // HOTFIX 299
+import { useStockConfirm } from '../../../components/restaurant/shared/StockConfirm'; // HOTFIX 305
 
 interface AddItemsModalProps {
   orderNumber: string;
@@ -43,6 +44,7 @@ export const AddItemsModal = ({
     return matchCat && matchSearch && p.available;
   });
 
+  const { withStockCheck, stockDialog } = useStockConfirm(); // HOTFIX 305 (B6-04): aviso de stock en 0
   const handleAdd = (product: Product) => {
     const modifiers: ProductModifier[] = (product as any).modifiers ?? [];
     const hasModifiers = modifiers.length > 0;
@@ -107,6 +109,7 @@ export const AddItemsModal = ({
 
   return (
     <>
+      {stockDialog}
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]" onClick={onClose} />
       <div className="fixed right-0 top-0 h-screen w-[420px] bg-white shadow-2xl z-[60] flex flex-col overflow-hidden">
 
@@ -150,7 +153,7 @@ export const AddItemsModal = ({
             {searchQuery && filteredProducts.length > 0 && (
               <div className={`absolute top-full left-0 right-0 mt-1 bg-white border-2 ${accent === 'purple' ? 'border-purple-500' : 'border-blue-500'} rounded-lg shadow-xl max-h-[280px] overflow-y-auto z-50`}>
                 {filteredProducts.map(product => (
-                  <button key={product.id} onClick={() => handleAdd(product)}
+                  <button key={product.id} onClick={() => withStockCheck(product as any, () => handleAdd(product))}
                     className={`w-full p-3 hover:${accent === 'purple' ? 'bg-purple-50' : 'bg-blue-50'} transition-colors text-left border-b border-gray-100 last:border-0 flex items-center justify-between gap-3`}>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5">

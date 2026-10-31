@@ -9,6 +9,7 @@ interface QuickActionBarProps {
   onEdit?: () => void;
   onCancel?: () => Promise<void>;
   onConfirm?: () => Promise<void>;
+  printLabel?: string; // HOTFIX 302: "Reimprimir" en Ventas del dia
 }
 
 export function QuickActionBar({ 
@@ -17,7 +18,8 @@ export function QuickActionBar({
   onPrint, 
   onEdit, 
   onCancel, 
-  onConfirm 
+  onConfirm,
+  printLabel = 'Imprimir',
 }: QuickActionBarProps) {
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -45,7 +47,7 @@ export function QuickActionBar({
           className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
         >
           <Printer className="w-4 h-4" />
-          Imprimir
+          {printLabel}
         </button>
       )}
 

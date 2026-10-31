@@ -116,7 +116,7 @@ const menuSections: MenuSection[] = [
       { name: 'Restaurant',       icon: UtensilsCrossed, path: '/restaurant',    permission: 'pos.access'   },
       { name: 'Órdenes',          icon: Receipt,         path: '/orders',        permission: 'pos.access'   },
       { name: 'Pedidos Online',   icon: ShoppingBag,     path: '/online-orders', permission: 'pos.access'   },
-      { name: 'Ventas',           icon: TrendingUp,      path: '/sales',         permission: 'sales.view'   },
+      { name: 'Ventas',           icon: TrendingUp,      path: '/sales',         permission: ['sales.view', 'sales.today'] }, // HOTFIX 302
       { name: 'KDS',              icon: Tv,              path: '/kds',           permission: 'kds.view', planRequired: 'TODO' },
     ]
   },

@@ -3,6 +3,7 @@
  * Incluye indicador de estado online/offline del agente de cada impresora.
  */
 import { useState } from 'react';
+import { createPortal } from 'react-dom'; // HOTFIX 302: por portal (se abre tambien desde la tarjeta del POS)
 import { Printer, X, RotateCcw, Loader2, ChefHat, Receipt } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -69,8 +70,8 @@ export function ReprintModal({ open, orderId, orderNumber, onClose, onSuccess }:
     reprintMut.mutate();
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+  return createPortal(
+    <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={e => { e.stopPropagation(); onClose(); }}>
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
         onClick={e => e.stopPropagation()}
@@ -197,6 +198,7 @@ export function ReprintModal({ open, orderId, orderNumber, onClose, onSuccess }:
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -253,7 +253,7 @@ function AppContent() {
               <Route path="tables" element={<PermissionGuard permission="tables.manage"><Tables /></PermissionGuard>} />
               <Route path="orders"     element={<PermissionGuard permission="pos.access"><Orders /></PermissionGuard>} />
               <Route path="online-orders" element={<PermissionGuard permission="pos.access"><OnlineOrders /></PermissionGuard>} />
-              <Route path="sales"      element={<PermissionGuard permission="sales.view"><Sales /></PermissionGuard>} />
+              <Route path="sales"      element={<PermissionGuard permission={['sales.view', 'sales.today']}><Sales /></PermissionGuard>} />{/* HOTFIX 302: sales.today = Ventas del dia */}
               
               {/* Redirects para compatibilidad con rutas antiguas */}
               <Route path="pos" element={<Navigate to="/restaurant" replace />} />

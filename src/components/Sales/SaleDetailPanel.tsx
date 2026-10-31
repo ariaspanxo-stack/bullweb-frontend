@@ -13,6 +13,7 @@ import salesService, { type PaymentMethodEvent } from '@/services/salesService';
 import { ChangePaymentMethodModal } from './ChangePaymentMethodModal';
 import { ReprintModal } from '@/components/print/ReprintModal';
 import { CustomerSegmentBadge } from '@/components/customers/CustomerSegmentBadge';
+import { usePermission } from '@/hooks/usePermission'; // HOTFIX 302
 
 interface SaleDetailPanelProps {
   sale: Sale | null;
@@ -161,8 +162,20 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
     }
   };
 
+  // HOTFIX 302: Ventas del dia (sin sales.view): reimprimir solo pedidos de hoy o abiertos y sin anular desde aqui
+  const todayOnly = !usePermission(['sales.view', 'ALL_PERMISSIONS']);
+  const canReprint = usePermission(['printers.view', 'ALL_PERMISSIONS']);
+  const saleIsTodayOrOpen = (() => {
+    if (!sale) return false;
+    if (sale.status === 'open' || sale.status === 'paying') return true;
+    const d = new Date(sale.startTime as any);
+    const now = new Date();
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+  })();
+  const showPrint = canReprint && (!todayOnly || saleIsTodayOrOpen);
+
   const canCancel = sale
-    ? !['cancelled', 'CANCELLED', 'ANULADA'].includes(sale.status ?? '')
+    ? !todayOnly && !['cancelled', 'CANCELLED', 'ANULADA'].includes(sale.status ?? '')
     : false;
 
   if (!sale) {
@@ -197,8 +210,9 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
       {/* QUICK ACTIONS BAR */}
       <QuickActionBar
         sale={sale}
-        onPrint={handlePrint}
+        onPrint={showPrint ? handlePrint : undefined}
         onCancel={canCancel ? handleCancel : undefined}
+        printLabel={todayOnly ? 'Reimprimir' : 'Imprimir'}
       />
 
       {/* METADATA */}

@@ -20,6 +20,8 @@ type TabType = 'ventas' | 'movimientos' | 'arqueos' | 'propinas' | 'descuentos';
 export const Sales = () => {
   const qc = useQueryClient();
   const canViewTips = usePermission('tips.view');
+  // HOTFIX 302: sin sales.view (Cajero con sales.today) = Ventas del dia: solo la lista de hoy y el detalle para reimprimir
+  const todayOnly = !usePermission(['sales.view', 'ALL_PERMISSIONS']);
   const [activeTab, setActiveTab] = useState<TabType>('ventas');
   const [sales, setSales] = useState<Sale[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
@@ -74,7 +76,7 @@ export const Sales = () => {
       }
 
       // Mejora #5 — cargar stats de la semana anterior si el rango es un solo día
-      if (filters.startDate && filters.endDate) {
+      if (!todayOnly && filters.startDate && filters.endDate) {
         const diffMs = filters.endDate.getTime() - filters.startDate.getTime();
         const isDaily = diffMs <= 25 * 3600 * 1000; // ≤25 h = rango diario
         if (isDaily) {
@@ -263,7 +265,13 @@ export const Sales = () => {
         )}
       </div>
 
+      {/* HOTFIX 302: Ventas del dia sin pestañas */}
+      {todayOnly && (
+        <p className="mb-6 text-sm text-gray-600">Ventas de hoy. Selecciona una venta para reimprimir.</p>
+      )}
+
       {/* Tabs de navegación */}
+      {!todayOnly && (
       <div className="mb-6 flex gap-4 border-b border-gray-200">
         <button
           onClick={() => setActiveTab('ventas')}
@@ -318,17 +326,20 @@ export const Sales = () => {
           Descuentos
         </button>
       </div>
+      )}
 
       {/* Contenido según tab activo */}
       {activeTab === 'ventas' && (
         <>
           {/* Filtros */}
+          {!todayOnly && (
           <div className="mb-6">
             <SalesFilters onFilterChange={handleFilterChange} />
           </div>
+          )}
 
           {/* Estadísticas */}
-          {stats && (
+          {!todayOnly && stats && (
             <div className="mb-6">
               <SalesStats
                 stats={stats}
@@ -345,7 +356,7 @@ export const Sales = () => {
           )}
 
           {/* Gráfico ventas por hora — Mejora #4 */}
-          {sales.length > 0 && (
+          {!todayOnly && sales.length > 0 && (
             <div className="mb-6">
               <SalesHourChart sales={sales} />
             </div>
@@ -368,8 +379,8 @@ export const Sales = () => {
         </>
       )}
 
-      {activeTab === 'movimientos' && <TabMovimientos />}
-      {activeTab === 'arqueos' && <TabArqueos />}
+      {!todayOnly && activeTab === 'movimientos' && <TabMovimientos />}
+      {!todayOnly && activeTab === 'arqueos' && <TabArqueos />}
       {activeTab === 'propinas' && canViewTips && <TabPropinas filters={filters} />}
       {activeTab === 'descuentos' && <TabDescuentos sales={sales} isLoading={loading} hasSearched={hasSearched} />}
 

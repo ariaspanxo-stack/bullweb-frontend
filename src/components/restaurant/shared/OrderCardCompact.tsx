@@ -24,6 +24,8 @@ import { usePermission } from '../../../hooks/usePermission';
 import { usePlan } from '../../../hooks/usePlan';
 import { ItemPrepList, ItemsProgress } from './ItemPrepList';
 import { modifierNames } from './ModifierGroupsModal'; // HOTFIX 291
+import { ReprintModal } from '../../print/ReprintModal'; // HOTFIX 302
+import { Printer } from 'lucide-react'; // HOTFIX 302
 
 // HOTFIX 300 (B1-07): estados del reparto (mismos textos que /delivery)
 const DELIVERY_LABELS: Record<string, string> = {
@@ -116,6 +118,7 @@ export function OrderCardCompact({
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false); // HOTFIX 297
+  const [showReprint, setShowReprint] = useState(false); // HOTFIX 302
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Cerrar dropdown al hacer click fuera
@@ -135,6 +138,7 @@ export function OrderCardCompact({
   const canCancelOwn = usePermission('pos.cancel_order_own');
   const canCancelAny = usePermission('pos.cancel_order_any');
   const canCancel    = canCancelOwn || canCancelAny;
+  const canReprint   = usePermission(['printers.view', 'ALL_PERMISSIONS']); // HOTFIX 302
   const canCreateOrder = usePermission('pos.create_order');
 
   const { isBasico: planBasico, planReady } = usePlan();
@@ -346,8 +350,8 @@ export function OrderCardCompact({
             <Pencil size={18} />
           </button>
 
-          {/* Menú ··· — solo visible si puede cancelar */}
-          {canCancel && (
+          {/* Menú ··· — visible si puede cancelar o reimprimir (HOTFIX 302) */}
+          {(canCancel || canReprint) && (
             <div className="relative flex-shrink-0 order-4" ref={menuRef}>
               <button
                 onClick={e => { e.stopPropagation(); setShowMenu((v) => !v); }}
@@ -359,7 +363,18 @@ export function OrderCardCompact({
 
               {showMenu && (
                 <div className="absolute right-0 bottom-full mb-1 w-44 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50">
+                  {/* HOTFIX 302: Reimprimir (comanda o recibo, con impresora) */}
+                  {canReprint && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowMenu(false); setShowReprint(true); }}
+                      className="w-full min-h-[44px] flex items-center gap-2 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      <Printer size={13} className="text-slate-500" />
+                      Reimprimir
+                    </button>
+                  )}
                   {/* Cancelar orden */}
+                  {canCancel && (
                   <button
                     onClick={() => { setShowMenu(false); onCancel(order); }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
@@ -367,6 +382,7 @@ export function OrderCardCompact({
                     <X size={13} className="text-red-400" />
                     Cancelar orden
                   </button>
+                  )}
                 </div>
               )}
             </div>
@@ -385,6 +401,16 @@ export function OrderCardCompact({
             // Refrescar la lista de órdenes desde el backend
             onRefresh?.();
           }}
+        />
+      )}
+
+      {/* ── HOTFIX 302: reimprimir desde la tarjeta ── */}
+      {showReprint && (
+        <ReprintModal
+          open={showReprint}
+          orderId={order.id}
+          orderNumber={order.orderNumber || order.id.slice(-6).toUpperCase()}
+          onClose={() => setShowReprint(false)}
         />
       )}
 

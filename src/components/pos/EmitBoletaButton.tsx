@@ -12,6 +12,7 @@
 import { useState } from 'react';
 import { usePermission } from '@/hooks/usePermission';
 import api from '@/services/api';
+import { adminService } from '@/services/adminService'; // HOTFIX 302
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { Printer, CheckCircle, Loader2, X, Download } from 'lucide-react';
@@ -90,15 +91,23 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
     if (!orderId) return;
     setPrinting(true);
     try {
+      // HOTFIX 302: impresora predeterminada = la primera de caja (receipt) activa, con agente y sin mantenimiento,
+      // en el orden de Impresiones (sort_order). Antes se enviaba printer_id undefined y el backend respondia 400.
+      const printers = await adminService.listPrinters();
+      const def = printers.find((p: any) => p.is_active && p.type === 'receipt' && p.agent_id && !p.maintenance_mode);
+      if (!def) {
+        toast.error('No hay impresora de caja activa con agente. Configurala en Impresoras.');
+        return;
+      }
       await api.post('/admin/printers/reprint', {
         order_id: orderId,
-        printer_id: undefined,
+        printer_id: def.id,
         type: 'receipt',
       });
       toast.success('Boleta enviada a impresora');
       setPrinted(true);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Error al imprimir boleta');
+      toast.error(err?.response?.data?.error ?? err?.response?.data?.message ?? 'Error al imprimir boleta');
     } finally {
       setPrinting(false);
     }

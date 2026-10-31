@@ -185,6 +185,7 @@ export const PERMISSION_TREE: PermModule[] = [
           { key: 'reports.analytics', label: 'Ver análisis avanzado' },
           { key: 'sales.view', label: 'Ver registro de ventas' },
           { key: 'sales.export', label: 'Exportar ventas' },
+          { key: 'sales.today', label: 'Ver ventas del día y reimprimir (sin historial)' }, // HOTFIX 302
         ],
       },
     ],

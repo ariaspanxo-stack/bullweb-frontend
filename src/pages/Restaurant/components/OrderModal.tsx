@@ -36,6 +36,7 @@ import { useConfirmVoidOrder, leavesOrderEmpty } from '../../../components/resta
 import { formatCurrency } from '../../../lib/utils';
 import { OrderTicket } from '../../../components/restaurant/shared/OrderTicket';
 import { ItemPrepList, ItemsProgress } from '../../../components/restaurant/shared/ItemPrepList'; // TAREA 280
+import { ReprintModal } from '../../../components/print/ReprintModal'; // HOTFIX 302
 import { colorForCategory, emojiForCategory, categoryLabel } from '../../../lib/categoryHelpers';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { useActivePromotions } from '../../../hooks/useActivePromotions'; // HOTFIX 299
@@ -166,6 +167,9 @@ export const OrderModal = ({
   const canDiscount = usePermission('pos.discount_table');
   const canTransfer = usePermission('pos.transfer_order');
   const canSendToKitchen = usePermission('tables.order');
+  const canReprint  = usePermission(['printers.view', 'ALL_PERMISSIONS']); // HOTFIX 302
+  const [showReprint, setShowReprint] = useState(false); // HOTFIX 302
+  const [reprintNumber, setReprintNumber] = useState<string>(''); // HOTFIX 302: numero de pedido para el titulo
 
   const handleTransfer = async (newTableId: string) => {
     if (!existingOrderId) return;
@@ -211,6 +215,7 @@ export const OrderModal = ({
         if (sale?.customerId)   setSelectedCustomerId(sale.customerId);
         if (sale?.customerPhone) setClientPhone(sale.customerPhone);
         if (sale?.status)       setExistingStatus(sale.status);
+        if ((sale as any)?.orderNumber) setReprintNumber(String((sale as any).orderNumber)); // HOTFIX 302
         const disc = Number((sale as any)?.discount ?? 0);
         const pct  = Number((sale as any)?.discountValue ?? 0);
         if (disc > 0) {
@@ -1167,6 +1172,23 @@ export const OrderModal = ({
                         {existingOrderId ? `Cobrar ${fmt(total)}` : 'Cobrar mesa'}
                       </button>
                     </div>
+                    {/* HOTFIX 302: Reimprimir comanda o recibo del pedido de la mesa (printers.view) */}
+                    {canReprint && existingOrderId && (
+                      <button
+                        onClick={() => setShowReprint(true)}
+                        className="w-full min-h-[44px] mt-2 bg-white border-2 border-gray-300 text-gray-600 rounded-xl font-bold text-xs hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Printer size={14} /> Reimprimir
+                      </button>
+                    )}
+                    {showReprint && existingOrderId && (
+                      <ReprintModal
+                        open={showReprint}
+                        orderId={existingOrderId}
+                        orderNumber={reprintNumber || existingOrderId.slice(-6).toUpperCase()}
+                        onClose={() => setShowReprint(false)}
+                      />
+                    )}
 
                     {/* Avance de estado del pedido (secundarios, contorno) */}
                     {existingOrderId && existingStatus === 'PENDING' && (

@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { RefreshCw, ChefHat, X, CheckCircle, ShoppingBag, Phone } from 'lucide-react';
 import api from '../services/api';
 import toast from 'react-hot-toast';
+import { isCashMethodName } from '@/lib/cartaUi'; // HOTFIX 304 (B5-04)
 import { chileDateStr } from '@/lib/chileDate';
 import { CustomerSegmentBadge } from '@/components/customers/CustomerSegmentBadge';
 import {
@@ -39,6 +40,7 @@ interface QROnlineOrder {
   items:         OrderItem[];
   customerNote:  string | null;
   paymentMethod: string | null;
+  cashAmount:    number | null;  // HOTFIX 304 (B5-04): "con cuánto paga" (efectivo)
   viewedAt:      string | null;
   createdAt:     string;
   createdDateCl: string | null; // HOTFIX 272 lote — día en hora Chile (BD)
@@ -166,6 +168,13 @@ function OrderCard({ order, defaults, onAccept, onDone, onReject, processing }: 
       {order.paymentMethod && (
         <p className="text-xs text-gray-400 mb-3">💳 {order.paymentMethod}</p>
       )}
+      {/* HOTFIX 304 (B5-04): efectivo con "con cuánto paga" y vuelto (sobre el total del pedido, sin envío aún) */}
+      {isCashMethodName(order.paymentMethod) && order.cashAmount != null && order.cashAmount > 0 && (
+        <p className="text-sm text-gray-700 mb-3">
+          💵 Paga con <span className="font-bold">{fmtCLP(order.cashAmount)}</span>
+          {order.cashAmount >= order.total && <> · Vuelto <span className="font-bold">{fmtCLP(order.cashAmount - order.total)}</span></>}
+        </p>
+      )}
 
       {/* Acciones */}
       {order.onlineStatus === 'pending' && mode === 'idle' && (
@@ -289,7 +298,7 @@ export default function OnlineOrders() {
         customerPhone: r.customerPhone ?? null,
         customerSegment: r.customerSegment ?? null,
         orderType:     r.orderType ?? null,
-        tableNumber:   r.tableNumber ?? null,
+        tableNumber:   r.tableNumber ? (r.tableSection ? `${r.tableNumber} · ${r.tableSection}` : r.tableNumber) : null, // HOTFIX 304 (B5-10): con salón
         status:        r.status,
         onlineStatus:  r.status === 'PENDING_APPROVAL' ? 'pending'
                      : r.status === 'CONFIRMED'         ? 'done'
@@ -299,6 +308,7 @@ export default function OnlineOrders() {
         items:         Array.isArray(r.items) ? r.items : [],
         customerNote:  r.notes ?? null,
         paymentMethod: r.paymentMethod ?? null,
+        cashAmount:    r.cashAmount != null ? Number(r.cashAmount) : null,
         viewedAt:      r.viewedAt ?? null,
         createdAt:     r.createdAt,
         createdDateCl: r.createdDateCl ?? null,

@@ -6,6 +6,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { staffSocketAuth } from '@/lib/socketAuth';
 import { playOrderAlert } from '@/lib/alert-sound';
+import toast from 'react-hot-toast'; // HOTFIX 304 (B5-01/02)
 
 export interface QROrder {
   orderId:         string;
@@ -206,6 +207,8 @@ export function useQROrderAlerts() {
         },
         body: JSON.stringify(payload),
       });
+      // HOTFIX 304 (B5-01/02): 409 = otro equipo ya lo aceptó o rechazó; se quita de la alerta y se avisa el estado real
+      if (res.status === 409) { const j = await res.json().catch(() => null); toast.error(j?.error ?? 'Este pedido ya fue procesado desde otro equipo'); removeOrder(orderId); return; }
       if (res.ok) removeOrder(orderId);
     } catch { /* fetch falló: el pedido PERMANECE en la lista de alertas */ }
   }, [removeOrder]);
@@ -223,6 +226,8 @@ export function useQROrderAlerts() {
         },
         body: JSON.stringify({ reason }),
       });
+      // HOTFIX 304 (B5-01/02): 409 = otro equipo ya lo aceptó o rechazó; se quita de la alerta y se avisa el estado real
+      if (res.status === 409) { const j = await res.json().catch(() => null); toast.error(j?.error ?? 'Este pedido ya fue procesado desde otro equipo'); removeOrder(orderId); return; }
       if (res.ok) removeOrder(orderId);
     } catch { /* fetch falló: el pedido PERMANECE en la lista de alertas */ }
   }, [removeOrder]);

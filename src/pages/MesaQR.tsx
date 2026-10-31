@@ -39,8 +39,28 @@ function writeClicks(key: string, value: number) {
 
 export default function MesaQR() {
   const { slug } = useParams();
-  const [searchParams] = useSearchParams();
-  const tableNumber = searchParams.get('mesa');
+  const [searchParams, setSearchParams] = useSearchParams();
+  // HOTFIX 304 (B5-10): QR de mesa por id (?mesaId=); el QR viejo ?mesa=N sirve si el número es único en el local,
+  // si Salón y Terraza lo repiten el cliente elige su salón antes de llamar.
+  const mesaIdParam = searchParams.get('mesaId');
+  const mesaParam   = searchParams.get('mesa');
+  const [qrTable, setQrTable]           = useState<{ id: string; number: string; section: string | null } | null>(null);
+  const [tableChoices, setTableChoices] = useState<Array<{ id: string; number: string; section: string | null }>>([]);
+  useEffect(() => {
+    setQrTable(null); setTableChoices([]);
+    if (!slug || (!mesaIdParam && !mesaParam)) return;
+    const p = new URLSearchParams({ slug });
+    if (mesaIdParam) p.set('mesaId', mesaIdParam); else if (mesaParam) p.set('mesa', mesaParam);
+    let cancelled = false;
+    fetch(`/api/public/table?${p.toString()}`)
+      .then(r => r.json())
+      .then(j => { if (cancelled) return; setQrTable(j?.data?.table ?? null); setTableChoices(j?.data?.choices ?? []); })
+      .catch(() => { /* sin mesa resuelta: se llama con el número del QR */ });
+    return () => { cancelled = true; };
+  }, [slug, mesaIdParam, mesaParam]);
+  const tableNumber = qrTable ? qrTable.number : (mesaIdParam || tableChoices.length > 0 ? null : mesaParam);
+  const tableLabel  = qrTable ? `${qrTable.number}${qrTable.section ? ` · ${qrTable.section}` : ''}` : tableNumber;
+  const mustPick    = !qrTable && tableChoices.length > 1;
 
   const [requestSent, setRequestSent] = useState<RequestType | null>(null);
   const [loading, setLoading] = useState(false);
@@ -57,7 +77,7 @@ export default function MesaQR() {
   const limitReachedBill   = clicksBill   >= MAX_CLICKS;
 
   const handleRequest = async (type: RequestType) => {
-    if (!slug || loading) return;
+    if (!slug || loading || mustPick) return;
 
     // Bloqueo anti-spam: si ya llegó al límite, NO ejecutar el fetch
     const isLimit = type === 'call_waiter' ? limitReachedWaiter : limitReachedBill;
@@ -75,7 +95,7 @@ export default function MesaQR() {
       const res = await fetch('/api/public/table-request', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, tableNumber, type })
+        body: JSON.stringify({ slug, tableNumber, type, ...(qrTable ? { tableId: qrTable.id } : {}) })
       });
       // ── 429 Too Many Requests: el backend bloqueó por límite server-side ──
       // Forzar el bloqueo del botón (como si hubiera llegado a 3 toques) y
@@ -164,12 +184,28 @@ export default function MesaQR() {
       <div className="max-w-sm w-full bg-white rounded-3xl shadow-xl p-8 text-center space-y-6">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-900">Servicio de Mesa</h1>
-          {tableNumber && (
-            <p className="text-lg font-semibold text-orange-500 mt-1">Mesa {tableNumber}</p>
+          {tableLabel && (
+            <p className="text-lg font-semibold text-orange-500 mt-1">Mesa {tableLabel}</p>
           )}
         </div>
 
-        <div className="space-y-4">
+        {mustPick && (
+          <div className="space-y-2 text-left" role="group" aria-label="Elige tu salón">
+            <p className="text-sm text-gray-700">Hay más de una mesa {tableChoices[0].number}. ¿Dónde estás sentado?</p>
+            {tableChoices.map(t => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => setSearchParams(prev => { const n = new URLSearchParams(prev); n.delete('mesa'); n.set('mesaId', t.id); return n; }, { replace: true })}
+                className="w-full min-h-[48px] rounded-xl bg-orange-500 text-white font-bold hover:bg-orange-600"
+              >
+                Mesa {t.number}{t.section ? ` · ${t.section}` : ''}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className={`space-y-4 ${mustPick ? 'opacity-40 pointer-events-none' : ''}`}>
           {renderButton('call_waiter')}
           {renderButton('request_bill')}
         </div>

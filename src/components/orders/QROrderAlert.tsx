@@ -9,6 +9,7 @@ import type { QROrder } from '@/hooks/useQROrderAlerts';
 import { formatCurrency } from '@/lib/utils';
 import { CustomerSegmentBadge } from '@/components/customers/CustomerSegmentBadge';
 import { QrAcceptForm, QrRejectForm, SinResponderBadge, useQrAcceptDefaults, QR_UNANSWERED_MINUTES } from './QrDecisionForms';
+import { isCashMethodName } from '@/lib/cartaUi'; // HOTFIX 304 (B5-04)
 
 const COUNTDOWN_SEC = 120;
 
@@ -172,13 +173,13 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">
-                    {order.paymentMethod === 'efectivo'      ? '💵'
+                    {isCashMethodName(order.paymentMethod) ? '💵'
                      : order.paymentMethod === 'transferencia' ? '📱'
                      : '💳'}
                   </span>
                   <span className="text-white font-semibold capitalize">{order.paymentMethod}</span>
                 </div>
-                {order.paymentMethod === 'efectivo' && order.cashAmount != null && (
+                {isCashMethodName(order.paymentMethod) && order.cashAmount != null && ( /* HOTFIX 304 (B5-04): Efectivo por nombre */
                   <div className="text-right">
                     <div className="text-gray-400 text-xs">Paga con</div>
                     <div className="text-green-400 font-bold">{fmtCLP(order.cashAmount)}</div>

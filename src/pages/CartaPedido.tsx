@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { QrOrderTracking, saveActiveQrOrder, readActiveQrOrder } from '@/components/carta/QrOrderTracking';
+import { aaSafeColor } from '@/lib/cartaUi'; // HOTFIX 304
 
 interface CartaHeader { restaurantName: string; logo: string | null; themeColor: string; whatsapp?: string | null }
 
@@ -36,7 +37,7 @@ export default function CartaPedido() {
     return () => { alive = false; };
   }, [slug, orderId, validId]);
 
-  const themeColor = header?.themeColor ?? '#F97316';
+  const themeColor = aaSafeColor(header?.themeColor ?? '#F97316'); // HOTFIX 304: tema del local con contraste AA
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col items-center px-4 py-8">

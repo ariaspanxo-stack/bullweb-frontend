@@ -389,12 +389,15 @@ export default function CartaQRPage() {
     return '';
   }, [cartaSlug, user]);
 
+  // HOTFIX 304 (B5-10): etiqueta de mesa con salón ("5 · Terraza")
+  const mesaLabel = (t: any) => `${t.number}${t.sections?.name ? ` · ${t.sections.name}` : ''}`;
+
   // URL dinámica según slug + mesa seleccionada
   const baseCartaUrl = resolvedSlug
     ? `https://app.bullwebchile.com/carta/${resolvedSlug}`
     : `https://app.bullwebchile.com/carta`;
   const cartaUrl = selectedTable
-    ? `${baseCartaUrl}?mesa=${selectedTable}`
+    ? `${baseCartaUrl}?mesaId=${selectedTable}` // HOTFIX 304 (B5-10): QR por id de mesa
     : baseCartaUrl;
 
   const whatsappMessage = encodeURIComponent(
@@ -475,10 +478,10 @@ export default function CartaQRPage() {
     setLoadingMesaQrs(true);
     Promise.all(
       tables.map(table =>
-        QRCode.toDataURL(`https://app.bullwebchile.com/mesa/${resolvedSlug}?mesa=${table.number}`, {
+        QRCode.toDataURL(`https://app.bullwebchile.com/mesa/${resolvedSlug}?mesaId=${table.id}`, {
           width: 512, margin: 2, errorCorrectionLevel: 'H',
           color: { dark: '#1f2937', light: '#ffffff' },
-        }).then(url => ({ number: String(table.number), url }))
+        }).then(url => ({ number: String(table.id), url }))
       )
     ).then(results => {
       const map: Record<string, string> = {};
@@ -614,7 +617,7 @@ export default function CartaQRPage() {
       const results = await Promise.all(
         tables.map(table =>
           QRCode.toString(
-            `https://app.bullwebchile.com/mesa/${resolvedSlug}?mesa=${table.number}`,
+            `https://app.bullwebchile.com/mesa/${resolvedSlug}?mesaId=${table.id}`,
             { type: 'svg', errorCorrectionLevel: 'H', margin: 1,
               color: { dark: qrFgColor, light: qrBgColor } }
           ).then(svg => ({ table, svg }))
@@ -668,18 +671,19 @@ export default function CartaQRPage() {
   };
 
   // ── Descargar QR de una mesa ──────────────────────────────────
-  const downloadMesaQr = (tableNumber: string) => {
-    const url = mesaQrUrls[tableNumber];
+  // HOTFIX 304 (B5-10): los QR se guardan por id de mesa (Salón y Terraza repiten números); la etiqueta lleva el salón
+  const downloadMesaQr = (tableId: string, label: string) => {
+    const url = mesaQrUrls[tableId];
     if (!url) return;
     const a = document.createElement('a');
     a.href = url;
-    a.download = `QR-Mesa-${tableNumber}.png`;
+    a.download = `QR-Mesa-${label.replace(/[^a-zA-Z0-9áéíóúñÁÉÍÓÚÑ-]+/g, '-')}.png`;
     a.click();
   };
 
   // ── Imprimir QR de una mesa ───────────────────────────────────
-  const printMesaQr = (tableNumber: string) => {
-    const url = mesaQrUrls[tableNumber];
+  const printMesaQr = (tableId: string, tableNumber: string) => {
+    const url = mesaQrUrls[tableId];
     if (!url) return;
     const theme = cartaTheme || '#f97316';
     const name = restaurantName || 'Restaurante';
@@ -728,13 +732,13 @@ export default function CartaQRPage() {
       const results = await Promise.all(
         tables.map(table =>
           QRCode.toDataURL(
-            `https://app.bullwebchile.com/mesa/${resolvedSlug}?mesa=${table.number}`,
+            `https://app.bullwebchile.com/mesa/${resolvedSlug}?mesaId=${table.id}`,
             { width: 512, margin: 2, errorCorrectionLevel: 'H', color: { dark: '#1f2937', light: '#ffffff' } }
           ).then(url => ({ table, url }))
         )
       );
       const cards = results.map(({ table, url }) =>
-        buildQrCardHtml(String(table.number), url, theme, name)
+        buildQrCardHtml(mesaLabel(table), url, theme, name)
       ).join('');
       const win = window.open('', '_blank');
       if (!win) return;
@@ -842,7 +846,7 @@ export default function CartaQRPage() {
                     <option disabled>Cargando mesas...</option>
                   ) : (
                     tables.map(table => (
-                      <option key={table.id} value={table.number}>
+                      <option key={table.id} value={table.id}>
                         Mesa {table.number}
                         {table.sections?.name ? ` — ${table.sections.name}` : ''}
                       </option>
@@ -860,7 +864,7 @@ export default function CartaQRPage() {
               </div>
               {selectedTable && (
                 <p className="text-xs text-orange-600 mt-2">
-                  📍 QR exclusivo para Mesa {selectedTable}
+                  📍 QR exclusivo para Mesa {(() => { const t = tables.find((x: any) => x.id === selectedTable); return t ? mesaLabel(t) : selectedTable; })()}
                 </p>
               )}
             </div>
@@ -1678,13 +1682,13 @@ export default function CartaQRPage() {
                       <div key={table.id} id={`qr-mesa-${table.number}`}
                         className="bg-white rounded-xl border border-gray-200 p-5 flex flex-col items-center gap-2 hover:shadow-md transition-shadow">
                         <h3 className="font-bold text-gray-900 text-base">{restaurantName || 'Restaurante'}</h3>
-                        <p className="text-sm font-semibold text-gray-600">Mesa {table.number}</p>
+                        <p className="text-sm font-semibold text-gray-600">Mesa {mesaLabel(table)}</p>
                         {table.capacity && (
                           <p className="text-xs text-gray-400">{table.capacity} personas</p>
                         )}
-                        {mesaQrUrls[table.number] ? (
+                        {mesaQrUrls[table.id] ? (
                           <img
-                            src={mesaQrUrls[table.number]}
+                            src={mesaQrUrls[table.id]}
                             alt={`QR Mesa ${table.number}`}
                             className="w-[200px] h-[200px] rounded-lg"
                           />
@@ -1696,15 +1700,15 @@ export default function CartaQRPage() {
                         <p className="text-xs text-gray-500 text-center">Escanea para llamar al mesero</p>
                         <div className="flex gap-2 w-full mt-2">
                           <button
-                            onClick={() => downloadMesaQr(String(table.number))}
-                            disabled={!mesaQrUrls[table.number]}
+                            onClick={() => downloadMesaQr(String(table.id), mesaLabel(table))}
+                            disabled={!mesaQrUrls[table.id]}
                             className="flex-1 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-40 transition-colors"
                           >
                             Descargar
                           </button>
                           <button
-                            onClick={() => printMesaQr(String(table.number))}
-                            disabled={!mesaQrUrls[table.number]}
+                            onClick={() => printMesaQr(String(table.id), mesaLabel(table))}
+                            disabled={!mesaQrUrls[table.id]}
                             className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 disabled:opacity-40 transition-colors"
                           >
                             Imprimir

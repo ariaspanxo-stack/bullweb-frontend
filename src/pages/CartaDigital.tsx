@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom';
 import * as Sentry from '@sentry/react';
 import { QrOrderTracking, normalizeWhatsAppPhone, saveActiveQrOrder, readActiveQrOrder, clearActiveQrOrder, qrTrackingPath } from '../components/carta/QrOrderTracking'; // HOTFIX 272b
 import { useQrOrderStatus, type QrOrderPhase } from '../hooks/useQrOrderStatus'; // HOTFIX 272b — barra fija
+import { isCashMethodName, aaSafeColor } from '../lib/cartaUi'; // HOTFIX 304
 import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail, Instagram, Facebook, Globe, MessageCircle } from 'lucide-react';
 
 const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
@@ -63,6 +64,7 @@ interface CartaSettings {
   paymentMethods?:  Array<{ id: string; name: string }>;
   paymentMethodsRetiro?:    Array<{ id: string; name: string }>;
   paymentMethodsDelivery?:  Array<{ id: string; name: string }>;
+  ordering?:        { accepting: boolean; code?: string; message?: string | null }; // HOTFIX 304 (B5-05/06)
   address?:         string | null;
   city?:            string | null;
   phone?:           string | null;
@@ -402,7 +404,7 @@ function ProductCard({
                   <div className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
                     <button
                       onClick={onRemove}
-                      className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 active:scale-95 transition-all"
+                      className="w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 active:scale-95 transition-all"
                       aria-label={`Quitar ${product.name}`}
                     >
                       <Minus className="w-3.5 h-3.5" />
@@ -410,7 +412,7 @@ function ProductCard({
                     <span className="font-bold text-gray-900 w-5 text-center text-sm">{quantity}</span>
                     <button
                       onClick={onAdd}
-                      className="bw-press w-8 h-8 rounded-full shadow-sm flex items-center justify-center text-white hover:brightness-110 active:scale-95 transition-all"
+                      className="bw-press w-11 h-11 rounded-full shadow-sm flex items-center justify-center text-white hover:brightness-110 active:scale-95 transition-all"
                       style={{ backgroundColor: themeColor }}
                       aria-label={`Agregar ${product.name}`}
                     >
@@ -898,9 +900,13 @@ function CartSheet({
   onClose,
   onUpdate,
   onOrderSuccess,
+  tableId = null,
+  orderingBlocked = null,
 }: {
   cart:             CartItem[];
   tableNumber:      string | null;
+  tableId?:         string | null;   // HOTFIX 304 (B5-10): mesa del QR por id
+  orderingBlocked?: string | null;   // HOTFIX 304 (B5-05/06): mensaje si el local no recibe pedidos (cerrado o cuenta inactiva)
   tenantSlug:       string | null;
   themeColor:       string;
   paymentMethods:   Array<{ id: string; name: string }>;
@@ -939,6 +945,9 @@ function CartSheet({
     orderType === 'delivery'
       ? (paymentMethodsDelivery && paymentMethodsDelivery.length > 0 ? paymentMethodsDelivery : paymentMethods ?? FALLBACK_PAYMENT_METHODS)
       : (paymentMethodsRetiro && paymentMethodsRetiro.length > 0 ? paymentMethodsRetiro : paymentMethods ?? FALLBACK_PAYMENT_METHODS);
+  // HOTFIX 304 (B5-04): Efectivo se reconoce por el nombre del medio (los medios reales tienen id UUID, no 'efectivo')
+  const isCashSelected = paymentMethod !== null
+    && isCashMethodName(channelPaymentMethods.find(m => m.id === paymentMethod)?.name ?? paymentMethod);
 
   // Reset del método seleccionado al cambiar de canal si ya no está disponible
   useEffect(() => {
@@ -1014,6 +1023,7 @@ function CartSheet({
           // general (mostrador/delivery) NO envía mesa. 'mostrador' +
           // tableNumber presente = servir en mesa.
           tableNumber:     tableNumber ?? null,
+          ...(tableId ? { tableId } : {}), // HOTFIX 304 (B5-10): el backend toma número y salón de la mesa
           tenantSlug:      tenantSlug  ?? null,
           orderType:       orderType,
           customerName:    form.name.trim(),
@@ -1027,7 +1037,7 @@ function CartSheet({
           paymentMethod:   channelPaymentMethods.find(m => m.id === paymentMethod)?.name
                              ?? channelPaymentMethods[0]?.name
                              ?? 'efectivo',
-          cashAmount:      paymentMethod === 'efectivo' && cashAmount
+          cashAmount:      isCashSelected && cashAmount
                              ? parseInt(cashAmount)
                              : null,
           items: cart.map(i => ({
@@ -1108,8 +1118,8 @@ function CartSheet({
   if (step === 'payment') {
     const cashNum    = parseInt(cashAmount) || 0;
     const change     = cashNum - total;
-    const canConfirm = paymentMethod !== null &&
-                       (paymentMethod !== 'efectivo' || cashAmount.trim() !== '');
+    const canConfirm = paymentMethod !== null && !orderingBlocked &&
+                       (!isCashSelected || cashAmount.trim() !== '');
 
     const colorActiveMap: Record<PaymentMethod, string> = {
       efectivo:      'border-green-500 bg-green-500/10',
@@ -1126,7 +1136,7 @@ function CartSheet({
       Math.ceil(total / 10000) * 10000,
     ].filter((v, i, a) => a.indexOf(v) === i).slice(0, 4);
 
-    const isEfectivo = paymentMethod === 'efectivo';
+    const isEfectivo = isCashSelected; // HOTFIX 304 (B5-04)
 
     return (
       <SheetWrap onClose={onClose}>
@@ -1172,7 +1182,7 @@ function CartSheet({
                   key={method.id}
                   onClick={() => {
                     setPaymentMethod(method.id);
-                    if (method.id !== 'efectivo') setCashAmount('');
+                    if (!isCashMethodName(method.name)) setCashAmount('');
                   }}
                   className="w-full flex items-center gap-3 p-4 border-2 rounded-xl transition-all duration-200 active:scale-[0.98]"
                   style={{
@@ -1244,6 +1254,11 @@ function CartSheet({
         </div>
 
         <div className="p-4 border-t border-gray-700/50 shrink-0 space-y-2">
+          {orderingBlocked && (
+            <div role="alert" className="rounded-xl px-4 py-3 text-sm font-semibold text-red-200" style={{ backgroundColor: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)' }}>
+              {orderingBlocked}
+            </div>
+          )}
           {submitError && (
             <div
               className="rounded-xl px-4 py-3 text-sm text-red-300 flex items-start gap-2"
@@ -1644,9 +1659,14 @@ function CartSheet({
           <span className="text-gray-400 text-sm">{totalQty} {totalQty === 1 ? 'ítem' : 'ítems'}</span>
           <span className="text-white font-black text-xl">{fmtCLP(total)}</span>
         </div>
+        {orderingBlocked && (
+          <div role="alert" className="rounded-xl px-4 py-3 text-sm font-semibold text-red-200" style={{ backgroundColor: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)' }}>
+            {orderingBlocked}
+          </div>
+        )}
         <button
           onClick={() => setStep('type')}
-          disabled={cart.length === 0}
+          disabled={cart.length === 0 || !!orderingBlocked}
           className="w-full py-4 disabled:opacity-40 text-white font-extrabold text-base tracking-wide rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-[1.02] transition-all duration-200"
         >
           Elegir forma de entrega →
@@ -1740,10 +1760,33 @@ function ActiveQrOrderBar({ tenantSlug }: { tenantSlug: string | null }) {
 /** Página pública de carta digital — /carta */
 export default function CartaDigital() {
   const { slug: slugFromPath } = useParams<{ slug?: string }>();
-  const [searchParams]  = useSearchParams();
-  const mesaNumber      = searchParams.get('mesa');
+  const [searchParams, setSearchParams] = useSearchParams();
   const tenantSlug      = slugFromPath ?? searchParams.get('t') ?? null;
   const { isOpen, nextChange, hours, todayIdx } = useBusinessHours(tenantSlug);
+
+  // HOTFIX 304 (B5-10): QR de mesa por id (?mesaId=). La URL vieja ?mesa=N sirve si el número es único en el local;
+  // si Salón y Terraza repiten el número, el cliente elige el salón antes de pedir.
+  const mesaIdParam = searchParams.get('mesaId');
+  const mesaParam   = searchParams.get('mesa');
+  const [qrTable,      setQrTable]      = useState<{ id: string; number: string; section: string | null } | null>(null);
+  const [tableChoices, setTableChoices] = useState<Array<{ id: string; number: string; section: string | null }>>([]);
+  useEffect(() => {
+    setQrTable(null); setTableChoices([]);
+    if (!tenantSlug || (!mesaIdParam && !mesaParam)) return;
+    const p = new URLSearchParams({ slug: tenantSlug });
+    if (mesaIdParam) p.set('mesaId', mesaIdParam); else if (mesaParam) p.set('mesa', mesaParam);
+    let cancelled = false;
+    fetch(`/api/public/table?${p.toString()}`)
+      .then(r => r.json())
+      .then(j => { if (cancelled) return; setQrTable(j?.data?.table ?? null); setTableChoices(j?.data?.choices ?? []); })
+      .catch(() => { /* sin mesa: se pide como QR general */ });
+    return () => { cancelled = true; };
+  }, [tenantSlug, mesaIdParam, mesaParam]);
+  const pickTable = (id: string) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.delete('mesa'); n.set('mesaId', id); return n; }, { replace: true });
+  // Etiqueta de la mesa (se muestra y viaja como tableNumber; con tableId el backend usa el número real)
+  const mesaNumber: string | null = qrTable
+    ? (qrTable.section ? `${qrTable.number} · ${qrTable.section}` : qrTable.number)
+    : (mesaIdParam || tableChoices.length > 0 ? null : mesaParam);
 
   const [categories,    setCategories]    = useState<Category[]>([]);
   const [cartaSettings, setCartaSettings] = useState<CartaSettings | null>(null);
@@ -1776,7 +1819,7 @@ export default function CartaDigital() {
   }, []);
 
   // ── Cart state (persistido en localStorage por restaurante + mesa) ──
-  const cartKey = `bullweb:cart:${tenantSlug ?? 'default'}:${mesaNumber ?? 'generico'}`;
+  const cartKey = `bullweb:cart:${tenantSlug ?? 'default'}:${mesaIdParam ?? mesaParam ?? 'generico'}`;
   const [cart,     setCart]     = useState<CartItem[]>(() => {
     try {
       const saved = localStorage.getItem(cartKey);
@@ -1839,7 +1882,17 @@ export default function CartaDigital() {
     return m;
   }, [cart]);
 
-  const themeColor = cartaSettings?.themeColor ?? '#FF6B35';
+  // HOTFIX 304: tema del local con contraste mínimo AA (se oscurece si no llega a 4.5:1 contra blanco)
+  const themeColor = useMemo(() => aaSafeColor(cartaSettings?.themeColor ?? '#FF6B35'), [cartaSettings?.themeColor]);
+  // HOTFIX 304 (B5-05/06): la carta se ve, pero no deja pedir con el local cerrado o la cuenta inactiva
+  const orderingBlocked: string | null = isOpen === false
+    ? `El local está cerrado.${nextChange ? ' ' + nextChange + '.' : ''} Puedes ver la carta, pero no hacer pedidos ahora.`
+    : cartaSettings?.ordering?.accepting === false
+      ? (cartaSettings.ordering.message ?? 'Este local no está recibiendo pedidos por la carta en este momento.')
+      : null;
+  const canOrder = orderingBlocked === null;
+  // HOTFIX 304 (B5-03): producto con grupo obligatorio -> el "+" abre el selector en vez de agregar directo
+  const needsSelector = (p: Product) => (p.modifierGroups ?? []).some(g => g.required || g.minSelect > 0);
 
   // Carga con retry automático (máx 2 veces, delay 2s)
   useEffect(() => {
@@ -1850,7 +1903,8 @@ export default function CartaDigital() {
     const load = async () => {
       try {
         const params = new URLSearchParams();
-        if (mesaNumber)  params.set('mesa', mesaNumber);
+        if (mesaIdParam) params.set('mesaId', mesaIdParam);
+        else if (mesaParam) params.set('mesa', mesaParam);
         if (tenantSlug)  params.set('slug', tenantSlug);
         const url = `/api/public/menu${params.size ? '?' + params.toString() : ''}`;
         const res  = await fetch(url);
@@ -1875,7 +1929,7 @@ export default function CartaDigital() {
 
     load();
     return () => { cancelled = true; };
-  }, [retryCount, mesaNumber, tenantSlug]);
+  }, [retryCount, mesaIdParam, mesaParam, tenantSlug]);
 
   const hideUnavailable = cartaSettings?.hideUnavailable ?? false;
 
@@ -2051,7 +2105,7 @@ export default function CartaDigital() {
             <button
               type="button"
               onClick={() => setShowHours(v => !v)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors cursor-pointer"
             >
               <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
               <span className="whitespace-nowrap">
@@ -2072,7 +2126,7 @@ export default function CartaDigital() {
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Escríbenos por WhatsApp"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#25D366]/10 border border-[#25D366]/30 hover:border-[#25D366]/60 transition-colors"
+                className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-full bg-[#25D366]/10 border border-[#128C7E] hover:border-[#25D366]/60 transition-colors"
               >
                 <MessageCircle className="w-3.5 h-3.5 flex-shrink-0 text-[#25D366]" />
                 <span className="whitespace-nowrap font-medium text-[#128C7E]">WhatsApp</span>
@@ -2148,7 +2202,7 @@ export default function CartaDigital() {
                   setActiveTab(cat.id);
                   document.getElementById(`cat-${cat.id}`)?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 ${
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 pl-2 pr-4 py-1.5 min-h-[44px] rounded-full text-sm font-semibold transition-all duration-200 ${
                   activeTab === cat.id
                     ? 'text-white font-bold'
                     : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
@@ -2191,6 +2245,12 @@ export default function CartaDigital() {
               <p className="text-[11px] text-zinc-400">{nextChange}</p>
             )}
           </div>
+        </div>
+      )}
+      {/* HOTFIX 304 (B5-06): cuenta del local inactiva -> la carta se ve, sin pedidos */}
+      {isOpen !== false && !canOrder && (
+        <div role="status" className="px-4 py-3 max-w-xl mx-auto w-full" style={{ backgroundColor: 'rgba(239,68,68,0.08)', borderBottom: '1px solid rgba(239,68,68,0.15)', borderTop: '1px solid rgba(239,68,68,0.15)' }}>
+          <p className="text-[13px] font-semibold" style={{ color: '#fca5a5' }}>{orderingBlocked}</p>
         </div>
       )}
 
@@ -2260,9 +2320,9 @@ export default function CartaDigital() {
                   product={product}
                   quantity={cartQtyMap[product.id] ?? 0}
                   themeColor={themeColor}
-                  isBusinessOpen={isOpen}
+                  isBusinessOpen={canOrder ? isOpen : false}
                   index={idx}
-                  onAdd={() => addToCart(product)}
+                  onAdd={() => (needsSelector(product) ? setSelected(product) : addToCart(product))}
                   onRemove={() => updateCartItem(product.id, -1)}
                   onClick={() => setSelected(product)}
                 />
@@ -2509,7 +2569,33 @@ export default function CartaDigital() {
             setCart([]);
             try { localStorage.removeItem(cartKey); } catch { /* ignore */ }
           }}
+          tableId={qrTable?.id ?? null}
+          orderingBlocked={orderingBlocked}
         />
+      )}
+
+      {/* HOTFIX 304 (B5-10): QR viejo con un número repetido en el local -> el cliente elige su salón (portal z-100) */}
+      {!qrTable && tableChoices.length > 1 && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-labelledby="bw-mesa-elegir">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h2 id="bw-mesa-elegir" className="text-lg font-bold text-gray-900">¿Dónde estás sentado?</h2>
+            <p className="mt-1 text-sm text-gray-600">Hay más de una mesa {tableChoices[0].number}. Elige tu salón para que el pedido llegue a tu mesa.</p>
+            <div className="mt-4 flex flex-col gap-2">
+              {tableChoices.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => pickTable(t.id)}
+                  className="min-h-[48px] w-full rounded-xl px-4 text-base font-bold text-white"
+                  style={{ backgroundColor: themeColor }}
+                >
+                  Mesa {t.number}{t.section ? ` · ${t.section}` : ''}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>,
+        document.body,
       )}
 
       {/* Modal detalle producto — estilo premium Rappi/UberEats */}
@@ -2665,7 +2751,7 @@ export default function CartaDigital() {
 
               {/* ── Barra de acción inferior ── */}
               <div className="p-6 mt-6 border-t border-gray-100">
-                {selected.available !== false && isOpen !== false ? (
+                {selected.available !== false && canOrder ? (
                   <div className="flex items-center gap-4">
                     {/* Stepper */}
                     <div className="flex items-center gap-3 bg-gray-100 rounded-full px-2 py-1">
@@ -2704,13 +2790,13 @@ export default function CartaDigital() {
                       <p className="text-red-500 text-xs font-semibold text-center -mb-2">{modsError}</p>
                     )}
                   </div>
-                ) : isOpen === false ? (
+                ) : !canOrder ? (
                   <div
                     className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold"
                     style={{ backgroundColor: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}
                   >
                     <Clock className="w-4 h-4" />
-                    {nextChange ? `Cerrado · ${nextChange}` : 'Negocio cerrado'}
+                    {isOpen === false ? (nextChange ? `Cerrado · ${nextChange}` : 'Negocio cerrado') : 'No recibe pedidos ahora'}
                   </div>
                 ) : null}
               </div>

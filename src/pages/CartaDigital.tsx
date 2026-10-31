@@ -1888,7 +1888,7 @@ export default function CartaDigital() {
   const orderingBlocked: string | null = isOpen === false
     ? `El local está cerrado.${nextChange ? ' ' + nextChange + '.' : ''} Puedes ver la carta, pero no hacer pedidos ahora.`
     : cartaSettings?.ordering?.accepting === false
-      ? (cartaSettings.ordering.message ?? 'Este local no está recibiendo pedidos por la carta en este momento.')
+      ? (cartaSettings.ordering.message ?? 'Este local no recibe pedidos en línea por ahora')
       : null;
   const canOrder = orderingBlocked === null;
   // HOTFIX 304 (B5-03): producto con grupo obligatorio -> el "+" abre el selector en vez de agregar directo

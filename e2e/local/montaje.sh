@@ -23,7 +23,7 @@ if [ "$MODE" = "up" ]; then
   q -f "$D/_304_migracion.sql"; echo "rc_migracion_304=$?"
   q -f "$D/_306_migracion.sql" > /dev/null; echo "rc_migracion_306=$?"
   rm -rf "$WORK"; mkdir -p "$WORK"
-  git -C "$BE" archive main | tar -x -C "$WORK"; echo "backend archivado: main $(git -C "$BE" rev-parse --short main)"
+  REF="${E2E_BACKEND_REF:-main}"; git -C "$BE" archive "$REF" | tar -x -C "$WORK"; echo "backend archivado: $REF $(git -C "$BE" rev-parse --short "$REF")"
   WIN_WORK=$(cygpath -w "$WORK/node_modules"); WIN_NM=$(cygpath -w "$BE/node_modules")
   MSYS_NO_PATHCONV=1 cmd /c mklink /J "$WIN_WORK" "$WIN_NM" > /dev/null
   cd "$WORK"

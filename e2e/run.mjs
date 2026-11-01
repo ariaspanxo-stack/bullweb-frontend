@@ -1,6 +1,6 @@
 // E2E-1: script unico. npm run e2e:local (F1 F2 F5 F8 contra bullweb_test) y npm run e2e:sandbox (F1 F5 F8 contra el sandbox, con limpieza).
 // local: montaje -> usuarios -> build -> preview -> playwright -> limpieza -> baja con huella. sandbox: playwright -> limpieza por SSH con conteos.
-// Banderas de desarrollo: --sin-montaje (el montaje ya esta arriba y no se baja), --flujo F1 (solo ese flujo).
+// Banderas: --ref lote-307 (solo local: backend y frontend de esa rama por git archive, sin cambiar el arbol), --sin-montaje (el montaje ya esta arriba y no se baja), --flujo F1 (solo ese flujo).
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -16,6 +16,10 @@ const [, , env, ...flags] = process.argv;
 if (env !== 'local' && env !== 'sandbox') { console.error('uso: run.mjs <local|sandbox> [--sin-montaje] [--flujo F1]'); process.exit(2); }
 const sinMontaje = flags.includes('--sin-montaje');
 const flujo = flags.includes('--flujo') ? flags[flags.indexOf('--flujo') + 1] : null;
+const ref = flags.includes('--ref') ? flags[flags.indexOf('--ref') + 1] : null;
+if (ref && env !== 'local') { console.error('--ref solo aplica a local'); process.exit(2); }
+if (ref && !/^[\w./-]+$/.test(ref)) { console.error('ref invalida'); process.exit(2); }
+if (ref) process.env.E2E_BACKEND_REF = ref;
 
 const dotenv = () => Object.fromEntries(readFileSync(resolve(FE, '.env.e2e'), 'utf8').split(/\r?\n/).map((l) => l.match(/^([A-Z0-9_]+)=(.*)$/)).filter(Boolean).map((m) => [m[1], m[2].trim()]));
 const GIT_BASH = 'C:/Program Files/Git/bin/bash.exe';
@@ -72,7 +76,21 @@ async function subirBackend() {
 }
 
 async function subirPreview() {
-  const rc = npx(['vite', 'build', '--config', 'e2e/vite.e2e.config.ts', '--mode', 'e2e', '--logLevel', 'error'], { VITE_API_URL: '/api', VITE_WS_URL: 'http://127.0.0.1:5175', VITE_ENV: 'e2e' });
+  const viteEnv = { VITE_API_URL: '/api', VITE_WS_URL: 'http://127.0.0.1:5175', VITE_ENV: 'e2e' };
+  let rc;
+  if (ref) {
+    // El arbol queda en la rama de la suite: el frontend a probar sale de git archive a e2e/.ref y compila con su propia configuracion.
+    const dir = resolve(here, '.ref');
+    rmSync(dir, { recursive: true, force: true });
+    mkdirSync(dir, { recursive: true });
+    const a = bash(['-c', `git -C frontend archive '${ref}' | tar -x -C frontend/e2e/.ref`]);
+    if (a.rc !== 0) throw new Error(`git archive frontend ${ref} fallo: ${a.out}`);
+    console.log(`frontend archivado: ${ref} ${bash(['-c', `git -C frontend rev-parse --short '${ref}'`]).out.trim()}`);
+    rc = spawnSync('npx', ['vite', 'build', '--outDir', '../.dist', '--emptyOutDir', '--mode', 'e2e', '--logLevel', 'error'], { cwd: dir, stdio: 'inherit', shell: true, env: { ...process.env, ...viteEnv } }).status;
+    rmSync(dir, { recursive: true, force: true });
+  } else {
+    rc = npx(['vite', 'build', '--config', 'e2e/vite.e2e.config.ts', '--mode', 'e2e', '--logLevel', 'error'], viteEnv);
+  }
   if (rc !== 0) throw new Error('build local fallo');
   const pvLog = openSync(resolve(RUN, 'preview.log'), 'w');
   const child = spawn('npx', ['vite', 'preview', '--config', 'e2e/vite.e2e.config.ts', '--mode', 'e2e'], { cwd: FE, shell: true, detached: true, stdio: ['ignore', pvLog, pvLog] });

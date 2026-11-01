@@ -1,4 +1,4 @@
-// F1: login del panel, login del mesero y token viejo rechazado con "Sesion cerrada". Corre en local y sandbox.
+// F1: login del panel, login del mesero y token viejo rechazado con "Sesion cerrada" VISIBLE en pantalla (orden del Comandante: falla hasta que el producto lo muestre). Corre en local y sandbox.
 import { test, expect, shot, goto, loginPanel, api, creds } from '../lib/base';
 import type { Page } from '@playwright/test';
 import { assertFlow, SANDBOX_SLUG, assertToken } from '../lib/guard';
@@ -26,9 +26,8 @@ test('F1 login panel, login mesero y token viejo da Sesion cerrada', async ({ pa
     await page.getByRole('button', { name: 'Iniciar Sesión' }).click();
     expect((await resp).status()).toBe(401);
     const fin = await estadoTrasRechazo(page);
-    // Hallazgo E2E-H1: el 401 dispara el cierre forzado y recarga; el mensaje de error no queda en pantalla.
-    const visible = await page.getByText(/credenciales/i).isVisible();
-    test.info().annotations.push({ type: 'observacion', description: `clave mala: termina en ${fin}, mensaje de error en pantalla=${visible}` });
+    expect(fin).toBe('/login');
+    await expect(page.getByText(/contraseña incorrect/i).first(), 'E2E-H1: mensaje de clave incorrecta en pantalla').toBeVisible();
     await shot(page, F, '01_clave_mala');
   });
 
@@ -65,8 +64,8 @@ test('F1 login panel, login mesero y token viejo da Sesion cerrada', async ({ pa
     await goto(page, '/profile');
     await expect.poll(() => rejected, { timeout: 20000 }).toBeGreaterThan(0);
     const fin = await estadoTrasRechazo(page);
-    const enPantalla = await page.getByText('Sesión cerrada').isVisible();
-    test.info().annotations.push({ type: 'observacion', description: `panel token viejo: termina en ${fin}, texto Sesion cerrada en pantalla=${enPantalla} (la API si lo responde)` });
+    expect(fin).toBe('/login');
+    await expect(page.getByText('Sesión cerrada').first(), 'E2E-H2: aviso de sesion cerrada en el panel').toBeVisible();
     await shot(page, F, '04_panel_token_viejo');
   });
 
@@ -95,9 +94,9 @@ test('F1 login panel, login mesero y token viejo da Sesion cerrada', async ({ pa
     page.on('response', (r) => { if (r.status() === 401 && r.url().includes('/api/waiter')) rejected++; });
     await page.reload({ waitUntil: 'domcontentloaded' });
     await expect.poll(() => rejected, { timeout: 30000 }).toBeGreaterThan(0);
-    await page.waitForTimeout(2500);
-    const enPantalla = await page.getByText('Sesión cerrada').first().isVisible();
-    test.info().annotations.push({ type: 'observacion', description: `mesero token viejo: url=${new URL(page.url()).pathname} texto Sesion cerrada en pantalla=${enPantalla}` });
+    await expect(page.getByText('Sesión cerrada').first(), 'E2E-H3: aviso de sesion cerrada en la app mesero').toBeVisible();
+    await page.waitForURL((u) => u.pathname === '/mesero/login', { timeout: 20000 });
+    expect(await page.evaluate(() => localStorage.getItem('waiterToken'))).toBeNull();
     await shot(page, F, '07_mesero_token_viejo');
   });
 

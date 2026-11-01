@@ -3,13 +3,14 @@
 Dos comandos, desde `frontend/`:
 
 - `npm run e2e:local`: F1, F2, F5 y F8 contra `bullweb_test` (5433) con el backend de `main` (git archive, el repo no se toca) y el frontend de la rama actual en 127.0.0.1:5175. Sube y baja todo, y compara la huella al final. Unos 5 min.
+- `node e2e/run.mjs local --ref lote-307`: igual que e2e:local, pero con backend y frontend de esa rama. Sirve para probar un lote antes de desplegarlo, sin cambiar de rama.
 - `npm run e2e:sandbox`: F1, F5 y F8 contra `app.bullwebchile.com`, solo tenant `tu-mejor-sabor-216e63`. Limpia por SSH y compara conteos. Unos 3 min. La carta debe estar abierta.
 
 ## Flujos
 
 | Flujo | Cubre | Corre en |
 |---|---|---|
-| F1 | login panel, clave mala, login mesero con PIN, token viejo rechazado con "Sesión cerrada" | local, sandbox |
+| F1 | login panel, mensaje de clave incorrecta en pantalla, login mesero con PIN, aviso "Sesión cerrada" en pantalla en panel y mesero | local, sandbox |
 | F2 | turno, Mostrador con modificador obligatorio, comanda en KDS, Iniciar/Listo por ítem, cobro en efectivo con vuelto | solo local |
 | F5 | carta a 360 px, modificador, tracking con progreso, aceptar desde dos POS, doble aceptación = 1 pedido | local, sandbox |
 | F8 | sin datos de otro tenant en 3 pantallas, ni por id ajeno, ni por parámetro | local, sandbox |

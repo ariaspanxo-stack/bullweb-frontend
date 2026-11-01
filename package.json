@@ -8,6 +8,8 @@
     "build": "tsc && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "e2e:local": "node e2e/run.mjs local",
+    "e2e:sandbox": "node e2e/run.mjs sandbox",
     "deploy:dev": "powershell -File deploy.ps1",
     "deploy:prod": "powershell -File deploy.ps1 -Production",
     "deploy:quick": "powershell -File deploy.ps1 -Production -SkipBuild"
@@ -50,6 +52,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@playwright/test": "^1.64.1",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",

@@ -90,10 +90,8 @@ test('F1 login panel, login mesero y token viejo da Sesion cerrada', async ({ pa
     const old = await api(page, 'GET', '/waiter/tables', token as string);
     expect(old.status).toBe(401);
     expect(old.text).toContain('Sesión cerrada');
-    let rejected = 0;
-    page.on('response', (r) => { if (r.status() === 401 && r.url().includes('/api/waiter')) rejected++; });
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await expect.poll(() => rejected, { timeout: 30000 }).toBeGreaterThan(0);
+    // Sin recargar: la propia app detecta el rechazo en su siguiente llamada; recargar borraria el aviso. Tocar Mis Ordenes fuerza esa llamada.
+    await page.getByRole('button', { name: /Mis Órdenes/ }).click({ timeout: 3000 }).catch(() => {});
     await expect(page.getByText('Sesión cerrada').first(), 'E2E-H3: aviso de sesion cerrada en la app mesero').toBeVisible();
     await page.waitForURL((u) => u.pathname === '/mesero/login', { timeout: 20000 });
     expect(await page.evaluate(() => localStorage.getItem('waiterToken'))).toBeNull();

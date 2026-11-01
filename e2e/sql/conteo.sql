@@ -9,4 +9,5 @@ SELECT 'CONTEO mesas_ocupadas=' || (SELECT count(*) FROM tables WHERE "tenantId"
 SELECT 'CONTEO usuarios_activos=' || (SELECT count(*) FROM users WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND active AND "deletedAt" IS NULL);
 SELECT 'CONTEO productos_md5=' || (SELECT md5(string_agg(id || ':' || name || ':' || price::text || ':' || available::text || ':' || COALESCE(stock::text, '-'), ',' ORDER BY id)) FROM products WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568');
 SELECT 'CONTEO stock_movements=' || (SELECT count(*) FROM stock_movements WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568');
+SELECT 'CONTEO carta_analytics=' || (SELECT count(*) FROM carta_analytics WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568');
 SELECT 'CONTEO ingredientes_md5=' || (SELECT md5(string_agg(id || ':' || "currentStock"::text, ',' ORDER BY id)) FROM ingredients WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568');

@@ -138,7 +138,7 @@ try {
     if (!sinMontaje || !existsSync(resolve(here, '.dist/index.html'))) await subirPreview();
   }
   antes = conteo();
-  if (antes.length !== 11) throw new Error(`conteo inicial incompleto (${antes.length} de 11)`);
+  if (antes.length !== 12) throw new Error(`conteo inicial incompleto (${antes.length} de 12)`);
   console.log(`conteo antes:\n${antes.join('\n')}`);
   const t0 = Date.now();
   rc = correrPlaywright();

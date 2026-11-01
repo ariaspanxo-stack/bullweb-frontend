@@ -4,6 +4,7 @@ CREATE TEMP TABLE _e2e_o AS SELECT id FROM orders WHERE "tenantId"::text = '6c9d
 CREATE TEMP TABLE _e2e_c AS SELECT id FROM customers WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND name ILIKE 'E2E-PW-%';
 DELETE FROM print_jobs WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND EXISTS (SELECT 1 FROM _e2e_o o WHERE print_jobs.payload LIKE '%' || o.id || '%');
 DELETE FROM payments WHERE "orderId" IN (SELECT id FROM _e2e_o);
+DELETE FROM carta_analytics a WHERE a."tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND a.event = 'order_placed' AND EXISTS (SELECT 1 FROM qr_pending_orders q WHERE q."tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND q.customer_name ILIKE 'E2E-PW-%' AND abs(extract(epoch FROM a.created_at - q.created_at)) < 5);
 DELETE FROM qr_pending_orders WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND customer_name ILIKE 'E2E-PW-%';
 DELETE FROM stock_movements WHERE reference IN (SELECT id FROM _e2e_o);
 DELETE FROM order_items WHERE "orderId" IN (SELECT id FROM _e2e_o);

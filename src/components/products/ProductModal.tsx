@@ -49,7 +49,7 @@ const AVAILABLE_TAGS = [
   { key: 'vegetariano', label: 'Vegetariano', emoji: '🥦' },
   { key: 'sin_gluten',  label: 'Sin gluten',  emoji: '🌾' },
   { key: 'picante',     label: 'Picante',     emoji: '🌶️' },
-  { key: 'popular',     label: 'Popular',     emoji: '⭐' },
+  { key: 'popular',     label: 'Más pedido',  emoji: '⭐' }, // HOTFIX 308: misma clave, nuevo nombre
   { key: 'nuevo',       label: 'Nuevo',       emoji: '🆕' },
   { key: 'oferta',      label: 'Oferta',      emoji: '🏷️' },
 ];

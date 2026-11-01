@@ -41,3 +41,39 @@ export function aaSafeColor(hex: string | null | undefined, fallback = '#C2410C'
 function toHex([r, g, b]: [number, number, number]): string {
   return '#' + [r, g, b].map((c) => Math.max(0, Math.min(255, c)).toString(16).padStart(2, '0')).join('');
 }
+
+// HOTFIX 308 — presentación de la carta QR pública.
+
+const MINOR_WORDS = new Set(['de', 'del', 'la', 'las', 'el', 'lo', 'los', 'y', 'e', 'o', 'u', 'a', 'al', 'con', 'sin', 'en', 'por', 'para']);
+// Siglas que se respetan aunque el nombre completo venga en mayúsculas
+const KNOWN_ACRONYMS = new Set(['BBQ', 'XL', 'XXL', 'IPA', 'APA', 'CC', 'ML', 'KG', 'GR', 'TV', 'AUD']);
+
+/**
+ * Title Case al mostrar ("PIZZA DE LA CASA" -> "Pizza de la Casa", "hamburguesa bbq" -> "Hamburguesa Bbq").
+ * Respeta siglas: en un nombre con minúsculas, toda palabra de 2 a 4 letras en mayúsculas (Hamburguesa BBQ);
+ * en un nombre todo en mayúsculas, solo las siglas conocidas. Palabras con dígitos o mayúsculas internas
+ * (500cc, McFlurry) quedan igual. Solo cambia lo que se ve; el dato no se toca.
+ */
+export function titleCaseName(raw: unknown): string {
+  const s = String(raw ?? '').replace(/\s+/g, ' ').trim();
+  const letters = s.replace(/[^\p{L}]/gu, '');
+  const allUpper = letters.length > 1 && letters === letters.toLocaleUpperCase('es');
+  return s.split(' ').map((w, i) => {
+    const core = w.replace(/[^\p{L}\p{N}]/gu, '');
+    if (!core || /\d/.test(core)) return w;
+    const upper = core.toLocaleUpperCase('es');
+    const lower = core.toLocaleLowerCase('es');
+    const lw = w.toLocaleLowerCase('es');
+    if (i > 0 && MINOR_WORDS.has(lower)) return lw;
+    if (core === upper && core.length >= 2 && (allUpper ? KNOWN_ACRONYMS.has(upper) : core.length <= 4)) return w;
+    if (core !== upper && core.slice(1) !== core.slice(1).toLocaleLowerCase('es')) return w;
+    const k = lw.search(/\p{L}/u);
+    return lw.slice(0, k) + lw.charAt(k).toLocaleUpperCase('es') + lw.slice(k + 1);
+  }).join(' ');
+}
+
+/** Categoría de extras/agregados por nombre: va al final de la carta y no se elige como categoría inicial. */
+export function isExtrasCategoryName(name: unknown): boolean {
+  const n = String(name ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return /\b(extras?|agregados?|adicionales?|acompanamientos?)\b/.test(n);
+}

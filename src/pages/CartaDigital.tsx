@@ -4,8 +4,8 @@ import { createPortal } from 'react-dom';
 import * as Sentry from '@sentry/react';
 import { QrOrderTracking, normalizeWhatsAppPhone, saveActiveQrOrder, readActiveQrOrder, clearActiveQrOrder, qrTrackingPath } from '../components/carta/QrOrderTracking'; // HOTFIX 272b
 import { useQrOrderStatus, type QrOrderPhase } from '../hooks/useQrOrderStatus'; // HOTFIX 272b — barra fija
-import { isCashMethodName, aaSafeColor } from '../lib/cartaUi'; // HOTFIX 304
-import { ShoppingBag, Search, ChevronLeft, ChevronRight, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail, Instagram, Facebook, Globe, MessageCircle } from 'lucide-react';
+import { isCashMethodName, aaSafeColor, titleCaseName, isExtrasCategoryName } from '../lib/cartaUi'; // HOTFIX 304 / 308
+import { ShoppingBag, Search, ChevronLeft, ChevronRight, ChevronDown, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail, Instagram, Facebook, Globe, MessageCircle } from 'lucide-react';
 
 const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
 
@@ -91,7 +91,7 @@ const TAG_CONFIG: Record<string, { label: string; emoji: string; bg: string; tex
   vegetariano: { label: 'Vegetariano', emoji: '🥦', bg: 'bg-lime-100',   text: 'text-lime-700'   },
   sin_gluten:  { label: 'Sin gluten',  emoji: '🌾', bg: 'bg-yellow-100', text: 'text-yellow-700' },
   picante:     { label: 'Picante',     emoji: '🌶️', bg: 'bg-red-100',    text: 'text-red-700'    },
-  popular:     { label: 'Popular',     emoji: '⭐', bg: 'bg-orange-100', text: 'text-orange-700' },
+  popular:     { label: 'Más pedido',  emoji: '⭐', bg: 'bg-orange-100', text: 'text-orange-700' }, // HOTFIX 308: misma clave, nuevo nombre
   nuevo:       { label: 'Nuevo',       emoji: '🆕', bg: 'bg-blue-100',   text: 'text-blue-700'   },
   oferta:      { label: 'Oferta',      emoji: '🏷️', bg: 'bg-pink-100',   text: 'text-pink-700'   },
 };
@@ -301,6 +301,9 @@ function SkeletonTabs() {
   );
 }
 
+// HOTFIX 308 — pestaña y ancla de la fila "Los más pedidos"
+const TOP_TAB_ID = '__top__';
+
 // ── ProductCard component ───────────────────────────────────────
 function ProductCard({
   product,
@@ -321,125 +324,121 @@ function ProductCard({
   isBusinessOpen?: boolean | null;
   index?:          number;
 }) {
-  // Hotfix #195 — ProductCard como TARJETA mobile-first (390px primero):
-  // foto superior full-width en móvil / thumbnail izquierda en desktop (sm:),
-  // placeholder elegante con emoji de la categoría cuando NO hay foto (PROHIBIDO el gris vacío).
-  // El nombre vive en la propia tarjeta para que el thumb nunca lo pise.
-  const isAvailable      = product.available !== false;
-  const canAdd           = isAvailable && isBusinessOpen !== false;
-  const fallbackEmoji    = product.emoji ?? '🍽️';
-  const inCart           = quantity > 0;
+  // HOTFIX 308 — tarjeta según la foto: con foto, tarjeta grande (foto arriba); sin foto, una sola fila
+  // (nombre, descripción, etiquetas y precio a la izquierda; botón a la derecha), sin placeholder.
+  // Precio en negrita sin píldora; el color del local solo en el botón. Botón de 44 px: "+" en móvil y
+  // "Agregar" desde md; con el producto en el pedido lleva el contador y aparece el "−".
+  const isAvailable = product.available !== false;
+  const canAdd      = isAvailable && isBusinessOpen !== false;
+  const inCart      = quantity > 0;
+  const [imgFailed, setImgFailed] = useState(false);
+  const hasPhoto    = !!product.image && !imgFailed;
+  const name        = titleCaseName(product.name);
 
-  return (
-    <div
-      onClick={isAvailable && onClick ? onClick : undefined}
-      className={`bw-fade-in-up bw-item-card bg-white border border-gray-100 rounded-2xl overflow-hidden transition-all duration-200
-        ${isAvailable && onClick ? 'cursor-pointer hover:-translate-y-[3px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)]' : ''}
-        ${!isAvailable ? 'opacity-80' : ''}
-      `}
-      style={{
-        animationDelay: `${Math.min(index * 40, 400)}ms`,
-        ...(isAvailable ? {} : { borderColor: 'rgba(0,0,0,0.04)' }),
-      }}
-    >
-      {/* Foto: superior en móvil (mobile-first) — thumbnail izquierda en desktop */}
-      <div className="flex flex-col sm:flex-row">
-        <div
-          className="bw-item-thumb relative flex-shrink-0 flex items-center justify-center overflow-hidden"
-          style={{ backgroundColor: `${themeColor}0d` }}
+  const actions = isAvailable ? (
+    <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+      {canAdd && inCart && (
+        <button
+          onClick={onRemove}
+          className="w-11 h-11 rounded-full border border-gray-200 bg-white flex items-center justify-center text-gray-600 hover:bg-gray-50 active:scale-95 transition-all"
+          aria-label={`Quitar ${name}`}
         >
-          {product.image ? (
-            <img
-              src={product.image}
-              alt={product.name}
-              className={`w-full h-full object-cover ${!isAvailable ? 'grayscale opacity-60' : ''}`}
-              loading="lazy"
-              onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
-            />
-          ) : (
-            /* Placeholder elegante: emoji del producto sobre fondo suave del tema */
-            <span className={`bw-item-placeholder text-4xl select-none ${!isAvailable ? 'grayscale opacity-60' : ''}`}>{fallbackEmoji}</span>
-          )}
-          {!isAvailable && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
-              <span className="text-[10px] font-bold text-white px-2 py-0.5 rounded-full bg-black/45">{product.soldOut ? 'Agotado' : 'No disponible'}</span>
-            </div>
-          )}
+          <Minus className="w-4 h-4" />
+        </button>
+      )}
+      {canAdd ? (
+        <button
+          onClick={onAdd}
+          className="bw-press relative min-w-[44px] h-11 px-3 md:px-4 rounded-full flex items-center justify-center gap-1.5 text-white text-sm font-bold shadow-sm hover:brightness-110 active:scale-95 transition-all"
+          style={{ backgroundColor: themeColor }}
+          aria-label={inCart ? `Agregar otro ${name}, llevas ${quantity}` : `Agregar ${name}`}
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden md:inline">Agregar</span>
           {inCart && (
-            <div
-              className="absolute top-1.5 right-1.5 sm:-top-1 sm:-right-1 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-white"
-              style={{ backgroundColor: themeColor }}
+            <span
+              key={quantity}
+              className="bw-pop absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1 rounded-full bg-white text-[11px] font-black flex items-center justify-center shadow"
+              style={{ color: themeColor, border: `2px solid ${themeColor}` }}
             >
               {quantity}
-            </div>
-          )}
-        </div>
-
-        {/* Cuerpo: nombre bold + descripción 1 línea + tags + precio/botón */}
-        <div className="flex-1 min-w-0 flex flex-col p-3.5">
-          <p className="font-bold text-gray-900 text-sm leading-snug">{product.name.toLowerCase().replace(/\b\w/g, (c: string) => c.toUpperCase())}</p>
-          {product.description && (
-            <p className="text-xs text-gray-500 truncate leading-relaxed mt-0.5">{product.description}</p>
-          )}
-          {product.tags && product.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-1.5">
-              {product.tags.map((tag: string) => <ProductTag key={tag} tag={tag} />)}
-            </div>
-          )}
-          {!isAvailable && (
-            <span className="inline-block mt-1.5 text-[10px] font-medium text-gray-400 px-2 py-0.5 rounded-full bg-gray-100">
-              {product.soldOut ? 'Agotado' : 'No disponible hoy'}
             </span>
           )}
+        </button>
+      ) : (
+        <span
+          className="min-w-[44px] h-11 px-3 md:px-4 rounded-full flex items-center justify-center gap-1.5 bg-gray-100 text-gray-400 text-sm font-semibold"
+          title="No se reciben pedidos ahora"
+          aria-disabled="true"
+        >
+          <Plus className="w-4 h-4" />
+          <span className="hidden md:inline">Agregar</span>
+        </span>
+      )}
+    </div>
+  ) : null;
 
-          {/* Precio prominente + botón + alineados al pie de la tarjeta */}
-          <div className="flex items-center justify-between mt-2.5" onClick={e => e.stopPropagation()}>
-            {!isAvailable ? (
-              <span className="font-bold text-gray-400 text-sm line-through">{fmtCLP(product.price)}</span>
-            ) : (
-              <span className="font-extrabold text-base rounded-lg px-2 py-0.5" style={{ backgroundColor: `${themeColor}15`, color: themeColor }}>{fmtCLP(product.price)}</span>
-            )}
-            {isAvailable && (
-              canAdd ? (
-                inCart ? (
-                  <div className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-1">
-                    <button
-                      onClick={onRemove}
-                      className="w-11 h-11 rounded-full bg-white shadow-sm flex items-center justify-center text-gray-500 hover:bg-gray-50 active:scale-95 transition-all"
-                      aria-label={`Quitar ${product.name}`}
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <span className="font-bold text-gray-900 w-5 text-center text-sm">{quantity}</span>
-                    <button
-                      onClick={onAdd}
-                      className="bw-press w-11 h-11 rounded-full shadow-sm flex items-center justify-center text-white hover:brightness-110 active:scale-95 transition-all"
-                      style={{ backgroundColor: themeColor }}
-                      aria-label={`Agregar ${product.name}`}
-                    >
-                      <Plus className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={onAdd}
-                    className="bw-press w-12 h-12 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex-shrink-0"
-                    style={{ backgroundColor: themeColor, boxShadow: `0 4px 14px ${themeColor}55` }}
-                    aria-label={`Agregar ${product.name}`}
-                  >
-                    <Plus className="w-4 h-4 text-white" />
-                  </button>
-                )
-              ) : (
-                <div
-                  className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-100 opacity-40"
-                  title="Negocio cerrado"
-                >
-                  <Plus className="w-4 h-4 text-gray-400" />
-                </div>
-              )
-            )}
+  const price = isAvailable
+    ? <span className="font-bold text-gray-900 text-base">{fmtCLP(product.price)}</span>
+    : <span className="font-bold text-gray-400 text-sm line-through">{fmtCLP(product.price)}</span>;
+
+  const info = (
+    <>
+      <p className="font-bold text-gray-900 text-[15px] leading-snug">{name}</p>
+      {product.description && (
+        <p className="text-[13px] text-gray-500 leading-snug mt-0.5 line-clamp-2">{product.description}</p>
+      )}
+      {product.tags && product.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-1.5">
+          {product.tags.map((tag: string) => <ProductTag key={tag} tag={tag} />)}
+        </div>
+      )}
+      {!isAvailable && (
+        <span className="inline-block mt-1.5 text-[11px] font-semibold text-gray-600 px-2 py-0.5 rounded-full bg-gray-100">
+          {product.soldOut ? 'Agotado' : 'No disponible hoy'}
+        </span>
+      )}
+    </>
+  );
+
+  const shellClass = `bw-fade-in-up bg-white border border-gray-100 rounded-2xl overflow-hidden transition-shadow duration-200
+    ${isAvailable && onClick ? 'cursor-pointer hover:shadow-[0_6px_18px_rgba(0,0,0,0.10)]' : ''}`;
+  const shellStyle = { animationDelay: `${Math.min(index * 40, 400)}ms` };
+  const handleClick = isAvailable && onClick ? onClick : undefined;
+
+  if (!hasPhoto) {
+    return (
+      <div onClick={handleClick} className={`${shellClass} p-3.5 flex items-center gap-3`} style={shellStyle}>
+        <div className={`flex-1 min-w-0 ${!isAvailable ? 'opacity-70' : ''}`}>
+          {info}
+          <div className="mt-1.5">{price}</div>
+        </div>
+        {actions}
+      </div>
+    );
+  }
+
+  return (
+    <div onClick={handleClick} className={shellClass} style={shellStyle}>
+      <div className="relative w-full aspect-[16/10] xl:aspect-[2/1] bg-gray-100">
+        <img
+          src={product.image!}
+          alt={name}
+          className={`w-full h-full object-cover ${!isAvailable ? 'grayscale opacity-60' : ''}`}
+          loading="lazy"
+          onError={() => setImgFailed(true)}
+        />
+        {!isAvailable && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <span className="text-[11px] font-bold text-white px-2 py-0.5 rounded-full bg-black/55">{product.soldOut ? 'Agotado' : 'No disponible'}</span>
           </div>
+        )}
+      </div>
+      <div className="p-3.5">
+        <div className={!isAvailable ? 'opacity-70' : ''}>{info}</div>
+        <div className="flex items-center justify-between gap-3 mt-2.5">
+          {price}
+          {actions}
         </div>
       </div>
     </div>
@@ -672,7 +671,7 @@ function CartaHero({
           backgroundPosition: bannerUrl ? 'center' : undefined,
           backgroundRepeat: bannerUrl ? 'no-repeat' : undefined,
         }}
-        className="h-[clamp(280px,38vh,420px)] md:h-[400px]"
+        className="h-[40vh] min-h-[220px] md:h-[360px]" /* HOTFIX 308: portada 40 % del alto en móvil */
       >
         {/* Overlay degradado 2 stops cuando hay banner — legibilidad garantizada (Amend #197: recalibrado a la nueva altura, zona oscura baja antes) */}
         {bannerUrl && <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, transparent 0%, ${themeColor}22 42%, #09090b 96%)` }} />}
@@ -707,24 +706,15 @@ function CartaHero({
         <div className="flex-1 min-w-0">
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-white leading-tight truncate" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.6)' }}>{displayName}</h1>
           {tagline && <span className="inline-block text-sm text-white/90 font-medium mt-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur border border-white/20" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}>{tagline}</span>}
-          {isOpen !== null && (
+          {/* HOTFIX 308: el cerrado se avisa una sola vez (barra fija arriba); aquí solo "Abierto ahora" */}
+          {isOpen === true && (
             <div
               className="inline-flex items-center gap-1.5 mt-2 py-1 px-2.5 rounded-full text-[11px] font-semibold"
-              style={{
-                backgroundColor: isOpen ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-                border: `1px solid ${isOpen ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
-                backdropFilter: 'blur(4px)',
-              }}
+              style={{ backgroundColor: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)' }}
+              title={nextChange || undefined}
             >
-              <span className={`w-1.5 h-1.5 rounded-full ${isOpen ? 'animate-pulse' : ''}`} style={{ backgroundColor: isOpen ? '#22c55e' : '#ef4444' }} />
-              <span style={{ color: isOpen ? '#86efac' : '#fca5a5' }}>
-                {isOpen
-                  ? `🟢 Abierto ahora`
-                  : nextChange
-                    ? `🔴 Cerrado · ${nextChange}`
-                    : '🔴 Cerrado'
-                }
-              </span>
+              <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: '#22c55e' }} />
+              <span className="text-white">Abierto ahora</span>
             </div>
           )}
         </div>
@@ -770,45 +760,6 @@ function CartaNavbar({
           </button>
         )}
       </div>
-    </div>
-  );
-}
-
-// ── CartaFloatingCart ────────────────────────────────────────────────
-function CartaFloatingCart({
-  count,
-  total,
-  themeColor,
-  onClick,
-}: {
-  count:      number;
-  total:      number;
-  themeColor: string;
-  onClick:    () => void;
-}) {
-  if (count === 0) return null;
-  return (
-    <div className="fixed bottom-6 left-0 right-0 z-40 flex justify-center px-4">
-      <button
-        onClick={onClick}
-        className="w-full max-w-[420px] flex items-center justify-between px-5 py-4 rounded-2xl text-white font-bold active:scale-[0.97] transition-all"
-        style={{
-          background: `linear-gradient(135deg, ${themeColor}, ${darkenColor(themeColor, 40)})`,
-          boxShadow: `0 8px 32px ${themeColor}55`,
-        }}
-      >
-        <span
-          key={count}
-          className="bw-pop bw-badge-pulse bw-cart-badge w-7 h-7 rounded-full flex items-center justify-center text-sm font-black"
-          style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
-        >
-          {count}
-        </span>
-        <span className="flex items-center gap-2">
-          <ShoppingCart className="w-4 h-4" /> Ver pedido
-        </span>
-        <span className="font-black">{fmtCLP(total)}</span>
-      </button>
     </div>
   );
 }
@@ -876,12 +827,12 @@ function CartaFloatingBar({
               className={`bw-pop bw-badge-pulse bw-cart-badge w-7 h-7 rounded-full flex items-center justify-center text-sm font-black shrink-0 ${pulse ? 'bw-bar-pulse' : ''}`}
               style={{ backgroundColor: 'rgba(0,0,0,0.25)' }}
             >
-              {count}
+              <ShoppingCart className="w-4 h-4" />
             </span>
-            <ShoppingCart className="w-4 h-4 shrink-0" />
-            <span className="font-bold truncate">Ver pedido</span>
+            {/* HOTFIX 308: "Ver pedido · N ítems · $X" (el número va en el texto; el ícono conserva el pulso) */}
+            <span className="font-bold truncate">Ver pedido · {count} {count === 1 ? 'ítem' : 'ítems'}</span>
           </span>
-          <span className="font-black shrink-0">{fmtCLP(total)}</span>
+          <span className="font-black shrink-0">· {fmtCLP(total)}</span>
         </button>
       </div>
     </>,
@@ -1626,7 +1577,7 @@ function CartSheet({
               }
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">{item.product.name}</p>
+              <p className="text-sm font-medium text-white truncate">{titleCaseName(item.product.name)}</p>
               <p className="text-xs font-semibold" style={{ color: themeColor }}>{fmtCLP(item.product.price)}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -1800,6 +1751,8 @@ export default function CartaDigital() {
   const [activeTag,     setActiveTag]     = useState<string | null>(null);
   const [modalQty,     setModalQty]     = useState(1);
   const [showHours,    setShowHours]    = useState(false); // Hotfix #139 — horario semanal expandible
+  const [topProductIds, setTopProductIds] = useState<string[]>([]); // HOTFIX 308 — "Los más pedidos" (backend, 30 días)
+  const [showInfo,      setShowInfo]      = useState(false);        // HOTFIX 308 — acordeón "Info y horarios" (móvil)
   // ── HOTFIX #233 (F3) — estado del selector de modificadores del modal ──
   // groupId → optionIds seleccionadas; se resetea al abrir/cerrar el modal.
   const [selectedModOptions, setSelectedModOptions] = useState<Record<string, string[]>>({});
@@ -1913,9 +1866,14 @@ export default function CartaDigital() {
         if (cancelled) return;
         const cats: Category[]    = json.data?.categories    ?? json.data ?? [];
         const cfg:  CartaSettings = json.data?.cartaSettings ?? null;
+        const top:  string[]      = Array.isArray(json.data?.topProductIds) ? json.data.topProductIds : [];
         setCategories(cats);
+        setTopProductIds(top);
         if (cfg) setCartaSettings(cfg);
-        if (cats.length > 0) setActiveTab(cats[0].id);
+        // HOTFIX 308: categoría inicial = "Los más pedidos" si hay ventas; si no, la primera que no sea de extras
+        const firstMain = cats.find(c => !isExtrasCategoryName(c.name)) ?? cats[0];
+        if (top.length > 0) setActiveTab(TOP_TAB_ID);
+        else if (firstMain) setActiveTab(firstMain.id);
       } catch {
         if (cancelled) return;
         if (retryCount < 2) {
@@ -1985,12 +1943,25 @@ export default function CartaDigital() {
     };
   }, [loading, categories, slugFromPath]);
 
+  // HOTFIX 308: el orden lo define el local; solo las categorías de extras/agregados (por nombre) van al final
+  const orderedCategories = useMemo<Category[]>(
+    () => [...categories.filter(c => !isExtrasCategoryName(c.name)), ...categories.filter(c => isExtrasCategoryName(c.name))],
+    [categories],
+  );
+
+  // HOTFIX 308: productos de "Los más pedidos" en el orden del ranking (solo los publicados y disponibles)
+  const topProducts = useMemo<Product[]>(() => {
+    const byId = new Map<string, Product>();
+    for (const c of categories) for (const p of c.products) if (p.available !== false) byId.set(p.id, p);
+    return topProductIds.map(id => byId.get(id)).filter((p): p is Product => !!p);
+  }, [categories, topProductIds]);
+
   // Filtro — con useMemo para evitar recalcular en cada render
   const filtered = useMemo<Category[]>(() => {
     const q = search.trim().toLowerCase();
     let base: Category[];
     if (q) {
-      base = categories
+      base = orderedCategories
         .map(c => ({
           ...c,
           products: c.products.filter(p =>
@@ -2001,7 +1972,7 @@ export default function CartaDigital() {
         .filter(c => c.products.length > 0);
     } else {
       // Mostrar todas las categorías en scroll continuo (sin filtro por tab)
-      base = categories;
+      base = orderedCategories;
     }
     if (hideUnavailable) {
       base = base
@@ -2014,7 +1985,8 @@ export default function CartaDigital() {
         .filter(c => c.products.length > 0);
     }
     return base;
-  }, [categories, activeTab, search, activeTag, hideUnavailable]);
+  }, [orderedCategories, search, activeTag, hideUnavailable]);
+  const showTopRow = topProducts.length > 0 && !search.trim() && !activeTag;
 
   const filteredCount = filtered.reduce((s, c) => s + c.products.length, 0);
 
@@ -2077,6 +2049,35 @@ export default function CartaDigital() {
     );
   }
 
+  // HOTFIX 308 — horario de hoy (dato, no aviso) y aviso único de "no se reciben pedidos"
+  const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  const todayH = hours && todayIdx >= 0 ? hours[DAY_KEYS[todayIdx]] : null;
+  const todayHoursLabel = !hours
+    ? 'Horario no disponible'
+    : todayH?.enabled ? `Hoy ${todayH.open} – ${todayH.close}` : 'Hoy cerrado';
+  const closedNotice: string | null = isOpen === false
+    ? `Cerrado${nextChange ? ` · ${nextChange}` : ''} · Puedes ver la carta, pero no pedir ahora`
+    : orderingBlocked;
+  const weeklyHours = hours ? (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[13px]">
+      {['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'].map(d => {
+        const label: Record<string, string> = { monday: 'Lunes', tuesday: 'Martes', wednesday: 'Miércoles', thursday: 'Jueves', friday: 'Viernes', saturday: 'Sábado', sunday: 'Domingo' };
+        const h       = hours[d];
+        const isToday = todayIdx === DAY_KEYS.indexOf(d);
+        return (
+          <div
+            key={d}
+            className={`flex items-center justify-between px-3 py-2 rounded-lg border ${isToday ? 'font-semibold' : 'border-gray-100 bg-gray-50'}`}
+            style={isToday ? { borderColor: themeColor, backgroundColor: `${themeColor}14` } : undefined}
+          >
+            <span className="text-gray-800">{label[d]}{isToday ? ' · hoy' : ''}</span>
+            <span className="text-gray-600">{h?.enabled ? `${h.open} – ${h.close}` : 'Cerrado'}</span>
+          </div>
+        );
+      })}
+    </div>
+  ) : null;
+
   return (
     <div className="min-h-screen text-white bw-reveal" style={{ backgroundColor: '#09090b' }}>
       {/* HOTFIX 272b — pedido QR activo (oculta mientras el sheet del carrito está abierto) */}
@@ -2094,11 +2095,11 @@ export default function CartaDigital() {
         bannerUrl={cartaSettings?.bannerUrl ?? null}
       />
 
-      {/* ── Barra de información de contacto (chips) ── */}
+      {/* ── Barra de información de contacto (chips) — HOTFIX 308: desde md; en móvil va en el acordeón "Info y horarios" ── */}
       {(cartaSettings?.address || cartaSettings?.phone || cartaSettings?.email || isOpen !== null) && (
-        <div className="relative z-10 -mt-6 mx-4 md:mx-8 lg:mx-auto lg:max-w-5xl bg-white rounded-2xl shadow-xl border border-gray-200 px-4 py-3 flex flex-wrap items-center justify-center gap-2 text-[13px] text-gray-700">
+        <div className="hidden md:flex relative z-10 -mt-6 mx-8 lg:mx-auto lg:max-w-5xl bg-white rounded-2xl shadow-xl border border-gray-200 px-4 py-3 flex-wrap items-center justify-center gap-2 text-[13px] text-gray-700">
             {cartaSettings?.address && (
-              <div className="flex items-center gap-1.5 max-w-full sm:max-w-[280px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
+              <div className="flex items-center gap-1.5 max-w-[280px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
                 <MapPin className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
                 <span className="truncate">{cartaSettings.address}{cartaSettings.city ? `, ${cartaSettings.city}` : ''}</span>
               </div>
@@ -2107,13 +2108,11 @@ export default function CartaDigital() {
               type="button"
               onClick={() => setShowHours(v => !v)}
               className="flex items-center gap-1.5 px-3 min-h-[44px] rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors cursor-pointer"
+              aria-expanded={showHours}
             >
               <Clock className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
-              <span className="whitespace-nowrap">
-              {isOpen !== null
-                    ? (isOpen ? `Abierto · ${nextChange}` : `Cerrado · ${nextChange}`)
-                    : 'Horario no disponible'}
-              </span>
+              <span className="whitespace-nowrap">{todayHoursLabel}</span>
+              <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${showHours ? 'rotate-180' : ''}`} />
             </button>
             {cartaSettings?.phone && (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
@@ -2134,7 +2133,7 @@ export default function CartaDigital() {
               </a>
             )}
             {cartaSettings?.email && (
-              <div className="hidden sm:flex items-center gap-1.5 max-w-[240px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
+              <div className="flex items-center gap-1.5 max-w-[240px] px-3 py-1.5 rounded-full bg-gray-50 border border-gray-100 hover:border-gray-200 transition-colors">
                 <Mail className="w-3.5 h-3.5 flex-shrink-0" style={{ color: themeColor }} />
                 <span className="truncate">{cartaSettings.email}</span>
               </div>
@@ -2142,9 +2141,9 @@ export default function CartaDigital() {
           </div>
       )}
 
-      {/* ── Hotfix #139 — Horario semanal expandible ── */}
+      {/* ── Hotfix #139 — Horario semanal expandible (desde md) ── */}
       {showHours && hours && (
-        <div className="relative z-10 mx-4 md:mx-8 lg:mx-auto lg:max-w-5xl mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 p-4">
+        <div className="hidden md:block relative z-10 mx-8 lg:mx-auto lg:max-w-5xl mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
               <Clock className="w-4 h-4" style={{ color: themeColor }} /> Horario semanal
@@ -2152,108 +2151,121 @@ export default function CartaDigital() {
             <button
               type="button"
               onClick={() => setShowHours(false)}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="min-w-[44px] min-h-[44px] flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
               aria-label="Cerrar horario"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[13px]">
-            {['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map(d => {
-              const label: Record<string, string> = { monday: 'Lunes', tuesday: 'Martes', wednesday: 'Miércoles', thursday: 'Jueves', friday: 'Viernes', saturday: 'Sábado', sunday: 'Domingo' };
-              const h       = hours[d];
-              const isToday = todayIdx === ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'].indexOf(d);
-              return (
-                <div
-                  key={d}
-                  className={`flex items-center justify-between px-3 py-2 rounded-lg border ${isToday ? 'font-semibold' : 'border-gray-100 bg-gray-50'}`}
-                  style={isToday ? { borderColor: themeColor, backgroundColor: `${themeColor}14` } : undefined}
-                >
-                  <span className="text-gray-800">{label[d]}{isToday ? ' · hoy' : ''}</span>
-                  <span className="text-gray-600">{h?.enabled ? `${h.open} – ${h.close}` : 'Cerrado'}</span>
-                </div>
-              );
-            })}
-          </div>
+          {weeklyHours}
         </div>
       )}
 
-      {/* ── 3. Barra de búsqueda + Categorías (full-width sticky) */}
-      <div className="sticky top-0 z-40 shadow-sm border-b border-gray-200/80" style={{ backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(24px) saturate(1.5)', WebkitBackdropFilter: 'blur(24px) saturate(1.5)' }}>
-        <CartaNavbar
-          searchQuery={search}
-          onSearchChange={setSearch}
-          categories={categories}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          themeColor={themeColor}
-        />
-        {categories.length > 1 && (
-          <div className="w-full px-6 py-3 overflow-x-auto scrollbar-hide scroll-smooth flex gap-2" style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}>
-            {categories.map(cat => {
-              const catThumb = cat.image ?? null;
-              // Hotfix #140 — jerarquía: imagen → emoji por nombre → emoji derivado de producto → default
-              const catEmoji = getEmojiForCategory(cat.name)
-                ?? cat.products.find(p => p.emoji)?.emoji
-                ?? '🍽️';
-              return (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  setActiveTab(cat.id);
-                  document.getElementById(`cat-${cat.id}`)?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className={`shrink-0 whitespace-nowrap flex items-center gap-2 pl-2 pr-4 py-1.5 min-h-[44px] rounded-full text-sm font-semibold transition-all duration-200 ${
-                  activeTab === cat.id
-                    ? 'text-white font-bold'
-                    : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                }`}
-                style={activeTab === cat.id
-                  ? { backgroundColor: themeColor, boxShadow: `0 4px 14px ${themeColor}66`, transform: 'scale(1.02)' }
-                  : undefined}
+      {/* ── HOTFIX 308 — móvil: datos del local en el acordeón "Info y horarios" ── */}
+      <div className="md:hidden relative z-10 -mt-4 mx-4 bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden text-gray-700">
+        <button
+          type="button"
+          onClick={() => setShowInfo(v => !v)}
+          aria-expanded={showInfo}
+          className="w-full min-h-[48px] px-4 flex items-center justify-between gap-3 text-left"
+        >
+          <span className="flex items-center gap-2 min-w-0">
+            <Clock className="w-4 h-4 shrink-0" style={{ color: themeColor }} />
+            <span className="text-sm font-bold text-gray-900 shrink-0">Info y horarios</span>
+            <span className="text-xs text-gray-500 truncate">{todayHoursLabel}</span>
+          </span>
+          <ChevronDown className={`w-5 h-5 shrink-0 text-gray-500 transition-transform ${showInfo ? 'rotate-180' : ''}`} />
+        </button>
+        {showInfo && (
+          <div className="px-4 pb-4 pt-3 space-y-2 text-[13px] border-t border-gray-100">
+            {cartaSettings?.address && (
+              <p className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 mt-0.5 shrink-0" style={{ color: themeColor }} />
+                <span>{cartaSettings.address}{cartaSettings.city ? `, ${cartaSettings.city}` : ''}</span>
+              </p>
+            )}
+            {cartaSettings?.phone && (
+              <a href={`tel:${cartaSettings.phone.replace(/[^\d+]/g, '')}`} className="flex items-center gap-2 min-h-[44px]">
+                <Phone className="w-4 h-4 shrink-0" style={{ color: themeColor }} />
+                <span>{cartaSettings.phone}</span>
+              </a>
+            )}
+            {cartaSettings?.email && (
+              <p className="flex items-center gap-2 min-w-0">
+                <Mail className="w-4 h-4 shrink-0" style={{ color: themeColor }} />
+                <span className="truncate">{cartaSettings.email}</span>
+              </p>
+            )}
+            {cartaSettings?.phone && (
+              <a
+                href={`https://wa.me/${cartaSettings.phone.replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 min-h-[44px] rounded-full bg-[#25D366]/10 border border-[#128C7E]"
               >
-                {(catThumb || catEmoji) && (
-                  <span className={`w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 transition-all ${activeTab === cat.id ? 'ring-2 ring-white/60' : 'bg-gray-100'}`}>
-                    {catThumb
-                      ? <img src={catThumb} alt="" className="w-full h-full object-cover" loading="lazy" />
-                      : <span className="text-sm leading-none">{catEmoji}</span>
-                    }
-                  </span>
-                )}
-                {cat.name}
-              </button>
-              );
-            })}
+                <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                <span className="font-medium text-[#128C7E]">WhatsApp</span>
+              </a>
+            )}
+            {hours ? <div className="pt-1">{weeklyHours}</div> : <p className="text-gray-500">Horario no disponible</p>}
           </div>
         )}
       </div>
 
-      {/* Banner negocio cerrado */}
-      {isOpen === false && (
-        <div
-          className="px-4 py-3 flex items-center gap-3 max-w-xl mx-auto w-full"
-          style={{ backgroundColor: 'rgba(239,68,68,0.08)', borderBottom: '1px solid rgba(239,68,68,0.15)', borderTop: '1px solid rgba(239,68,68,0.15)' }}
-        >
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-            style={{ backgroundColor: 'rgba(239,68,68,0.15)' }}
-          >
-            <Clock className="w-4 h-4" style={{ color: '#f87171' }} />
+      {/* ── 3. Barra de búsqueda + Categorías (full-width sticky) — HOTFIX 308: el aviso de cerrado vive aquí, una sola vez */}
+      <div className="sticky top-0 z-40 mt-3 shadow-sm border-b border-gray-200/80" style={{ backgroundColor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(24px) saturate(1.5)', WebkitBackdropFilter: 'blur(24px) saturate(1.5)' }}>
+        {closedNotice && (
+          <div role="status" className="px-4 py-2 text-[13px] font-medium text-center border-b" style={{ backgroundColor: '#FEF2F2', color: '#991B1B', borderColor: '#FECACA' }}>
+            {closedNotice}
           </div>
-          <div>
-            <p className="text-[13px] font-semibold" style={{ color: '#fca5a5' }}>Negocio cerrado</p>
-            {nextChange && (
-              <p className="text-[11px] text-zinc-400">{nextChange}</p>
-            )}
+        )}
+        <div className="pt-3">
+          <CartaNavbar
+            searchQuery={search}
+            onSearchChange={setSearch}
+            categories={orderedCategories}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            themeColor={themeColor}
+          />
+        </div>
+        {(orderedCategories.length > 1 || topProducts.length > 0) && (
+          <div className="w-full px-4 md:px-6 pb-3 overflow-x-auto scrollbar-hide scroll-smooth flex gap-2" style={{ scrollSnapType: 'x proximity', scrollbarWidth: 'none' }}>
+            {[
+              ...(topProducts.length > 0 ? [{ id: TOP_TAB_ID, name: 'Los más pedidos', thumb: null as string | null, emoji: '🔥' }] : []),
+              ...orderedCategories.map(cat => ({
+                id: cat.id,
+                name: titleCaseName(cat.name),
+                thumb: cat.image ?? null,
+                // Hotfix #140 — jerarquía: imagen → emoji por nombre → emoji derivado de producto → default
+                emoji: getEmojiForCategory(cat.name) ?? cat.products.find(p => p.emoji)?.emoji ?? '🍽️',
+              })),
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  document.getElementById(tab.id === TOP_TAB_ID ? 'cat-top' : `cat-${tab.id}`)?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className={`shrink-0 whitespace-nowrap flex items-center gap-2 pl-2 pr-4 py-1.5 min-h-[44px] rounded-full text-sm font-semibold transition-colors duration-200 ${
+                  activeTab === tab.id
+                    ? 'text-white font-bold'
+                    : 'bg-white border border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                }`}
+                style={activeTab === tab.id ? { backgroundColor: themeColor } : undefined}
+              >
+                <span className={`w-7 h-7 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${activeTab === tab.id ? 'ring-2 ring-white/60' : 'bg-gray-100'}`}>
+                  {tab.thumb
+                    ? <img src={tab.thumb} alt="" className="w-full h-full object-cover" loading="lazy" />
+                    : <span className="text-sm leading-none">{tab.emoji}</span>
+                  }
+                </span>
+                {tab.name}
+              </button>
+            ))}
           </div>
-        </div>
-      )}
-      {/* HOTFIX 304 (B5-06): cuenta del local inactiva -> la carta se ve, sin pedidos */}
-      {isOpen !== false && !canOrder && (
-        <div role="status" className="px-4 py-3 max-w-xl mx-auto w-full" style={{ backgroundColor: 'rgba(239,68,68,0.08)', borderBottom: '1px solid rgba(239,68,68,0.15)', borderTop: '1px solid rgba(239,68,68,0.15)' }}>
-          <p className="text-[13px] font-semibold" style={{ color: '#fca5a5' }}>{orderingBlocked}</p>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* ── 4. Split-view: Productos + Carrito ─────────── */}
       <div className="w-full flex flex-col lg:flex-row min-h-screen">
@@ -2268,11 +2280,13 @@ export default function CartaDigital() {
         {availableTags.length > 0 && (
           <div className="space-y-2">
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
+              {/* HOTFIX 308: filtro activo con el color del local; 44 px de alto */}
               <button
                 onClick={() => setActiveTag(null)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  !activeTag ? 'bg-gray-900 text-white ring-1 ring-gray-700' : 'bg-white border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                className={`shrink-0 px-4 min-h-[44px] rounded-full text-sm font-medium border transition-colors ${
+                  !activeTag ? 'text-white border-transparent' : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
                 }`}
+                style={!activeTag ? { backgroundColor: themeColor } : undefined}
               >
                 Todos
               </button>
@@ -2283,12 +2297,13 @@ export default function CartaDigital() {
                   <button
                     key={tag}
                     onClick={() => setActiveTag(activeTag === tag ? null : tag)}
-                    className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium
-                      transition-all flex items-center gap-1 border active:scale-95
+                    className={`shrink-0 px-4 min-h-[44px] rounded-full text-sm font-medium
+                      transition-colors flex items-center gap-1 border active:scale-95
                       ${ activeTag === tag
-                        ? `${cfg.bg} ${cfg.text} border-current`
-                        : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
+                        ? 'text-white border-transparent'
+                        : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
                       }`}
+                    style={activeTag === tag ? { backgroundColor: themeColor } : undefined}
                   >
                     {cfg.emoji} {cfg.label}
                   </button>
@@ -2307,14 +2322,42 @@ export default function CartaDigital() {
           </div>
         )}
 
+        {/* HOTFIX 308 — fila "Los más pedidos" (top 6 por ventas de 30 días, calculado en el backend) */}
+        {showTopRow && (
+          <div id="cat-top" className="scroll-mt-40">
+            <div className="mt-4 mb-3 flex items-center gap-2">
+              <span className="w-1 h-6 rounded-full" style={{ backgroundColor: themeColor }} />
+              <h2 className="text-lg font-bold text-gray-900">🔥 Los más pedidos</h2>
+            </div>
+            {/* móvil: fila deslizable; desde md: grilla como las categorías (2 y 3 columnas) */}
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide snap-x snap-mandatory scroll-px-4 -mx-4 px-4 pb-1 md:mx-0 md:px-0 md:scroll-px-0 md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-4 md:items-start md:overflow-visible" style={{ scrollbarWidth: 'none' }}>
+              {topProducts.map((product, idx) => (
+                <div key={product.id} className="snap-start shrink-0 w-[78%] sm:w-[300px] md:w-auto">
+                  <ProductCard
+                    product={product}
+                    quantity={cartQtyMap[product.id] ?? 0}
+                    themeColor={themeColor}
+                    isBusinessOpen={canOrder ? isOpen : false}
+                    index={idx}
+                    onAdd={() => (needsSelector(product) ? setSelected(product) : addToCart(product))}
+                    onRemove={() => updateCartItem(product.id, -1)}
+                    onClick={() => setSelected(product)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {filtered.map(cat => (
-          <div key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-28">
+          <div key={cat.id} id={`cat-${cat.id}`} className="scroll-mt-40">
             <div className="mt-8 mb-4 flex items-center gap-2">
               <span className="w-1 h-6 rounded-full" style={{ backgroundColor: themeColor }} />
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-900">{cat.name}</h2>
-              <span className="text-xs text-gray-400 ml-auto">{cat.products.length} producto{cat.products.length !== 1 ? 's' : ''}</span>
+              <h2 className="text-lg font-bold text-gray-900">{titleCaseName(cat.name)}</h2>
+              <span className="text-xs text-gray-500 ml-auto">{cat.products.length} producto{cat.products.length !== 1 ? 's' : ''}</span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* HOTFIX 308: 3 columnas desde 1280 px; items-start para que la tarjeta compacta no se estire */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4 items-start">
               {cat.products.map((product, idx) => (
                 <ProductCard
                   key={product.id}
@@ -2395,7 +2438,7 @@ export default function CartaDigital() {
                     }
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{item.product.name}</p>
+                    <p className="text-sm font-semibold text-gray-900 truncate">{titleCaseName(item.product.name)}</p>
                     {/* HOTFIX #233 (F3) — modifiers seleccionados con su delta */}
                     {(item.modifiers?.length ?? 0) > 0 && (
                       <div className="mt-0.5">
@@ -2527,17 +2570,8 @@ export default function CartaDigital() {
       </div>
     </footer>
 
-    {/* Botón flotante del carrito (solo mobile) */}
-      <div className="lg:hidden">
-      {!showCart && (
-        <CartaFloatingCart
-          count={totalCartQty}
-          total={totalCartAmt}
-          themeColor={themeColor}
-          onClick={() => setShowCart(true)}
-        />
-      )}
-      </div>
+    {/* HOTFIX 308: se quitó el botón flotante viejo (CartaFloatingCart): quedaba anclado al final del
+        documento por el transform de .bw-reveal y duplicaba la barra de abajo */}
 
       {/* HOTFIX #239 — barra flotante full-width SIEMPRE visible al agregar
           ítems (portal a document.body: inmune al containing-block que el
@@ -2661,7 +2695,7 @@ export default function CartaDigital() {
               {/* ── Info del producto ── */}
               <div className="p-6 pb-0">
                 <h2 className="text-2xl font-extrabold text-gray-900">
-                  {selected.name}
+                  {titleCaseName(selected.name)}
                 </h2>
                 {selected.description && (
                   <p className="text-gray-500 mt-2 leading-relaxed">{selected.description}</p>
@@ -2679,8 +2713,7 @@ export default function CartaDigital() {
                   </span>
                 )}
                 <p
-                  className={`text-3xl font-extrabold mt-4 inline-block rounded-xl px-3 py-1 ${selected.available === false ? 'text-gray-400 line-through' : ''}`}
-                  style={selected.available !== false ? { color: themeColor, backgroundColor: `${themeColor}15` } : undefined}
+                  className={`text-3xl font-bold mt-4 ${selected.available === false ? 'text-gray-400 line-through' : 'text-gray-900'}`} /* HOTFIX 308: precio en negrita sin píldora */
                 >
                   {fmtCLP(selected.price)}
                 </p>

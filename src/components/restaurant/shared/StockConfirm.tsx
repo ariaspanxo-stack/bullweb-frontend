@@ -23,12 +23,18 @@ export function useStockConfirm() {
     // HOTFIX 307 (B6-09): producto con receta cuyos ingredientes quedarian en negativo: avisa y pide confirmar.
     // Sin red o sin receta sigue como antes: el aviso nunca frena una venta por si mismo.
     const qty = (added.current.get(product.id) ?? 0) + 1;
+    let settled = false;
+    const proceed = () => { if (settled) return; settled = true; added.current.set(product.id, qty); go(); };
+    // Sin respuesta en 1,5 s se agrega igual: con mala red el POS no queda esperando el aviso
+    setTimeout(proceed, 1500);
     posService.checkProductStock(product.id, qty)
       .then(shortages => {
-        if (!shortages.length) { added.current.set(product.id, qty); go(); return; }
+        if (settled) return;
+        if (!shortages.length) { proceed(); return; }
+        settled = true;
         setPending({ product, go: () => { added.current.set(product.id, qty); go(); }, shortages });
       })
-      .catch(() => { added.current.set(product.id, qty); go(); });
+      .catch(proceed);
   };
 
   const dialog = pending

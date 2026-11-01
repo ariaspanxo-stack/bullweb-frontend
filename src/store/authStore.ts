@@ -77,6 +77,12 @@ export const useAuthStore = create<AuthState>()(
         } else {
           localStorage.removeItem('bw_session_expired');
         }
+        // HOTFIX 306: avisar al servidor para que invalide la sesion (sube la version del usuario)
+        const tk = localStorage.getItem('bullweb_token') || get().token;
+        if (tk) {
+          const API = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
+          fetch(`${API}/auth/logout`, { method: 'POST', keepalive: true, headers: { Authorization: `Bearer ${tk}` } }).catch(() => {});
+        }
         // Limpiar la clave canónica de token usada por api.ts
         localStorage.removeItem('bullweb_token');
         authService.logout();

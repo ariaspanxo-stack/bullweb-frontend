@@ -60,6 +60,17 @@ export function MeseroLayout({
               // preservando el tenant del localStorage (misma mecánica que
               // WaiterProtectedRoute.buildLoginUrl)
               const tenant = localStorage.getItem('waiterTenant');
+              // HOTFIX 306: cerrar sesion invalida el token en el servidor y lo borra del equipo (B4-18)
+              const token = localStorage.getItem('waiterToken');
+              if (token) {
+                const API = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
+                fetch(`${API}/waiter/logout`, {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${token}`, ...(tenant ? { 'x-tenant-slug': tenant } : {}) },
+                }).catch(() => {});
+              }
+              localStorage.removeItem('waiterToken');
+              localStorage.removeItem('waiterInfo');
               navigate(tenant ? `/mesero/login?tenant=${tenant}` : '/mesero/login');
             }}
             className="p-2 rounded-lg hover:bg-orange-400 transition-colors"

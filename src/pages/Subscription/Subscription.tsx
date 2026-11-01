@@ -10,7 +10,7 @@ import { usePlan } from '@/hooks/usePlan';
 // HOTFIX #218 (P0-1): la ficha consume la query COMPARTIDA ['billing','status']
 // — sin loadStatus propio (antes: fetch al montar + polling 30s duplicado).
 import { useBillingStatus } from '@/hooks/useBillingStatus';
-import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { createPortal } from 'react-dom'; // HOTFIX 306
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -88,6 +88,11 @@ export default function Subscription() {
   const loading = billingQ.isLoading;
   const loadError = billingQ.isError;
 
+  // HOTFIX 306 (B7-01): pagar, cambiar de plan y cancelar = solo quien tiene billing.manage (el Administrador)
+  const perms: string[] = useAuthStore((s) => ((s.user as any)?.role?.permissions ?? []) as string[]);
+  const canBill = perms.includes('ALL_PERMISSIONS') || perms.includes('billing.manage');
+  const [cancelText, setCancelText] = useState('');
+
   const [paying,   setPaying]   = useState<'upgrade' | 'renewal' | null>(null);
   const [upgraded, setUpgraded] = useState(false);
   const [error,    setError]    = useState<string | null>(null);
@@ -151,12 +156,13 @@ export default function Subscription() {
   const handleCancel = useCallback(async () => {
     try {
       setError(null);
-      await api.post('/billing/cancel', {});
+      await api.post('/billing/cancel', { confirm: cancelText.trim().toUpperCase() });
+      setCancelText('');
       billingQ.refetch();
     } catch (err: any) {
       setError(err.message ?? 'Error cancelando suscripción.');
     }
-  }, [billingQ]);
+  }, [billingQ, cancelText]);
 
   // ── Helpers de display ──────────────────────────────────────────────────────
 
@@ -299,7 +305,7 @@ export default function Subscription() {
                 </div>
               </div>
 
-              {billingStatus.status === 'ACTIVE' && billingStatus.subscription && (
+              {canBill && billingStatus.status === 'ACTIVE' && billingStatus.subscription && (
                 <button
                   onClick={() => setCancelConfirmOpen(true)}
                   className="text-sm text-red-600 hover:text-red-800 underline"
@@ -344,7 +350,7 @@ export default function Subscription() {
               </div>
               <button
                 onClick={handlePayRenewal}
-                disabled={paying !== null}
+                disabled={paying !== null || !canBill}
                 className="px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-60 flex items-center gap-2 transition-colors"
               >
                 {paying === 'renewal' ? (
@@ -392,7 +398,7 @@ export default function Subscription() {
             <div className="mt-6 flex items-center flex-wrap gap-4">
               <button
                 onClick={handleUpgrade}
-                disabled={paying !== null}
+                disabled={paying !== null || !canBill}
                 className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 disabled:opacity-60 flex items-center gap-2 transition-colors"
               >
                 {paying === 'upgrade' ? (
@@ -439,7 +445,7 @@ export default function Subscription() {
           <div className="mb-8 text-center">
             <button
               onClick={handlePayRenewal}
-              disabled={paying !== null}
+              disabled={paying !== null || !canBill}
               className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2 disabled:opacity-60"
             >
               {paying === 'renewal' ? 'Generando link...' : 'Pagar suscripción ahora'}
@@ -447,16 +453,47 @@ export default function Subscription() {
           </div>
         )}
 
-        {/* Confirm cancelar suscripción */}
-        <ConfirmModal
-          isOpen={cancelConfirmOpen}
-          title="Cancelar suscripción"
-          message="¿Estás seguro que deseas cancelar tu suscripción? Perderás el acceso al final del período activo."
-          confirmLabel="Sí, cancelar"
-          variant="danger"
-          onConfirm={() => { setCancelConfirmOpen(false); handleCancel(); }}
-          onCancel={() => setCancelConfirmOpen(false)}
-        />
+        {/* HOTFIX 306 (B7-01): cancelar exige escribir CANCELAR (modal por portal, z-100) */}
+        {cancelConfirmOpen && createPortal(
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/50" onClick={() => { setCancelConfirmOpen(false); setCancelText(''); }} />
+            <div className="relative bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-2">Cancelar suscripción</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                El local quedará sin acceso al sistema. Para confirmar escribe <span className="font-bold">CANCELAR</span>.
+              </p>
+              <input
+                value={cancelText}
+                onChange={(e) => setCancelText(e.target.value)}
+                placeholder="CANCELAR"
+                aria-label="Escribe CANCELAR para confirmar"
+                className="w-full min-h-[44px] px-3 border border-gray-300 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-[#F97316]"
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setCancelConfirmOpen(false); setCancelText(''); }}
+                  className="flex-1 min-h-[44px] rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50"
+                >
+                  Volver
+                </button>
+                <button
+                  disabled={cancelText.trim().toUpperCase() !== 'CANCELAR'}
+                  onClick={() => { setCancelConfirmOpen(false); handleCancel(); }}
+                  className="flex-1 min-h-[44px] rounded-xl bg-[#F97316] text-white font-semibold hover:opacity-90 disabled:opacity-40"
+                >
+                  Cancelar suscripción
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
+
+        {!canBill && (
+          <p className="mb-6 text-sm text-gray-500 text-center">
+            Solo el administrador del local puede pagar, cambiar el plan o cancelar la suscripción.
+          </p>
+        )}
 
         {/* Error */}
         {error && (

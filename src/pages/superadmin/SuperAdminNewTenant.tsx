@@ -44,7 +44,7 @@ export default function SuperAdminNewTenant() {
     mutationFn: (dto: CreateTenantDTO) => superadminService.createTenant(dto),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['superadmin'] });
-      setCreated({ tempPassword: data.tempPassword, tenantName: form.name, adminEmail: form.adminEmail });
+      setCreated({ tempPassword: data.tempPassword, tenantName: form.name, adminEmail: (data as any).loginEmail ?? form.adminEmail }); // HOTFIX 306: el admin entra con slug@bullwebchile.com
     },
     onError: (err: any) => {
       toast.error(err?.response?.data?.error ?? 'Error al crear el cliente');

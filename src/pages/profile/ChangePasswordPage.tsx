@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Loader2, Lock } from 'lucide-react';
 import api from '@/services/api';
+import { useAuthStore } from '@/store/authStore'; // HOTFIX 306
 
 export function ChangePasswordPage() {
   const navigate = useNavigate();
@@ -32,7 +33,8 @@ export function ChangePasswordPage() {
         newPassword:     form.newPassword,
       });
       setSuccess(true);
-      setTimeout(() => navigate('/profile'), 2000);
+      // HOTFIX 306: cambiar la clave cierra todas las sesiones; se vuelve a entrar con la clave nueva
+      setTimeout(() => useAuthStore.getState().logout('manual'), 2000);
     } catch (err: any) {
       setError(err?.message ?? 'Error al cambiar contraseña');
     } finally {
@@ -45,7 +47,7 @@ export function ChangePasswordPage() {
       <div className="text-center">
         <div className="text-6xl mb-4">✅</div>
         <h2 className="font-black text-xl text-gray-900 mb-2">¡Contraseña actualizada!</h2>
-        <p className="text-gray-500 text-sm">Redirigiendo...</p>
+        <p className="text-gray-500 text-sm">Vuelve a ingresar con tu nueva contraseña...</p>
       </div>
     </div>
   );

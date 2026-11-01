@@ -284,7 +284,7 @@ function AppContent() {
               <Route path="settings" element={<AppSettings />} />
               <Route path="settings/print" element={<PrintSettingsPage />} />
               <Route path="profile"  element={<Profile />} />
-              <Route path="profile/restaurant" element={<RestaurantProfilePage />} />
+              <Route path="profile/restaurant" element={<PermissionGuard permission="settings.manage"><RestaurantProfilePage /></PermissionGuard>} />{/* HOTFIX 306 (B7-02) */}
               <Route path="apps/dte" element={<PermissionGuard permission="billing.config"><PlanGuard><DteConfigPage /></PlanGuard></PermissionGuard>} />
               <Route path="apps" element={<PermissionGuard permission="apps.view"><AppsPage /></PermissionGuard>} />
               <Route path="dte/documentos" element={<PermissionGuard permission="billing.view"><PlanGuard><DteDocumentsPage /></PlanGuard></PermissionGuard>} />

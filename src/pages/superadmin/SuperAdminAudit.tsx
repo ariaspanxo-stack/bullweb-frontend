@@ -18,6 +18,13 @@ const ACTION_LABELS: Record<string, string> = {
   CREATE_PAYMENT:    '💳 Pago registrado',
   CREATE_TENANT:     '🏪 Nuevo cliente',
   UPDATE_PLAN_PRICE: '💲 Cambio precio plan',
+  // HOTFIX 306 (B8-02): acciones que el backend ahora registra
+  LOGIN:                'Ingreso SuperAdmin',
+  ARCHIVE_TENANT:       'Archivar',
+  UNARCHIVE_TENANT:     'Desarchivar',
+  DELETE_TENANT:        'Eliminar (soft)',
+  EXTEND_PERIOD:        'Prórroga de período',
+  RESET_ADMIN_PASSWORD: 'Reset clave admin',
 };
 
 export default function SuperAdminAudit() {

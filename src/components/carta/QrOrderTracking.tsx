@@ -162,6 +162,77 @@ export function QrReviewBlock({ orderId, tenantSlug }: { orderId: string; tenant
   );
 }
 
+// LOTE MP-A — pago con Mercado Pago desde el seguimiento: abre MP en pestana nueva; rechazado o vencido ofrece Reintentar o Pagar en caja.
+const MP_TEXT: Record<string, string> = {
+  rejected:  'Tu pago fue rechazado. No se hizo ningun cobro.',
+  expired:   'El tiempo para pagar se termino. No se hizo ningun cobro.',
+  cancelled: 'El intento de pago se cancelo. No se hizo ningun cobro.',
+  error:     'No pudimos abrir Mercado Pago.',
+};
+function MercadoPagoBlock({ orderId, payment, themeColor, isDelivery }: {
+  orderId: string; payment: NonNullable<ReturnType<typeof useQrOrderStatus>['payment']>; themeColor: string; isDelivery: boolean;
+}) {
+  const [busy, setBusy] = useState<'pay' | 'counter' | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const failed = MP_TEXT[payment.status];
+  const post = async (path: string) => {
+    const res = await fetch(`/api/public/mp/qr-orders/${orderId}/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json?.success) throw new Error(json?.error ?? 'No pudimos completar la accion. Intenta de nuevo.');
+    return json.data ?? {};
+  };
+  const pay = async () => {
+    // Pestana abierta dentro del clic: el navegador del celular bloquea la que se abre despues de esperar la respuesta
+    const tab = window.open('', '_blank');
+    setBusy('pay'); setError(null);
+    try {
+      const data = await post('pay');
+      if (data.checkoutUrl) {
+        if (tab) tab.location.href = data.checkoutUrl; else window.location.href = data.checkoutUrl;
+      } else {
+        tab?.close();
+      }
+    } catch (e: any) {
+      tab?.close();
+      setError(e?.message ?? 'No pudimos abrir Mercado Pago.');
+    } finally { setBusy(null); }
+  };
+  const counter = async () => {
+    setBusy('counter'); setError(null);
+    try { await post('pay-at-counter'); } catch (e: any) { setError(e?.message ?? 'No pudimos cambiar el pedido.'); } finally { setBusy(null); }
+  };
+  if (payment.status === 'review') {
+    return <p className="text-sm font-semibold text-amber-300">Tu pago esta en revision. Contacta al local.</p>;
+  }
+  return (
+    <div className="space-y-2">
+      {failed && <p className="text-sm font-semibold text-red-400">{failed}</p>}
+      {payment.status === 'pending' && <p className="text-sm text-zinc-300">Cuando termines en Mercado Pago, esta pantalla se actualiza sola.</p>}
+      {payment.amount != null && <p className="text-sm text-zinc-300">Total a pagar: <span className="font-bold text-white">{fmtCLP(payment.amount)}</span></p>}
+      <button
+        type="button"
+        onClick={pay}
+        disabled={busy !== null}
+        className="w-full min-h-[44px] py-3 rounded-2xl font-bold text-base text-white transition-opacity disabled:opacity-50"
+        style={{ background: themeColor }}
+      >
+        {busy === 'pay' ? 'Abriendo…' : failed ? 'Reintentar pago' : 'Pagar con Mercado Pago'}
+      </button>
+      {(failed || payment.status === 'pending' || !isDelivery) && (
+        <button
+          type="button"
+          onClick={counter}
+          disabled={busy !== null}
+          className="w-full min-h-[44px] py-3 rounded-2xl font-semibold text-sm text-zinc-200 border border-zinc-600 transition-opacity disabled:opacity-50"
+        >
+          {busy === 'counter' ? 'Cambiando…' : isDelivery ? 'Pagar al recibir' : 'Pagar en caja'}
+        </button>
+      )}
+      {error && <p className="text-xs text-red-400">{error}</p>}
+    </div>
+  );
+}
+
 interface TrackingProps {
   orderId:            string;
   tenantSlug:         string | null;
@@ -241,6 +312,25 @@ export function QrOrderTracking({
           {st === 'PENDING' ? ` · hace ${elapsedMin} min` : ''}
         </p>
       </div>
+
+      {st === 'AWAITING_PAYMENT' && liveStatus.payment && (
+        <>
+          {acceptedText && (
+            <div className="flex items-start gap-3">
+              {ok}
+              <p className="text-sm font-medium text-green-400">El local confirmó tu pedido. {acceptedText}</p>
+            </div>
+          )}
+          <MercadoPagoBlock orderId={orderId} payment={liveStatus.payment} themeColor={themeColor} isDelivery={isDel} />
+        </>
+      )}
+
+      {liveStatus.payment?.status === 'approved' && (
+        <div className="flex items-center gap-3">
+          {ok}
+          <p className="text-sm font-medium text-green-400">Pago recibido con Mercado Pago{liveStatus.payment.amount != null ? ` · ${fmtCLP(liveStatus.payment.amount)}` : ''}</p>
+        </div>
+      )}
 
       {st === 'PENDING' && (
         <>

@@ -29,6 +29,9 @@ export function WaiterLoginPage() {
   const [selected, setSelected] = useState<WaiterProfile | null>(null);
   const [pin,      setPin]      = useState('');
   const [error,    setError]    = useState('');
+  // HOTFIX 307 (E2E-H3): motivo por el que la app mesero saco al usuario
+  const [sessionMsg] = useState(() => localStorage.getItem('waiterSessionMsg'));
+  useEffect(() => { localStorage.removeItem('waiterSessionMsg'); }, []);
 
   // Leer ?tenant= de la URL y guardarlo para la sesión del mesero
   useEffect(() => {
@@ -113,6 +116,13 @@ export function WaiterLoginPage() {
         <div className="text-4xl font-bold text-white mb-1">BullWeb</div>
         <div className="text-orange-400 text-sm">Sistema de Pedidos</div>
       </div>
+
+      {/* HOTFIX 307 (E2E-H3) */}
+      {sessionMsg && (
+        <div role="status" className="w-full max-w-xs mb-6 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-sm font-semibold text-center">
+          {sessionMsg}
+        </div>
+      )}
 
       {/* ── PASO 1 — Selección de mesero ───────────────────── */}
       {step === 'select' && (

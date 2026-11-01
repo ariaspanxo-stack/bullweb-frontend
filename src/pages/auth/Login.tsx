@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -45,6 +45,10 @@ export default function Login() {
 
   // Limpiar el flag para que no aparezca en cargas futuras
   if (sessionExpired) localStorage.removeItem('bw_session_expired');
+
+  // HOTFIX 307 (E2E-H2): sesion revocada (cierre en otro equipo, cambio de clave): se avisa una vez y dura hasta salir de esta pantalla
+  const [sessionClosed] = useState(() => localStorage.getItem('bw_session_closed') === '1');
+  useEffect(() => { localStorage.removeItem('bw_session_closed'); }, []);
 
   // ── 2FA state ──
   const [step,      setStep]      = useState<'credentials' | '2fa'>('credentials');
@@ -131,6 +135,14 @@ export default function Login() {
                   Tu sesión de 8 horas expiró. Inicia sesión para comenzar un nuevo turno.
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* HOTFIX 307 (E2E-H2) */}
+          {step === 'credentials' && sessionClosed && (
+            <div role="status" className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6">
+              <p className="font-semibold text-amber-800">Sesión cerrada</p>
+              <p className="text-sm text-amber-700 mt-0.5">Vuelve a ingresar para continuar.</p>
             </div>
           )}
 

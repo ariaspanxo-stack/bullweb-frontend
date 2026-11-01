@@ -21,8 +21,9 @@ export function ChangePasswordPage() {
       setError('Las contraseñas nuevas no coinciden');
       return;
     }
-    if (form.newPassword.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+    // HOTFIX 307: misma regla que el backend (changePasswordSchema) y que Mi perfil
+    if (form.newPassword.length < 8 || !/[A-Z]/.test(form.newPassword) || !/[0-9]/.test(form.newPassword)) {
+      setError('La contraseña debe tener mínimo 8 caracteres, una mayúscula y un número');
       return;
     }
     setLoading(true);

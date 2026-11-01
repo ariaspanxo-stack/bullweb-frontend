@@ -1124,6 +1124,10 @@ function CartSheet({
             <span className="text-gray-400 text-sm">Total a pagar</span>
             <span className="text-orange-400 font-bold text-lg">{fmtCLP(total)}</span>
           </div>
+          {/* HOTFIX 307 (B5-14): el cliente sabe que el envio se suma antes de confirmar */}
+          {orderType === 'delivery' && (
+            <p className="text-gray-400 text-xs -mt-2">No incluye el costo de envío: el local lo confirma al aceptar tu pedido.</p>
+          )}
 
           {/* Lista vertical de métodos */}
           <div className="flex flex-col gap-3">

@@ -125,9 +125,11 @@ export default function Profile() {
     try {
       await authService.changePassword({ currentPassword: currentPwd, newPassword: newPwd });
       setCurrentPwd(''); setNewPwd(''); setConfirmPwd('');
-      toast.success('Contraseña actualizada exitosamente');
+      // HOTFIX 307: el 306 cierra todas las sesiones al cambiar la clave; antes aqui se expulsaba sin explicacion
+      toast.success('¡Contraseña actualizada! Vuelve a ingresar con tu nueva contraseña...', { duration: 2500 });
+      setTimeout(() => useAuthStore.getState().logout('manual'), 2000);
     } catch (err: any) {
-      toast.error(err?.response?.data?.message ?? 'Error al cambiar contraseña');
+      toast.error(err?.message ?? 'Error al cambiar contraseña');
     } finally {
       setChangingPwd(false);
     }

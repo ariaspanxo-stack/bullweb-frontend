@@ -184,7 +184,7 @@ export const OrderModal = ({
       setShowTransferModal(false);
       onClose();
     } catch (error: any) {
-      toast.error(error?.response?.data?.error || 'Error al transferir mesa');
+      toast.error(error?.message || 'Error al transferir mesa'); // HOTFIX 307 (B4-09): el 409 dice por que
     } finally {
       setIsTransferring(false);
     }
@@ -356,7 +356,14 @@ export const OrderModal = ({
 
   const handlePrintPreBill = async () => {
     if (!existingOrderId) return;
-    try { await posService.printPrecuenta(existingOrderId); } catch { /* silencioso */ }
+    // HOTFIX 307 (B3-12): si no salio, el cajero se entera (antes el error era silencioso)
+    try {
+      const r = await posService.printPrecuenta(existingOrderId);
+      if (r.queued === 0) toast.error(r.warnings[0] || 'La pre-cuenta no se envió a ninguna impresora');
+      else if (r.warnings.length) toast(r.warnings[0], { icon: '⚠️' });
+    } catch (error: any) {
+      toast.error(error?.message || 'No se pudo enviar la pre-cuenta a imprimir');
+    }
   };
 
   // ── Hotfix #257: descuento guardado en la orden (topes + PIN de administrador) ──
@@ -1050,8 +1057,8 @@ export const OrderModal = ({
                         email: customerEmail.trim() || undefined,
                         marketingOptIn,
                       });
-                      customerId = customer.id;
-                      toast.success('Vinculado');
+                      customerId = customer.id || undefined; // HOTFIX 307 (B4-19): sin telefono ni correo no hay ficha
+                      if (customerId) toast.success('Vinculado');
                     } catch { /* no bloquear */ }
                   }
                   onSendToKitchen(customerId, clientName.trim() || undefined, clientPhone.trim() || undefined, orderNote.trim() || undefined);
@@ -1146,15 +1153,15 @@ export const OrderModal = ({
                                 email: customerEmail.trim() || undefined,
                                 marketingOptIn,
                               });
-                              customerId = customer.id;
-                              if (existingOrderId) {
+                              customerId = customer.id || undefined; // HOTFIX 307 (B4-19)
+                              if (existingOrderId && customerId) {
                                 await restaurantService.updateOrderCustomer(existingOrderId, {
                                   customerId: customer.id,
                                   customerName: customer.name,
                                   customerPhone: clientPhone.trim() || null,
                                 }).catch(() => {});
                               }
-                              toast.success('Vinculado a la orden');
+                              if (customerId) toast.success('Vinculado a la orden');
                             } catch { /* no bloquear */ }
                           }
                           onCheckout(

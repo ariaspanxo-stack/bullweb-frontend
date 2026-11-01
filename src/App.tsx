@@ -115,6 +115,7 @@ const ForgotPasswordPage    = lazy(() => import('@/pages/auth/ForgotPasswordPage
 const ResetPasswordPage     = lazy(() => import('@/pages/auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const RegisterTenant         = lazy(() => import('@/pages/auth/RegisterTenant'));
 const PagoResultado          = lazy(() => import('@/pages/PagoResultado'));
+const ChangePasswordPage    = lazy(() => import('@/pages/profile/ChangePasswordPage').then(m => ({ default: m.ChangePasswordPage }))); // HOTFIX 307
 const RestaurantProfilePage = lazy(() => import('@/pages/profile/RestaurantProfilePage').then(m => ({ default: m.RestaurantProfilePage })));
 const CouponsPage           = lazy(() => import('@/pages/coupons/CouponsPage').then(m => ({ default: m.CouponsPage })));
 const PromotionsPage        = lazy(() => import('@/pages/Promotions/PromotionsPage'));
@@ -284,6 +285,7 @@ function AppContent() {
               <Route path="settings" element={<AppSettings />} />
               <Route path="settings/print" element={<PrintSettingsPage />} />
               <Route path="profile"  element={<Profile />} />
+              <Route path="profile/password" element={<ChangePasswordPage />} />{/* HOTFIX 307 */}
               <Route path="profile/restaurant" element={<PermissionGuard permission="settings.manage"><RestaurantProfilePage /></PermissionGuard>} />{/* HOTFIX 306 (B7-02) */}
               <Route path="apps/dte" element={<PermissionGuard permission="billing.config"><PlanGuard><DteConfigPage /></PlanGuard></PermissionGuard>} />
               <Route path="apps" element={<PermissionGuard permission="apps.view"><AppsPage /></PermissionGuard>} />

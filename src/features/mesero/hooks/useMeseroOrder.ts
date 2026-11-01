@@ -17,6 +17,7 @@ export interface CartItem {
   // Para ítems ya en la orden (de BD):
   orderItemId?:   string;
   sentToKitchen?: boolean;
+  sendKey?:       string; // HOTFIX 307 (B4-13): misma clave en cada reintento de este item; cambia si el item cambia
 }
 
 export function useMeseroOrder(_table: any | null) {
@@ -72,7 +73,7 @@ export function useMeseroOrder(_table: any | null) {
       );
       if (existingIdx >= 0) {
         setCart(prev => prev.map((item, idx) =>
-          idx === existingIdx ? { ...item, quantity: item.quantity + 1 } : item
+          idx === existingIdx ? { ...item, quantity: item.quantity + 1, sendKey: undefined } : item
         ));
         return;
       }
@@ -102,14 +103,14 @@ export function useMeseroOrder(_table: any | null) {
       return;
     }
     setCart(prev => prev.map((item, i) =>
-      i === index ? { ...item, quantity: qty } : item
+      i === index ? { ...item, quantity: qty, sendKey: undefined } : item
     ));
   }, [removeFromCart]);
 
   // Actualizar nota de un ítem pendiente
   const updateNote = useCallback((index: number, note: string) => {
     setCart(prev => prev.map((item, i) =>
-      i === index ? { ...item, notes: note } : item
+      i === index ? { ...item, notes: note, sendKey: undefined } : item
     ));
   }, []);
 
@@ -126,11 +127,18 @@ export function useMeseroOrder(_table: any | null) {
     setSubmitting(true);
 
     try {
-      const itemsPayload = newItems.map(i => ({
+      // HOTFIX 307 (B4-13): clave estable por item; si el envio falla y el mesero reintenta, el backend no lo duplica
+      const keyed = newItems.map(i => ({ item: i, sendKey: i.sendKey ?? crypto.randomUUID() }));
+      setCart(prev => prev.map(i => {
+        const k = keyed.find(x => x.item === i);
+        return k ? { ...i, sendKey: k.sendKey } : i;
+      }));
+      const itemsPayload = keyed.map(({ item: i, sendKey }) => ({
         productId: i.productId,
         quantity:  i.quantity,
         modifiers: i.modifiers,
         notes:     i.notes || undefined,
+        idempotencyKey: sendKey,
       }));
 
       if (activeOrder) {

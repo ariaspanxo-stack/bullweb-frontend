@@ -335,8 +335,8 @@ export const NewMostradorModal = ({
             email: customerEmail.trim() || undefined,
             marketingOptIn,
           });
-          customerId = customer.id;
-          toast.success(`✓ ${customerName.trim()} vinculado a la orden`);
+          customerId = customer.id || undefined; // HOTFIX 307 (B4-19)
+          if (customerId) toast.success(`✓ ${customerName.trim()} vinculado a la orden`);
         } catch { /* no bloquear el pedido */ }
       }
       // DESPUÉS: crear la orden con el customerId
@@ -361,8 +361,8 @@ export const NewMostradorModal = ({
             email: customerEmail.trim() || undefined,
             marketingOptIn,
           });
-          customerId = customer.id;
-          toast.success(`✓ ${customerName.trim()} vinculado a la orden`);
+          customerId = customer.id || undefined; // HOTFIX 307 (B4-19)
+          if (customerId) toast.success(`✓ ${customerName.trim()} vinculado a la orden`);
         } catch { /* no bloquear */ }
       }
       await onConfirm([], customerName.trim(), deliveryPhone.trim(), undefined, 'cash', customerId);

@@ -33,7 +33,8 @@ async function waiterFetch(path: string, init?: RequestInit): Promise<any> {
   const json = await res.json();
   // Hotfix #277: suscripcion vencida -> aviso bloqueante "Contacta al administrador"
   if (res.status === 402) notifyWaiterPaymentRequired(json);
-  if (!res.ok) throw new Error(json.error ?? json.message ?? 'Error de red');
+  // HOTFIX 307 (B4-13): con status, withRetry no reintenta errores de negocio (4xx); solo los de red
+  if (!res.ok) throw Object.assign(new Error(json.error ?? json.message ?? 'Error de red'), { status: res.status });
   return json;
 }
 
@@ -102,7 +103,7 @@ export const meseroService = {
   // Agregar ítems a orden existente
   addItems: async (
     orderId: string,
-    items: { productId: string; quantity: number; modifiers?: any[]; notes?: string }[]
+    items: { productId: string; quantity: number; modifiers?: any[]; notes?: string; idempotencyKey?: string }[]
   ): Promise<any> => {
     return waiterFetch(`/waiter/orders/${orderId}/items`, {
       method: 'POST',

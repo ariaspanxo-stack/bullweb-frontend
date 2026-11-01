@@ -245,11 +245,16 @@ export const posService = {
   /**
    * Imprimir pre-cuenta (sin cerrar la orden) a la impresora de caja
    */
-  async printPrecuenta(orderId: string): Promise<void> {
-    const { data } = await api.post<ApiResponse>(`/pos/orders/${orderId}/print-precuenta`);
-    if (!data.success) {
-      throw new Error(data.message || 'Error al imprimir pre-cuenta');
-    }
+  async printPrecuenta(orderId: string): Promise<{ queued: number; warnings: string[] }> {
+    // HOTFIX 307 (B3-12): devuelve lo encolado y los avisos; un error HTTP lanza en el cliente API
+    const { data } = await api.post<any>(`/pos/orders/${orderId}/print-precuenta`);
+    return { queued: Number(data?.queued ?? 0), warnings: Array.isArray(data?.warnings) ? data.warnings : [] };
+  },
+
+  // HOTFIX 307 (B6-09): ingredientes que quedarian en negativo al vender qty unidades del producto
+  async checkProductStock(productId: string, qty: number): Promise<{ name: string; unit: string; needed: number; available: number }[]> {
+    const { data } = await api.get<any>(`/pos/stock-check?productId=${encodeURIComponent(productId)}&qty=${qty}`);
+    return Array.isArray(data?.shortages) ? data.shortages : [];
   },
 
   /**

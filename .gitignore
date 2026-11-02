@@ -35,3 +35,11 @@ tsc_out.txt
 tsc_out.txt
 dist/
 node_modules/
+
+# E2E Playwright: credenciales y salidas fuera de git
+.env.e2e
+e2e/.dist/
+e2e/.ref/
+e2e/.report/
+e2e/.results/
+e2e/.run/

@@ -6,6 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { usePermission } from '@/hooks/usePermission'; // LOTE MP-A
+import { mercadoPagoService } from '@/services/mercadoPagoService'; // LOTE MP-A
 import toast from 'react-hot-toast';
 
 // ─── Preference types ────────────────────────────────────────────────────────
@@ -97,6 +98,11 @@ export default function AppSettings() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
   const canManagePayments = usePermission('settings.manage'); // LOTE MP-A
+  const [paymentsEnabled, setPaymentsEnabled] = useState(false); // LOTE MP-A: solo locales de la lista blanca
+  useEffect(() => {
+    if (!canManagePayments) return;
+    mercadoPagoService.status().then((s) => setPaymentsEnabled(s.enabled === true)).catch(() => setPaymentsEnabled(false));
+  }, [canManagePayments]);
   const [prefs, setPrefs] = useState<AppPreferences>(loadPrefs);
   const [saved, setSaved] = useState(false);
 
@@ -202,7 +208,7 @@ export default function AppSettings() {
       </Section>
 
       {/* LOTE MP-A: Configuracion -> Pagos */}
-      {canManagePayments && (
+      {canManagePayments && paymentsEnabled && (
         <Section title="Pagos" icon={CreditCard}>
           <button
             onClick={() => navigate('/settings/pagos')}

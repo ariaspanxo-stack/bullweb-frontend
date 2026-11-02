@@ -2,6 +2,7 @@
 import api from './api';
 
 export interface MpStatus {
+  enabled:     boolean;
   available:   boolean;
   connected:   boolean;
   status:      'connected' | 'expired' | 'revoked' | 'disconnected';
@@ -31,6 +32,7 @@ export interface MpReviewPayment {
 }
 
 export const mercadoPagoService = {
+  // Local fuera de la lista blanca: { enabled: false } y nada mas
   async status(): Promise<MpStatus> {
     const res = await api.get('/payments/mp/status');
     return res.data as MpStatus;

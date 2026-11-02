@@ -209,7 +209,7 @@ function MercadoPagoBlock({ orderId, payment, themeColor, isDelivery }: {
       {failed && <p className="text-sm font-semibold text-red-400">{failed}</p>}
       {payment.status === 'pending' && <p className="text-sm text-zinc-300">Cuando termines en Mercado Pago, esta pantalla se actualiza sola.</p>}
       {payment.amount != null && <p className="text-sm text-zinc-300">Total a pagar: <span className="font-bold text-white">{fmtCLP(payment.amount)}</span></p>}
-      <button
+      {payment.canPay && <button
         type="button"
         onClick={pay}
         disabled={busy !== null}
@@ -217,8 +217,8 @@ function MercadoPagoBlock({ orderId, payment, themeColor, isDelivery }: {
         style={{ background: themeColor }}
       >
         {busy === 'pay' ? 'Abriendo…' : failed ? 'Reintentar pago' : 'Pagar con Mercado Pago'}
-      </button>
-      {(failed || payment.status === 'pending' || !isDelivery) && (
+      </button>}
+      {(failed || payment.status === 'pending' || !isDelivery || !payment.canPay) && (
         <button
           type="button"
           onClick={counter}

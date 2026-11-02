@@ -1,7 +1,7 @@
 // LOTE MP-A: Configuracion -> Pagos. Conectar la cuenta de Mercado Pago del local, estado, comision (solo lectura) y pagos para revisar.
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { CreditCard, AlertTriangle, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { mercadoPagoService, type MpReviewPayment, type MpStatus } from '@/services/mercadoPagoService';
@@ -74,6 +74,9 @@ export default function PaymentsSettingsPage() {
   };
 
   const connected = status?.connected === true;
+
+  // Local fuera de la lista blanca: esta pantalla no existe para el
+  if (status && !status.enabled) return <Navigate to="/settings" replace />;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

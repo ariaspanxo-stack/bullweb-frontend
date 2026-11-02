@@ -720,10 +720,21 @@ async function fetchWithRefresh(
       return res;
     }
 
+    // HOTFIX 307 (E2E-H1): el 401 de login o 2FA es una clave o codigo incorrecto, no una sesion vencida: lo informa la pantalla
+    if (/\/auth\/(login|2fa\/verify)$/.test(new URL(res.url, window.location.origin).pathname)) {
+      return res;
+    }
+
+    // HOTFIX 307 (E2E-H2): sesion revocada en el servidor: el login la avisa tras el cierre forzado
+    const sesionCerrada = await res.clone().json()
+      .then((b: any) => /Sesión cerrada/.test(String(b?.message ?? b?.error ?? '')))
+      .catch(() => false);
+
     _isRefreshing = true;
     try {
       const newToken = await _tryRefreshToken();
       if (!newToken) {
+        if (sesionCerrada) localStorage.setItem('bw_session_closed', '1'); // HOTFIX 307 (E2E-H2)
         _forceLogout();
         return res; // Devuelve el 401 para que el caller lo procese
       }

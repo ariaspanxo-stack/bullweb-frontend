@@ -524,6 +524,12 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
       });
     });
 
+    // HOTFIX 307 (B3-12): comanda omitida o impresion atascada: aviso visible en el POS (un solo aviso por mensaje)
+    socketRef.current.on('print.problem', (data: { message?: string; orderNumber?: string | null }) => {
+      const text = (data?.orderNumber ? data.orderNumber + ': ' : '') + (data?.message || 'Hay un problema de impresión');
+      hotToast.error(text, { id: 'print-problem-' + (data?.message || ''), duration: 10000 });
+    });
+
     // HOTFIX 300 (B1-10 / B1-07): toda escritura de pedidos, mesas o reparto del tenant (POS, app mesero, QR,
     // /delivery) -> recargar pedidos y mesas sin caché (antes la mesa abierta o cobrada por el mesero no llegaba)
     let changedTimer: ReturnType<typeof setTimeout> | null = null;

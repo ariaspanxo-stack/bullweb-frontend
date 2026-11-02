@@ -292,8 +292,10 @@ export function DeliveryOrderModal({
   async function handlePrecuenta() {
     setSubmitting(true);
     try {
-      await posService.printPrecuenta(currentOrder.id);
-      toast.success('Pre-cuenta enviada a imprimir');
+      // HOTFIX 307 (B3-12)
+      const r = await posService.printPrecuenta(currentOrder.id);
+      if (r.queued === 0) toast.error(r.warnings[0] || 'La pre-cuenta no se envió a ninguna impresora');
+      else toast.success('Pre-cuenta enviada a imprimir');
     } catch {
       toast.error('Error al imprimir pre-cuenta');
     } finally {

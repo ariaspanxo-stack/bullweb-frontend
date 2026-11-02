@@ -118,9 +118,14 @@ class AuthService {
         throw e;
       }
       
+      // HOTFIX 307 (E2E-H1): el cliente HTTP deja status y mensaje en el error, no en error.response
+      if (error.status === 401 && error.message === 'Credenciales inválidas') {
+        throw new Error('Correo o contraseña incorrectos. Revísalos e intenta de nuevo.');
+      }
       throw new Error(
         error.response?.data?.message || 
         error.response?.data?.error || 
+        (error.status ? error.message : '') ||
         'Error al iniciar sesión'
       );
     }

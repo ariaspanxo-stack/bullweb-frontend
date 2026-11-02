@@ -156,7 +156,7 @@ export default function KDS() {
   }, [stations, selectedStation]);
 
   // Query inicial de órdenes
-  const { data: initialOrders = [], isFetching } = useQuery<any[]>({
+  const { data: initialOrders = [], isFetching, isFetched } = useQuery<any[]>({
     queryKey: ['kds', selectedStation],
     queryFn: async () => {
       if (selectedStation === 'all') {
@@ -175,9 +175,20 @@ export default function KDS() {
     refetchInterval: isSuspended ? false : 10000, // Refetch cada 10 segundos como fallback (FIX 7)
   });
 
+  // HOTFIX 307 (B4-08): un pedido nuevo suena tambien cuando llega por recarga (order.new no llega a la pantalla de
+  // todas las estaciones y orders.changed solo avisa que algo cambio). La primera carga de cada estacion no suena.
+  const seenOrdersRef = useRef<{ station: string; ids: Set<string> } | null>(null);
   useEffect(() => {
     setOrders(initialOrders);
-  }, [initialOrders]);
+    if (!isFetched) return;
+    const station = String(selectedStation);
+    const seen = seenOrdersRef.current?.station === station ? seenOrdersRef.current : null;
+    const ids = initialOrders.map((o: any) => o.id);
+    if (seen && ids.some((id: string) => !seen.ids.has(id)) && soundEnabledRef.current && audioRef.current) {
+      audioRef.current.play().catch(() => {});
+    }
+    seenOrdersRef.current = { station, ids: new Set([...(seen?.ids ?? []), ...ids]) };
+  }, [initialOrders, isFetched]);
 
   // FIX 6: solo actualizar el badge cuando el fetch completa (evitar número stale)
   useEffect(() => {
@@ -240,10 +251,18 @@ export default function KDS() {
 
     // Nueva orden
     socket.on('order.new', (order: any) => {
-      setOrders(prev => [order, ...prev]);
+      seenOrdersRef.current?.ids.add(order?.id); // HOTFIX 307 (B4-08): no suena dos veces
+      setOrders(prev => [order, ...prev.filter(o => o.id !== order?.id)]);
       if (soundEnabledRef.current && audioRef.current) {
         audioRef.current.play().catch(() => {});
       }
+    });
+
+    // HOTFIX 307 (B4-08): cualquier escritura de pedidos del local recarga la pantalla sin esperar los 10 s
+    let changedTimer: ReturnType<typeof setTimeout> | null = null;
+    socket.on('orders.changed', () => {
+      if (changedTimer) clearTimeout(changedTimer);
+      changedTimer = setTimeout(() => { queryClient.invalidateQueries({ queryKey: ['kds'] }); }, 300);
     });
 
     // Orden actualizada

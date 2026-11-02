@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -456,7 +457,8 @@ export default function DeliveryMappings() {
   const manualTotal = manualSubtotal;
   const manualNet = manualSubtotal - manualFee;
 
-  const submitManualOrder = async () => {
+  const [stockWarning, setStockWarning] = useState<string | null>(null); // HOTFIX 307 (B6-09)
+  const submitManualOrder = async (confirmInsufficientStock = false) => {
     if (manualItems.length === 0) {
       toast.error('Agrega al menos un producto al pedido.');
       return;
@@ -514,6 +516,7 @@ export default function DeliveryMappings() {
         commissions: commissionsPayload,
         customerName: manualCustomer.trim() || undefined,
         notes: manualNotes.trim() || undefined,
+        confirmInsufficientStock, // HOTFIX 307 (B6-09)
       });
       // Hotfix #153 — post-confirma autocontenido: nada de POS/comanda.
       // Ticket listo con los datos locales (+neto del backend si vino).
@@ -552,12 +555,10 @@ export default function DeliveryMappings() {
       // Hotfix #157 — el pedido ahora SÍ crea la orden POS (Ventas/Delivery).
       toast.success('Pedido registrado — aparece en Ventas/Delivery');
     } catch (e: unknown) {
-      const msg =
-        (e as { response?: { data?: { message?: string; error?: string } } })?.response?.data
-          ?.message ||
-        (e as { response?: { data?: { error?: string } } })?.response?.data?.error ||
-        'Error al crear el pedido manual.';
-      toast.error(msg);
+      const msg = (e as { message?: string })?.message || 'Error al crear el pedido manual.';
+      // HOTFIX 307 (B6-09): sin stock de ingredientes avisa y deja vender igual (antes 500 sin salida)
+      if ((e as { status?: number })?.status === 409 && msg.startsWith('Stock insuficiente')) setStockWarning(msg);
+      else toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -606,6 +607,20 @@ export default function DeliveryMappings() {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
+    <>
+      {stockWarning && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900">Faltan ingredientes</h3>
+            <p className="mt-2 text-sm text-gray-600">{stockWarning}. Si vendes igual, el stock queda en negativo.</p>
+            <div className="mt-5 flex gap-3">
+              <button type="button" className="min-h-[44px] flex-1 rounded-xl border border-gray-300 px-4 font-semibold text-gray-700" onClick={() => setStockWarning(null)}>Cancelar</button>
+              <button type="button" className="min-h-[44px] flex-1 rounded-xl bg-[#F97316] px-4 font-semibold text-white" onClick={() => { setStockWarning(null); submitManualOrder(true); }}>Vender igual</button>
+            </div>
+          </div>
+        </div>,
+        document.body,
+      )}
     <div className="min-h-screen bg-gray-950 text-white">
       {/* Header */}
       <header className="bg-gray-950/90 backdrop-blur border-b border-white/5 sticky top-0 z-10">
@@ -1324,7 +1339,7 @@ export default function DeliveryMappings() {
                   </div>
                 </div>
                 <button
-                  onClick={submitManualOrder}
+                  onClick={() => submitManualOrder()}
                   disabled={submitting || manualItems.length === 0}
                   className="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-brand-500 hover:bg-brand-600 disabled:bg-white/10 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
                 >
@@ -1585,5 +1600,6 @@ export default function DeliveryMappings() {
         </div>
       )}
     </div>
+    </>
   );
 }

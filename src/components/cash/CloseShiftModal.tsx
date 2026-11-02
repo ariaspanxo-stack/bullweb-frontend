@@ -523,6 +523,18 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
 
                 {renderTips(cuadre.tips)}
 
+                {/* LOTE MP-A: pagos en linea sin turno adoptados al abrir este turno, aparte de los cobros del turno */}
+                {Number((cuadre as { onlineAdopted?: { count: number } }).onlineAdopted?.count ?? 0) > 0 && (
+                  <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm font-medium text-gray-700">Pagos en linea adoptados</span>
+                      <span className="text-xs text-gray-400">({(cuadre as unknown as { onlineAdopted: { count: number } }).onlineAdopted.count})</span>
+                    </div>
+                    <span className="text-sm font-bold text-gray-800">{formatCLP((cuadre as unknown as { onlineAdopted: { total: number } }).onlineAdopted.total)}</span>
+                  </div>
+                )}
+
                 {/* Efectivo esperado */}
                 <div className="bg-orange-50 border border-orange-100 rounded-2xl px-4 py-3">
                   <div className="flex items-center justify-between">

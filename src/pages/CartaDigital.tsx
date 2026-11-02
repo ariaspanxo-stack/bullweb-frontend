@@ -65,6 +65,7 @@ interface CartaSettings {
   paymentMethods?:  Array<{ id: string; name: string }>;
   paymentMethodsRetiro?:    Array<{ id: string; name: string }>;
   paymentMethodsDelivery?:  Array<{ id: string; name: string }>;
+  mercadoPago?:             { connected: boolean }; // LOTE MP-A
   ordering?:        { accepting: boolean; code?: string; message?: string | null }; // HOTFIX 304 (B5-05/06)
   address?:         string | null;
   city?:            string | null;
@@ -496,6 +497,7 @@ const FALLBACK_PAYMENT_METHODS: Array<{ id: string; name: string }> = [
   { id: 'transferencia', name: 'Transferencia' },
 ];
 
+const MP_PAY_ID = 'mercado-pago'; // LOTE MP-A
 const PAYMENT_ICON: Record<string, string> = {
   efectivo:      '💵',
   'débito':      '💳',
@@ -848,6 +850,7 @@ function CartSheet({
   paymentMethods,
   paymentMethodsRetiro,
   paymentMethodsDelivery,
+  mercadoPago,
   whatsapp,
   onClose,
   onUpdate,
@@ -864,6 +867,7 @@ function CartSheet({
   paymentMethods:   Array<{ id: string; name: string }>;
   paymentMethodsRetiro?:    Array<{ id: string; name: string }>;
   paymentMethodsDelivery?:  Array<{ id: string; name: string }>;
+  mercadoPago?:             { connected: boolean }; // LOTE MP-A
   whatsapp?:        string | null;
   onClose:          () => void;
   onUpdate:         (productId: string, delta: number) => void;
@@ -893,10 +897,12 @@ function CartSheet({
 
   // HOTFIX 248 T2 — lista activa de medios de pago según el canal (retiro/delivery).
   // Semántica del backend: array vacío/ausente = TODOS los medios activos.
-  const channelPaymentMethods: Array<{ id: string; name: string }> =
+  const baseChannelMethods: Array<{ id: string; name: string }> =
     orderType === 'delivery'
       ? (paymentMethodsDelivery && paymentMethodsDelivery.length > 0 ? paymentMethodsDelivery : paymentMethods ?? FALLBACK_PAYMENT_METHODS)
       : (paymentMethodsRetiro && paymentMethodsRetiro.length > 0 ? paymentMethodsRetiro : paymentMethods ?? FALLBACK_PAYMENT_METHODS);
+  // LOTE MP-A: boton propio solo si el local esta conectado; el id MP_PAY_ID viaja como el nombre del medio
+  const channelPaymentMethods = mercadoPago?.connected ? [{ id: MP_PAY_ID, name: 'Mercado Pago' }, ...baseChannelMethods] : baseChannelMethods;
   // HOTFIX 304 (B5-04): Efectivo se reconoce por el nombre del medio (los medios reales tienen id UUID, no 'efectivo')
   const isCashSelected = paymentMethod !== null
     && isCashMethodName(channelPaymentMethods.find(m => m.id === paymentMethod)?.name ?? paymentMethod);
@@ -1149,9 +1155,9 @@ function CartSheet({
                   <span className="text-2xl">{PAYMENT_ICON[method.name.toLowerCase()] ?? PAYMENT_ICON[method.id] ?? '💰'}</span>
                   <div className="flex-1 text-left">
                     <span className={`font-semibold text-sm ${isActive ? 'text-white' : 'text-gray-300'}`}>
-                      {method.name}
+                      {method.id === MP_PAY_ID ? 'Pagar con Mercado Pago' : method.name}
                     </span>
-                    <p className="text-xs text-gray-500">{PAYMENT_DESC[method.name.toLowerCase()] ?? PAYMENT_DESC[method.id] ?? ''}</p>
+                    <p className="text-xs text-gray-500">{method.id === MP_PAY_ID ? (orderType === 'delivery' ? 'El local confirma el costo de envío y luego pagas' : 'Pagas en línea antes de que preparen tu pedido') : (PAYMENT_DESC[method.name.toLowerCase()] ?? PAYMENT_DESC[method.id] ?? '')}</p>
                   </div>
                   {isActive && <CheckCircle className="w-5 h-5 shrink-0" style={{ color: themeColor }} />}
                 </button>
@@ -2601,6 +2607,7 @@ export default function CartaDigital() {
           paymentMethods={cartaSettings?.paymentMethods ?? FALLBACK_PAYMENT_METHODS}
           paymentMethodsRetiro={cartaSettings?.paymentMethodsRetiro}
           paymentMethodsDelivery={cartaSettings?.paymentMethodsDelivery}
+          mercadoPago={cartaSettings?.mercadoPago}
           whatsapp={cartaSettings?.whatsapp}
           onClose={() => setShowCart(false)}
           onUpdate={updateCartItem}

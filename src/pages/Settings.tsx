@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import {
   Settings, Bell, Monitor, Globe, RefreshCw, ShieldCheck,
-  ChevronRight, Check, Info
+  ChevronRight, Check, Info, CreditCard
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { usePermission } from '@/hooks/usePermission'; // LOTE MP-A
+import { mercadoPagoService } from '@/services/mercadoPagoService'; // LOTE MP-A
 import toast from 'react-hot-toast';
 
 // ─── Preference types ────────────────────────────────────────────────────────
@@ -95,6 +97,12 @@ function Row({ label, description, control }: {
 export default function AppSettings() {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const canManagePayments = usePermission('settings.manage'); // LOTE MP-A
+  const [paymentsEnabled, setPaymentsEnabled] = useState(false); // LOTE MP-A: solo locales de la lista blanca
+  useEffect(() => {
+    if (!canManagePayments) return;
+    mercadoPagoService.status().then((s) => setPaymentsEnabled(s.enabled === true)).catch(() => setPaymentsEnabled(false));
+  }, [canManagePayments]);
   const [prefs, setPrefs] = useState<AppPreferences>(loadPrefs);
   const [saved, setSaved] = useState(false);
 
@@ -198,6 +206,22 @@ export default function AppSettings() {
           }
         />
       </Section>
+
+      {/* LOTE MP-A: Configuracion -> Pagos */}
+      {canManagePayments && paymentsEnabled && (
+        <Section title="Pagos" icon={CreditCard}>
+          <button
+            onClick={() => navigate('/settings/pagos')}
+            className="w-full min-h-[44px] flex items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left"
+          >
+            <div>
+              <p className="text-sm font-medium text-gray-800">Mercado Pago</p>
+              <p className="text-xs text-gray-400 mt-0.5">Conecta tu cuenta para cobrar en linea desde la carta QR</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          </button>
+        </Section>
+      )}
 
       {/* Admin settings shortcut */}
       {isAdmin && (

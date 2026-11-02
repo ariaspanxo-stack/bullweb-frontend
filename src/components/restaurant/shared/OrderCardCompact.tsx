@@ -25,6 +25,9 @@ import { usePlan } from '../../../hooks/usePlan';
 import { ItemPrepList, ItemsProgress } from './ItemPrepList';
 import { modifierNames } from './ModifierGroupsModal'; // HOTFIX 291
 import { ReprintModal } from '../../print/ReprintModal'; // HOTFIX 302
+import toast from 'react-hot-toast'; // LOTE MP-A
+import { useMpOrderState } from '../../../hooks/useMpOrderStates'; // LOTE MP-A
+import api from '../../../services/api'; // LOTE MP-A
 import { Printer } from 'lucide-react'; // HOTFIX 302
 
 // HOTFIX 300 (B1-07): estados del reparto (mismos textos que /delivery)
@@ -169,6 +172,18 @@ export function OrderCardCompact({
     onClick: () => void;
   };
 
+  // LOTE MP-A: pagado con Mercado Pago sin cerrar. No se cobra de nuevo; Entregado y Cerrar pedido solo cierran (ahi pasa a PAID).
+  const mpState = useMpOrderState(order.id, /mercado\s*pago/i.test(String(pmLabel ?? '')));
+  const mpPaid  = mpState?.status === 'approved' && !mpState.reviewReason && Number(mpState.amount) >= Number(order.total);
+  const closeMpPaid = async () => {
+    try {
+      await api.post(`/pos/orders/${order.id}/close`, {});
+      onRefresh?.();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error ?? e?.response?.data?.message ?? 'No se pudo cerrar el pedido');
+    }
+  };
+
   const mainAction: ActionConfig | null = (() => {
     if (order.status === 'PENDING') {
       if (!canCreateOrder) return null;
@@ -189,7 +204,7 @@ export function OrderCardCompact({
       return {
         label:     'Entregado',
         icon:      <Package size={14} />,
-        onClick:   () => onPay(order),
+        onClick:   () => (mpPaid ? closeMpPaid() : onPay(order)),
       };
     }
     return null;
@@ -262,6 +277,14 @@ export function OrderCardCompact({
           </div>
         )}
 
+        {/* LOTE MP-A: estado del pago en linea */}
+        {mpState && (
+          <p className="text-[13px] font-semibold text-slate-800 bg-orange-50 border border-orange-200 px-2 py-1.5 rounded-md">
+            {mpState.reviewReason ? 'Mercado Pago: pago para revisar' : mpState.status === 'approved' ? 'Pagado con Mercado Pago' : `Mercado Pago: ${mpState.status}`}
+            {mpState.status === 'approved' && mpState.withoutSession && !mpState.adoptedAt ? ' · sin turno' : ''}
+          </p>
+        )}
+
         {/* TAREA 280: avance por ítem; en Básico (sin KDS) la cocina marca cada ítem desde aquí */}
         {inKitchen && <ItemsProgress items={order.items as any} />}
         {inKitchen && isBasico
@@ -317,7 +340,15 @@ export function OrderCardCompact({
 
           {/* Botón Cobrar / Cerrar Pedido — directo si delivery con medio de pago asignado */}
           {canCobrar && (
-            isDeliveryClose ? (
+            mpPaid ? (
+              <button
+                onClick={e => { e.stopPropagation(); closeMpPaid(); }}
+                className={slotIsPrimary ? primaryCls : secondaryCls}
+              >
+                <CheckCircle size={16} />
+                <span>Cerrar pedido</span>
+              </button>
+            ) : isDeliveryClose ? (
               <button
                 onClick={(e) => {
                   // HOTFIX 297: ya no cobra en un clic; abre confirmacion con medio de pago

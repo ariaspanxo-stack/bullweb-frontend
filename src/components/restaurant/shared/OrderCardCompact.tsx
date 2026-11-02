@@ -173,7 +173,7 @@ export function OrderCardCompact({
   };
 
   // LOTE MP-A: pagado con Mercado Pago sin cerrar. No se cobra de nuevo; Entregado y Cerrar pedido solo cierran (ahi pasa a PAID).
-  const mpState = useMpOrderState(order.id, /mercado\s*pago/i.test(String(pmRaw ?? '')));
+  const mpState = useMpOrderState(order.id, /mercado\s*pago/i.test(String(pmLabel ?? '')));
   const mpPaid  = mpState?.status === 'approved' && !mpState.reviewReason && Number(mpState.amount) >= Number(order.total);
   const closeMpPaid = async () => {
     try {

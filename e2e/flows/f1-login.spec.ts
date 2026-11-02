@@ -52,6 +52,8 @@ test('F1 login panel, login mesero y token viejo da Sesion cerrada', async ({ pa
   });
 
   await test.step('panel: token viejo tras cerrar sesion', async () => {
+    // Sin la app corriendo al revocar: su propio 401 la redirigia a /login y abortaba el goto de abajo (ERR_ABORTED intermitente).
+    await page.goto('about:blank');
     const out = await api(page, 'POST', '/auth/logout', tokenCajero);
     expect(out.status).toBeLessThan(300);
     const old = await api(page, 'GET', '/auth/me', tokenCajero);

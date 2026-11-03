@@ -68,12 +68,13 @@ export default function PaymentRequiredOverlay() {
   // Si el estado vuelve a ACTIVE/TRIAL (pago confirmado vía webhook), cerrar
   // y recargar. El ciclo de 30s que sostiene otro consumidor nos avisa.
   useEffect(() => {
-    if (open && (status === 'ACTIVE' || status === 'TRIAL')) {
+    // HOTFIX 402: TRIAL solo reactiva si sigue vigente; un TRIAL vencido cerraba el overlay y recargaba en bucle
+    if (open && (status === 'ACTIVE' || (status === 'TRIAL' && billingQ.data?.trialActive))) {
       setOpen(false);
       setError(null);
       window.location.reload();
     }
-  }, [open, status]);
+  }, [open, status, billingQ.data?.trialActive]);
 
   // ── (P2-6) Countdown del retryAfter ─────────────────────────────────────────
   useEffect(() => {
@@ -105,7 +106,7 @@ export default function PaymentRequiredOverlay() {
       setError(null);
       const fresh = await billingQ.refetch();
       const s = fresh.data?.status;
-      if (s === 'ACTIVE' || s === 'TRIAL') {
+      if (s === 'ACTIVE' || (s === 'TRIAL' && fresh.data?.trialActive)) { // HOTFIX 402
         setOpen(false);
         window.location.reload();
       } else {

@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useBillingStatus } from '@/hooks/useBillingStatus';
 import { useNavigate, useLocation } from 'react-router-dom';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { Menu, Bell, MessageCircle, User, Settings, LogOut, ChevronRight, ShoppingBag, AlertCircle, CheckCircle, X, Package, Download, Headset, CreditCard, AlertTriangle, Loader2, Star } from 'lucide-react';
+import { Menu, Bell, MessageCircle, User, Settings, LogOut, ChevronRight, ShoppingBag, AlertCircle, CheckCircle, X, Package, Download, Headset, CreditCard, AlertTriangle, Loader2, Star, Sparkles } from 'lucide-react';
 import { useInstallPWA } from '@/components/pwa/InstallPWA';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
@@ -34,6 +34,7 @@ const breadcrumbMap: Record<string, string> = {
   '/customers': 'Clientes',
   '/employees': 'Empleados',
   '/reports': 'Reportes',
+  '/copiloto': 'Copiloto',
   '/settings': 'Configuración'
 };
 
@@ -223,6 +224,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
     if (type === 'CASH_CLOSE')   return <CheckCircle  className="w-4 h-4 text-purple-500" />;
     if (type === 'TABLE_REQUEST') return <Bell        className="w-4 h-4 text-amber-500" />;
     if (type === 'LOW_REVIEW')    return <Star        className="w-4 h-4 text-amber-500" />; // HOTFIX 273
+    if (type === 'COPILOT_SUMMARY' || type === 'COPILOT_ALERT') return <Sparkles className="w-4 h-4 text-orange-500" />; // LOTE COPILOTO 1
     return <Bell className="w-4 h-4 text-gray-400" />;
   };
 

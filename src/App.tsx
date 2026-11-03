@@ -21,6 +21,7 @@ const Campaigns       = lazy(() => import('@/pages/Campaigns'));
 const Delivery        = lazy(() => import('@/pages/Delivery'));
 const DeliveryMappings = lazy(() => import('@/pages/DeliveryMappings'));
 const Reports         = lazy(() => import('@/pages/Reports'));
+const Copiloto        = lazy(() => import('@/pages/Copiloto')); // LOTE COPILOTO 1
 const Sales           = lazy(() => import('@/pages/Sales/Sales').then(m => ({ default: m.Sales })));
 
 // H187 — E2: deferrals de rutas eager (solo App.tsx las importaba, verificado)
@@ -281,6 +282,7 @@ function AppContent() {
               <Route path="reports"          element={<PermissionGuard permission="reports.view"><Reports /></PermissionGuard>} />
               <Route path="reports/sales"    element={<Navigate to="/reports" replace />} />
               <Route path="reports/analytics" element={<Navigate to="/reports" replace />} />
+              <Route path="copiloto"         element={<PermissionGuard permission="settings.manage"><Copiloto /></PermissionGuard>} />{/* LOTE COPILOTO 1 */}
               
               {/* Sistema */}
               <Route path="settings" element={<AppSettings />} />

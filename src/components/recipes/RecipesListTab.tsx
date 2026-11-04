@@ -177,7 +177,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
           items: validItems,
           yield: rendimiento,
         });
-        toast.success('Vinculación creada. El stock se descontará automáticamente.');
+        toast.success('Ficha creada. El stock se descontará al vender.');
         setSelectedProduct('');
         setItems([{ ingredientId: '', quantity: 1 }]);
         setRecipeYield('1');
@@ -396,7 +396,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                     <div className="space-y-1">
                       {recipe.recipe_items?.slice(0, 3).map((ri) => (
                         <p key={ri.id} className="text-xs text-[#475569] truncate">
-                          • {ri.ingredients?.name ?? 'Ingrediente'} — {formatQty(ri.quantity)} {formatUnit(ri.ingredients?.unit ?? ri.unit ?? '')}
+                          • {ri.ingredients?.name ?? 'Ingrediente'} — {formatQty(ri.quantity, 3)} {formatUnit(ri.ingredients?.unit ?? ri.unit ?? '')}
                         </p>
                       ))}
                       {itemCount > 3 && <p className="text-xs text-[#94A3B8]">+ {itemCount - 3} más</p>}

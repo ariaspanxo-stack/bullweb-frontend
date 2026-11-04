@@ -4,10 +4,12 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { resolve } from 'node:path';
-import { test, expect, shot, goto, loginPanel, api, creds } from '../lib/base';
+import { test, expect as expectBase, shot, goto, loginPanel, api, creds } from '../lib/base';
 import { assertFlow, currentEnv, loadEnvFile, FRONTEND_DIR, MARK, SANDBOX_TENANT_ID } from '../lib/guard';
 
 const F = 'F9';
+// lib/base frena la API a 100 por minuto: una pantalla puede esperar hasta 61 s en cargar sin que sea un fallo
+const expect = expectBase.configure({ timeout: 70_000 });
 test.beforeAll(() => assertFlow(F));
 
 const fmt = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
@@ -20,7 +22,7 @@ const N = {
 
 test('F9 Inventario completo en pantalla', async ({ page }) => {
   test.setTimeout(540_000);
-  page.setDefaultTimeout(30_000); // lib/base frena la API a 100 por minuto: una pantalla puede tardar en cargar
+  page.setDefaultTimeout(70_000);
   const hallazgos: string[] = [];
   const esperados: RegExp[] = [];
   page.on('pageerror', (e) => hallazgos.push(`error de pagina: ${e.message.slice(0, 160)}`));
@@ -49,7 +51,7 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
   const inventario = async (t: string) => { await goto(page, '/inventory'); await tab(t); };
   const fila = (texto: string) => page.locator('tr').filter({ hasText: texto });
   const post = (p: string) => page.waitForResponse((r) => r.url().includes(`/api${p}`) && ['POST', 'PATCH', 'DELETE'].includes(r.request().method()));
-  const toast = (re: RegExp) => expect(page.getByText(re).first()).toBeVisible({ timeout: 15000 });
+  const toast = (re: RegExp) => expect(page.getByText(re).first()).toBeVisible({ timeout: 20000 });
 
   const c = creds();
   const token = await loginPanel(page, c.admin);
@@ -316,7 +318,7 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
 
   await seccion('exportar Excel trae todas las hojas con datos', async () => {
     await goto(page, '/inventory');
-    const d = page.waitForEvent('download', { timeout: 60000 });
+    const d = page.waitForEvent('download', { timeout: 90000 });
     await page.getByRole('button', { name: 'Exportar Excel' }).click();
     const archivo = await (await d).path();
     const req = createRequire(resolve(FRONTEND_DIR, 'package.json'));

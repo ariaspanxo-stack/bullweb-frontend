@@ -480,7 +480,7 @@ export default function Inventory() {
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-500">{qty(mov.previousStock)}</td>
                           <td className="px-4 py-3 text-sm font-medium">{qty(mov.newStock)}</td>
-                          <td className="px-4 py-3 text-sm text-gray-400">{mov.reference || mov.notes || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-400">{/* LOTE 309: la venta guarda el id del pedido: no se muestra un codigo crudo */}{mov.type === 'SALE' ? 'Venta de un pedido' : mov.reference || mov.notes || '—'}</td>
                         </tr>
                       );
                     })

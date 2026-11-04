@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { useBillingStatus } from '@/hooks/useBillingStatus';
@@ -27,7 +28,8 @@ import { useBillingStatus } from '@/hooks/useBillingStatus';
  *          retryAfter (el backend lo expone en el body) — no más clicks ciegos.
  */
 export default function PaymentRequiredOverlay() {
-  const { isSuperAdmin, user } = useAuthStore();
+  const { isSuperAdmin, user, logout } = useAuthStore();
+  const navigate = useNavigate();
   // Hotfix #277: solo el administrador paga (mismo criterio que el backend: ALL_PERMISSIONS o rol /admin/)
   const isAdmin = (user?.role?.permissions ?? []).includes('ALL_PERMISSIONS') || /admin/i.test(user?.role?.name ?? '');
   const [open,      setOpen]      = useState(false);
@@ -199,7 +201,7 @@ export default function PaymentRequiredOverlay() {
           <button
             onClick={checkStatus}
             disabled={verifying}
-            className="text-gray-400 hover:text-gray-600 text-sm py-1 underline underline-offset-2 transition-colors disabled:opacity-60 inline-flex items-center gap-1.5"
+            className="w-full min-h-[44px] text-gray-400 hover:text-gray-600 text-sm underline underline-offset-2 transition-colors disabled:opacity-60 inline-flex items-center justify-center gap-1.5"
           >
             {verifying ? (
               <>
@@ -209,6 +211,15 @@ export default function PaymentRequiredOverlay() {
             ) : (
               isAdmin ? 'Ya pagué, verificar ahora' : 'Verificar ahora'
             )}
+          </button>
+
+          {/* HOTFIX overlay: siempre se puede salir, sin pagar */}
+          <button
+            onClick={() => { logout('manual'); navigate('/login'); }}
+            className="w-full min-h-[44px] mt-2 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-2"
+          >
+            <LogOut size={16} />
+            Cerrar sesión
           </button>
 
           {/* Indicador del ciclo compartido (P0-1) */}

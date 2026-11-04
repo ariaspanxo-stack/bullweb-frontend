@@ -21,7 +21,7 @@ export default function TableRequestAlert({ requests, onDismiss }: TableRequestA
   );
 
   return (
-    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm text-slate-900">
       <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 text-center space-y-4 animate-bounce-once">
         <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto ${
           isCallWaiter ? 'bg-orange-100' : 'bg-slate-100'

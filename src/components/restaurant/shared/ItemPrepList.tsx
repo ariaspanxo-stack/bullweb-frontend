@@ -73,7 +73,7 @@ export function ItemPrepList({ orderId, items, onChanged }: {
         const st = (local[i.id] ?? i.status ?? 'PENDING') as string;
         const loading = busy === i.id;
         return (
-          <div key={i.id} className="flex items-center gap-2 py-1.5 min-w-0">
+          <div key={i.id} className="flex-wrap flex items-center gap-2 py-1.5 min-w-0">
             <p className="flex-1 min-w-0 text-[15px] text-slate-800 truncate leading-snug">
               <span className="font-bold text-slate-900">{i.quantity}×</span> {i.productName}
               {/* HOTFIX 291: modificadores elegidos */}

@@ -68,7 +68,7 @@ function AssignRoleModal({
   });
 
   return (
-    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 text-slate-900">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Cambiar rol</h2>
         <div className="space-y-2 mb-6 max-h-64 overflow-y-auto">
@@ -98,7 +98,7 @@ function AssignRoleModal({
             </label>
           ))}
         </div>
-        <div className="flex gap-3">
+        <div className="flex-wrap flex gap-3">
           <button onClick={onClose} className="min-h-[44px] flex-1 px-4 py-2 text-sm border rounded-xl hover:bg-gray-50">
             Cancelar
           </button>

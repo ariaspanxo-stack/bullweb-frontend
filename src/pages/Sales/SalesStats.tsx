@@ -241,7 +241,7 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
           </div>
 
           {/* Botones adicionales — Mejora #1 */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex-wrap flex gap-3 pt-4">
             <button
               onClick={() => setShowCancelModal(true)}
               className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded text-sm font-medium text-red-700 transition-colors"
@@ -279,9 +279,9 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
 
       {/* Modal Cancelaciones */}
       {showCancelModal && (
-        createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowCancelModal(false)}>
+        createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] text-slate-900" onClick={() => setShowCancelModal(false)}>
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                 <XCircle className="w-5 h-5 text-red-500" />
                 Cancelaciones del período
@@ -330,9 +330,9 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
 
       {/* Modal Propinas */}
       {showTipsModal && (
-        createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]" onClick={() => setShowTipsModal(false)}>
+        createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] text-slate-900" onClick={() => setShowTipsModal(false)}>
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <h2 className="text-lg font-bold text-gray-800">Propinas del período</h2>
               <button onClick={() => setShowTipsModal(false)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />

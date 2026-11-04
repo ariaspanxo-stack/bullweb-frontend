@@ -68,10 +68,10 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+    createPortal(<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-start p-6 border-b border-gray-200">
+        <div className="flex justify-between items-start p-6 border-b border-gray-200 flex-wrap gap-2">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full flex items-center justify-center text-slate-900 text-2xl font-bold">
               {detailedStats?.customer?.name?.charAt(0).toUpperCase() || 'C'}
@@ -90,7 +90,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-500 hover:text-gray-600 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -156,7 +156,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
         )}
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200 px-6">
+        <div className="flex-wrap flex border-b border-gray-200 px-6">
           <button
             onClick={() => setActiveTab('orders')}
             className={`min-h-[44px] px-4 py-3 font-semibold border-b-2 transition-colors ${
@@ -216,7 +216,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                 <div className="space-y-4">
                   {detailedStats.orders.recent.length === 0 ? (
                     <div className="text-center py-12">
-                      <ShoppingBag className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <ShoppingBag className="w-16 h-16 text-slate-700 mx-auto mb-4" />
                       <p className="text-gray-500">No hay órdenes registradas</p>
                     </div>
                   ) : (
@@ -310,7 +310,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                             className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
                           >
                             <div className="flex items-center gap-3">
-                              <span className="text-2xl font-bold text-gray-400">
+                              <span className="text-2xl font-bold text-slate-500">
                                 #{index + 1}
                               </span>
                               <div>
@@ -400,7 +400,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                   <div>
                     <h3 className="font-bold text-gray-900 mb-3">Historial de movimientos</h3>
                     {pointsHistory.length === 0 ? (
-                      <div className="text-center py-8 text-gray-400">
+                      <div className="text-center py-8 text-slate-500">
                         <Gift className="w-10 h-10 mx-auto mb-2 opacity-30" />
                         <p>Sin movimientos de puntos</p>
                       </div>
@@ -420,7 +420,7 @@ const CustomerDetailModal: React.FC<CustomerDetailModalProps> = ({
                               }`}>
                                 {h.points > 0 ? '+' : ''}{h.points} pts
                               </p>
-                              <p className="text-xs text-gray-400">→ {h.balanceAfter} pts</p>
+                              <p className="text-xs text-slate-500">→ {h.balanceAfter} pts</p>
                             </div>
                           </div>
                         ))}

@@ -26,7 +26,7 @@ function AutomationCard({
 }: AutomationCardProps) {
   return (
     <div className={`bg-white rounded-xl border ${enabled ? 'border-orange-200 shadow-sm' : 'border-gray-200'} p-5 transition-all`}>
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
           <div className={`shrink-0 ${bgColor} p-3 rounded-xl`}>
             <Icon className={`h-5 w-5 ${iconColor}`} />
@@ -36,7 +36,7 @@ function AutomationCard({
             <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex-wrap flex items-center gap-2 shrink-0">
           {onEdit && (
             <button
               onClick={onEdit}
@@ -50,7 +50,7 @@ function AutomationCard({
           <button
             onClick={() => onToggle(!enabled)}
             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-              enabled ? 'bg-orange-500' : 'bg-gray-200'
+              enabled ? 'bg-orange-50 border border-orange-300' : 'bg-gray-200'
             }`}
           >
             <span
@@ -145,9 +145,9 @@ function AutomationEditModal({ automationType, settings, onSave, onClose }: Edit
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-wrap gap-2">
           <h3 className="font-semibold text-gray-900">{titles[automationType]}</h3>
           <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
@@ -241,7 +241,7 @@ function AutomationEditModal({ automationType, settings, onSave, onClose }: Edit
           )}
         </div>
 
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+        <div className="flex-wrap px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
           <button onClick={onClose} className="min-h-[44px] px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-white">
             Cancelar
           </button>
@@ -424,7 +424,7 @@ export function AutomationsTab() {
     return (
       <div className="space-y-4">
         {loadError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between flex-wrap gap-2">
             <span>{loadError}</span>
             <button onClick={load} className="min-h-[44px] text-xs underline font-medium ml-4">Reintentar</button>
           </div>
@@ -441,7 +441,7 @@ export function AutomationsTab() {
   return (
     <div className="space-y-6">
       {/* Header row */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h2 className="text-base font-semibold text-gray-900">
             Automatizaciones de email
@@ -478,7 +478,7 @@ export function AutomationsTab() {
 
       {/* Error banner */}
       {loadError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between flex-wrap gap-2">
           <span>{loadError}</span>
           <button onClick={load} className="min-h-[44px] text-xs underline font-medium ml-4">Reintentar</button>
         </div>
@@ -587,7 +587,7 @@ export function AutomationsTab() {
 
       {/* Confirm test modal — con input de email y feedback */}
       {confirmTest && (
-        createPortal(<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
+        createPortal(<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4 text-slate-900">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
             <h3 className="font-semibold text-gray-900 mb-1">Ejecutar prueba de email</h3>
             <p className="text-sm text-gray-500 mb-4">
@@ -611,7 +611,7 @@ export function AutomationsTab() {
               <p className="text-xs text-slate-700 font-medium mb-2">Email enviado correctamente ✅</p>
             )}
 
-            <div className="flex gap-3 justify-end mt-3">
+            <div className="flex-wrap flex gap-3 justify-end mt-3">
               <button
                 onClick={() => { setConfirmTest(null); setTestEmail(''); setTestError(null); setTestSuccess(false); }}
                 disabled={testLoading}

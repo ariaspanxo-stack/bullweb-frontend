@@ -94,9 +94,9 @@ function NewAgentModal({ onClose, onSave, saving }: {
   const [name, setName] = useState('');
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 flex-wrap gap-2">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <Bot className="w-5 h-5 text-slate-700" /> Registrar agente
           </h2>
@@ -113,7 +113,7 @@ function NewAgentModal({ onClose, onSave, saving }: {
           </div>
           <p className="text-xs text-gray-500">Se generará una clave API automáticamente. Ingresala en el Agente BullWeb al configurarlo.</p>
         </div>
-        <div className="flex justify-end gap-2 p-5 border-t border-gray-100">
+        <div className="flex-wrap flex justify-end gap-2 p-5 border-t border-gray-100">
           <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
             Cancelar
           </button>
@@ -285,7 +285,7 @@ function ExtensionSection() {
         </div>
 
         {/* Stepper */}
-        <div className="mt-4 flex items-center gap-1.5">
+        <div className="flex-wrap mt-4 flex items-center gap-1.5">
           {steps.map((s, i) => (
             <div key={s.num} className="flex items-center gap-1.5 flex-1">
               <button
@@ -295,13 +295,13 @@ function ExtensionSection() {
                 }`}
               >
                 <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                  step > s.num ? 'bg-slate-500 text-white' : step === s.num ? 'bg-white text-slate-700' : 'bg-white/30 text-white'
+                  step > s.num ? 'bg-slate-500 text-white' : step === s.num ? 'bg-white text-slate-700' : 'bg-slate-200 text-slate-700'
                 }`}>
                   {step > s.num ? <Check className="w-3 h-3" /> : s.num}
                 </span>
                 <span className="text-xs font-medium leading-tight hidden sm:block">{s.title}</span>
               </button>
-              {i < steps.length - 1 && <ChevronRight className="w-3 h-3 text-white/40 shrink-0" />}
+              {i < steps.length - 1 && <ChevronRight className="w-3 h-3 text-slate-400 shrink-0" />}
             </div>
           ))}
         </div>
@@ -392,7 +392,7 @@ function ExtensionSection() {
               <Download className="w-4 h-4" />
               Descargar install-host.ps1
             </a>
-            <div className="flex gap-3">
+            <div className="flex-wrap flex gap-3">
               <button onClick={() => setStep(1)} className="min-h-[44px] text-sm text-gray-500 hover:underline">← Volver</button>
               <button onClick={() => setStep(3)} className="min-h-[44px] text-sm text-slate-700 hover:underline font-medium">
                 Native Host instalado → Continuar al paso 3
@@ -458,7 +458,7 @@ function ExtensionSection() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex-wrap flex gap-3">
               <button onClick={() => setStep(2)} className="min-h-[44px] text-sm text-gray-500 hover:underline">← Volver</button>
               <button onClick={() => setStep(4)} className="min-h-[44px] text-sm text-slate-700 hover:underline font-medium">
                 API Key guardada → Continuar al paso 4
@@ -494,7 +494,7 @@ function ExtensionSection() {
               ))}
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex-wrap flex gap-3">
               <button onClick={() => setStep(3)} className="min-h-[44px] text-sm text-gray-500 hover:underline">← Volver</button>
               <button
                 onClick={() => window.location.reload()}
@@ -579,7 +579,7 @@ function AgentsSection() {
               </p>
 
               {/* ── Instalación automática recomendada ── */}
-              <div className="mt-3 bg-white/10 border border-white/20 rounded-xl p-3">
+              <div className="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
                 <div className="flex items-center gap-2 mb-1.5">
                   <span className="bg-slate-500 text-white text-xs px-2 py-0.5 rounded-full font-bold leading-tight">
                     RECOMENDADO
@@ -589,7 +589,7 @@ function AgentsSection() {
                 <p className="text-slate-500 text-xs mb-2">
                   Abre <strong>PowerShell como Administrador</strong> y ejecuta:
                 </p>
-                <div className="bg-gray-900/80 rounded-lg px-3 py-2 flex items-center justify-between gap-2">
+                <div className="bg-gray-900/80 rounded-lg px-3 py-2 flex items-center justify-between gap-2 flex-wrap">
                   <code className="text-slate-500 text-xs font-mono break-all leading-relaxed">
                     iwr -useb https://app.bullwebchile.com/install-agent.ps1 | iex
                   </code>
@@ -608,26 +608,26 @@ function AgentsSection() {
 
               {/* ── Pasos 1-4: flujo real del agente (Hotfix #172) ── */}
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="bg-white/10 border border-white/20 rounded-xl p-3 flex gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-white text-slate-700 text-xs font-bold flex items-center justify-center shrink-0">1</span>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-slate-600 text-white text-xs font-bold flex items-center justify-center shrink-0">1</span>
                   <p className="text-xs text-slate-500 leading-relaxed">
                     <strong className="text-slate-900">Creá un agente</strong> con el botón <strong className="text-slate-900">"Nuevo agente"</strong> (más abajo) y copiá su <strong className="text-slate-900">API Key</strong>.
                   </p>
                 </div>
-                <div className="bg-white/10 border border-white/20 rounded-xl p-3 flex gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-white text-slate-700 text-xs font-bold flex items-center justify-center shrink-0">2</span>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-slate-600 text-white text-xs font-bold flex items-center justify-center shrink-0">2</span>
                   <p className="text-xs text-slate-500 leading-relaxed">
                     Abrí <strong className="text-slate-900">PowerShell como Administrador</strong> y ejecutá el comando de arriba (<code className="text-slate-500 font-mono">iwr -useb https://app.bullwebchile.com/install-agent.ps1 | iex</code>).
                   </p>
                 </div>
-                <div className="bg-white/10 border border-white/20 rounded-xl p-3 flex gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-white text-slate-700 text-xs font-bold flex items-center justify-center shrink-0">3</span>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-slate-600 text-white text-xs font-bold flex items-center justify-center shrink-0">3</span>
                   <p className="text-xs text-slate-500 leading-relaxed">
                     Cuando el instalador la pida, <strong className="text-slate-900">pegá la API Key</strong>. Si descargás el .exe y hacés doble clic, corre en segundo plano <strong className="text-slate-900">sin ventana visible</strong> — la vía recomendada es el instalador de PowerShell.
                   </p>
                 </div>
-                <div className="bg-white/10 border border-white/20 rounded-xl p-3 flex gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-white text-slate-700 text-xs font-bold flex items-center justify-center shrink-0">4</span>
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-slate-600 text-white text-xs font-bold flex items-center justify-center shrink-0">4</span>
                   <p className="text-xs text-slate-500 leading-relaxed">
                     Verificá en la tabla de abajo: estado <strong className="text-slate-900">En línea</strong> y versión <strong className="text-slate-900">v{release?.version ?? downloadInfo?.version ?? '—'}</strong>.
                   </p>
@@ -655,21 +655,21 @@ function AgentsSection() {
 
               {/* ── Aviso SmartScreen (colapsable) ── */}
               <details className="mt-3 group">
-                <summary className="text-xs text-yellow-200 cursor-pointer hover:text-white select-none flex items-center gap-1">
+                <summary className="text-xs text-amber-800 cursor-pointer hover:text-white select-none flex items-center gap-1">
                   <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
                   ¿Aparece aviso de Windows? — Haz clic aquí
                 </summary>
-                <div className="mt-2 bg-yellow-500/20 border border-yellow-400/30 rounded-xl p-3 text-xs text-yellow-100">
-                  <p className="font-semibold text-yellow-200 mb-1.5">Aviso de Windows SmartScreen</p>
-                  <p className="mb-2 text-yellow-100/90">
+                <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
+                  <p className="font-semibold text-amber-800 mb-1.5">Aviso de Windows SmartScreen</p>
+                  <p className="mb-2 text-amber-900">
                     Es normal — aparece porque el agente es software nuevo y aún no tiene suficientes
                     descargas para ser reconocido automáticamente. No indica ningún peligro.
                   </p>
-                  <ol className="space-y-1 list-decimal list-inside text-yellow-200">
+                  <ol className="space-y-1 list-decimal list-inside text-amber-800">
                     <li>Haz clic en <strong className="text-slate-900">"Más información"</strong></li>
                     <li>Haz clic en <strong className="text-slate-900">"Ejecutar de todas formas"</strong></li>
                   </ol>
-                  <p className="mt-2 text-yellow-300/70">
+                  <p className="mt-2 text-amber-800">
                     El código fuente es público en GitHub y auditable por cualquier persona.
                   </p>
                 </div>
@@ -686,12 +686,12 @@ function AgentsSection() {
       </div>
 
       {/* Encabezado tabla */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 flex-wrap gap-2">
         <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
           <Bot className="w-4 h-4 text-gray-500" /> Agentes registrados
           {isLoading && <RefreshCw className="w-3 h-3 animate-spin text-gray-400" />}
         </h4>
-        <div className="flex gap-2">
+        <div className="flex-wrap flex gap-2">
           <button onClick={() => refetch()} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-gray-100">
             <RefreshCw className="w-3.5 h-3.5 text-gray-400" />
           </button>
@@ -760,7 +760,7 @@ function AgentsSection() {
                     : 'Nunca'}
                 </td>
                 <td className="px-4 py-2.5">
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex-wrap flex items-center gap-1.5">
                     <code className="text-xs font-mono text-gray-500 bg-gray-100 rounded px-1 py-0.5">
                       {revealedId === a.id ? a.api_key : `${a.api_key.slice(0, 8)}••••••••`}
                     </code>
@@ -843,10 +843,10 @@ function AgentLogsModal({ agent, onClose }: { agent: PrintAgent; onClose: () => 
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
+    createPortal(<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <ScrollText className="w-5 h-5 text-slate-500" />
             <h3 className="font-semibold text-gray-900">Logs — {agent.name}</h3>
@@ -859,7 +859,7 @@ function AgentLogsModal({ agent, onClose }: { agent: PrintAgent; onClose: () => 
         </div>
 
         {/* Filtros */}
-        <div className="flex items-center gap-2 px-5 py-2 border-b border-gray-100 shrink-0">
+        <div className="flex-wrap flex items-center gap-2 px-5 py-2 border-b border-gray-100 shrink-0">
           {(['all', 'error', 'warn'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
               className={`min-h-[44px] px-3 py-1 rounded-full text-xs font-medium transition-colors ${
@@ -1016,9 +1016,9 @@ function AssignAgentModal({
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 flex-wrap gap-2">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-slate-700" />
             Asignar agente a {printer.name}
@@ -1064,7 +1064,7 @@ function AssignAgentModal({
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 p-5 border-t border-gray-100">
+        <div className="flex-wrap flex justify-end gap-2 p-5 border-t border-gray-100">
           <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
             Cancelar
           </button>
@@ -1131,13 +1131,13 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
   const cancelledCount = jobs.filter(j => j.status === 'cancelled').length;
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/40 z-[100] flex justify-end" onClick={onClose}>
+    createPortal(<div className="fixed inset-0 bg-black/40 z-[100] flex justify-end text-slate-900" onClick={onClose}>
       <div
         className="w-full max-w-lg bg-white h-full overflow-y-auto shadow-xl flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 sticky top-0 bg-white z-10 flex-wrap gap-2">
           <div>
             <h2 className="font-semibold text-gray-900 flex items-center gap-2">
               <History className="w-4 h-4 text-slate-500" />
@@ -1145,7 +1145,7 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">Últimos 50 trabajos · Auto-refresco cada 5s</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex-wrap flex items-center gap-2">
             <button
               onClick={() => setAutoRefresh(a => !a)}
               className={`min-h-[44px] text-xs px-2 py-1 rounded-lg border transition-colors ${
@@ -1206,7 +1206,7 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
           )}
           {jobs.map(job => (
             <div key={job.id} className="border border-gray-100 rounded-xl p-3 bg-white hover:bg-gray-50 transition-colors">
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                     job.status === 'pending'   ? 'bg-yellow-100 text-yellow-700' :
@@ -1238,7 +1238,7 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex-wrap flex items-center gap-1 shrink-0">
                   {job.status === 'failed' && (
                     <button
                       onClick={() => retryMut.mutate(job.id)}
@@ -1615,7 +1615,7 @@ export default function PrintersPage() {
           </h1>
           <p className="text-sm text-gray-500 mt-1">Gestión de impresoras térmicas y de etiquetas por sucursal</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex-wrap flex gap-2">
           <button onClick={() => { refetch(); qc.invalidateQueries({ queryKey: ['admin','printers','health'] }); }} disabled={isLoading}
             className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded-lg border border-gray-200 hover:bg-gray-50">
             <RefreshCw className={`w-4 h-4 text-gray-500 ${isLoading ? 'animate-spin' : ''}`} />
@@ -1849,7 +1849,7 @@ export default function PrintersPage() {
                       : <span className="text-gray-300">Nunca</span>}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
+                    <div className="flex-wrap flex items-center justify-end gap-1">
                       {/* Test */}
                       <button
                         onClick={() => handleTest(p)}

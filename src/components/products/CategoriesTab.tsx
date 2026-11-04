@@ -205,7 +205,7 @@ export const CategoriesTab: React.FC<CategoriesTabProps> = ({
   return (
     <div className="p-6">
       {/* Encabezado — A4/A5 */}
-      <div className="flex items-center justify-between gap-4 mb-6">
+      <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
         <div>
           <h2 className={TITLE}>Categorías</h2>
           <p className={SUBTITLE}>Gestiona y reordena arrastrando las categorías de tus productos</p>

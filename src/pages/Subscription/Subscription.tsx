@@ -455,7 +455,7 @@ export default function Subscription() {
 
         {/* HOTFIX 306 (B7-01): cancelar exige escribir CANCELAR (modal por portal, z-100) */}
         {cancelConfirmOpen && createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 text-slate-900">
             <div className="absolute inset-0 bg-black/50" onClick={() => { setCancelConfirmOpen(false); setCancelText(''); }} />
             <div className="relative bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-2">Cancelar suscripción</h3>
@@ -469,7 +469,7 @@ export default function Subscription() {
                 aria-label="Escribe CANCELAR para confirmar"
                 className="w-full min-h-[44px] px-3 border border-gray-300 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-[#F97316]"
               />
-              <div className="flex gap-3">
+              <div className="flex-wrap flex gap-3">
                 <button
                   onClick={() => { setCancelConfirmOpen(false); setCancelText(''); }}
                   className="flex-1 min-h-[44px] rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50"

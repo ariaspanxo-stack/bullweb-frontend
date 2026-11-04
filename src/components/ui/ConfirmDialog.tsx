@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { AlertTriangle, Trash2, X } from 'lucide-react';
 
 export interface ConfirmDialogProps {
@@ -28,19 +29,19 @@ export function ConfirmDialog({
       ? 'bg-red-100'
       : variant === 'warning'
       ? 'bg-yellow-100'
-      : 'bg-blue-100';
+      : 'bg-slate-100';
   const iconColor =
     variant === 'danger'
       ? 'text-red-500'
       : variant === 'warning'
       ? 'text-yellow-500'
-      : 'text-blue-500';
+      : 'text-slate-500';
   const btnClass =
     variant === 'danger'
       ? 'bg-red-500 hover:bg-red-600'
       : variant === 'warning'
       ? 'bg-yellow-500 hover:bg-yellow-600'
-      : 'bg-blue-500 hover:bg-blue-600';
+      : 'bg-slate-500 hover:bg-slate-700';
   const Icon = variant === 'danger' ? Trash2 : AlertTriangle;
   const defaultTitle =
     variant === 'danger'
@@ -50,7 +51,7 @@ export function ConfirmDialog({
       : 'Confirmar';
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
         {/* Header */}
         <div className="px-6 pt-6 pb-4 flex items-start gap-4">
@@ -65,7 +66,7 @@ export function ConfirmDialog({
           </div>
           <button
             onClick={onCancel}
-            className="p-1 hover:bg-gray-100 rounded-lg flex-shrink-0"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded-lg flex-shrink-0"
           >
             <X className="w-4 h-4 text-gray-400" />
           </button>
@@ -75,18 +76,18 @@ export function ConfirmDialog({
         <div className="px-6 pb-6 flex gap-2">
           <button
             onClick={onCancel}
-            className="flex-1 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="min-h-[44px] flex-1 py-2.5 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
-            className={`flex-1 py-2.5 text-white rounded-xl text-sm font-bold transition-colors ${btnClass}`}
+            className={`min-h-[44px] flex-1 py-2.5 text-white rounded-xl text-sm font-bold transition-colors ${btnClass}`}
           >
             {confirmLabel}
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

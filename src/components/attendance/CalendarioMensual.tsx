@@ -122,7 +122,7 @@ export function CalendarioMensual({ employees }: CalendarioMensualProps) {
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-gray-800">Calendario Mensual</h3>
           {/* Toggle Individual / Equipo */}
-          <div className="flex items-center bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
+          <div className="flex-wrap flex items-center bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
             <button
               onClick={() => setView('individual')}
               className={`min-h-[44px] flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors ${
@@ -157,7 +157,7 @@ export function CalendarioMensual({ employees }: CalendarioMensualProps) {
             </div>
           )}
           {/* Navegación mes */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          <div className="flex-wrap flex items-center gap-1 bg-gray-100 rounded-xl p-1">
             <button
               onClick={prevMonth}
               className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-white text-gray-600 transition-colors"

@@ -131,7 +131,7 @@ export default function AddProductModal({
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Cantidad
           </label>
-          <div className="flex items-center gap-4">
+          <div className="flex-wrap flex items-center gap-4">
             <button
               onClick={decrementQuantity}
               className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 border border-gray-300 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all"
@@ -207,7 +207,7 @@ export default function AddProductModal({
         </div>
 
         {/* Botones */}
-        <div className="flex gap-3">
+        <div className="flex-wrap flex gap-3">
           <Button
             variant="outline"
             size="lg"

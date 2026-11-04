@@ -115,9 +115,9 @@ export const ImportMenuModal: React.FC<Props> = ({ isOpen, onClose, onImported }
   const tenantName = tenants.find(t => t.id === tenantId)?.name ?? '';
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-label="Importar carta">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 text-slate-900" role="dialog" aria-modal="true" aria-label="Importar carta">
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-6xl max-h-[92vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-wrap gap-2">
           <div>
             <h2 className="text-xl font-bold text-[#0F172A]">Importar carta</h2>
             <p className="text-sm text-[#64748B]">Foto o PDF (lectura con IA) o Excel con columnas Categoría | Producto | Precio | Descripción</p>
@@ -213,7 +213,7 @@ export const ImportMenuModal: React.FC<Props> = ({ isOpen, onClose, onImported }
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-200">
+        <div className="flex-wrap flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-200">
           <button onClick={close} className={BTN_OUTLINE} disabled={!!busy}>Cerrar</button>
           <button onClick={commit} className={BTN_PRIMARY} disabled={!rows.length || !incluidas.length || invalidas.length > 0 || !tenantId || !!busy}>
             {busy === 'commit' ? <Loader2 className="w-5 h-5 animate-spin" /> : null}

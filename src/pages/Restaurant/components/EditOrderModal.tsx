@@ -3,6 +3,7 @@
 // Permite eliminar productos existentes y agregar nuevos
 // ═══════════════════════════════════════════════════════════════
 
+import { createPortal } from 'react-dom';
 import { useState, useRef } from 'react';
 import { X, Search, Plus, Minus, Trash2, Pencil, Star } from 'lucide-react';
 import type { Product, ProductCategory, CartItem } from '../../../types/restaurant.types';
@@ -167,14 +168,14 @@ export const EditOrderModal = ({
   const accentPriceText = accent === 'purple' ? 'text-slate-700' : 'text-slate-700';
 
   return (
-    <>
+    createPortal(<>
       {stockDialog}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] text-slate-900" onClick={onClose} />
 
-      <div className="fixed right-0 top-0 h-screen w-[480px] bg-white shadow-2xl z-[60] flex flex-col overflow-hidden">
+      <div className="fixed right-0 top-0 h-screen w-[480px] bg-white shadow-2xl z-[100] flex flex-col overflow-hidden">
 
         {/* ── HEADER ── */}
-        <div className={`${accentBg} text-white px-4 py-3 flex items-center justify-between flex-shrink-0`}>
+        <div className={`${accentBg} text-slate-900 px-4 py-3 flex items-center justify-between flex-shrink-0`}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
               <Pencil size={18} />
@@ -348,7 +349,7 @@ export const EditOrderModal = ({
                 {newCart.map(item => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"
+                    className="flex-wrap flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"
                   >
                     <button
                       onClick={() => handleQty(item.id, item.quantity - 1)}
@@ -427,7 +428,7 @@ export const EditOrderModal = ({
 
       {/* Hotfix #286: confirmacion al quitar el ultimo producto (anula el pedido) */}
       {voidModal}
-    </>
+    </>, document.body)
   );
 };
 

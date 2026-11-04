@@ -356,7 +356,7 @@ export function CouponsPage() {
                     </td>
                     <td className="px-4 py-3">{statusBadge(c)}</td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
+                      <div className="flex-wrap flex items-center gap-1">
                         {/* FUNCIONAL 8: toggle deshabilitado mientras procesa */}
                         <button
                           onClick={() => !isToggling && toggleMutation.mutate({ id: c.id, isActive: !c.isActive })}
@@ -400,11 +400,11 @@ export function CouponsPage() {
 
           {/* ── MENOR 12: Paginación ── */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 flex-wrap gap-2">
               <span className="text-xs text-gray-500">
                 Página {page} de {totalPages} · {total} cupones
               </span>
-              <div className="flex items-center gap-1">
+              <div className="flex-wrap flex items-center gap-1">
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
@@ -427,7 +427,7 @@ export function CouponsPage() {
 
       {/* ── Modal Crear / Editar ── */}
       {showModal && (
-        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-900">
           <form
             onSubmit={handleSubmit}
             className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
@@ -550,7 +550,7 @@ export function CouponsPage() {
               )}
 
             </div>
-            <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
+            <div className="flex-wrap px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
               <button
                 type="button" onClick={closeModal}
                 className="min-h-[44px] px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -571,7 +571,7 @@ export function CouponsPage() {
 
       {/* ── Modal Confirmar Eliminación ── */}
       {deleteId && (
-        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-900">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -582,7 +582,7 @@ export function CouponsPage() {
                 <p className="text-xs text-gray-400">Esta acción no se puede deshacer</p>
               </div>
             </div>
-            <div className="flex gap-3 justify-end">
+            <div className="flex-wrap flex gap-3 justify-end">
               <button
                 onClick={() => setDeleteId(null)}
                 className="min-h-[44px] px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"

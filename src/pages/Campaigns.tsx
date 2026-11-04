@@ -123,7 +123,7 @@ export default function Campaigns() {
     <div className="min-h-screen bg-gray-50">
       {/* ── Header ── */}
       <div className="bg-white border-b border-gray-200 px-6 py-5">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <div className="bg-orange-50 p-2.5 rounded-xl">
               <Heart className="h-6 w-6 text-orange-500" />
@@ -142,7 +142,7 @@ export default function Campaigns() {
               </span>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex-wrap flex gap-2">
             <button
               onClick={handleRefresh}
               disabled={refreshing}
@@ -191,7 +191,7 @@ export default function Campaigns() {
         )}
 
         {/* ── Tabs ── */}
-        <div className="flex gap-1 mt-5">
+        <div className="flex-wrap flex gap-1 mt-5">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -217,7 +217,7 @@ export default function Campaigns() {
       <div className="p-6">
         {/* Error banner */}
         {loadError && (
-          <div className="mb-5 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
+          <div className="mb-5 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between flex-wrap gap-2">
             <span>{loadError}</span>
             <button onClick={loadData} className="min-h-[44px] text-xs underline font-medium ml-4">Reintentar</button>
           </div>

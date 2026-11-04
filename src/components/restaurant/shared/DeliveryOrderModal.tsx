@@ -484,7 +484,7 @@ export function DeliveryOrderModal({
     <>
       {/* ── Backdrop ── */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-6"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-6 text-slate-900"
         onClick={onClose}
       >
         {/* ── Panel ── */}
@@ -495,7 +495,7 @@ export function DeliveryOrderModal({
 
           {/* ════ HEADER ════ */}
           <div className={`${headerBg} text-white px-5 py-4 flex-shrink-0`}>
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
               {/* Icono + título */}
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -772,7 +772,7 @@ export function DeliveryOrderModal({
                 extraTotals={<>
                   {/* Descuento: solo visible si existe en BD */}
                   {orderDiscount > 0 && (
-                    <div className="flex justify-between items-center text-sm font-semibold text-[#F97316]">
+                    <div className="flex justify-between items-center text-sm font-semibold text-[#F97316] flex-wrap gap-2">
                       <span>Descuento</span>
                       <div className="flex items-center gap-2">
                         <span>− {fmt(orderDiscount)}</span>
@@ -905,7 +905,7 @@ export function DeliveryOrderModal({
                 footerExtra={showDiscount && (
                   <div className="mt-3 border-t border-gray-100 pt-3 bg-orange-50">
                     <p className="text-xs font-semibold text-gray-600 mb-2">Aplicar descuento</p>
-                    <div className="flex gap-2 items-center">
+                    <div className="flex-wrap flex gap-2 items-center">
                       <div className="flex rounded-lg overflow-hidden border border-gray-200">
                         <button
                           onClick={() => setDiscountType('%')}
@@ -949,7 +949,7 @@ export function DeliveryOrderModal({
           {/* ════ FOOTER — Acciones ════ */}
           <div className="border-t border-gray-100 p-3 flex-shrink-0 bg-white space-y-2">
             {/* Fila superior — acciones secundarias */}
-            <div className="flex gap-2">
+            <div className="flex-wrap flex gap-2">
               {/* Descuento */}
               <button
                 onClick={() => setShowDiscount(v => !v)}
@@ -970,7 +970,7 @@ export function DeliveryOrderModal({
             </div>
 
             {/* Fila principal — Cocina + Cobrar al mismo nivel */}
-            <div className="flex gap-2">
+            <div className="flex-wrap flex gap-2">
               {/* Cocina — igual de prominente que Cobrar (Hotfix 251 C4: naranja #F97316) */}
               <button
                 onClick={handleCocina}

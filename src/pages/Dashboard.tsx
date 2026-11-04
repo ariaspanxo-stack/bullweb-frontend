@@ -193,7 +193,7 @@ export const Dashboard = () => {
       </div>
 
       {/* Selector de rango */}
-      <div className="mb-6 flex gap-2">
+      <div className="flex-wrap mb-6 flex gap-2">
         {(['today', 'yesterday', 'week', 'month'] as TimeRange[]).map((range) => (
           <button
             key={range}
@@ -219,7 +219,7 @@ export const Dashboard = () => {
           <div className="pointer-events-none absolute -bottom-12 left-1/3 h-40 w-40 rounded-full bg-blue-500/10 blur-2xl" />
 
           <div className="relative p-6">
-            <div className="mb-5 flex items-center justify-between gap-3">
+            <div className="mb-5 flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2 text-slate-300">
                 <Crown size={18} className="text-amber-400" />
                 <h2 className="text-sm font-semibold uppercase tracking-wide">Resumen ejecutivo</h2>

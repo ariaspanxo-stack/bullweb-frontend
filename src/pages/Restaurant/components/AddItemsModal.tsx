@@ -2,6 +2,7 @@
 // ADD ITEMS MODAL - Agregar productos a una orden existente
 // ═══════════════════════════════════════════════════════════════
 
+import { createPortal } from 'react-dom';
 import { useState, useRef } from 'react';
 import { X, Search, Plus, Minus, ShoppingCart, Star } from 'lucide-react';
 import type { Product, ProductCategory, CartItem } from '../../../types/restaurant.types';
@@ -108,13 +109,13 @@ export const AddItemsModal = ({
     : 'bg-slate-500 text-white';
 
   return (
-    <>
+    createPortal(<>
       {stockDialog}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]" onClick={onClose} />
-      <div className="fixed right-0 top-0 h-screen w-[420px] bg-white shadow-2xl z-[60] flex flex-col overflow-hidden">
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] text-slate-900" onClick={onClose} />
+      <div className="fixed right-0 top-0 h-screen w-[420px] bg-white shadow-2xl z-[100] flex flex-col overflow-hidden">
 
         {/* HEADER */}
-        <div className={`${accent === 'purple' ? ' ' : ' '} text-white px-4 py-3 flex items-center justify-between flex-shrink-0`}>
+        <div className={`${accent === 'purple' ? ' ' : ' '} text-slate-900 px-4 py-3 flex items-center justify-between flex-shrink-0`}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
               <ShoppingCart size={18} />
@@ -199,7 +200,7 @@ export const AddItemsModal = ({
                 const promo = promoPricing.lines[idx]; // HOTFIX 299
                 return (
                 <div key={item.id} className="bg-white rounded-xl border border-gray-200 px-3 py-2.5">
-                <div className="flex items-center gap-2">
+                <div className="flex-wrap flex items-center gap-2">
                   <button onClick={() => handleQty(item.id, item.quantity - 1)}
                     className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-6 h-6 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center transition-colors flex-shrink-0">
                     <Minus size={11} />
@@ -257,7 +258,7 @@ export const AddItemsModal = ({
           </div>
         )}
       </div>
-    </>
+    </>, document.body)
   );
 };
 

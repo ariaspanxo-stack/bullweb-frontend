@@ -151,7 +151,7 @@ const { dteIsConfigured, lastPaidOrderId } = useRestaurant();
 
   if (paymentCompleted) {
     return (
-      createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+      createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
         <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center">
           <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-orange-600" />
@@ -216,7 +216,7 @@ isConfigured={dteIsConfigured}
           </label>
           
           {/* Botones rápidos */}
-          <div className="flex gap-2 mb-3">
+          <div className="flex-wrap flex gap-2 mb-3">
             {[10, 15, 20].map(percentage => (
               <button
                 key={percentage}
@@ -233,7 +233,7 @@ isConfigured={dteIsConfigured}
           </div>
 
           {/* Tipo de propina */}
-          <div className="flex gap-2 mb-3">
+          <div className="flex-wrap flex gap-2 mb-3">
             <button
               onClick={() => handleTipTypeChange('PERCENTAGE')}
               className={`min-h-[44px] flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all ${
@@ -368,7 +368,7 @@ isConfigured={dteIsConfigured}
         </div>
 
         {/* Botones */}
-        <div className="flex gap-3 pt-4 border-t border-gray-200">
+        <div className="flex-wrap flex gap-3 pt-4 border-t border-gray-200">
           <Button
             variant="outline"
             size="lg"

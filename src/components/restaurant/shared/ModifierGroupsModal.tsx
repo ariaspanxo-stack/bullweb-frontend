@@ -113,9 +113,9 @@ export function ModifierGroupsModal({
 
   return createPortal(
     <>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] text-slate-900" onClick={onClose} />
       <div role="dialog" aria-labelledby="modgroups-title" className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] max-w-[94vw] max-h-[90vh] flex flex-col bg-white rounded-2xl shadow-2xl z-[100]">
-        <div className="flex items-start justify-between gap-3 p-5 border-b border-gray-200">
+        <div className="flex items-start justify-between gap-3 p-5 border-b border-gray-200 flex-wrap">
           <div className="min-w-0">
             <h3 id="modgroups-title" className="font-bold text-gray-900 text-lg truncate">{product?.name}</h3>
             <p className="text-sm text-gray-500">Elige las opciones</p>
@@ -185,7 +185,7 @@ export function ModifierGroupsModal({
           )}
         </div>
 
-        <div className="p-5 border-t border-gray-200 flex items-center gap-3">
+        <div className="flex-wrap p-5 border-t border-gray-200 flex items-center gap-3">
           <div className="flex-1">
             <p className="text-xs text-gray-500">Total por unidad</p>
             <p className="text-lg font-bold text-gray-900">{clp(Number(product?.price ?? 0) + extra)}</p>

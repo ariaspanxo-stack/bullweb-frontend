@@ -178,7 +178,7 @@ export function MesasTab() {
   return (
     <div>
       {/* Filtros */}
-      <div className="mb-4 flex items-center gap-4">
+      <div className="flex-wrap mb-4 flex items-center gap-4">
         {/* Buscador */}
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
@@ -193,7 +193,7 @@ export function MesasTab() {
 
         {/* Secciones (pestañas con conteo ocupadas/total) */}
         {sections.length > 0 && (
-          <div className="flex gap-1">
+          <div className="flex-wrap flex gap-1">
             {sections.map((section: any) => {
               const c = zoneCounts.get(section.id) ?? { occupied: 0, total: 0 };
               return (

@@ -152,10 +152,10 @@ const ModifierModal: React.FC<ModifierModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+    createPortal(<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-start p-6 border-b border-gray-200">
+        <div className="flex justify-between items-start p-6 border-b border-gray-200 flex-wrap gap-2">
           <div className="flex-1">
             <h2 className="text-xl font-bold text-gray-900">{product.name}</h2>
             <p className="text-sm text-gray-500 mt-1">Personaliza tu producto</p>
@@ -275,7 +275,7 @@ const ModifierModal: React.FC<ModifierModalProps> = ({
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex-wrap flex gap-3">
             <button
               onClick={onClose}
               className="min-h-[44px] flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"

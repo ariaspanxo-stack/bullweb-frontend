@@ -46,12 +46,12 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
   return (
     <div className="bg-white border-b border-slate-200 shadow-sm">
       {showShiftBanner && !dismissed && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm px-4 py-1.5 flex items-center justify-between gap-2">
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 text-sm px-4 py-1.5 flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-1.5">
             <span className="text-sm">⚠️</span>
             <p className="text-sm text-amber-900">Sin turno activo</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex-wrap flex items-center gap-2">
             <button onClick={onOpenShift} className="min-h-[44px] h-9 px-3 rounded-lg bg-[#F97316] hover:bg-orange-600 text-white text-sm font-semibold transition-colors">Abrir</button>
             <button onClick={() => setDismissed(true)} className="min-h-[44px] text-amber-400 hover:text-amber-600 text-sm leading-none">✕</button>
           </div>
@@ -59,12 +59,12 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
       )}
       <div className="px-4 py-2 flex items-center justify-between gap-3">
         {/* Tab bar */}
-        <div className="inline-flex items-center gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+        <div className="flex-wrap flex w-full sm:inline-flex sm:w-fit items-center gap-1 bg-gray-100 p-1 rounded-xl">
           {/* ── Mesas ── solo si tiene pos.mesas */}
           {canTab('mesas') && (
             <button
               onClick={() => handleTabChange('mesas')}
-              className={`min-h-[44px] flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer ${
+              className={`min-h-[44px] flex flex-1 sm:flex-none min-w-0 items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-5 py-2.5 rounded-lg font-semibold text-[13px] sm:text-sm transition-all duration-200 cursor-pointer ${
                 activeTab === 'mesas'
                   ? 'bg-white shadow-sm text-gray-900'
                   : 'text-gray-500 hover:text-gray-900'
@@ -86,7 +86,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
           {canTab('mostrador') && (
             <button
               onClick={() => handleTabChange('mostrador')}
-              className={`min-h-[44px] flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer ${
+              className={`min-h-[44px] flex flex-1 sm:flex-none min-w-0 items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-5 py-2.5 rounded-lg font-semibold text-[13px] sm:text-sm transition-all duration-200 cursor-pointer ${
                 activeTab === 'mostrador'
                   ? 'bg-white shadow-sm text-gray-900'
                   : 'text-gray-500 hover:text-gray-900'
@@ -115,7 +115,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
           {canTab('delivery') && (
             <button
               onClick={() => handleTabChange('delivery')}
-              className={`min-h-[44px] flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer ${
+              className={`min-h-[44px] flex flex-1 sm:flex-none min-w-0 items-center justify-center gap-1 sm:gap-2 px-1.5 sm:px-5 py-2.5 rounded-lg font-semibold text-[13px] sm:text-sm transition-all duration-200 cursor-pointer ${
                 activeTab === 'delivery'
                   ? 'bg-white shadow-sm text-gray-900'
                   : 'text-gray-500 hover:text-gray-900'
@@ -142,7 +142,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
         </div>
 
         {/* Controles funcionales */}
-        <div className="flex items-center gap-2">
+        <div className="flex-wrap flex items-center gap-2">
           <button
             onClick={handleRefresh}
             className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"

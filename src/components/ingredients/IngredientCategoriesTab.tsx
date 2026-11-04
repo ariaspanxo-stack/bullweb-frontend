@@ -17,7 +17,7 @@ export const IngredientCategoriesTab: React.FC<IngredientCategoriesTabProps> = (
 }) => {
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Categorías de Ingredientes</h2>
           <p className="text-gray-600 mt-1">Organiza tus ingredientes por tipo</p>
@@ -49,7 +49,7 @@ export const IngredientCategoriesTab: React.FC<IngredientCategoriesTabProps> = (
               </div>
             </div>
 
-            <div className="flex gap-2 mt-4">
+            <div className="flex-wrap flex gap-2 mt-4">
               <button
                 onClick={() => onEdit(category)}
                 className="min-h-[44px] flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-slate-700 bg-slate-50 rounded hover:bg-slate-100"

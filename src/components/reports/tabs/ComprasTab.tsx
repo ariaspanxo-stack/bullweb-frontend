@@ -67,11 +67,11 @@ export function ComprasTab() {
       </div>
 
       {purchasesMeta && purchasesMeta.total > PURCHASES_PAGE_SIZE && (
-        <div className="flex items-center justify-between px-4 py-3 bg-white border border-gray-100 rounded-2xl">
+        <div className="flex items-center justify-between px-4 py-3 bg-white border border-gray-100 rounded-2xl flex-wrap gap-2">
           <span className="text-xs text-gray-400">
             Mostrando <span className="font-semibold text-gray-600">{(purchasesPage - 1) * PURCHASES_PAGE_SIZE + 1}–{Math.min(purchasesPage * PURCHASES_PAGE_SIZE, purchasesMeta.total)}</span> de <span className="font-semibold text-gray-600">{purchasesMeta.total}</span> compras
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex-wrap flex items-center gap-1">
             <button onClick={() => setPurchasesPage(1)} disabled={purchasesPage === 1} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronsLeft className="w-4 h-4" /></button>
             <button onClick={() => setPurchasesPage(p => p - 1)} disabled={purchasesPage === 1} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronLeft className="w-4 h-4" /></button>
             <span className="text-sm text-gray-600 px-2"><span className="font-bold">{purchasesPage}</span> / <span className="font-bold">{totalPages}</span></span>

@@ -391,14 +391,14 @@ export const NewMostradorModal = ({
       )}
       {/* Overlay — sin onClick para no cerrar al hacer click fuera */}
       <div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] text-slate-900"
       />
 
       {/* Modal fullscreen — Hotfix 245 C1 */}
-      <div className="fixed inset-0 bg-white shadow-2xl z-50 flex flex-col overflow-hidden">
+      <div className="fixed inset-0 bg-white shadow-2xl z-[100] flex flex-col overflow-hidden text-slate-900">
         
         {/* ========== HEADER ========== */}
-        <div className=" text-slate-900 px-5 py-4 flex items-center justify-between flex-shrink-0">
+        <div className=" text-slate-900 px-5 py-4 flex items-center justify-between flex-shrink-0 flex-wrap gap-2">
           <div className="flex items-center gap-3">
             {step === 'order' ? (
               <button
@@ -422,7 +422,7 @@ export const NewMostradorModal = ({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex-wrap flex items-center gap-2">
             <div className="flex items-center gap-1 mr-1">
               <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step === 'client' ? 'bg-white text-slate-700' : 'bg-white/25 text-white/70'}`}>1</div>
               <div className="w-3 h-px bg-white/40" />

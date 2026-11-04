@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type {
@@ -87,10 +88,10 @@ export const ModifierOptionModal: React.FC<ModifierOptionModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    createPortal(<div className="fixed inset-0 z-[100] overflow-y-auto text-slate-900">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-[100]"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       />
 
@@ -98,7 +99,7 @@ export const ModifierOptionModal: React.FC<ModifierOptionModalProps> = ({
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-wrap gap-2">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
                 {mode === 'create' ? '✨ Nueva Opción' : '✏️ Editar Opción'}
@@ -201,7 +202,7 @@ export const ModifierOptionModal: React.FC<ModifierOptionModalProps> = ({
             </div>
 
             {/* Botones */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex-wrap flex gap-3 pt-4">
               <button
                 type="button"
                 onClick={onClose}
@@ -219,7 +220,7 @@ export const ModifierOptionModal: React.FC<ModifierOptionModalProps> = ({
           </form>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 

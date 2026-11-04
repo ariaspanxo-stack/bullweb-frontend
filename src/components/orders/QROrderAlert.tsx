@@ -78,7 +78,7 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
   };
 
   return (
-    createPortal(<div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 text-slate-900">
       <div className="bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-orange-500/40 overflow-hidden">
 
         {/* Barra de progreso countdown */}

@@ -127,9 +127,9 @@ function TextModal({
   const [h, setH] = useState(headerText);
   const [f, setF] = useState(footerText);
   return (
-    createPortal(<div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-wrap gap-2">
           <h3 className="font-semibold text-gray-900">{title}</h3>
           <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
@@ -157,7 +157,7 @@ function TextModal({
             />
           </div>
         </div>
-        <div className="flex justify-end gap-2 px-5 py-3 border-t border-gray-100">
+        <div className="flex-wrap flex justify-end gap-2 px-5 py-3 border-t border-gray-100">
           <button
             onClick={onClose}
             className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -333,7 +333,7 @@ export default function PrintSettingsPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
             <Printer className="w-7 h-7 text-white" />

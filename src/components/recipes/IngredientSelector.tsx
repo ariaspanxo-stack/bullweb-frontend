@@ -151,7 +151,7 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                     </span>
                   )}
                   <div className="flex-1 space-y-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <h4 className="font-medium text-gray-900">
                         {getIngredientName(recipeIng.ingredientId)}
                       </h4>
@@ -232,7 +232,7 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
         </button>
       ) : (
         <div className="border border-gray-300 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
             <h4 className="font-medium text-gray-900">Selecciona un ingrediente</h4>
             <button
               type="button"

@@ -253,7 +253,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
 
   // HOTFIX 299: modal por portal z-[100]; el ConfirmModal (z-[60]) va dentro para quedar encima
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-4 text-slate-900">
     <ConfirmModal
       isOpen={shiftConfirmOpen}
       title="Diferencia en arqueo"
@@ -414,7 +414,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
         ) : (
           <>
             <div className="bg-white px-6 py-5 flex-shrink-0">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between flex-wrap gap-2">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-orange-500/20 rounded-xl">
                 <DollarSign className="w-5 h-5 text-orange-400" />
@@ -681,7 +681,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-3xl flex items-center gap-3">
+        <div className="flex-wrap flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-3xl flex items-center gap-3">
           <button
             type="button"
             onClick={onCancel}

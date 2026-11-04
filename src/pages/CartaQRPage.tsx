@@ -791,7 +791,7 @@ export default function CartaQRPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6">
+      <div className="flex-wrap flex gap-1 bg-gray-100 rounded-xl p-1 mb-6">
         {([
           { id: 'qr',            icon: QrCode,     label: 'Código QR'     },
           { id: 'preview',       icon: Eye,         label: 'Vista previa'  },
@@ -998,7 +998,7 @@ export default function CartaQRPage() {
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
                 Descargar QR
               </p>
-              <div className="flex gap-2">
+              <div className="flex-wrap flex gap-2">
                 <button
                   onClick={handleDownloadPNG}
                   disabled={!qrDataUrl}
@@ -1203,7 +1203,7 @@ export default function CartaQRPage() {
                   <div key={day.key}
                     className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4"
                   >
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                       <span className="font-semibold text-gray-800 text-sm">{day.label}</span>
                       <button
                         onClick={() => {
@@ -1566,7 +1566,7 @@ export default function CartaQRPage() {
 
           {/* Toggle: ocultar no disponibles */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
               <div>
                 <p className="text-sm font-semibold text-gray-700">Ocultar productos no disponibles</p>
                 <p className="text-xs text-gray-400 mt-0.5">
@@ -1576,7 +1576,7 @@ export default function CartaQRPage() {
               <button
                 onClick={() => setHideUnavailable(v => !v)}
                 className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${
-                  hideUnavailable ? 'bg-orange-500' : 'bg-gray-300'
+                  hideUnavailable ? 'bg-orange-50 border border-orange-300' : 'bg-gray-300'
                 }`}
               >
                 <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform duration-200 ${
@@ -1669,7 +1669,7 @@ export default function CartaQRPage() {
                           </div>
                         )}
                         <p className="text-xs text-gray-500 text-center">Escanea para llamar al mesero</p>
-                        <div className="flex gap-2 w-full mt-2">
+                        <div className="flex-wrap flex gap-2 w-full mt-2">
                           <button
                             onClick={() => downloadMesaQr(String(table.id), mesaLabel(table))}
                             disabled={!mesaQrUrls[table.id]}

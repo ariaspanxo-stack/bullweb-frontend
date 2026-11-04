@@ -82,11 +82,11 @@ export function FailedJobsPanel({ printerId, onClose }: FailedJobsPanelProps) {
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-wrap gap-2">
           <div>
             <h2 className="font-black text-gray-800 text-lg">Cola de reimpresión</h2>
             <p className="text-sm text-gray-400 mt-0.5">
@@ -95,7 +95,7 @@ export function FailedJobsPanel({ printerId, onClose }: FailedJobsPanelProps) {
               {printerId ? ' en esta impresora' : ' en total'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex-wrap flex items-center gap-2">
             {jobs.length > 1 && (
               <button
                 onClick={handleRetryAll}
@@ -153,7 +153,7 @@ export function FailedJobsPanel({ printerId, onClose }: FailedJobsPanelProps) {
                     {job.attempts} intento{job.attempts !== 1 ? 's' : ''}
                   </p>
                 </div>
-                <div className="flex gap-1 flex-shrink-0">
+                <div className="flex-wrap flex gap-1 flex-shrink-0">
                   <button
                     onClick={() => handleRetry(job.id)}
                     disabled={retrying.has(job.id)}

@@ -79,7 +79,7 @@ export default function CustomerFormModal({ isOpen, onClose, customer }: Custome
           placeholder="cliente@email.com"
         />
 
-        <div className="flex gap-3 pt-4">
+        <div className="flex-wrap flex gap-3 pt-4">
           <Button type="button" variant="outline" onClick={onClose} className="flex-1">
             Cancelar
           </Button>

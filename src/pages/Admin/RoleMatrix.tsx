@@ -14,6 +14,7 @@
  *  - Bloqueo de roles de sistema
  */
 
+import { createPortal } from 'react-dom';
 import { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -50,12 +51,12 @@ export const MODULES = [
 ] as const;
 
 export const ACTIONS = [
-  { key: 'read',    label: 'Ver',      color: 'bg-blue-100   text-blue-700'   },
-  { key: 'create',  label: 'Crear',    color: 'bg-green-100  text-green-700'  },
+  { key: 'read',    label: 'Ver',      color: 'bg-slate-100 text-slate-700'   },
+  { key: 'create',  label: 'Crear',    color: 'bg-slate-100 text-slate-700'  },
   { key: 'update',  label: 'Editar',   color: 'bg-yellow-100 text-yellow-700' },
-  { key: 'delete',  label: 'Borrar',   color: 'bg-red-100    text-red-700'    },
-  { key: 'export',  label: 'Exportar', color: 'bg-purple-100 text-purple-700' },
-  { key: 'approve', label: 'Aprobar',  color: 'bg-indigo-100 text-indigo-700' },
+  { key: 'delete',  label: 'Borrar',   color: 'bg-red-100 text-red-700'    },
+  { key: 'export',  label: 'Exportar', color: 'bg-slate-100 text-slate-700' },
+  { key: 'approve', label: 'Aprobar',  color: 'bg-slate-100 text-slate-700' },
   { key: 'void',    label: 'Anular',   color: 'bg-orange-100 text-orange-700' },
 ] as const;
 
@@ -88,17 +89,17 @@ const PermCell = ({
       onClick={onChange}
       disabled={disabled}
       title={disabled ? 'Rol de sistema: no editable' : (allowed ? 'Permitido — click para denegar' : 'Denegado — click para permitir')}
-      className={`
+      className={`min-h-[44px] 
         w-7 h-7 rounded-md flex items-center justify-center transition-all border
         ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:scale-110'}
-        ${gained ? 'bg-green-200 border-green-400 ring-1 ring-green-400' :
-          lost  ? 'bg-red-200   border-red-300   ring-1 ring-red-400'   :
-          allowed ? 'bg-green-100 border-green-300 hover:bg-green-200'   :
-                    'bg-gray-100  border-gray-200  hover:bg-gray-200'    }
+        ${gained ? 'bg-slate-100 border-slate-200 ring-1 ring-slate-300' :
+          lost  ? 'bg-red-200 border-red-300 ring-1 ring-red-400'   :
+          allowed ? 'bg-slate-100 border-slate-200 hover:bg-slate-100'   :
+                    'bg-gray-100 border-gray-200 hover:bg-gray-200'    }
       `}
     >
       {allowed
-        ? <CheckCircle2 size={14} className={gained ? 'text-green-700' : 'text-green-600'} />
+        ? <CheckCircle2 size={14} className={gained ? 'text-slate-700' : 'text-slate-700'} />
         : <span className={`text-xs font-bold ${lost ? 'text-red-600' : 'text-gray-300'}`}>✕</span>
       }
     </button>
@@ -138,13 +139,13 @@ const CreateRoleModal = ({ onClose, onCreated }: CreateRoleModalProps) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-96 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
             <Plus size={16} className="text-orange-500" /> Nuevo Rol
           </h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600"><X size={16} /></button>
         </div>
 
         <div>
@@ -176,7 +177,7 @@ const CreateRoleModal = ({ onClose, onCreated }: CreateRoleModalProps) => {
               <button
                 key={c}
                 onClick={() => setColor(c)}
-                className={`w-8 h-8 rounded-full border-2 transition-all ${
+                className={`min-h-[44px] w-8 h-8 rounded-full border-2 transition-all ${
                   color === c ? 'border-gray-800 scale-110 shadow-md' : 'border-transparent hover:scale-105'
                 }`}
                 style={{ backgroundColor: c }}
@@ -194,28 +195,28 @@ const CreateRoleModal = ({ onClose, onCreated }: CreateRoleModalProps) => {
           </div>
         </div>
 
-        <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-          <Info size={14} className="text-blue-500 mt-0.5 shrink-0" />
-          <p className="text-xs text-blue-700">
+        <div className="flex items-start gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+          <Info size={14} className="text-slate-500 mt-0.5 shrink-0" />
+          <p className="text-xs text-slate-700">
             El rol se creará sin permisos. Podrás configurarlos en la matriz de permisos a continuación.
           </p>
         </div>
 
         <div className="flex justify-end gap-2 pt-1">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">
+          <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">
             Cancelar
           </button>
           <button
             onClick={handleCreate}
             disabled={!name.trim() || creating}
-            className="px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-1.5"
+            className="min-h-[44px] px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-400 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-1.5"
           >
             {creating ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
             Crear y configurar permisos
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 
@@ -250,11 +251,11 @@ const RenameRoleModal = ({ role, onClose, onRenamed }: RenameRoleModalProps) => 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-80 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-base font-semibold text-gray-900">Editar rol</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={16} /></button>
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600"><X size={16} /></button>
         </div>
 
         <div>
@@ -264,7 +265,7 @@ const RenameRoleModal = ({ role, onClose, onRenamed }: RenameRoleModalProps) => 
             onChange={(e) => setName(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSave(); if (e.key === 'Escape') onClose(); }}
             autoFocus
-            className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </div>
 
@@ -275,7 +276,7 @@ const RenameRoleModal = ({ role, onClose, onRenamed }: RenameRoleModalProps) => 
               <button
                 key={c}
                 onClick={() => setColor(c)}
-                className={`w-7 h-7 rounded-full border-2 transition-all ${
+                className={`min-h-[44px] w-7 h-7 rounded-full border-2 transition-all ${
                   color === c ? 'border-gray-800 scale-110' : 'border-transparent'
                 }`}
                 style={{ backgroundColor: c }}
@@ -285,17 +286,17 @@ const RenameRoleModal = ({ role, onClose, onRenamed }: RenameRoleModalProps) => 
         </div>
 
         <div className="flex justify-end gap-2">
-          <button onClick={onClose} className="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
+          <button onClick={onClose} className="min-h-[44px] px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
           <button
             onClick={handleSave}
             disabled={!name.trim() || saving}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="min-h-[44px] px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
           >
             {saving ? 'Guardando...' : 'Guardar'}
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 
@@ -308,7 +309,7 @@ interface UnsavedChangesModalProps {
 }
 
 const UnsavedChangesModal = ({ onDiscard, onKeepEditing }: UnsavedChangesModalProps) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+  createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
     <div className="bg-white rounded-2xl shadow-2xl p-6 w-80 flex flex-col gap-4">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
@@ -321,18 +322,18 @@ const UnsavedChangesModal = ({ onDiscard, onKeepEditing }: UnsavedChangesModalPr
       </div>
       <p className="text-sm text-gray-600">¿Deseas descartar los cambios y cambiar de rol?</p>
       <div className="flex justify-end gap-2">
-        <button onClick={onKeepEditing} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg border">
+        <button onClick={onKeepEditing} className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg border">
           Seguir editando
         </button>
         <button
           onClick={onDiscard}
-          className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600"
+          className="min-h-[44px] px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600"
         >
           Descartar cambios
         </button>
       </div>
     </div>
-  </div>
+  </div>, document.body)
 );
 
 // ---------------------------------------------------------------------------
@@ -509,7 +510,7 @@ export const RoleMatrix = ({ roleId }: RoleMatrixProps) => {
                 <h3 className="font-semibold text-gray-800 text-sm">Roles</h3>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="p-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-400 transition"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-400 transition"
                   title="Nuevo rol"
                 >
                   <Plus size={14} />
@@ -555,7 +556,7 @@ export const RoleMatrix = ({ roleId }: RoleMatrixProps) => {
                         <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0">
                           <button
                             onClick={(e) => { e.stopPropagation(); setRenameRole(role); }}
-                            className="p-1 text-gray-400 hover:text-blue-500 rounded transition"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 text-gray-400 hover:text-slate-500 rounded transition"
                             title="Editar nombre y color"
                           >
                             <Pencil size={11} />
@@ -563,7 +564,7 @@ export const RoleMatrix = ({ roleId }: RoleMatrixProps) => {
                           <button
                             onClick={(e) => { e.stopPropagation(); handleDeleteRole(role); }}
                             disabled={userCount > 0}
-                            className="p-1 text-gray-400 hover:text-red-500 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 text-gray-400 hover:text-red-500 rounded transition disabled:opacity-30 disabled:cursor-not-allowed"
                             title={userCount > 0 ? 'Tiene usuarios asignados' : 'Eliminar rol'}
                           >
                             <Trash2 size={11} />
@@ -596,7 +597,7 @@ export const RoleMatrix = ({ roleId }: RoleMatrixProps) => {
                 {selectedRoleId && (
                   <button
                     onClick={openCloneDialog}
-                    className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-100 transition"
+                    className="min-h-[44px] flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-100 transition"
                   >
                     <Copy size={14} /> Clonar
                   </button>
@@ -606,7 +607,7 @@ export const RoleMatrix = ({ roleId }: RoleMatrixProps) => {
                   <button
                     onClick={() => saveMutation.mutate()}
                     disabled={saveMutation.isPending}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 transition"
+                    className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-60 transition"
                   >
                     {saveMutation.isPending
                       ? <><Loader2 size={14} className="animate-spin" /> Guardando...</>
@@ -629,11 +630,11 @@ export const RoleMatrix = ({ roleId }: RoleMatrixProps) => {
 
             {/* Indicador de cambios */}
             {hasChanges && !selectedRole?.isSystem && (
-              <div className="mb-4 bg-blue-50 border-l-4 border-blue-500 p-3 rounded flex items-center gap-2">
-                <Info size={14} className="text-blue-600 shrink-0" />
-                <p className="text-sm text-blue-800">
+              <div className="mb-4 bg-slate-50 border-l-4 border-slate-200 p-3 rounded flex items-center gap-2">
+                <Info size={14} className="text-slate-700 shrink-0" />
+                <p className="text-sm text-slate-700">
                   Hay cambios sin guardar.
-                  <span className="ml-1 text-green-600 font-medium">Verde = nuevo permiso</span> ·
+                  <span className="ml-1 text-slate-700 font-medium">Verde = nuevo permiso</span> ·
                   <span className="ml-1 text-red-600 font-medium">Rojo = permiso quitado</span>
                 </p>
               </div>
@@ -647,14 +648,14 @@ export const RoleMatrix = ({ roleId }: RoleMatrixProps) => {
                 <p className="text-sm mt-1">Elige un rol del panel izquierdo o crea uno nuevo.</p>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="mt-4 flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-400 transition mx-auto text-sm"
+                  className="min-h-[44px] mt-4 flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-400 transition mx-auto text-sm"
                 >
                   <Plus size={14} /> Nuevo rol
                 </button>
               </div>
             ) : roleLoading ? (
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-12 flex items-center justify-center">
-                <Loader2 size={24} className="animate-spin text-blue-500" />
+                <Loader2 size={24} className="animate-spin text-slate-500" />
               </div>
             ) : (
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-auto">
@@ -665,7 +666,7 @@ export const RoleMatrix = ({ roleId }: RoleMatrixProps) => {
                       {ACTIONS.map((action) => (
                         <th key={action.key} className="px-2 py-3 text-center">
                           <button
-                            className={`inline-flex flex-col items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition w-full ${selectedRole?.isSystem ? 'cursor-default' : 'cursor-pointer'}`}
+                            className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center inline-flex flex-col items-center gap-1 px-2 py-1 rounded-lg hover:bg-gray-100 transition w-full ${selectedRole?.isSystem ? 'cursor-default' : 'cursor-pointer'}`}
                             onClick={() => toggleAction(action.key)}
                             title={`Toggle todos: ${action.label}`}
                           >
@@ -705,9 +706,9 @@ export const RoleMatrix = ({ roleId }: RoleMatrixProps) => {
                             <button
                               onClick={() => toggleModule(mod.key)}
                               disabled={!!selectedRole?.isSystem}
-                              className={`text-xs px-2 py-1 rounded-md border transition ${
+                              className={`min-h-[44px] text-xs px-2 py-1 rounded-md border transition ${
                                 allEnabled
-                                  ? 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
+                                  ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-100'
                                   : 'bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200'
                               } disabled:opacity-40 disabled:cursor-not-allowed`}
                               title={allEnabled ? 'Quitar todos' : 'Otorgar todos'}
@@ -726,15 +727,15 @@ export const RoleMatrix = ({ roleId }: RoleMatrixProps) => {
             {/* Leyenda */}
             <div className="mt-4 flex items-center gap-6 text-xs text-gray-500">
               <span className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded bg-green-100 border border-green-300 flex items-center justify-center">
-                  <CheckCircle2 size={10} className="text-green-600" />
+                <div className="w-4 h-4 rounded bg-slate-100 border border-slate-200 flex items-center justify-center">
+                  <CheckCircle2 size={10} className="text-slate-700" />
                 </div> Permitido
               </span>
               <span className="flex items-center gap-1.5">
                 <div className="w-4 h-4 rounded bg-gray-100 border border-gray-200" /> Denegado
               </span>
               <span className="flex items-center gap-1.5">
-                <div className="w-4 h-4 rounded bg-green-200 border border-green-400 ring-1 ring-green-400" /> Nuevo permiso
+                <div className="w-4 h-4 rounded bg-slate-100 border border-slate-200 ring-1 ring-slate-300" /> Nuevo permiso
               </span>
               <span className="flex items-center gap-1.5">
                 <div className="w-4 h-4 rounded bg-red-200 border border-red-300 ring-1 ring-red-400" /> Permiso quitado
@@ -777,7 +778,7 @@ export const RoleMatrix = ({ roleId }: RoleMatrixProps) => {
       )}
 
       {cloneDialogOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-xl p-6 w-80 flex flex-col gap-4">
             <h3 className="text-base font-semibold text-gray-900">Clonar rol</h3>
             <p className="text-sm text-gray-500">Nombre para el nuevo rol:</p>
@@ -787,14 +788,14 @@ export const RoleMatrix = ({ roleId }: RoleMatrixProps) => {
               onChange={(e) => setCloneDialogName(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') doClone(); if (e.key === 'Escape') setCloneDialogOpen(false); }}
               autoFocus
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
             <div className="flex justify-end gap-2">
-              <button onClick={() => setCloneDialogOpen(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
-              <button onClick={doClone} disabled={!cloneDialogName.trim()} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">Clonar</button>
+              <button onClick={() => setCloneDialogOpen(false)} className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
+              <button onClick={doClone} disabled={!cloneDialogName.trim()} className="min-h-[44px] px-4 py-2 text-sm bg-white text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 border border-slate-300">Clonar</button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
     </>
   );

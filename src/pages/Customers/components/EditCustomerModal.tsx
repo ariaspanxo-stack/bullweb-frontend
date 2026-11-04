@@ -76,10 +76,10 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white border border-slate-200 rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col">
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
-          <h3 className="text-lg font-bold text-white">Editar Cliente</h3>
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0 flex-wrap gap-2">
+          <h3 className="text-lg font-bold text-slate-900">Editar Cliente</h3>
           <button
             onClick={onClose}
             className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-colors"
@@ -98,7 +98,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 !text-white rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 !text-slate-900 rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
                 />
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 !text-white rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 !text-slate-900 rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
                 />
               </div>
             </div>
@@ -126,7 +126,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   maxLength={12}
                   onChange={(e) => setRut(e.target.value)}
                   placeholder="12.345.678-9"
-                  className="w-full bg-slate-50 border border-slate-200 !text-white rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 !text-slate-900 rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
                 />
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 !text-white rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 !text-slate-900 rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
                 />
               </div>
             </div>
@@ -153,7 +153,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   value={birthdate}
                   max={new Date().toISOString().slice(0, 10)}
                   onChange={(e) => setBirthdate(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 !text-white rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none [color-scheme:dark]"
+                  className="w-full bg-slate-50 border border-slate-200 !text-slate-900 rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none [color-scheme:dark]"
                 />
                 <p className="text-xs text-slate-500 mt-1">Para felicitarlo en su cumpleaños 🎂</p>
               </div>
@@ -166,7 +166,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                 <select
                   value={sector}
                   onChange={(e) => setSector(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 !text-white rounded-lg pl-10 pr-4 py-2.5 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none appearance-none [color-scheme:dark]"
+                  className="w-full bg-slate-50 border border-slate-200 !text-slate-900 rounded-lg pl-10 pr-4 py-2.5 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none appearance-none [color-scheme:dark]"
                 >
                   <option value="">Selecciona un sector</option>
                   {SECTORES_CHILE.map(s => (
@@ -184,7 +184,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 !text-white rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
+                  className="w-full bg-slate-50 border border-slate-200 !text-slate-900 rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
                 />
               </div>
             </div>
@@ -195,7 +195,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                 type="text"
                 value={addressNumber}
                 onChange={(e) => setAddressNumber(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 !text-white rounded-lg px-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
+                className="w-full bg-slate-50 border border-slate-200 !text-slate-900 rounded-lg px-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
               />
             </div>
 
@@ -206,7 +206,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 !text-white rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none resize-none"
+                  className="w-full bg-slate-50 border border-slate-200 !text-slate-900 rounded-lg pl-10 pr-4 py-2.5 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none resize-none"
                   rows={3}
                 />
               </div>
@@ -214,7 +214,7 @@ export default function EditCustomerModal({ isOpen, customer, onClose, onSuccess
           </div>
         </div>
 
-        <div className="p-4 border-t border-slate-200 flex gap-2 flex-shrink-0">
+        <div className="flex-wrap p-4 border-t border-slate-200 flex gap-2 flex-shrink-0">
           <button
             onClick={onClose}
             className="min-h-[44px] flex-1 py-2.5 px-4 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium transition-colors"

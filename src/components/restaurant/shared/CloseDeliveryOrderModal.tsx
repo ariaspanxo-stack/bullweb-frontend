@@ -82,11 +82,11 @@ export function CloseDeliveryOrderModal({ order, onClose, onDone }: CloseDeliver
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 text-slate-900"
       onClick={e => { e.stopPropagation(); if (!saving) onClose(); }}
     >
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="text-lg font-bold text-gray-900">Cerrar pedido</h3>
           <button
             onClick={onClose}
@@ -149,7 +149,7 @@ export function CloseDeliveryOrderModal({ order, onClose, onDone }: CloseDeliver
           </div>
         )}
 
-        <div className="flex gap-2 mt-5">
+        <div className="flex-wrap flex gap-2 mt-5">
           <button
             onClick={onClose}
             disabled={saving}

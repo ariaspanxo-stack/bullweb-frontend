@@ -375,7 +375,7 @@ export default function PromotionsPage() {
                       </button>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-1">
+                      <div className="flex-wrap flex items-center gap-1">
                         {canManage && (
                           <button
                             onClick={() => openEdit(p)}
@@ -406,7 +406,7 @@ export default function PromotionsPage() {
 
       {/* ── Modal Crear / Editar ── */}
       {showModal && (
-        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-900">
           <form
             onSubmit={handleSubmit}
             className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
@@ -573,7 +573,7 @@ export default function PromotionsPage() {
                         onClick={() => toggleDay(d.value)}
                         className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                           checked
-                            ? 'bg-orange-500 text-white'
+                            ? 'bg-orange-50 text-orange-700 border border-orange-300'
                             : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                         }`}
                       >
@@ -613,7 +613,7 @@ export default function PromotionsPage() {
               </label>
 
             </div>
-            <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end sticky bottom-0 bg-white">
+            <div className="flex-wrap px-6 py-4 border-t border-gray-100 flex gap-3 justify-end sticky bottom-0 bg-white">
               <button
                 type="button" onClick={closeModal}
                 className="min-h-[44px] px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -634,7 +634,7 @@ export default function PromotionsPage() {
 
       {/* ── Modal Confirmar Eliminación ── */}
       {deletePromo && (
-        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-900">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -645,7 +645,7 @@ export default function PromotionsPage() {
                 <p className="text-xs text-gray-400">"{deletePromo.name}" — Esta acción no se puede deshacer</p>
               </div>
             </div>
-            <div className="flex gap-3 justify-end">
+            <div className="flex-wrap flex gap-3 justify-end">
               <button
                 onClick={() => setDeletePromo(null)}
                 className="min-h-[44px] px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"

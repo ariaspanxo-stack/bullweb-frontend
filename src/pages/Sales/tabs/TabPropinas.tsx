@@ -299,7 +299,7 @@ export const TabPropinas = ({ filters }: Props) => {
 
           {period === 'rango' ? (
             <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5">
+              <div className="flex-wrap flex items-center gap-1.5">
                 <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Desde:</span>
                 <input
                   type="date"
@@ -314,7 +314,7 @@ export const TabPropinas = ({ filters }: Props) => {
                   className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100 w-24"
                 />
               </div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex-wrap flex items-center gap-1.5">
                 <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Hasta:</span>
                 <input
                   type="date"
@@ -424,7 +424,7 @@ export const TabPropinas = ({ filters }: Props) => {
           </select>
 
           {/* Acciones al final de la fila */}
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex-wrap flex items-center gap-2 ml-auto">
             {/* Toggle tabla / cards */}
             <div className="flex rounded border border-gray-200 overflow-hidden">
               <button
@@ -432,7 +432,7 @@ export const TabPropinas = ({ filters }: Props) => {
                 title="Vista tabla"
                 className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 transition-colors ${
                   viewMode === 'table'
-                    ? 'bg-orange-500 text-white'
+                    ? 'bg-orange-50 text-orange-700 border border-orange-300'
                     : 'bg-white text-gray-500 hover:bg-gray-100'
                 }`}
               >
@@ -443,7 +443,7 @@ export const TabPropinas = ({ filters }: Props) => {
                 title="Vista cards"
                 className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 transition-colors ${
                   viewMode === 'cards'
-                    ? 'bg-orange-500 text-white'
+                    ? 'bg-orange-50 text-orange-700 border border-orange-300'
                     : 'bg-white text-gray-500 hover:bg-gray-100'
                 }`}
               >

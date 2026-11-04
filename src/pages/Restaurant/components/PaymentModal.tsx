@@ -92,7 +92,7 @@ const RowInput = memo(({ row, onMethod, onAmount, onRemove, canRemove, placehold
   const selectedName = activeMethods.find(m => m.code === row.method)?.name ?? '';
   const Icon = methodIcon(selectedName);
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex-wrap flex items-center gap-2">
       {/* Selector de método */}
       <div className="relative flex-shrink-0">
         <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 text-slate-500" />
@@ -431,7 +431,7 @@ export const PaymentModal = ({
 
   if (paymentCompleted) {
     return createPortal(
-      <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
         <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center">
           <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-orange-600" />
@@ -464,16 +464,16 @@ export const PaymentModal = ({
 
   return createPortal(
     <>
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100]" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] text-slate-900" onClick={onClose} />
 
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 text-slate-900">
         <div
           className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden"
           style={{ height: 'min(92vh, 780px)' }}
           onClick={e => e.stopPropagation()}
         >
           {/* HEADER — una sola línea (D4) */}
-          <div className="flex-shrink-0 flex items-center justify-between gap-3 px-5 min-h-[60px] border-b border-slate-200">
+          <div className="flex-shrink-0 flex items-center justify-between gap-3 px-5 min-h-[60px] border-b border-slate-200 flex-wrap">
             <h2 className="text-lg font-bold text-slate-900 truncate">
               {channelLabel} · <span className="font-black">${fmt(finalTotal)}</span>
               {orderNumber && <span className="ml-2 text-xs font-medium text-slate-400">{orderNumber}</span>}
@@ -669,7 +669,7 @@ export const PaymentModal = ({
                   if (!anyTipEnabled && tipRows.length === 0) return null;
                   return (
                     <section className={CARD}>
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                         <p className={CARD_TITLE}>
                           Propina
                           {tipConfig && <span className="ml-1 normal-case tracking-normal font-medium text-slate-400">({tipConfig.tip_percentage}%)</span>}
@@ -701,7 +701,7 @@ export const PaymentModal = ({
 
                 {/* PAGO */}
                 <section className={CARD}>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                     <p className={CARD_TITLE}>
                       Pago
                       <span className="ml-1 normal-case tracking-normal font-medium text-slate-400">· venta ${fmt(saleTotal)}</span>

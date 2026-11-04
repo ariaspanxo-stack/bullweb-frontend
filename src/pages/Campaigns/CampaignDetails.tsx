@@ -238,7 +238,7 @@ export function CampaignDetails({ campaign, onUpdate }: CampaignDetailsProps) {
             onChange={(e) => setScheduleDate(e.target.value)}
             className="w-full border border-slate-200 rounded px-2 py-1 text-xs bg-white"
           />
-          <div className="flex gap-2">
+          <div className="flex-wrap flex gap-2">
             <button
               onClick={handleSchedule}
               disabled={!scheduleDate || isBusy('schedule')}
@@ -260,7 +260,7 @@ export function CampaignDetails({ campaign, onUpdate }: CampaignDetailsProps) {
       {confirmDelete && (
         <div className="mx-4 mb-3 bg-red-50 border border-red-200 rounded-lg p-3 space-y-2">
           <p className="text-xs font-medium text-red-800">¿Eliminar esta campaña permanentemente?</p>
-          <div className="flex gap-2">
+          <div className="flex-wrap flex gap-2">
             <button
               onClick={handleDelete}
               disabled={isBusy('delete')}

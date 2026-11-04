@@ -71,11 +71,11 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-wrap gap-2">
           <div>
             <h2 className="font-black text-gray-800 text-lg">Editar registro</h2>
             <p className="text-sm text-gray-400 mt-0.5">{record.employeeName}</p>
@@ -127,7 +127,7 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
           {/* Tipo ENTRY / EXIT */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
-            <div className="flex gap-2">
+            <div className="flex-wrap flex gap-2">
               <button
                 type="button"
                 onClick={() => setType('ENTRY')}
@@ -204,7 +204,7 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
           )}
 
           {/* Footer */}
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex-wrap flex items-center gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}

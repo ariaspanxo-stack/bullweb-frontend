@@ -56,7 +56,7 @@ export const ModifiersListTab: React.FC<ModifiersListTabProps> = ({
   return (
     <div className="p-6 space-y-6">
       {/* Encabezado — A4/A5 */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h2 className={TITLE}>Modificadores</h2>
           <p className={SUBTITLE}>
@@ -104,7 +104,7 @@ export const ModifiersListTab: React.FC<ModifiersListTabProps> = ({
                   onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleGroup(group.id); } }}
                   className="p-4 cursor-pointer hover:bg-[#F8FAFC] transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1 flex-wrap">
                         {isExpanded
@@ -150,7 +150,7 @@ export const ModifiersListTab: React.FC<ModifiersListTabProps> = ({
                 {isExpanded && (
                   <div className="p-4 space-y-2 border-t border-[#E2E8F0]">
                     {(group.options ?? []).map((option) => (
-                      <div key={option.id} className="flex items-center justify-between gap-3 p-3 bg-[#F8FAFC] rounded-lg">
+                      <div key={option.id} className="flex items-center justify-between gap-3 p-3 bg-[#F8FAFC] rounded-lg flex-wrap">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h4 className="font-semibold text-[#0F172A]">{option.name}</h4>

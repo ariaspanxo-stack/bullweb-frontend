@@ -219,7 +219,7 @@ export function MonthlyClose() {
 
       {/* ── Selector período ── */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm">
+        <div className="flex-wrap flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-2 shadow-sm">
           <Calendar className="w-4 h-4 text-orange-500" />
           <select
             value={month}
@@ -239,7 +239,7 @@ export function MonthlyClose() {
           </select>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex-wrap flex gap-2">
           <button
             onClick={handleExportExcel}
             className="min-h-[44px] flex items-center gap-2 px-3 py-2 rounded-lg bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium transition-colors border border-slate-300"

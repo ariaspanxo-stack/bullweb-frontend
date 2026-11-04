@@ -26,20 +26,20 @@ export default function Badge({
 }: BadgeProps) {
   const variants = {
     default: 'bg-gray-100 text-gray-800',
-    success: 'bg-green-100 text-green-800',
+    success: 'bg-slate-100 text-slate-700',
     warning: 'bg-yellow-100 text-yellow-800',
     danger: 'bg-red-100 text-red-800',
-    info: 'bg-blue-100 text-blue-800',
-    purple: 'bg-purple-100 text-purple-800'
+    info: 'bg-slate-100 text-slate-700',
+    purple: 'bg-slate-100 text-slate-700'
   };
 
   const dotColors = {
     default: 'bg-gray-500',
-    success: 'bg-green-500',
+    success: 'bg-slate-500',
     warning: 'bg-yellow-500',
     danger: 'bg-red-500',
-    info: 'bg-blue-500',
-    purple: 'bg-purple-500'
+    info: 'bg-slate-500',
+    purple: 'bg-slate-500'
   };
 
   const sizes = {

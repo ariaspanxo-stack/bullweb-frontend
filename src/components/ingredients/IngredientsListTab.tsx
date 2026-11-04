@@ -151,7 +151,7 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
     // H127: wrapper plano — el scroll de página lo maneja el Layout; el fondo lo pinta Products.tsx.
     <div className="p-6 space-y-6">
       {/* Encabezado — A4/A5 */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h2 className={TITLE}>Ingredientes</h2>
           <p className={SUBTITLE}>

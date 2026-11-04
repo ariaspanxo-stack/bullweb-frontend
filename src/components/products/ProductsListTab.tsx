@@ -235,7 +235,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
     <>
       {/* Encabezado — Hotfix #258 (A3/A4/A5): fondo claro, título legible, crear naranja arriba a la derecha */}
       <div className="sticky top-0 z-20 bg-[#F8FAFC]/95 backdrop-blur border-b border-[#E2E8F0] px-6 py-4">
-        <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
           <div>
             <h1 className={TITLE}>Productos</h1>
             <p className={SUBTITLE}>
@@ -243,7 +243,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
               {filteredProducts.length !== products.length && ` (${products.length} en total)`}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex-wrap flex items-center gap-2">
             {onImportMenu && (
               <button onClick={onImportMenu} className={BTN_OUTLINE}>
                 <FileUp className="w-5 h-5" />
@@ -277,7 +277,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
             <span className="hidden sm:inline">CSV</span>
           </button>
 
-          <div className="flex gap-2">
+          <div className="flex-wrap flex gap-2">
             <button
               onClick={() => setViewType('grid')}
               className={viewType === 'grid' ? filterClass(true) : BTN_ICON}
@@ -363,7 +363,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
               Seleccionar todos ({currentItems.length})
             </button>
           )}
-          <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+          <div className="flex-wrap flex items-center gap-2 ml-auto flex-shrink-0">
             <button onClick={() => handleBulkAvailability(true)} disabled={bulkLoading} className={BTN_OUTLINE}>
               <ToggleRight className="w-4 h-4" />
               Habilitar
@@ -538,7 +538,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                       )}
 
                       {(
-                        <div className="flex items-center gap-2">
+                        <div className="flex-wrap flex items-center gap-2">
                           <button
                             onClick={() => onEditProduct(product)}
                             title="Editar"

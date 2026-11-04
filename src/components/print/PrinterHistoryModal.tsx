@@ -40,11 +40,11 @@ export function PrinterHistoryModal({
   }), [history]);
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-wrap gap-2">
           <div>
             <h2 className="font-black text-gray-800 text-lg">Historial — {printer.name}</h2>
             <p className="text-sm text-gray-400 mt-0.5">Últimos 30 días</p>

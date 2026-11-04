@@ -61,13 +61,13 @@ export default function TableStats() {
       </div>
 
       {/* Disponibles */}
-      <div className="bg-green-50 rounded-lg border-2 border-green-200 p-4 hover:shadow-md transition-shadow">
-        <div className="flex items-center gap-2 text-green-600 mb-2">
+      <div className="bg-slate-50 rounded-lg border-2 border-slate-200 p-4 hover:shadow-md transition-shadow">
+        <div className="flex items-center gap-2 text-slate-700 mb-2">
           <CheckCircle className="w-4 h-4" />
           <span className="text-sm font-medium">Disponibles</span>
         </div>
-        <div className="text-3xl font-bold text-green-700">{stats.available}</div>
-        <div className="text-xs text-green-600 mt-1">
+        <div className="text-3xl font-bold text-slate-700">{stats.available}</div>
+        <div className="text-xs text-slate-700 mt-1">
           Listas para usar
         </div>
       </div>
@@ -98,15 +98,15 @@ export default function TableStats() {
       </div>
 
       {/* Tasa de Ocupación */}
-      <div className="bg-blue-50 rounded-lg border-2 border-blue-200 p-4 hover:shadow-md transition-shadow">
-        <div className="flex items-center gap-2 text-blue-600 mb-2">
+      <div className="bg-slate-50 rounded-lg border-2 border-slate-200 p-4 hover:shadow-md transition-shadow">
+        <div className="flex items-center gap-2 text-slate-700 mb-2">
           <TrendingUp className="w-4 h-4" />
           <span className="text-sm font-medium">Ocupación</span>
         </div>
-        <div className="text-3xl font-bold text-blue-700">{occupancyRate}%</div>
-        <div className="w-full bg-blue-200 rounded-full h-2 mt-2">
+        <div className="text-3xl font-bold text-slate-700">{occupancyRate}%</div>
+        <div className="w-full bg-slate-100 rounded-full h-2 mt-2">
           <div 
-            className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+            className="bg-slate-500 h-2 rounded-full transition-all duration-500"
             style={{ width: `${occupancyRate}%` }}
           />
         </div>

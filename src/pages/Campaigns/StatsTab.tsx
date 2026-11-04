@@ -36,7 +36,7 @@ function KpiCard({
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-start gap-4">
       <div className={`p-3 rounded-xl ${color}`}>
-        <Icon className="h-5 w-5 text-white" />
+        <Icon className="h-5 w-5 text-slate-900" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>

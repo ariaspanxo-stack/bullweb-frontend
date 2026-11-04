@@ -85,7 +85,7 @@ export default function OrderCart({ onCheckout, onApplyDiscount }: OrderCartProp
               key={item.id} 
               className="bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors"
             >
-              <div className="flex items-start justify-between mb-2">
+              <div className="flex items-start justify-between mb-2 flex-wrap gap-2">
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm text-gray-900 truncate">
                     {item.product.name}
@@ -129,8 +129,8 @@ export default function OrderCart({ onCheckout, onApplyDiscount }: OrderCartProp
               </div>
 
               {/* Controles de cantidad y precio */}
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200 flex-wrap gap-2">
+                <div className="flex-wrap flex items-center gap-2">
                   <button
                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
                     className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-7 h-7 rounded bg-white border border-gray-300 flex items-center justify-center hover:bg-gray-100 active:scale-95 transition-all"

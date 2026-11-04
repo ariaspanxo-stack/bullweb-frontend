@@ -264,10 +264,10 @@ function RoleModal({ role, onClose, onSave }: RoleModalProps) {
   };
 
   return (
-    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 text-slate-900">
       <div className="bg-gray-800 rounded-xl border border-gray-600 w-full max-w-lg">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-600">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-600 flex-wrap gap-2">
           <h2 className="text-lg font-semibold text-white">
             {role ? 'Editar rol' : step === 'template' ? 'Nuevo rol — elegir plantilla' : 'Configurar rol'}
           </h2>
@@ -351,13 +351,13 @@ function RoleModal({ role, onClose, onSave }: RoleModalProps) {
                 </div>
               </div>
             </div>
-            <div className="flex justify-between pt-2">
+            <div className="flex justify-between pt-2 flex-wrap gap-2">
               {!role && (
                 <button onClick={() => setStep('template')} className="min-h-[44px] text-sm text-gray-300 hover:text-white flex items-center gap-1">
                   ← Plantillas
                 </button>
               )}
-              <div className="flex gap-3 ml-auto">
+              <div className="flex-wrap flex gap-3 ml-auto">
                 <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm text-gray-200 hover:text-white">Cancelar</button>
                 <button
                   onClick={submit} disabled={saving}
@@ -425,16 +425,16 @@ function DiffModal({ roles, onClose }: {
     );
 
   return (
-    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 text-slate-900">
       <div className="bg-gray-800 rounded-xl border border-gray-600 w-full max-w-3xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-600 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-600 shrink-0 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <GitCompare size={18} className="text-slate-500" />
             <h2 className="text-lg font-semibold text-white">Comparar Roles</h2>
           </div>
           <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-300 hover:text-white"><X size={18} /></button>
         </div>
-        <div className="px-6 py-4 border-b border-gray-600 flex items-center gap-4 shrink-0">
+        <div className="flex-wrap px-6 py-4 border-b border-gray-600 flex items-center gap-4 shrink-0">
           <select value={roleAId} onChange={e => setRoleAId(e.target.value)}
             className="flex-1 bg-white border border-gray-500 text-slate-900 text-sm rounded-lg px-3 py-2 focus:outline-none">
             <option value="">— Rol A —</option>
@@ -835,7 +835,7 @@ export default function RBACPage() {
   return (
     <div className="bg-white min-h-full rounded-2xl p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <ShieldCheck className="text-slate-500" size={24} />
           <div>
@@ -843,7 +843,7 @@ export default function RBACPage() {
             <p className="text-sm text-slate-700">Control de acceso basado en roles (RBAC)</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex-wrap flex items-center gap-2">
           <button
             onClick={() => setModal('diff')}
             className="min-h-[44px] flex items-center gap-2 px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 rounded-lg text-sm border border-slate-200"
@@ -884,7 +884,7 @@ export default function RBACPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-slate-50 rounded-lg p-1 w-fit border border-slate-200">
+      <div className="flex-wrap flex gap-1 bg-slate-50 rounded-lg p-1 w-fit border border-slate-200">
         {(['roles', 'matrix'] as const).map(t => (
           <button
             key={t}
@@ -968,7 +968,7 @@ export default function RBACPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
                       <span className="text-xs text-slate-700">
                         <span className="text-slate-500 font-medium">{role.permission_count}</span> permisos
                       </span>
@@ -1145,12 +1145,12 @@ export default function RBACPage() {
 
               {/* Barra de acciones flotante */}
               {hasUnsavedChanges && !isSuperAdmin(selectedRole) && (
-                <div className="sticky bottom-4 flex items-center justify-between gap-4 bg-slate-50 border border-amber-600/40 rounded-xl px-4 py-3 ">
+                <div className="sticky bottom-4 flex items-center justify-between gap-4 bg-slate-50 border border-amber-600/40 rounded-xl px-4 py-3  flex-wrap">
                   <div className="flex items-center gap-2 text-sm text-amber-300">
                     <AlertTriangle size={15} />
                     <span>{diffCount} cambio{diffCount !== 1 ? 's' : ''} sin guardar</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex-wrap flex gap-2">
                     <button
                       onClick={() => { setCurrentPermissions([...savedPermissions]); }}
                       className="min-h-[44px] px-3 py-1.5 text-xs text-slate-700 hover:text-slate-900 border border-slate-200 rounded-lg hover:bg-slate-50 transition-all"
@@ -1175,7 +1175,7 @@ export default function RBACPage() {
 
       {/* Modal: cambios sin guardar al cambiar rol */}
       {showUnsavedWarning && pendingRole && (
-        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 text-slate-900">
           <div className="bg-slate-50 rounded-xl border border-slate-200 w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center gap-2 text-amber-400">
               <AlertTriangle size={18} />
@@ -1231,7 +1231,7 @@ export default function RBACPage() {
       )}
 
       {cloneDialogRole && (
-        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 text-slate-900">
           <div className="bg-white rounded-xl p-6 w-80 flex flex-col gap-4">
             <h3 className="text-base font-semibold text-gray-900">Clonar rol</h3>
             <p className="text-sm text-gray-500">Nombre para el clon de <strong>{cloneDialogRole.name}</strong>:</p>
@@ -1243,7 +1243,7 @@ export default function RBACPage() {
               autoFocus
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
-            <div className="flex justify-end gap-2">
+            <div className="flex-wrap flex justify-end gap-2">
               <button onClick={() => setCloneDialogRole(null)} className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
               <button onClick={doClone} disabled={!cloneDialogName.trim()} className="min-h-[44px] px-4 py-2 text-sm bg-white text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 border border-slate-300">Clonar</button>
             </div>

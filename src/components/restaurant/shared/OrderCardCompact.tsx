@@ -326,7 +326,7 @@ export function OrderCardCompact({
         </div>
 
         {/* ── Acciones ── */}
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex-wrap flex items-center gap-2 min-w-0">
           {/* Botón acción principal (avance de estado) */}
           {mainAction && (
             <button

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   X,
@@ -342,10 +343,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    createPortal(<div className="fixed inset-0 z-[100] overflow-y-auto text-slate-900">
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-[100]"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={handleClose}
       />
 
@@ -356,7 +357,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
+          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10 flex-wrap gap-2">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
                 {isEditMode ? 'Editar Producto' : 'Nuevo Producto'}
@@ -520,7 +521,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                         disabled={isSubmitting}
                         className={`min-h-[44px] px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
                           formData.stationId === station.id
-                            ? 'bg-orange-500 border-orange-500 text-white shadow-sm'
+                            ? 'bg-orange-50 border-orange-300 text-orange-700 shadow-sm'
                             : 'bg-white border-gray-300 text-gray-700 hover:border-orange-400 hover:text-orange-600'
                         }`}
                       >
@@ -1028,7 +1029,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                         }
                         className={`min-h-[44px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
                           active
-                            ? 'bg-orange-500 border-orange-500 text-white shadow-sm'
+                            ? 'bg-orange-50 border-orange-300 text-orange-700 shadow-sm'
                             : 'bg-white border-gray-300 text-gray-600 hover:border-orange-400 hover:text-orange-600'
                         }`}
                       >
@@ -1043,7 +1044,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           </form>
 
           {/* Footer con botones */}
-          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
+          <div className="flex-wrap sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end gap-3">
             <button
               type="button"
               onClick={handleClose}
@@ -1070,7 +1071,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 

@@ -134,7 +134,7 @@ export function ChangePasswordPage() {
             </div>
           )}
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex-wrap flex gap-3 pt-2">
             <button
               type="button"
               onClick={() => navigate(-1)}

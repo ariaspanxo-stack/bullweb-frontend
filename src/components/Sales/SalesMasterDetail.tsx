@@ -23,7 +23,7 @@ export function SalesMasterDetail({
   onRefresh
 }: SalesMasterDetailProps) {
   return (
-    <div className="flex gap-6" style={{ minHeight: '600px' }}>
+    <div className="flex flex-col lg:flex-row gap-6" style={{ minHeight: '600px' }}>
       {/* MASTER: Lista de ventas (65%) */}
       <div className="flex-[65] min-w-0 flex flex-col">
         <SalesTable
@@ -36,7 +36,7 @@ export function SalesMasterDetail({
       </div>
 
       {/* DETAIL: Panel lateral fijo (35%) */}
-      <div className="flex-[35] min-w-[420px] max-w-[500px]">
+      <div className="w-full lg:flex-[35] lg:min-w-[420px] lg:max-w-[500px]">
         <SaleDetailPanel
           sale={selectedSale}
           onRefresh={onRefresh}

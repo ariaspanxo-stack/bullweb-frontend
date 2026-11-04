@@ -168,9 +168,9 @@ const SimulateModal = ({
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-        <div className="p-6 border-b flex items-center justify-between">
+        <div className="p-6 border-b flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <PlayCircle size={20} className="text-orange-500" />
             <h2 className="text-xl font-bold text-gray-900">Simular sesión</h2>
@@ -217,7 +217,7 @@ const SimulateModal = ({
             </div>
           )}
         </div>
-        <div className="p-6 border-t flex justify-end gap-3">
+        <div className="flex-wrap p-6 border-t flex justify-end gap-3">
           <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">
             Cerrar
           </button>
@@ -297,10 +297,10 @@ const EditUserModal = ({
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl">
         {/* Header */}
-        <div className="p-5 border-b flex items-center justify-between">
+        <div className="p-5 border-b flex items-center justify-between flex-wrap gap-2">
           <div>
             <h2 className="text-lg font-bold text-gray-900">{user.name}</h2>
             <p className="text-xs text-gray-400 mt-0.5">
@@ -481,9 +481,9 @@ const ResetPasswordModal = ({
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-        <div className="p-6 border-b flex items-center justify-between">
+        <div className="p-6 border-b flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Key size={20} className="text-slate-500" />
             <h2 className="text-xl font-bold text-gray-900">Resetear contraseña</h2>
@@ -528,7 +528,7 @@ const ResetPasswordModal = ({
             </div>
           )}
         </div>
-        <div className="p-6 border-t flex justify-end gap-3">
+        <div className="flex-wrap p-6 border-t flex justify-end gap-3">
           <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">
             {tempPass ? 'Cerrar' : 'Cancelar'}
           </button>
@@ -621,9 +621,9 @@ const CreateUserModal = ({
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl">
-        <div className="p-6 border-b flex items-center justify-between">
+        <div className="p-6 border-b flex items-center justify-between flex-wrap gap-2">
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <UserPlus size={20} className="text-slate-700" /> Nuevo Usuario
           </h2>
@@ -762,7 +762,7 @@ const CreateUserModal = ({
           </div>
         </div>
 
-        <div className="p-6 border-t flex justify-end gap-3">
+        <div className="flex-wrap p-6 border-t flex justify-end gap-3">
           <button className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition" onClick={onClose}>
             Cancelar
           </button>
@@ -814,9 +814,9 @@ const UserCreatedModal = ({
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-        <div className="p-6 border-b flex items-center justify-between">
+        <div className="p-6 border-b flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <CheckCircle size={20} className="text-slate-500" />
             <h2 className="text-xl font-bold text-gray-900">Usuario creado exitosamente</h2>
@@ -889,7 +889,7 @@ const UserCreatedModal = ({
           </div>
         </div>
 
-        <div className="p-6 border-t flex justify-end gap-3">
+        <div className="flex-wrap p-6 border-t flex justify-end gap-3">
           <button
             onClick={copyAll}
             className="min-h-[44px] flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition"
@@ -1045,14 +1045,14 @@ export const AdminUsers = () => {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
           <p className="text-gray-500 text-sm mt-0.5">
             {meta?.total ?? 0} usuarios registrados
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex-wrap flex items-center gap-2">
           <button
             onClick={handleExport}
             className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
@@ -1069,7 +1069,7 @@ export const AdminUsers = () => {
       </div>
 
       {/* Filtros */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4 flex items-center gap-4">
+      <div className="flex-wrap bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4 flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
@@ -1183,7 +1183,7 @@ export const AdminUsers = () => {
                   {new Date(user.createdAt).toLocaleDateString('es-CL')}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-1">
+                  <div className="flex-wrap flex items-center gap-1">
                     <button
                       onClick={() => setEditUser(user)}
                       className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 hover:bg-orange-50 rounded-lg text-gray-400 hover:text-orange-500 transition"
@@ -1224,9 +1224,9 @@ export const AdminUsers = () => {
 
         {/* Paginación */}
         {meta && meta.pages > 1 && (
-          <div className="px-4 py-3 border-t flex items-center justify-between text-sm text-gray-600">
+          <div className="px-4 py-3 border-t flex items-center justify-between text-sm text-gray-600 flex-wrap gap-2">
             <span>Mostrando {((page - 1) * 20) + 1}–{Math.min(page * 20, meta.total)} de {meta.total}</span>
-            <div className="flex items-center gap-1">
+            <div className="flex-wrap flex items-center gap-1">
               <button className="min-h-[44px] px-3 py-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40 transition" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Anterior</button>
               <span className="px-3 py-1.5 text-gray-500">{page} / {meta.pages}</span>
               <button className="min-h-[44px] px-3 py-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40 transition" disabled={page >= meta.pages} onClick={() => setPage((p) => p + 1)}>Siguiente →</button>

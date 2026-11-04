@@ -149,7 +149,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-gray-800">Justificativos de Ausencia</h3>
           {pending > 0 && (
@@ -158,7 +158,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex-wrap flex items-center gap-2">
           <button
             onClick={handleExportExcel}
             className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors"
@@ -224,7 +224,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
               />
             </div>
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex-wrap flex justify-end gap-2">
             <button
               onClick={() => setShowForm(false)}
               className="min-h-[44px] px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 rounded-lg transition-colors"
@@ -362,7 +362,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
                   </td>
                   <td className="px-4 py-3">
                     {j.estado === 'pendiente' && (
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex-wrap flex items-center gap-1.5">
                         <button
                           onClick={() => approveMut.mutate({ id: j.id, estado: 'aprobado' })}
                           disabled={approveMut.isPending}

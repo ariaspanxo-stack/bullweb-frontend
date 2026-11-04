@@ -62,9 +62,9 @@ function NewMethodModal({
   };
 
   return (
-    createPortal(<div className="fixed inset-0 z-[100] bg-black/40 flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 z-[100] bg-black/40 flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="text-lg font-bold text-gray-900">Nuevo Medio de Pago</h3>
           <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600">
             <X size={20} />
@@ -79,7 +79,7 @@ function NewMethodModal({
           placeholder="Ej: MercadoPago"
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
         />
-        <div className="flex gap-2 justify-end">
+        <div className="flex-wrap flex gap-2 justify-end">
           <button
             onClick={onClose}
             className="min-h-[44px] px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
@@ -231,14 +231,14 @@ export default function PaymentMethodsPage() {
         onCancel={() => setDeleteTargetId(null)}
       />
       {/* ── Cabecera ───────────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Medios de Pago</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             Configura los métodos de cobro disponibles en la caja.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex-wrap flex gap-2">
           <button
             onClick={() => setReordering(r => !r)}
             className={`min-h-[44px] flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
@@ -261,9 +261,9 @@ export default function PaymentMethodsPage() {
       </div>
 
       {/* ── Body split ───────────────────────────────────────────── */}
-      <div className="flex flex-1 gap-6 min-h-0">
+      <div className="flex flex-col lg:flex-row flex-1 gap-6 min-h-0">
         {/* Panel izquierdo — lista */}
-        <aside className="w-64 bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
+        <aside className="w-full lg:w-64 bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
           <div className="px-4 pt-4 pb-2">
             <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">
               Configurados ({methods.length})
@@ -334,7 +334,7 @@ export default function PaymentMethodsPage() {
               </div>
 
               {/* Activo */}
-              <div className="flex items-center justify-between py-3 border-y border-gray-100">
+              <div className="flex items-center justify-between py-3 border-y border-gray-100 flex-wrap gap-2">
                 <div className="flex items-center gap-2">
                   <CheckSquare size={16} className="text-gray-500" />
                   <div>
@@ -367,7 +367,7 @@ export default function PaymentMethodsPage() {
                 {/* Modo arqueo */}
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Arqueo</label>
-                  <div className="flex gap-2">
+                  <div className="flex-wrap flex gap-2">
                     {[
                       { value: 'auto',   label: 'Según Usuario' },
                       { value: 'manual', label: 'Automático' },
@@ -388,7 +388,7 @@ export default function PaymentMethodsPage() {
                 </div>
 
                 {/* Completar saldo manualmente */}
-                <div className="flex items-center justify-between py-3 bg-gray-50 rounded-xl px-4">
+                <div className="flex items-center justify-between py-3 bg-gray-50 rounded-xl px-4 flex-wrap gap-2">
                   <div>
                     <p className="text-sm font-semibold text-gray-800">
                       Completar saldo manualmente
@@ -411,7 +411,7 @@ export default function PaymentMethodsPage() {
               </div>
 
               {/* Botones */}
-              <div className="flex gap-3 pt-2">
+              <div className="flex-wrap flex gap-3 pt-2">
                 <button
                   onClick={handleCancel}
                   className="min-h-[44px] flex items-center gap-1.5 px-5 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"

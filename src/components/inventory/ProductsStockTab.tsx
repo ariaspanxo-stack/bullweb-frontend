@@ -175,7 +175,7 @@ function AdjustStockModal({
 
   return createPortal(
     <>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] text-slate-900" onClick={onClose} />
       <div role="dialog" aria-labelledby="adjust-stock-title" className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] max-w-[92vw] bg-white rounded-2xl shadow-2xl z-[100] p-5 space-y-4">
         <div>
           <h3 id="adjust-stock-title" className="font-bold text-gray-900">Ajustar stock: {product.name}</h3>
@@ -199,7 +199,7 @@ function AdjustStockModal({
           />
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
-        <div className="flex gap-2">
+        <div className="flex-wrap flex gap-2">
           <button
             onClick={onClose}
             className="flex-1 min-h-[44px] rounded-xl border-2 border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-colors"

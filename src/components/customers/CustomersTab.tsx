@@ -165,7 +165,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
       <div className="flex-1 bg-white rounded-lg border border-gray-200 overflow-hidden">
         {filteredCustomers.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full py-12">
-            <User className="w-16 h-16 text-gray-300 mb-4" />
+            <User className="w-16 h-16 text-slate-700 mb-4" />
             <p className="text-gray-500 text-lg mb-2">
               {searchQuery ? 'No se encontraron clientes' : 'No hay clientes registrados'}
             </p>
@@ -229,13 +229,13 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
                       <div className="space-y-1">
                         {customer.email && (
                           <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <Mail className="w-4 h-4 text-gray-400" />
+                            <Mail className="w-4 h-4 text-slate-500" />
                             {customer.email}
                           </div>
                         )}
                         {customer.phone && (
                           <div className="flex items-center gap-1 text-sm text-gray-600">
-                            <Phone className="w-4 h-4 text-gray-400" />
+                            <Phone className="w-4 h-4 text-slate-500" />
                             {customer.phone}
                           </div>
                         )}
@@ -249,7 +249,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
                     <td className="px-6 py-4">
                       {customer.address ? (
                         <div className="flex items-start gap-1 text-sm text-gray-600">
-                          <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                          <MapPin className="w-4 h-4 text-slate-500 mt-0.5 flex-shrink-0" />
                           <div>
                             <p>{customer.address}</p>
                             {customer.city && (
@@ -258,7 +258,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
                           </div>
                         </div>
                       ) : (
-                        <span className="text-sm text-gray-400">-</span>
+                        <span className="text-sm text-slate-500">-</span>
                       )}
                     </td>
                     <td className="px-6 py-4">
@@ -277,7 +277,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex-wrap flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleViewDetails(customer.id)}
                           className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 text-slate-700 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
@@ -324,8 +324,8 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
         <div className="p-4">
           {topCustomers.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-400 mb-2">No hay datos disponibles</p>
-              <p className="text-xs text-gray-400">Registra ventas para ver el ranking</p>
+              <p className="text-slate-500 mb-2">No hay datos disponibles</p>
+              <p className="text-xs text-slate-500">Registra ventas para ver el ranking</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -355,7 +355,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
                           </span>
                         </div>
                       </div>
-                      <div className="flex-shrink-0 text-2xl font-bold text-gray-300">
+                      <div className="flex-shrink-0 text-2xl font-bold text-slate-700">
                         #{index + 1}
                       </div>
                     </div>
@@ -389,14 +389,14 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
 
       {/* Modal confirmación eliminar */}
       {deleteConfirm && (
-        createPortal(<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
+        createPortal(<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] text-slate-900">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-bold text-gray-900 mb-2">Confirmar eliminación</h3>
             <p className="text-gray-600 mb-4">
               ¿Estás seguro que deseas eliminar al cliente <strong>{deleteConfirm.name}</strong>?
               Esta acción no se puede deshacer.
             </p>
-            <div className="flex gap-3">
+            <div className="flex-wrap flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
                 className="min-h-[44px] flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"

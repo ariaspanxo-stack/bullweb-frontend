@@ -234,7 +234,7 @@ export const AuditLogPanel = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Auditoría del Sistema</h1>
           <p className="text-gray-500 text-sm mt-0.5">
@@ -282,7 +282,7 @@ export const AuditLogPanel = () => {
             <option value="CRITICAL">CRITICAL</option>
           </select>
 
-          <div className="flex items-center gap-2">
+          <div className="flex-wrap flex items-center gap-2">
             <Calendar size={14} className="text-gray-400" />
             <input
               type="date"
@@ -365,9 +365,9 @@ export const AuditLogPanel = () => {
 
         {/* Paginación */}
         {meta && meta.pages > 1 && (
-          <div className="px-4 py-3 border-t flex items-center justify-between text-sm text-gray-600">
+          <div className="px-4 py-3 border-t flex items-center justify-between text-sm text-gray-600 flex-wrap gap-2">
             <span>Página {meta.page} de {meta.pages}</span>
-            <div className="flex items-center gap-2">
+            <div className="flex-wrap flex items-center gap-2">
               <button
                 className="min-h-[44px] px-3 py-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40"
                 disabled={meta.page <= 1}

@@ -64,7 +64,7 @@ export function OpenShiftModal({ register, isOpen, onClose, onSuccess }: OpenShi
   // HOTFIX 299: modal por portal z-[100] (se abre tambien desde el cobro, que ya es un portal z-[100])
   return createPortal(
     // Overlay bloqueante — sin onClick para cerrar
-    <div className="fixed inset-0 z-[100] bg-gray-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] bg-gray-950/90 backdrop-blur-sm flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
 
         {/* Header */}

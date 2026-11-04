@@ -219,7 +219,7 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
         {/* Controles de fecha según modo */}
         {dateMode === 'rango' ? (
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex items-center gap-1.5">
+            <div className="flex-wrap flex items-center gap-1.5">
               <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Desde:</span>
               <input
                 type="date"
@@ -234,7 +234,7 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
                 className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-sm cursor-pointer hover:bg-gray-100 w-24"
               />
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex-wrap flex items-center gap-1.5">
               <span className="text-xs text-gray-500 font-medium whitespace-nowrap">Hasta:</span>
               <input
                 type="date"
@@ -252,7 +252,7 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-2">
+            <div className="flex-wrap flex items-center gap-2">
               {dateMode !== 'mensual' && (
                 <input
                   type="text"
@@ -301,7 +301,7 @@ export const SalesFilters = ({ onFilterChange }: Props) => {
       </div>
 
       {/* Botones de acción */}
-      <div className="flex items-center gap-3">
+      <div className="flex-wrap flex items-center gap-3">
         <button
           onClick={handleApplyFilters}
           className="min-h-[44px] px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors"

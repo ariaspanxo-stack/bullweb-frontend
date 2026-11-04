@@ -2,6 +2,7 @@
 // BillPanel — Panel lateral "Solicitudes de cuenta"
 // ═══════════════════════════════════════════════════════════════
 
+import { createPortal } from 'react-dom';
 import { Bell, BellRing, ChevronRight, X } from 'lucide-react';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { formatTimeAgo } from './helpers';
@@ -15,12 +16,13 @@ export function BillPanel() {
     dismissAllBillRequests,
   } = useRestaurant();
 
-  return (
+  // LOTE 308b: en portal, fuera del flujo de la pagina (cerrado se salia a la derecha en celular)
+  return createPortal(
     <>
       {/* Overlay */}
       {showBillPanel && (
         <div
-          className="fixed inset-0 z-[100] bg-black/30 backdrop-blur-[2px]"
+          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-[2px]"
           onClick={() => setShowBillPanel(false)}
         />
       )}
@@ -29,7 +31,7 @@ export function BillPanel() {
       <div className={`fixed top-0 right-0 h-full w-96 max-w-full z-50 bg-white flex flex-col transition-transform duration-300 ease-in-out ${showBillPanel ? 'translate-x-0' : 'translate-x-full'}`}>
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <BellRing className="w-5 h-5 text-orange-400" />
             <span className="text-slate-900 font-semibold text-base">Solicitudes de cuenta</span>
@@ -60,7 +62,7 @@ export function BillPanel() {
                 key={req.orderId}
                 className="bg-slate-50 rounded-xl p-4 border border-slate-200 hover:border-orange-500/40 transition-colors"
               >
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex items-start justify-between gap-2 flex-wrap">
                   <div className="flex-1 min-w-0">
                     <p className="text-slate-900 font-semibold text-sm">{req.tableName}</p>
                     <p className="text-slate-500 text-xs mt-0.5">Mesero: {req.waiterName}</p>
@@ -94,6 +96,7 @@ export function BillPanel() {
           </div>
         )}
       </div>
-    </>
+    </>,
+    document.body,
   );
 }

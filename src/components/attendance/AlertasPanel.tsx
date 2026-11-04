@@ -86,7 +86,7 @@ export function AlertasPanel() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-gray-800">Alertas de Asistencia</h3>
           <span className="bg-red-100 text-red-700 text-xs font-semibold px-2 py-0.5 rounded-full">

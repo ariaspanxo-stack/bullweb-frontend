@@ -273,7 +273,7 @@ export const Sales = () => {
 
       {/* Tabs de navegación */}
       {!todayOnly && (
-      <div className="mb-6 flex gap-4 border-b border-gray-200">
+      <div className="flex-wrap mb-6 flex gap-4 border-b border-gray-200">
         <button
           onClick={() => setActiveTab('ventas')}
           className={`min-h-[44px] px-4 py-2 font-semibold transition-colors ${
@@ -387,7 +387,7 @@ export const Sales = () => {
 
       {/* Modal Abrir Caja */}
       {showCashModal && (
-        createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+        createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] text-slate-900">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="bg-orange-500 px-5 py-3">
               <h2 className="text-white font-bold text-sm tracking-wide">Nuevo Arqueo de Caja</h2>
@@ -435,7 +435,7 @@ export const Sales = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Hora de apertura <span className="text-red-500">*</span>
                 </label>
-                <div className="flex gap-2">
+                <div className="flex-wrap flex gap-2">
                   <input
                     type="date"
                     value={openDate}
@@ -471,7 +471,7 @@ export const Sales = () => {
                 </div>
               </div>
             </div>
-            <div className="px-6 pb-5 flex justify-end gap-2">
+            <div className="flex-wrap px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => setShowCashModal(false)}
                 className="min-h-[44px] px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"

@@ -106,7 +106,7 @@ export default function DataTable<T extends Record<string, any>>({
 
       {/* Pagination */}
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-white flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <p className="text-sm text-gray-700">
               Página <span className="font-medium">{pagination.page}</span> de{' '}

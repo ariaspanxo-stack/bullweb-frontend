@@ -82,9 +82,9 @@ function AssignDriverModal({ delivery, onClose, onAssign, loading }: AssignModal
   });
 
   return (
-    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 text-slate-900">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between p-6 border-b flex-wrap gap-2">
           <h2 className="text-xl font-bold text-gray-900">Asignar Repartidor</h2>
           <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
@@ -138,7 +138,7 @@ function AssignDriverModal({ delivery, onClose, onAssign, loading }: AssignModal
           </div>
         </div>
 
-        <div className="flex gap-3 p-6 border-t">
+        <div className="flex-wrap flex gap-3 p-6 border-t">
           <button
             onClick={onClose}
             className="min-h-[44px] flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
@@ -412,7 +412,7 @@ export default function Delivery() {
                       </td>
 
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1 justify-end">
+                        <div className="flex-wrap flex items-center gap-1 justify-end">
                           {/* Acciones de gestión — solo para usuarios con delivery.manage */}
                           {canManage && ['PENDING', 'ASSIGNED'].includes(d.status) && (
                             <button

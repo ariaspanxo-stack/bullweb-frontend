@@ -394,7 +394,7 @@ export default function DteConfigPage() {
 
           {/* Toggle módulo DTE */}
           {config.configured && (
-            <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-200">
+            <div className="flex items-center justify-between pt-3 mt-3 border-t border-gray-200 flex-wrap gap-2">
               <div>
                 <p className="font-medium text-gray-800 text-sm">Módulo DTE activo</p>
                 <p className="text-xs text-gray-500 mt-0.5">
@@ -561,7 +561,7 @@ export default function DteConfigPage() {
         {/* Ambiente */}
         <fieldset className="border border-gray-200 rounded-xl p-4">
           <legend className="text-sm font-semibold text-gray-700 px-2">🌐 Ambiente SII</legend>
-          <div className="flex gap-3">
+          <div className="flex-wrap flex gap-3">
             <button
               type="button"
               onClick={() => setForm(f => ({ ...f, ambiente: 'certificacion' }))}

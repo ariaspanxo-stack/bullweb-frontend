@@ -772,7 +772,7 @@ const Products = () => {
     <div className={`min-h-full flex ${PAGE_BG}`}>
       {/* Loading overlay — solo para operaciones de guardado/eliminación */}
       {(loadingTab === 'saving' || loadingTab === 'delete') && (
-        createPortal(<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-[100]">
+        createPortal(<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-[100] text-slate-900">
           <div className="bg-white rounded-xl p-6 shadow-xl border border-[#E2E8F0]">
             <div className="flex items-center space-x-3">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F97316]"></div>

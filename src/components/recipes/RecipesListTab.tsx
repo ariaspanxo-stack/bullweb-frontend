@@ -187,7 +187,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
       {/* Formulario colapsable (misma lógica de guardado) */}
       {showForm && (
         <div className={`${CARD} p-6 space-y-4`}>
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <h3 className="text-base font-bold text-[#0F172A]">
               {editingRecipeId ? 'Editar ficha — el producto no se puede cambiar' : 'Nueva ficha'}
             </h3>

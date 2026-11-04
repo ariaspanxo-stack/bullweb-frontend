@@ -196,7 +196,7 @@ export function RestaurantProfilePage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
           <h2 className="font-bold text-gray-900 text-sm tracking-wide">Personalización</h2>
           <Field label="Color principal">
-            <div className="flex items-center gap-3">
+            <div className="flex-wrap flex items-center gap-3">
               <input
                 type="color"
                 value={form.primaryColor ?? '#ea580c'}

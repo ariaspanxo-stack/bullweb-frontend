@@ -13,21 +13,6 @@ function avatarInitials(name: string) {
     .join('');
 }
 
-function avatarColor(name: string) {
-  const colors = [
-    ' border border-slate-200',
-    ' border border-slate-200',
-    ' border border-slate-200',
-    'from-orange-500 to-orange-600',
-    ' border border-slate-200',
-    ' border border-slate-200',
-    ' border border-slate-200',
-    'from-red-500 to-red-600',
-  ];
-  let hash = 0;
-  for (const c of name) hash = (hash * 31 + c.charCodeAt(0)) & 0xffffffff;
-  return colors[Math.abs(hash) % colors.length];
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-CL', {
@@ -138,7 +123,6 @@ export default function Profile() {
   if (!user) return null;
 
   const initials = avatarInitials(user.name);
-  const color    = avatarColor(user.name);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -146,7 +130,7 @@ export default function Profile() {
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-lg flex items-center justify-center">
-          <User className="w-7 h-7 text-white" />
+          <User className="w-7 h-7 text-slate-900" />
         </div>
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Mi Perfil</h1>
@@ -162,7 +146,7 @@ export default function Profile() {
         {/* Avatar + info */}
         <div className="px-6 pb-6">
           <div className="flex items-end justify-between -mt-12 mb-4">
-            <div className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center ring-4 ring-white shadow-lg`}>
+            <div className={`w-24 h-24 rounded-2xl bg-slate-600 flex items-center justify-center ring-4 ring-white shadow-lg`}>
               <span className="text-3xl font-bold text-white">{initials}</span>
             </div>
             {!editMode && (
@@ -196,7 +180,7 @@ export default function Profile() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex-wrap flex gap-3">
                 <button
                   onClick={handleSaveProfile}
                   disabled={saving}
@@ -328,7 +312,7 @@ export default function Profile() {
           <button
             type="submit"
             disabled={changingPwd || !currentPwd || !newPwd || !confirmPwd}
-            className="min-h-[44px] w-full py-2.5 bg-white text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors border border-slate-300"
+            className="min-h-[44px] w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors border border-slate-300"
           >
             {changingPwd ? 'Cambiando contraseña...' : 'Cambiar contraseña'}
           </button>

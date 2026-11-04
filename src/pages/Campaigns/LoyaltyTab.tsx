@@ -140,7 +140,7 @@ export function LoyaltyTab() {
     return (
       <div className="space-y-4">
         {loadError && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between flex-wrap gap-2">
             <span>{loadError}</span>
             <button onClick={load} className="min-h-[44px] text-xs underline font-medium ml-4">Reintentar</button>
           </div>
@@ -157,7 +157,7 @@ export function LoyaltyTab() {
     <div className="space-y-6">
       {/* Error banner */}
       {loadError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between flex-wrap gap-2">
           <span>{loadError}</span>
           <button onClick={load} className="min-h-[44px] text-xs underline font-medium ml-4">Reintentar</button>
         </div>
@@ -256,12 +256,12 @@ export function LoyaltyTab() {
 
       {/* ── Ranking de clientes ── */}
       <div className="bg-white border border-gray-200 rounded-xl p-5">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
             <Crown className="h-4 w-4 text-yellow-500" />
             Top 10 clientes por puntos
           </h3>
-          <div className="flex items-center gap-2">
+          <div className="flex-wrap flex items-center gap-2">
             {recalcResult && (
               <span className="text-xs text-gray-600 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5">
                 {recalcResult}
@@ -356,13 +356,13 @@ export function LoyaltyTab() {
 
       {/* Confirm recalculate modal */}
       {confirmRecalc && (
-        createPortal(<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
+        createPortal(<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4 text-slate-900">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
             <h3 className="font-semibold text-gray-900 mb-2">¿Recalcular puntos históricos?</h3>
             <p className="text-sm text-gray-500 mb-5">
               Se asignarán puntos a clientes con compras anteriores al sistema. Esta acción actualiza balances de fidelización.
             </p>
-            <div className="flex gap-3 justify-end">
+            <div className="flex-wrap flex gap-3 justify-end">
               <button
                 onClick={() => setConfirmRecalc(false)}
                 className="min-h-[44px] px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"

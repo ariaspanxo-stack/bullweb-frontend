@@ -5,6 +5,7 @@
 // Permite agregar extras y personalizaciones con precios
 // ═══════════════════════════════════════════════════════════════
 
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { X, Plus, Check } from 'lucide-react';
 import type { ProductModifier } from '../../../types/restaurant.types';
@@ -75,22 +76,22 @@ export const ModifiersModal = ({
   if (!isOpen) return null;
 
   return (
-    <>
+    createPortal(<>
       {/* Overlay */}
       <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] text-slate-900"
         onClick={onClose}
       />
 
       {/* Modal centrado */}
-      <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 text-slate-900">
         <div 
           className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           
           {/* ========== HEADER ========== */}
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-2xl flex items-center justify-between">
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white p-6 rounded-t-2xl flex items-center justify-between flex-wrap gap-2">
             <div>
               <h2 className="text-2xl font-bold">Personalizar Producto</h2>
               <p className="text-orange-100 text-sm mt-1">{productName}</p>
@@ -216,7 +217,7 @@ export const ModifiersModal = ({
           </div>
 
           {/* ========== FOOTER ========== */}
-          <div className="p-6 bg-gray-50 rounded-b-2xl border-t border-gray-200 flex gap-3">
+          <div className="flex-wrap p-6 bg-gray-50 rounded-b-2xl border-t border-gray-200 flex gap-3">
             <button
               onClick={onClose}
               className="min-h-[44px] flex-1 px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
@@ -232,6 +233,6 @@ export const ModifiersModal = ({
           </div>
         </div>
  </div>
-    </>
+    </>, document.body)
   );
 };

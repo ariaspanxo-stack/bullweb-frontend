@@ -34,10 +34,10 @@ function RestaurantInner() {
   // Guard: verificando caja
   if (ctx.cashLoading) {
     return (
-      <div className="fixed inset-0 bg-gray-950 flex items-center justify-center">
+      <div className="fixed inset-0 bg-white flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 animate-spin text-orange-400" />
-          <p className="text-gray-400 text-sm">Verificando caja...</p>
+          <p className="text-slate-600 text-sm">Verificando caja...</p>
         </div>
       </div>
     );
@@ -200,7 +200,7 @@ function RestaurantInner() {
       {/* Boleta electronica -- banner post-pago */}
       {ctx.lastPaidOrderId && (
         <div className="fixed bottom-4 right-4 z-50 w-72 bg-gray-900 rounded-xl shadow-2xl p-4">
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
             <span className="text-white text-sm font-semibold">Boleta electrónica</span>
             <button onClick={() => ctx.setLastPaidOrderId(null)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-white">
               <X size={16} />
@@ -236,7 +236,7 @@ isConfigured={ctx.dteIsConfigured}
           )
           : (
             createPortal(<div
-              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 text-slate-900"
               onClick={() => setShowOpenShift(false)}
             >
               <div

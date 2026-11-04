@@ -70,7 +70,7 @@ export function EditCustomerModal({
 
   return (
     createPortal(<div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-900"
       onClick={onClose}
       onKeyDown={handleKeyDown}
     >
@@ -79,7 +79,7 @@ export function EditCustomerModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
               variant === 'delivery' ? 'bg-slate-100' : 'bg-slate-100'
@@ -167,7 +167,7 @@ export function EditCustomerModal({
         </div>
 
         {/* ── Footer con acciones ── */}
-        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 sticky bottom-0 bg-white rounded-b-2xl">
+        <div className="flex-wrap flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 sticky bottom-0 bg-white rounded-b-2xl">
           <button
             onClick={onClose}
             disabled={saving}

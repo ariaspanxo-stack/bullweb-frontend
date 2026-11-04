@@ -145,7 +145,7 @@ export const OrderTicket = ({
                   className="bg-white rounded-lg border border-gray-200 overflow-hidden"
                 >
                   <div className="flex items-center gap-2 px-2 py-1.5">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex-wrap flex items-center gap-1.5">
                       <button
                         onClick={() => onDecreaseQuantity(item.id)}
                         className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-11 h-11 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors"

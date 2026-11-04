@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import EmojiPicker from './EmojiPicker';
@@ -176,10 +177,10 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    createPortal(<div className="fixed inset-0 z-[100] overflow-y-auto text-slate-900">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-[100]"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       />
 
@@ -187,7 +188,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full transform transition-all">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-wrap gap-2">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
                 {mode === 'create' ? '✨ Nueva Categoría' : '✏️ Editar Categoría'}
@@ -311,7 +312,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
             </div>
 
             {/* Botones */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex-wrap flex gap-3 pt-4">
               <button
                 type="button"
                 onClick={onClose}
@@ -329,7 +330,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
           </form>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 

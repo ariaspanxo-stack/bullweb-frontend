@@ -72,12 +72,12 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
   const displayLastVisit    = detailedStats?.lastVisit    ?? customer.lastOrderAt ?? customer.lastVisit;
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white border border-slate-200 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0 flex-wrap gap-2">
           <div>
-            <h3 className="text-xl font-bold text-white mb-1">{customer.name}</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-1">{customer.name}</h3>
             <div className="flex items-center gap-2">
               {(customer.tags ?? []).map(tag => {
                 const config = getTagConfig(tag);
@@ -146,7 +146,7 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
                 <ShoppingBag className="w-4 h-4 text-slate-500" />
                 <span className="text-xs text-slate-500">Pedidos</span>
               </div>
-              <div className="text-xl font-bold text-white">{displayTotalOrders}</div>
+              <div className="text-xl font-bold text-slate-900">{displayTotalOrders}</div>
             </div>
 
             <div className="bg-slate-50 rounded-lg p-3">
@@ -170,7 +170,7 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
                 <Clock className="w-4 h-4 text-slate-500" />
                 <span className="text-xs text-slate-500">Última Compra</span>
               </div>
-              <div className="text-xs font-bold text-white">
+              <div className="text-xs font-bold text-slate-900">
                 {displayLastVisit
                   ? new Date(displayLastVisit).toLocaleDateString('es-CL')
                   : 'Nunca'
@@ -185,18 +185,18 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-slate-500" />
-                <span className="text-white">{customer.phone}</span>
+                <span className="text-slate-900">{customer.phone}</span>
               </div>
               {customer.email && (
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4 text-slate-500" />
-                  <span className="text-white">{customer.email}</span>
+                  <span className="text-slate-900">{customer.email}</span>
                 </div>
               )}
               {customer.address && (
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-slate-500" />
-                  <span className="text-white">
+                  <span className="text-slate-900">
                     {customer.address} {customer.addressNumber}
                     {customer.sector && `, ${customer.sector}`}
                   </span>
@@ -205,7 +205,7 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
               {customer.birthdate && (
                 <div className="flex items-center gap-2">
                   <Cake className="w-4 h-4 text-slate-500" />
-                  <span className="text-white">
+                  <span className="text-slate-900">
                     {new Date(customer.birthdate).toLocaleDateString('es-CL')}
                   </span>
                 </div>
@@ -225,7 +225,7 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-yellow-400">#{index + 1}</span>
-                      <span className="text-sm text-white">{product.productName}</span>
+                      <span className="text-sm text-slate-900">{product.productName}</span>
                     </div>
                     <span className="text-xs text-slate-500">{product.quantity} veces</span>
                   </div>
@@ -249,7 +249,7 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
                   <div key={order.id} className="bg-white rounded-lg p-3 border border-slate-200">
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <div className="text-sm font-semibold text-white">{formatSaleNumber(order.orderNumber)}</div>
+                        <div className="text-sm font-semibold text-slate-900">{formatSaleNumber(order.orderNumber)}</div>
                         <div className="text-xs text-slate-500">
                           {new Date(order.date).toLocaleDateString('es-CL')} • {order.type === 'mostrador' ? 'Mostrador' : 'Delivery'}
                         </div>

@@ -104,7 +104,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         </div>
 
         {/* Controles de navegación */}
-        <div className="flex items-center gap-2">
+        <div className="flex-wrap flex items-center gap-2">
           {/* Primera página */}
           <button
             onClick={onFirstPage}

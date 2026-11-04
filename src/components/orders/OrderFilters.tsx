@@ -72,7 +72,7 @@ export default function OrderFilters({ filters, onFiltersChange, onReset, waiter
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4">
       {/* Barra superior */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex-wrap flex items-center gap-4 mb-4">
         {/* Búsqueda */}
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />

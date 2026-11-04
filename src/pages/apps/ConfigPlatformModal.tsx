@@ -128,10 +128,10 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
   });
 
   return (
-    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 text-slate-900">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between p-6 border-b flex-wrap gap-2">
           <div>
             <h2 className="text-xl font-bold text-gray-900">
               Configurar {PLATFORM_LABELS[platform] ?? platform}
@@ -230,7 +230,7 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
                 </div>
               )}
 
-              <div className="flex gap-3">
+              <div className="flex-wrap flex gap-3">
                 <button onClick={() => setStep(1)} className="min-h-[44px] flex-1 border border-gray-200 rounded-lg py-2.5 text-sm text-gray-600 hover:bg-gray-50">
                   ← Atrás
                 </button>

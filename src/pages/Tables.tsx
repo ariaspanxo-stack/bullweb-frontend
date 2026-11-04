@@ -62,7 +62,7 @@ export default function Tables() {
       {/* ====================================================================
           HEADER
       ==================================================================== */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
             Gestión de Mesas

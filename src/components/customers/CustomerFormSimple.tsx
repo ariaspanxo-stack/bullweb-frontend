@@ -108,17 +108,17 @@ const CustomerFormSimple: React.FC<CustomerFormSimpleProps> = ({
   if (!isOpen) return null;
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
+    createPortal(<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+        <div className="flex justify-between items-center p-6 border-b border-gray-200 flex-wrap gap-2">
           <h2 className="text-xl font-bold text-gray-900">
             {customer ? 'Editar Cliente' : 'Nuevo Cliente'}
           </h2>
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-500 hover:text-gray-600 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -254,7 +254,7 @@ const CustomerFormSimple: React.FC<CustomerFormSimpleProps> = ({
         </form>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 p-6 flex gap-3">
+        <div className="flex-wrap border-t border-gray-200 p-6 flex gap-3">
           <button
             type="button"
             onClick={onClose}

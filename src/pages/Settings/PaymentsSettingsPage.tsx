@@ -164,11 +164,11 @@ export default function PaymentsSettingsPage() {
       )}
 
       {confirmOpen && createPortal(
-        <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4 text-slate-900">
           <div className="bg-white rounded-xl p-6 max-w-sm w-full space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">Desconectar Mercado Pago</h3>
             <p className="text-sm text-gray-600">La carta dejara de ofrecer el pago en linea. Podras volver a conectar cuando quieras.</p>
-            <div className="flex gap-2">
+            <div className="flex-wrap flex gap-2">
               <button type="button" onClick={() => setConfirmOpen(false)} disabled={busy} className="flex-1 min-h-[44px] rounded-lg text-sm font-semibold text-slate-800 bg-white border-[1.5px] border-slate-300">Volver</button>
               <button type="button" onClick={disconnect} disabled={busy} className="flex-1 min-h-[44px] rounded-lg text-sm font-semibold text-slate-700 bg-white disabled:opacity-50 border border-slate-300">Desconectar</button>
             </div>

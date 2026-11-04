@@ -200,7 +200,7 @@ export const TabMovimientos = () => {
       </div>
 
       {/* Acciones */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-2">
         <p className="text-sm text-gray-500">
           {sessions.length} sesión{sessions.length !== 1 ? 'es' : ''} ·{' '}
           <span className="text-gray-400">Haz clic para ver movimientos detallados</span>

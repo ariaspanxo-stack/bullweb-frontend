@@ -180,7 +180,7 @@ export default function Inventory() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex-wrap flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Inventario</h1>
           <p className="text-gray-500 mt-1">Control de stock, recetas y movimientos</p>
@@ -513,7 +513,7 @@ export default function Inventory() {
                         <td className="px-4 py-3 text-sm text-gray-500">{s.taxId || '—'}</td>
                         <td className="px-4 py-3 text-sm text-gray-500">{s._count?.purchases ?? 0}</td>
                         <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex-wrap flex items-center justify-end gap-2">
                             <button
                               onClick={() => { setEditingSupplier(s); setIsSupplierModalOpen(true); }}
                               className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-gray-400 hover:text-slate-700 hover:bg-slate-100 rounded"
@@ -665,7 +665,7 @@ function PurchaseModal({
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-auto shadow-xl">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">Nueva Compra</h2>
@@ -689,7 +689,7 @@ function PurchaseModal({
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
               <label className="block text-sm font-medium text-gray-700">Ítems</label>
               <button type="button" onClick={addItem} className="min-h-[44px] text-sm text-primary-600 hover:text-primary-700 font-medium">
                 + Agregar ítem
@@ -740,7 +740,7 @@ function PurchaseModal({
             />
           </div>
         </div>
-        <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
+        <div className="flex-wrap p-6 border-t border-gray-200 flex gap-3 justify-end">
           <button type="button" onClick={onClose} className="min-h-[44px] px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? 'Guardando...' : 'Registrar Compra'}
@@ -776,7 +776,7 @@ function MovementModal({
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">Agregar Movimiento</h2>
@@ -823,7 +823,7 @@ function MovementModal({
             />
           </div>
         </div>
-        <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
+        <div className="flex-wrap p-6 border-t border-gray-200 flex gap-3 justify-end">
           <button type="button" onClick={onClose} className="min-h-[44px] px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? 'Guardando...' : 'Registrar'}
@@ -873,7 +873,7 @@ function SupplierModal({
   );
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">{supplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}</h2>
@@ -894,7 +894,7 @@ function SupplierModal({
             />
           </div>
         </div>
-        <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
+        <div className="flex-wrap p-6 border-t border-gray-200 flex gap-3 justify-end">
           <button type="button" onClick={onClose} className="min-h-[44px] px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
           <Button onClick={handleSubmit} disabled={isSubmitting || !name.trim()}>
             {isSubmitting ? 'Guardando...' : supplier ? 'Actualizar' : 'Crear Proveedor'}

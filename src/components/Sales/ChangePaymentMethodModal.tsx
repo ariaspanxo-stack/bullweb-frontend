@@ -83,9 +83,9 @@ export function ChangePaymentMethodModal({ sale, onClose, onDone }: ChangePaymen
 
   return createPortal(
     <>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60" onClick={() => !saving && onClose()}>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 text-slate-900" onClick={() => !saving && onClose()}>
         <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <h3 className="text-lg font-bold text-gray-900">Cambiar medio de pago</h3>
             <button onClick={onClose} disabled={saving} className="min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-gray-100 rounded-lg">
               <X className="w-5 h-5 text-gray-500" />
@@ -127,7 +127,7 @@ export function ChangePaymentMethodModal({ sale, onClose, onDone }: ChangePaymen
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
           />
 
-          <div className="flex gap-2 mt-5">
+          <div className="flex-wrap flex gap-2 mt-5">
             <button
               onClick={onClose}
               disabled={saving}

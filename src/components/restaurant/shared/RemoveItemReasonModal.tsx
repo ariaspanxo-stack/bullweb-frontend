@@ -4,6 +4,7 @@
 // El backend exige `reason` en el body del DELETE /pos/orders/:id/items/:itemId
 // ═══════════════════════════════════════════════════════════════
 
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { X, Trash2, AlertTriangle } from 'lucide-react';
 
@@ -35,12 +36,12 @@ export const RemoveItemReasonModal = ({
   };
 
   return (
-    <>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]" onClick={onCancel} />
+    createPortal(<>
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] text-slate-900" onClick={onCancel} />
 
-      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] max-w-[92vw] bg-white rounded-2xl shadow-2xl z-[70] flex flex-col overflow-hidden">
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] max-w-[92vw] bg-white rounded-2xl shadow-2xl z-[100] flex flex-col overflow-hidden">
         {/* HEADER */}
-        <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-5 py-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-red-500 to-red-600 text-white px-5 py-4 flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
               <Trash2 size={18} />
@@ -104,7 +105,7 @@ export const RemoveItemReasonModal = ({
         </div>
 
         {/* FOOTER */}
-        <div className="flex-shrink-0 border-t border-gray-200 bg-white px-5 py-3 flex gap-2">
+        <div className="flex-wrap flex-shrink-0 border-t border-gray-200 bg-white px-5 py-3 flex gap-2">
           <button
             onClick={onCancel}
             disabled={loading}
@@ -131,7 +132,7 @@ export const RemoveItemReasonModal = ({
           </button>
         </div>
       </div>
-    </>
+    </>, document.body)
   );
 };
 

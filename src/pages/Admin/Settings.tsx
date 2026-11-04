@@ -37,7 +37,7 @@ function ConfigField({
   const isNumber = !isNaN(Number(entry.value)) && entry.value !== '' && !isBoolean;
 
   return (
-    <div className="flex items-start justify-between gap-6 py-4 border-b last:border-0">
+    <div className="flex items-start justify-between gap-6 py-4 border-b last:border-0 flex-wrap">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-800">{entry.label}</p>
         {entry.description && <p className="text-xs text-gray-400 mt-0.5">{entry.description}</p>}
@@ -47,7 +47,7 @@ function ConfigField({
         {isBoolean ? (
           <button
             onClick={() => onChange(entry.key, value === 'true' ? 'false' : 'true')}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${value === 'true' ? 'bg-orange-50 border border-orange-300' : 'bg-gray-200'}`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${value === 'true' ? 'bg-orange-500' : 'bg-gray-200'}`}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${value === 'true' ? 'translate-x-6' : 'translate-x-1'}`}
@@ -174,7 +174,7 @@ function KioskSecurityPanel() {
         {ipList.length > 0 && (
           <ul className="space-y-1.5">
             {ipList.map((ip, i) => (
-              <li key={i} className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+              <li key={i} className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 flex-wrap">
                 <span className="font-mono text-sm text-gray-700">{ip}</span>
                 <button onClick={() => setIpList(prev => prev.filter((_, j) => j !== i))} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
                   <X className="w-4 h-4" />
@@ -190,7 +190,7 @@ function KioskSecurityPanel() {
 
       {/* Geofencing */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between gap-2 mb-1">
+        <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-orange-500" />
             <h4 className="text-sm font-semibold text-gray-800">Geofencing</h4>
@@ -298,14 +298,14 @@ export function TipSettingsPanel() {
   if (isLoading) return <p className="py-10 text-center text-gray-400">Cargando…</p>;
 
   const ToggleRow = ({ label, desc, field }: { label: string; desc?: string; field: keyof TipSettings }) => (
-    <div className="flex items-center justify-between gap-4 py-3.5 border-b last:border-0">
+    <div className="flex items-center justify-between gap-4 py-3.5 border-b last:border-0 flex-wrap">
       <div>
         <p className="text-sm font-medium text-gray-800">{label}</p>
         {desc && <p className="text-xs text-gray-400 mt-0.5">{desc}</p>}
       </div>
       <button
         onClick={() => toggle(field)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${cfg[field] ? 'bg-orange-50 border border-orange-300' : 'bg-gray-200'}`}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${cfg[field] ? 'bg-orange-500' : 'bg-gray-200'}`}
       >
         <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${cfg[field] ? 'translate-x-6' : 'translate-x-1'}`} />
       </button>

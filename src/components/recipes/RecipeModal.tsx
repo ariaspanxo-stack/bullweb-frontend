@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Loader2, Check } from 'lucide-react';
 import type { Recipe, RecipeFormData, RecipeFormErrors } from '../../types/recipe.types';
@@ -173,10 +174,10 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    createPortal(<div className="fixed inset-0 z-[100] overflow-y-auto text-slate-900">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-[100]"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
         onClick={onClose}
       />
 
@@ -184,7 +185,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
-          <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-gray-200 flex-wrap gap-2">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
                 {mode === 'create' ? '📋 Nueva Ficha Técnica' : '✏️ Editar Ficha Técnica'}
@@ -517,7 +518,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
             </div>
 
             {/* Botones */}
-            <div className="flex gap-3 pt-6 mt-6 border-t border-gray-200">
+            <div className="flex-wrap flex gap-3 pt-6 mt-6 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onClose}
@@ -550,7 +551,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
           </form>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 

@@ -98,7 +98,7 @@ export const SalesTable = ({
       {/* HEADER CON CONTEXTO */}
       {dateRange && (
         <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <p className="text-sm text-gray-600">
               📅 <span className="font-medium text-gray-900">{sales.filter(s => s.status !== 'cancelled').length} ventas</span>
               {sales.some(s => s.status === 'cancelled') && (
@@ -258,11 +258,11 @@ export const SalesTable = ({
 
       {/* Paginación */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 flex-wrap gap-2">
           <span className="text-xs text-gray-500">
             Pág. {page} / {totalPages} &bull; {sales.length} registros
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex-wrap flex items-center gap-1">
             <button onClick={() => setPage(1)}           disabled={page === 1}          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-gray-200 disabled:opacity-30"><ChevronsLeft  className="w-4 h-4" /></button>
             <button onClick={() => setPage(p => p - 1)} disabled={page === 1}          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-gray-200 disabled:opacity-30"><ChevronLeft   className="w-4 h-4" /></button>
             <span className="px-2 py-1 text-xs font-semibold bg-orange-500 text-white rounded">{page}</span>

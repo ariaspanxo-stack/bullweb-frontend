@@ -185,7 +185,7 @@ function OrderCard({ order, defaults, onAccept, onDone, onReject, processing }: 
 
       {/* Acciones */}
       {order.onlineStatus === 'pending' && mode === 'idle' && (
-        <div className="flex gap-2 mt-3">
+        <div className="flex-wrap flex gap-2 mt-3">
           <button
             onClick={() => setMode('accept')}
             disabled={isLoading}
@@ -418,7 +418,7 @@ export default function OnlineOrders() {
   return (
     <div className="p-6 max-w-2xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <div>
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-6 h-6 text-orange-500" />
@@ -476,7 +476,7 @@ export default function OnlineOrders() {
             onClick={() => setFilter(f.key)}
             className={`min-h-[44px] px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               filter === f.key
-                ? 'bg-orange-500 text-white shadow-md'
+                ? 'bg-orange-50 text-orange-700 shadow-md border border-orange-300'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -515,7 +515,7 @@ export default function OnlineOrders() {
 
           {/* Paginación */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-6">
+            <div className="flex-wrap flex justify-center items-center gap-2 mt-6">
               <button
                 disabled={page === 1}
                 onClick={() => setPage(p => p - 1)}

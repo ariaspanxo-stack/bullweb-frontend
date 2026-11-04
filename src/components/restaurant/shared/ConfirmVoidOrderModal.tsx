@@ -24,7 +24,7 @@ export function useConfirmVoidOrder(): { askVoid: (orderNum: string) => Promise<
 
   const voidModal = pending ? createPortal(
     <>
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]" onClick={() => close(false)} />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] text-slate-900" onClick={() => close(false)} />
       <div role="alertdialog" aria-labelledby="void-order-title" className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[420px] max-w-[92vw] bg-white rounded-2xl shadow-2xl z-[100] p-5 space-y-4">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-xl bg-orange-100 text-[#F97316] flex items-center justify-center flex-shrink-0">
@@ -37,7 +37,7 @@ export function useConfirmVoidOrder(): { askVoid: (orderNum: string) => Promise<
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex-wrap flex gap-2">
           <button
             onClick={() => close(false)}
             className="flex-1 min-h-[44px] rounded-xl border-2 border-gray-200 text-gray-700 font-bold hover:bg-gray-50 transition-colors"

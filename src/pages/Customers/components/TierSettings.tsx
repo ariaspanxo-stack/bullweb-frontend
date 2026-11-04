@@ -112,16 +112,16 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
   };
 
   const inputCls =
-    'w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-gray-800 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none placeholder-gray-400';
+    'w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-gray-800 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none placeholder-slate-400';
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white border border-slate-200 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Crown className="w-5 h-5 text-yellow-400" />
-            <h3 className="text-xl font-bold text-white">Niveles de Fidelización</h3>
+            <h3 className="text-xl font-bold text-slate-900">Niveles de Fidelización</h3>
           </div>
           <button
             onClick={onClose}
@@ -138,7 +138,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
           ) : (
             <>
               {/* Config de inactividad */}
-              <div className="bg-zinc-800/60 rounded-lg p-4 border border-zinc-700/50">
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                 <div className="flex items-center gap-2 mb-3">
                   <SettingsIcon className="w-4 h-4 text-slate-500" />
                   <h4 className="text-sm font-semibold text-slate-800">Reglas de Caída de Nivel</h4>
@@ -163,7 +163,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
                     />
                   </div>
                 </div>
-                <div className="mt-3 flex items-start gap-2 text-xs text-slate-600 bg-zinc-900/50 rounded-md p-2.5 border border-zinc-700/40">
+                <div className="mt-3 flex items-start gap-2 text-xs text-slate-600 bg-white rounded-md p-2.5 border border-slate-200">
                   <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 mt-0.5 flex-shrink-0" />
                   <span>
                     Tras {riskDays} días antes de caer, el cliente se marca "En Riesgo". Al superar {inactivityDays} días sin comprar, baja un nivel.
@@ -172,8 +172,8 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
               </div>
 
               {/* Lista de niveles */}
-              <div className="bg-zinc-800/60 rounded-lg p-4 border border-zinc-700/50">
-                <div className="flex items-center justify-between mb-3">
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                   <h4 className="text-sm font-semibold text-slate-800">Niveles</h4>
                   <button
                     onClick={addTier}
@@ -186,7 +186,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
                   {tiers.map((tier, idx) => (
                     <div
                       key={idx}
-                      className="bg-zinc-900/60 rounded-lg p-3 border border-zinc-700/60 grid grid-cols-1 md:grid-cols-12 gap-3 items-center"
+                      className="bg-white rounded-lg p-3 border border-slate-200 grid grid-cols-1 md:grid-cols-12 gap-3 items-center"
                     >
                       {/* Color */}
                       <div className="md:col-span-1 flex items-center gap-2">
@@ -256,7 +256,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200 flex-shrink-0 flex gap-2">
+        <div className="flex-wrap p-4 border-t border-slate-200 flex-shrink-0 flex gap-2">
           <button
             onClick={onClose}
             className="min-h-[44px] flex-1 py-2.5 px-4 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium transition-colors"

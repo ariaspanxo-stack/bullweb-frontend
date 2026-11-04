@@ -569,7 +569,7 @@ export function DteDocumentsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex-wrap flex items-center gap-2">
                           {doc.status === 'ISSUED' && (
                             <button
                               onClick={() => setCancelModal({
@@ -611,11 +611,11 @@ export function DteDocumentsPage() {
 
         {/* Paginación */}
         {totalPages > 1 && (
-          <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
+          <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between flex-wrap gap-2">
             <span className="text-gray-400 text-xs">
               Página {page} de {totalPages} · {total} documentos
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex-wrap flex items-center gap-2">
               <button
                 onClick={() => setPage(p => p - 1)}
                 disabled={page === 1}
@@ -653,7 +653,7 @@ export function DteDocumentsPage() {
 
       {/* Modal anulación */}
       {cancelModal && (
-        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm text-slate-900">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl border border-gray-200">
             <h3 className="text-gray-800 font-bold text-lg mb-1">Anular documento</h3>
             <p className="text-gray-500 text-xs mb-5">
@@ -670,7 +670,7 @@ export function DteDocumentsPage() {
               onChange={e => setCancelModal(m => m ? { ...m, motivo: e.target.value } : null)}
               className="w-full px-3 py-2 rounded-lg border border-gray-200 text-gray-800 text-sm placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none mb-5"
             />
-            <div className="flex gap-3">
+            <div className="flex-wrap flex gap-3">
               <button
                 onClick={() => setCancelModal(null)}
                 disabled={cancelModal.saving}

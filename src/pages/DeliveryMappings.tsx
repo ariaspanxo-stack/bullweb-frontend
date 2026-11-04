@@ -609,11 +609,11 @@ export default function DeliveryMappings() {
   return (
     <>
       {stockWarning && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 text-slate-900" role="dialog" aria-modal="true">
           <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
             <h3 className="text-lg font-bold text-gray-900">Faltan ingredientes</h3>
             <p className="mt-2 text-sm text-gray-600">{stockWarning}. Si vendes igual, el stock queda en negativo.</p>
-            <div className="mt-5 flex gap-3">
+            <div className="flex-wrap mt-5 flex gap-3">
               <button type="button" className="min-h-[44px] flex-1 rounded-xl border border-gray-300 px-4 font-semibold text-gray-700" onClick={() => setStockWarning(null)}>Cancelar</button>
               <button type="button" className="min-h-[44px] flex-1 rounded-xl bg-white px-4 font-semibold text-slate-700 border border-slate-300" onClick={() => { setStockWarning(null); submitManualOrder(true); }}>Vender igual</button>
             </div>
@@ -624,7 +624,7 @@ export default function DeliveryMappings() {
     <div className="min-h-screen bg-white text-slate-900 border border-slate-200">
       {/* Header */}
       <header className="bg-gray-950/90 backdrop-blur border-b border-white/5 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
+        <div className="flex-wrap max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
           <Link
             to="/delivery"
             className="p-2 rounded-lg hover:bg-white/5 text-gray-400 transition-colors"
@@ -653,7 +653,7 @@ export default function DeliveryMappings() {
         </div>
         {/* Selector de plataforma + tabs */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-3 flex flex-col sm:flex-row gap-3 sm:items-center">
-          <div className="flex items-center gap-2">
+          <div className="flex-wrap flex items-center gap-2">
             {PLATFORMS.map((p) => (
               <button
                 key={p.slug}
@@ -709,7 +709,7 @@ export default function DeliveryMappings() {
             </div>
           </div>
 
-          <div className="flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 w-fit">
+          <div className="flex-wrap flex items-center gap-1 bg-white/5 rounded-lg p-1 border border-white/10 w-fit">
             {/* Hotfix #157 — tab Mapeos OCULTO de la navegación visible (los
                 mapeos persisten en BD: alimentan la priorización de la grilla
                 #152 y el futuro modo automático). El botón no se renderiza;
@@ -778,7 +778,7 @@ export default function DeliveryMappings() {
           <>
             {/* Crear mapeo manual desde cero */}
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">
-              <h3 className="text-sm font-semibold text-white mb-1">
+              <h3 className="text-sm font-semibold text-slate-900 mb-1">
                 Crear mapeo manual ({platformLabel})
               </h3>
               <p className="text-xs text-gray-400 mb-3">
@@ -830,7 +830,7 @@ export default function DeliveryMappings() {
                       className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 px-4 py-3 items-center"
                     >
                       <div className="md:col-span-5">
-                        <p className="text-sm font-medium text-white break-words">
+                        <p className="text-sm font-medium text-slate-900 break-words">
                           {m.external_name}
                         </p>
                         <p className="text-[11px] text-gray-500 font-mono truncate">
@@ -858,7 +858,7 @@ export default function DeliveryMappings() {
                 <div className="w-16 h-16 mx-auto bg-slate-500 rounded-full flex items-center justify-center mb-4">
                   <CheckCircle2 className="w-8 h-8 text-slate-500" />
                 </div>
-                <h3 className="text-lg font-bold text-white">
+                <h3 className="text-lg font-bold text-slate-900">
                   {mappings.length > 0
                     ? `Todos los productos conocidos de ${platformLabel} están mapeados`
                     : 'Sin pedidos recibidos de plataformas todavía'}
@@ -927,7 +927,7 @@ export default function DeliveryMappings() {
 
                           {/* Nombre externo */}
                           <div className="md:col-span-4">
-                            <p className="text-sm font-medium text-white break-words">
+                            <p className="text-sm font-medium text-slate-900 break-words">
                               {item.externalName}
                             </p>
                             <p className="hidden md:block text-[11px] text-gray-500 font-mono truncate">
@@ -1009,7 +1009,7 @@ export default function DeliveryMappings() {
             <div className="lg:col-span-2 space-y-6">
               {/* Hotfix #152 — Selección visual de productos (grilla clickeable) */}
               <div className="bg-white/5 border border-white/10 rounded-xl p-4">
-                <h3 className="text-sm font-semibold text-white mb-1">
+                <h3 className="text-sm font-semibold text-slate-900 mb-1">
                   Agregar productos — pedido de {platformLabel}
                 </h3>
                 <p className="text-xs text-gray-400 mb-3">
@@ -1129,14 +1129,14 @@ export default function DeliveryMappings() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-white truncate">
+                          <p className="text-sm font-medium text-slate-900 truncate">
                             {it.productName}
                           </p>
                           <p className="text-xs text-gray-400 tabular-nums">
                             {fmtCLP(it.unitPrice)} c/u
                           </p>
                         </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
+                        <div className="flex-wrap flex items-center gap-1 flex-shrink-0">
                           <button
                             onClick={() => changeManualQty(it.key, -1)}
                             disabled={it.quantity <= 1}
@@ -1145,7 +1145,7 @@ export default function DeliveryMappings() {
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
-                          <span className="w-8 text-center text-sm font-semibold text-white tabular-nums">
+                          <span className="w-8 text-center text-sm font-semibold text-slate-900 tabular-nums">
                             {it.quantity}
                           </span>
                           <button
@@ -1156,7 +1156,7 @@ export default function DeliveryMappings() {
                             <Plus className="w-3.5 h-3.5" />
                           </button>
                         </div>
-                        <p className="text-sm font-semibold text-white tabular-nums flex-shrink-0 w-20 text-right">
+                        <p className="text-sm font-semibold text-slate-900 tabular-nums flex-shrink-0 w-20 text-right">
                           {fmtCLP(it.quantity * it.unitPrice)}
                         </p>
                         <button
@@ -1206,7 +1206,7 @@ export default function DeliveryMappings() {
             {/* Desglose y confirmación */}
             <div className="lg:col-span-1">
               <div className="bg-white/5 border border-white/10 rounded-xl p-4 sticky top-32">
-                <h3 className="text-sm font-semibold text-white mb-3">Desglose del pedido</h3>
+                <h3 className="text-sm font-semibold text-slate-900 mb-3">Desglose del pedido</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between text-gray-300">
                     <span>Subtotal</span>
@@ -1264,7 +1264,7 @@ export default function DeliveryMappings() {
                               <X className="w-3.5 h-3.5" />
                             </button>
                           </div>
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex-wrap flex items-center gap-1.5">
                             <select
                               value={row.type}
                               onChange={(e) =>
@@ -1327,7 +1327,7 @@ export default function DeliveryMappings() {
                     )}
                   </div>
 
-                  <div className="border-t border-white/10 pt-2 flex justify-between font-bold text-white">
+                  <div className="border-t border-white/10 pt-2 flex justify-between font-bold text-slate-900">
                     <span>Total</span>
                     <span className="tabular-nums">{fmtCLP(manualTotal)}</span>
                   </div>
@@ -1368,7 +1368,7 @@ export default function DeliveryMappings() {
         {/* ── TAB HISTORIAL (Hotfix #153 — solo platform_orders) ── */}
         {!loading && !error && tab === 'history' && (
           <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-            <div className="px-4 py-3 bg-white/5 border-b border-white/10 flex items-center justify-between">
+            <div className="px-4 py-3 bg-white/5 border-b border-white/10 flex items-center justify-between flex-wrap gap-2">
               <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 Pedidos manuales registrados ({historyTotal})
               </span>
@@ -1445,7 +1445,7 @@ export default function DeliveryMappings() {
                   ))}
                 </div>
                 {historyTotal > 20 && (
-                  <div className="px-4 py-3 border-t border-white/10 flex items-center justify-between text-xs text-gray-400 no-print">
+                  <div className="px-4 py-3 border-t border-white/10 flex items-center justify-between text-xs text-gray-400 no-print flex-wrap gap-2">
                     <button
                       onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
                       disabled={historyPage <= 1 || historyLoading}
@@ -1476,14 +1476,14 @@ export default function DeliveryMappings() {
           + @media print ocultando el resto de la UI. */}
       {ticketData && (
         createPortal(<div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm no-print"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm no-print text-slate-900"
           onClick={() => setTicketData(null)}
         >
           <div
             className="bg-white border border-slate-200 rounded-xl max-w-sm w-full max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
               <span className="text-sm font-semibold text-slate-900">Ticket interno</span>
               <button
                 onClick={() => setTicketData(null)}
@@ -1573,7 +1573,7 @@ export default function DeliveryMappings() {
                   Registro interno — Mapeo Delivery · BullWeb
                 </p>
               </div>
-              <div className="flex gap-2 mt-4">
+              <div className="flex-wrap flex gap-2 mt-4">
                 <button
                   onClick={() => window.print()}
                   className="min-h-[44px] flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold text-slate-900 bg-brand-500 hover:bg-brand-600 transition-colors"

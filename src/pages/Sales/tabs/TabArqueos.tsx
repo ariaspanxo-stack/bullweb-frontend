@@ -331,14 +331,14 @@ export const TabArqueos = () => {
   };
 
   return (
-    <div className="flex bg-gray-100 -m-6" style={{ minHeight: 'calc(100vh - 160px)' }}>
+    <div className="flex-wrap flex bg-gray-100 -m-6" style={{ minHeight: 'calc(100vh - 160px)' }}>
 
       {/* ── Panel izquierdo ── */}
       <div className="flex-1 flex flex-col overflow-hidden bg-white border-r border-gray-200">
 
-        <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
+        <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white flex-wrap gap-2">
           <h2 className="text-sm font-bold text-gray-700 tracking-wider">Arqueos de Caja</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex-wrap flex items-center gap-2">
             {!activeSession && registerId && (
               <button
                 onClick={handleShowOpenModal}
@@ -524,9 +524,9 @@ export const TabArqueos = () => {
         <div className="w-[420px] flex-shrink-0 flex flex-col bg-white border-l border-gray-200 overflow-y-auto">
 
           {/* Header */}
-          <div className="bg-orange-500 px-5 py-3 flex items-center justify-between flex-shrink-0">
+          <div className="bg-orange-500 px-5 py-3 flex items-center justify-between flex-shrink-0 flex-wrap gap-2">
             <h3 className="text-white font-bold text-sm tracking-wider">Arqueo de Caja</h3>
-            <div className="flex items-center gap-2">
+            <div className="flex-wrap flex items-center gap-2">
               {isActiveSelected && (canIncome || canExpense) && (
                 <>
                   {canIncome && (
@@ -945,7 +945,7 @@ export const TabArqueos = () => {
       {/* ── Modal: Confirmar eliminacion ── */}
       {/* HOTFIX 299 (B2-05): justificacion obligatoria (min 15) enviada en body y ?justification= ; portal z-[100] */}
       {confirmDeleteId && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 text-slate-900">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="bg-white px-5 py-3">
               <h3 className="text-white font-bold text-sm tracking-wide">Eliminar Arqueo</h3>
@@ -971,7 +971,7 @@ export const TabArqueos = () => {
                 {deleteJustification.trim().length}/{DELETE_MIN_CHARS} caracteres minimos
               </p>
             </div>
-            <div className="px-6 pb-5 flex justify-end gap-2">
+            <div className="flex-wrap px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => { setConfirmDeleteId(null); setDeleteJustification(''); }}
                 className="min-h-[44px] px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
@@ -994,7 +994,7 @@ export const TabArqueos = () => {
 
       {/* ── Modal: Nueva Caja ── */}
       {showOpenModal && (
-        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 text-slate-900">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="bg-orange-500 px-5 py-3">
               <h3 className="text-white font-bold text-sm tracking-wide">Nuevo Arqueo de Caja</h3>
@@ -1004,7 +1004,7 @@ export const TabArqueos = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Hora de apertura <span className="text-red-500">*</span>
                 </label>
-                <div className="flex gap-2">
+                <div className="flex-wrap flex gap-2">
                   <input
                     type="date"
                     value={openDate}
@@ -1038,7 +1038,7 @@ export const TabArqueos = () => {
                 </div>
               </div>
             </div>
-            <div className="px-6 pb-5 flex justify-end gap-2">
+            <div className="flex-wrap px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => setShowOpenModal(false)}
                 className="min-h-[44px] px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
@@ -1073,7 +1073,7 @@ export const TabArqueos = () => {
 
       {/* ── Modal: Confirmar cierre diferencia grande ── */}
       {showCloseConfirm && (
-        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 text-slate-900">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="bg-red-600 px-5 py-3 flex items-center gap-2">
               <AlertTriangle size={16} className="text-white" />
@@ -1087,7 +1087,7 @@ export const TabArqueos = () => {
               </p>
               <p className="text-xs text-gray-500">Confirma que los montos son correctos antes de cerrar la caja.</p>
             </div>
-            <div className="px-6 pb-5 flex justify-end gap-2">
+            <div className="flex-wrap px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => setShowCloseConfirm(false)}
                 className="min-h-[44px] px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"

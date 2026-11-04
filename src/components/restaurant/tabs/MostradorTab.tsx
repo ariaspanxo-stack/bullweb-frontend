@@ -56,7 +56,7 @@ export function MostradorTab() {
         />
       )}
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100 flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
             <ShoppingBag size={20} className="text-slate-700" />

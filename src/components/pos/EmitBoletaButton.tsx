@@ -169,10 +169,10 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
 
       {/* Modal */}
       {open && (
-        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 text-slate-900">
           <div className="!bg-gray-900 !border !border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 pt-5 pb-3 !bg-gray-900">
+            <div className="flex items-center justify-between px-6 pt-5 pb-3 !bg-gray-900 flex-wrap gap-2">
               <h3 className="!text-white !text-lg !font-semibold">
                 {emittedDoc ? 'Boleta Emitida' : 'Emitir Boleta Electrónica'}
               </h3>

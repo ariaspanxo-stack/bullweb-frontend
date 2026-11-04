@@ -40,7 +40,7 @@ export function useStockConfirm() {
 
   const dialog = pending
     ? createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 text-slate-900" role="dialog" aria-modal="true">
           <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-xl">
             {pending.shortages ? (
               <>
@@ -63,7 +63,7 @@ export function useStockConfirm() {
             </p>
               </>
             )}
-            <div className="mt-5 flex gap-3">
+            <div className="flex-wrap mt-5 flex gap-3">
               <button
                 type="button"
                 className="min-h-[44px] flex-1 rounded-xl border border-gray-300 px-4 font-semibold text-gray-700"

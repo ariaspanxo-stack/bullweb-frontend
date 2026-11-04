@@ -84,7 +84,7 @@ export function useAdminPin() {
 
   const pinModal = open
     ? createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60" onClick={() => finish(null)}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 text-slate-900" onClick={() => finish(null)}>
           <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-bold text-slate-900">PIN de administrador</h3>
             <p className="mt-1 text-sm text-slate-600">{message}</p>

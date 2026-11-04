@@ -114,10 +114,10 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-5 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-5 flex items-center justify-between flex-wrap gap-2">
           <div>
             <h2 className="text-lg font-bold text-white">Nueva Campaña</h2>
             <p className="text-orange-100 text-xs mt-0.5">Paso {step + 1} de {STEPS.length}: {STEPS[step]}</p>
@@ -402,7 +402,7 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between gap-3">
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between gap-3 flex-wrap">
           <button
             type="button"
             onClick={step === 0 ? onClose : () => { setError(null); setStep((s) => (s - 1) as Step); }}

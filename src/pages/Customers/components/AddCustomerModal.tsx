@@ -71,20 +71,20 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
   };
 
   const inputStyle: React.CSSProperties = {
-    backgroundColor: '#374151',
-    color: '#FFFFFF',
-    border: '1px solid #4B5563',
+    backgroundColor: '#FFFFFF',
+    color: '#0F172A',
+    border: '1px solid #CBD5E1',
   };
   const labelStyle: React.CSSProperties = {
-    color: '#E5E7EB',
+    color: '#334155',
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="force-light-inputs bg-white border border-slate-200 rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
-          <h3 className="text-lg font-bold text-white">Nuevo Cliente</h3>
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0 flex-wrap gap-2">
+          <h3 className="text-lg font-bold text-slate-900">Nuevo Cliente</h3>
           <button
             onClick={onClose}
             className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-colors"
@@ -100,7 +100,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
             <div>
               <label className="block text-sm font-medium mb-2" style={labelStyle}>Nombre *</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type="text"
                   value={name}
@@ -116,7 +116,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
             <div>
               <label className="block text-sm font-medium mb-2" style={labelStyle}>Teléfono *</label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type="tel"
                   value={phone}
@@ -132,7 +132,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
             <div>
               <label className="block text-sm font-medium mb-2" style={labelStyle}>Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type="email"
                   value={email}
@@ -148,7 +148,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
             <div>
               <label className="block text-sm font-medium mb-2" style={labelStyle}>Fecha de nacimiento</label>
               <div className="relative">
-                <Cake className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+                <Cake className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none z-10" />
                 <input
                   type="date"
                   value={birthdate}
@@ -165,7 +165,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
             <div>
               <label className="block text-sm font-medium mb-2" style={labelStyle}>RUT</label>
               <div className="relative">
-                <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type="text"
                   value={rut}
@@ -182,7 +182,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
             <div>
               <label className="block text-sm font-medium mb-2" style={labelStyle}>Ciudad</label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type="text"
                   value={sector}
@@ -198,7 +198,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
             <div>
               <label className="block text-sm font-medium mb-2" style={labelStyle}>Dirección</label>
               <div className="relative">
-                <Home className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Home className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type="text"
                   value={address}
@@ -227,7 +227,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
             <div>
               <label className="block text-sm font-medium mb-2" style={labelStyle}>Notas</label>
               <div className="relative">
-                <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
+                <MessageSquare className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -242,7 +242,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200 flex gap-2 flex-shrink-0">
+        <div className="flex-wrap p-4 border-t border-slate-200 flex gap-2 flex-shrink-0">
           <button
             onClick={onClose}
             className="min-h-[44px] flex-1 py-2.5 px-4 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium transition-colors"

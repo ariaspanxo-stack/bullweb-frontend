@@ -71,13 +71,13 @@ export function ReprintModal({ open, orderId, orderNumber, onClose, onSuccess }:
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={e => { e.stopPropagation(); onClose(); }}>
+    <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900" onClick={e => { e.stopPropagation(); onClose(); }}>
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
               <Printer className="w-4 h-4 text-slate-700" />
@@ -177,7 +177,7 @@ export function ReprintModal({ open, orderId, orderNumber, onClose, onSuccess }:
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+        <div className="flex-wrap flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
           <button
             onClick={onClose}
             disabled={printState === 'printing'}

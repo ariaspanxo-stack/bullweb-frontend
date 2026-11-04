@@ -144,7 +144,7 @@ export default function AppsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Apps</h1>
           <p className="text-gray-500 mt-1">Integraciones con plataformas de delivery externas</p>
@@ -159,7 +159,7 @@ export default function AppsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+      <div className="flex-wrap flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
         {([['plataformas', 'Plataformas'], ['pedidos', 'Pedidos externos']] as const).map(([key, label]) => (
           <button
             key={key}

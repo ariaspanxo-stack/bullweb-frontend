@@ -259,7 +259,7 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
         </div>
 
         {/* ───────────── Botones ───────────── */}
-        <div className="flex gap-3 pt-2">
+        <div className="flex-wrap flex gap-3 pt-2">
           <button
             type="button"
             onClick={onClose}

@@ -93,7 +93,7 @@ function ReportsInner() {
                 className={cn('min-h-[44px]', 
                   'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border',
                   activePreset === p.id
-                    ? 'bg-orange-500 text-white border-orange-500 shadow-sm '
+                    ? 'bg-orange-50 text-orange-700 border-orange-300 shadow-sm '
                     : 'bg-orange-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border-slate-200 border border-orange-300'
                 )}
               >
@@ -106,7 +106,7 @@ function ReportsInner() {
               type="date"
               value={dateFrom}
               onChange={e => { if (e.target.value.length === 10) { applyPreset(''); setDateFrom(e.target.value); } }}
-              className="date-input-dark border border-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
+              className="border border-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
               style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: 'white', colorScheme: 'dark' }}
             />
             <span className="text-slate-500 text-sm select-none">—</span>
@@ -114,7 +114,7 @@ function ReportsInner() {
               type="date"
               value={dateTo}
               onChange={e => { if (e.target.value.length === 10) { applyPreset(''); setDateTo(e.target.value); } }}
-              className="date-input-dark border border-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
+              className="border border-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
               style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: 'white', colorScheme: 'dark' }}
             />
 
@@ -135,7 +135,7 @@ function ReportsInner() {
             </div>
 
             {waiterId && (
-              <span className="flex items-center gap-1.5 bg-orange-500/20 text-orange-300 text-xs font-medium px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1.5 bg-orange-50 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-full">
                 <Users className="w-3 h-3" />
                 {waitersForFilter.find((w: any) => w.waiter?.id === waiterId)?.waiter?.name ?? 'Mesero'}
                 <button onClick={() => setWaiterId('')} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center hover:text-orange-100 ml-0.5">
@@ -167,7 +167,7 @@ function ReportsInner() {
             <button
               onClick={handleRefresh}
               title="Actualizar datos ahora"
-              className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-orange-500 hover:bg-slate-100 text-slate-700 hover:text-white rounded-lg transition-colors border border-slate-200"
+              className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 hover:text-white rounded-lg transition-colors border border-slate-200"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Actualizar</span>
@@ -187,7 +187,7 @@ function ReportsInner() {
             { label: 'Top producto',       value: (dashboardData as any).topProducts?.[0]?.product?.name ?? '—', prevVal: null, trend: null, icon: Star,         color: 'text-amber-400',   bg: 'bg-amber-500/20' },
           ];
           return (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2 px-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-2 px-1">
               {headerKpis.map(kpi => (
                 <div key={kpi.label} className="bg-slate-50 backdrop-blur-sm rounded-xl px-4 py-3 flex items-center gap-3 border border-slate-200">
                   <div className={`p-2 rounded-lg ${kpi.bg} flex-shrink-0`}>
@@ -224,7 +224,7 @@ function ReportsInner() {
                   className={cn('min-h-[44px]', 
                     'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0',
                     isActive
-                      ? 'bg-orange-500 text-white shadow-sm '
+                      ? 'bg-orange-50 text-orange-700 shadow-sm  border border-orange-300'
                       : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                   )}
                 >

@@ -144,7 +144,7 @@ export default function TableDetailModal({
       <div className="space-y-6">
         {isLoading ? (
           <div className="text-center py-8 text-gray-500">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
             <p>Cargando información...</p>
           </div>
         ) : (
@@ -156,7 +156,7 @@ export default function TableDetailModal({
                   Capacidad
                 </label>
                 <div className="flex items-center gap-2 mt-1">
-                  <Users className="w-5 h-5 text-blue-600" />
+                  <Users className="w-5 h-5 text-slate-700" />
                   <span className="text-lg font-bold text-gray-900">
                     {table.capacity} personas
                   </span>
@@ -168,7 +168,7 @@ export default function TableDetailModal({
                   Sección
                 </label>
                 <div className="flex items-center gap-2 mt-1">
-                  <MapPin className="w-5 h-5 text-purple-600" />
+                  <MapPin className="w-5 h-5 text-slate-700" />
                   <span className="text-lg font-bold text-gray-900">
                     {table.section?.name || 'Sin sección'}
                   </span>
@@ -180,7 +180,7 @@ export default function TableDetailModal({
                   Forma
                 </label>
                 <div className="flex items-center gap-2 mt-1">
-                  <Maximize2 className="w-5 h-5 text-green-600" />
+                  <Maximize2 className="w-5 h-5 text-slate-700" />
                   <span className="text-lg font-bold text-gray-900">
                     {shapeLabels[table.shape] || table.shape}
                   </span>
@@ -204,29 +204,29 @@ export default function TableDetailModal({
 
             {/* Mesero asignado */}
             {(table.assignedWaiter || currentOrder) && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                    <div className="w-10 h-10 rounded-full bg-slate-500 flex items-center justify-center text-white font-bold text-sm">
                       {(table.assignedWaiter?.name || currentOrder?.waiter?.name || '?').charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <p className="text-xs text-blue-500 font-medium">Mesero Asignado</p>
-                      <p className="text-sm font-semibold text-blue-800">{table.assignedWaiter?.name || currentOrder?.waiter?.name || 'Sin asignar'}</p>
+                      <p className="text-xs text-slate-500 font-medium">Mesero Asignado</p>
+                      <p className="text-sm font-semibold text-slate-700">{table.assignedWaiter?.name || currentOrder?.waiter?.name || 'Sin asignar'}</p>
                     </div>
                   </div>
                   {currentOrder && (
                     <button
                       onClick={() => setShowWaiterPicker(!showWaiterPicker)}
-                      className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-300 bg-white hover:bg-blue-50 rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
+                      className="min-h-[44px] text-xs font-medium text-slate-700 hover:text-slate-700 border border-slate-200 bg-white hover:bg-slate-100 rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
                     >
                       👤 Cambiar
                     </button>
                   )}
                 </div>
                 {showWaiterPicker && (
-                  <div className="mt-3 pt-3 border-t border-blue-200 space-y-1.5 max-h-40 overflow-y-auto">
-                    <p className="text-xs text-blue-500 mb-1">Seleccionar mesero:</p>
+                  <div className="mt-3 pt-3 border-t border-slate-200 space-y-1.5 max-h-40 overflow-y-auto">
+                    <p className="text-xs text-slate-500 mb-1">Seleccionar mesero:</p>
                     {waiters.length === 0 ? (
                       <p className="text-xs text-gray-400">No hay meseros disponibles</p>
                     ) : (
@@ -235,13 +235,13 @@ export default function TableDetailModal({
                           key={w.id}
                           onClick={() => assignWaiterMutation.mutate({ tableId: table.id, waiterId: w.id })}
                           disabled={assignWaiterMutation.isPending}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-blue-100 transition-colors text-left disabled:opacity-50"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-full flex items-center gap-2.5 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors text-left disabled:opacity-50"
                         >
                           <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
                             style={{ backgroundColor: w.avatarColor ?? '#FF6B35' }}>
                             {w.name?.charAt(0).toUpperCase()}
                           </div>
-                          <span className="text-sm text-blue-800 font-medium">{w.name}</span>
+                          <span className="text-sm text-slate-700 font-medium">{w.name}</span>
                         </button>
                       ))
                     )}
@@ -318,10 +318,10 @@ export default function TableDetailModal({
                         status: status.value
                       })}
                       disabled={isDisabled}
-                      className={`px-4 py-3 rounded-lg border-2 text-sm font-semibold transition-all ${
+                      className={`min-h-[44px] px-4 py-3 rounded-lg border-2 text-sm font-semibold transition-all ${
                         isCurrentStatus
                           ? 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
-                          : 'border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-gray-700 hover:text-blue-700'
+                          : 'border-gray-200 hover:border-slate-300 hover:bg-slate-100 text-gray-700 hover:text-slate-700'
                       }`}
                     >
                       {status.label}
@@ -333,7 +333,7 @@ export default function TableDetailModal({
             </div>
 
             {/* Acciones */}
-            <div className="flex gap-3 pt-4 border-t border-gray-200">
+            <div className="flex-wrap flex gap-3 pt-4 border-t border-gray-200">
               <Button
                 variant="outline"
                 onClick={() => {

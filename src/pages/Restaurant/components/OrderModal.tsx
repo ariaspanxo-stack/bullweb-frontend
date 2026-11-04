@@ -431,7 +431,7 @@ export const OrderModal = ({
 
           {/* ── HEADER (CA): círculo de mesa como elemento más grande,
               garzón, "Cambiar mesa" secundario (mismo onClick) y X ── */}
-          <div className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-14 h-14 bg-white text-orange-600 rounded-full flex items-center justify-center font-bold text-2xl flex-shrink-0 shadow-md">
                 {table.number}
@@ -475,7 +475,7 @@ export const OrderModal = ({
                 </select>
               </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex-wrap flex items-center gap-2 flex-shrink-0">
               {existingOrderId && canTransfer && (
                 <button
                   onClick={() => setShowTransferModal(true)}
@@ -495,7 +495,7 @@ export const OrderModal = ({
 
           {/* ── TABS MOVIL (conservados) ── */}
           <div className="lg:hidden flex-shrink-0 bg-orange-500 border-t border-white/20">
-            <div className="flex">
+            <div className="flex-wrap flex">
               <button
                 onClick={() => setMobileTab('menu')}
                 className={`min-h-[44px] flex-1 py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-2 transition-colors ${
@@ -925,7 +925,7 @@ export const OrderModal = ({
                         <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
                           <Users size={9} /> Personas
                         </p>
-                        <div className="flex items-center gap-1">
+                        <div className="flex-wrap flex items-center gap-1">
                           <button
                             onClick={() => setNumberOfPeople(Math.max(1, numberOfPeople - 1))}
                             className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-11 h-11 bg-white border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:border-orange-400 transition-colors"
@@ -1076,7 +1076,7 @@ export const OrderModal = ({
                     {showDiscountPopover && (
                       <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
                         <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">Descuento de la orden</p>
-                        <div className="flex gap-2">
+                        <div className="flex-wrap flex gap-2">
                           {(['%', '$'] as const).map(t => (
                             <button
                               key={t}
@@ -1287,7 +1287,7 @@ export const OrderModal = ({
 
       {/* Modal transferir mesa */}
       {showTransferModal && (
-        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
             <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="font-bold text-lg mb-1">Transferir a mesa</h3>
             <p className="text-xs text-gray-400 mb-4">Selecciona la mesa destino (disponible)</p>

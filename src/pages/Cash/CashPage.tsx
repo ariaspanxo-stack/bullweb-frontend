@@ -126,8 +126,8 @@ export function CashPage() {
                 : null;
 
               return (
-                <div key={s.id} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
+                <div key={s.id} className="px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
 
                     {/* Izquierda: estado + fecha */}
                     <div className="flex items-center gap-3">
@@ -152,7 +152,7 @@ export function CashPage() {
                     </div>
 
                     {/* Derecha: ventas + arqueo */}
-                    <div className="flex items-center gap-5 text-right">
+                    <div className="flex flex-wrap items-center justify-end gap-3 sm:gap-5 text-right">
 
                       {/* Ventas del turno */}
                       {s.status === 'CLOSED' && (

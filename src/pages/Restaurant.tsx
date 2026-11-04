@@ -92,7 +92,7 @@ export const Restaurant = () => {
           </div>
 
           {/* Buttons */}
-          <div className="flex gap-4 pt-4">
+          <div className="flex-wrap flex gap-4 pt-4">
             <button
               onClick={() => navigate('/dashboard')}
               className="min-h-[44px] flex-1 bg-white hover:bg-slate-50 text-slate-700 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg border border-slate-300"

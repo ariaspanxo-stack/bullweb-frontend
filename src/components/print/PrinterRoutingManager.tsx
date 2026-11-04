@@ -81,7 +81,7 @@ function RuleRow({
           <span className="text-xs text-gray-400">prioridad {rule.priority}</span>
         </div>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
+      <div className="flex-wrap flex items-center gap-1 shrink-0">
         <button
           onClick={() => onEdit(rule)}
           className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"
@@ -161,9 +161,9 @@ function RuleModal({
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white flex-wrap gap-2">
           <h2 className="text-base font-semibold text-gray-900">
             {rule ? 'Editar regla' : 'Nueva regla de enrutamiento'}
           </h2>
@@ -284,7 +284,7 @@ function RuleModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2 p-5 border-t border-gray-100 sticky bottom-0 bg-white">
+        <div className="flex-wrap flex justify-end gap-2 p-5 border-t border-gray-100 sticky bottom-0 bg-white">
           <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
             Cancelar
           </button>

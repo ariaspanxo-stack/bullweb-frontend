@@ -641,9 +641,9 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
 
     {/* ── MODAL PAGO ──────────────────────────────────────── */}
     {showPayModal && (
-      createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+      createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
         <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <h3 className="text-lg font-bold text-gray-900">Registrar Pago</h3>
             <button onClick={() => setShowPayModal(false)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded-lg">
               <X className="w-5 h-5 text-gray-500" />
@@ -689,7 +689,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
             )}
           </div>
 
-          <div className="flex gap-2 mt-6">
+          <div className="flex-wrap flex gap-2 mt-6">
             <button
               onClick={() => setShowPayModal(false)}
               className="min-h-[44px] flex-1 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -710,9 +710,9 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
 
     {/* ── MODAL ANULACIÓN ─────────────────────────────────── */}
     {showCancelModal && createPortal(
-      <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
         <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <h3 className="text-lg font-bold text-gray-900">{isPaidSale ? 'Anular venta pagada' : 'Eliminar Venta'}</h3>
             <button onClick={() => setShowCancelModal(false)} className="p-1 hover:bg-gray-100 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center">
               <X className="w-5 h-5 text-gray-500" />
@@ -761,7 +761,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
             </div>
           )}
 
-          <div className="flex gap-2 mt-4">
+          <div className="flex-wrap flex gap-2 mt-4">
             <button
               onClick={() => setShowCancelModal(false)}
               className="flex-1 min-h-[44px] py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"

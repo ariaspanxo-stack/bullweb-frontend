@@ -20,7 +20,7 @@ export default function Orders() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-lg flex items-center justify-center">
-            <Receipt className="w-7 h-7 text-white" />
+            <Receipt className="w-7 h-7 text-slate-900" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Órdenes</h1>

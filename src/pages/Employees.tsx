@@ -475,12 +475,12 @@ export default function Employees() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Empleados</h1>
           <p className="mt-1 text-sm text-gray-500">Gestiona el equipo y sus roles</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex-wrap flex items-center gap-2">
           {(activeTab === 'employees' || activeTab === 'roles') && (
             <button
               onClick={handleExport}
@@ -681,7 +681,7 @@ export default function Employees() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex-wrap flex items-center gap-2">
                           {canManage && (
                             <button onClick={() => openEditEmp(emp)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-slate-100 text-slate-700 transition-colors" title="Editar">
                               <Pencil className="h-3.5 w-3.5" />
@@ -752,14 +752,14 @@ export default function Employees() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filteredRoles.map((role: any) => (
                 <div key={role.id} className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between flex-wrap gap-2">
                     <div>
                       <h3 className="font-semibold text-gray-900">{role.name}</h3>
                       {role.description && (
                         <p className="text-xs text-gray-500 mt-0.5">{role.description}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex-wrap flex items-center gap-1">
                       {canManage && (
                         <button onClick={() => openEditRole(role)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-slate-100 text-slate-700 transition-colors">
                           <Pencil className="h-3.5 w-3.5" />
@@ -935,7 +935,7 @@ export default function Employees() {
                 </button>
               </span>
             )}
-            <div className="ml-auto flex items-center gap-2">
+            <div className="flex-wrap ml-auto flex items-center gap-2">
               <button
                 onClick={handleAttExport}
                 disabled={!attRecords.length && !attSummary.length}
@@ -962,7 +962,7 @@ export default function Employees() {
           </div>
 
           {/* ─── Sub-tabs Vista Diaria / Historial ───────────────────────── */}
-          <div className="flex gap-2 border-b border-gray-200">
+          <div className="flex-wrap flex gap-2 border-b border-gray-200">
             <button
               onClick={() => setAttView('diaria')}
               className={`min-h-[44px] px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
@@ -1194,7 +1194,7 @@ export default function Employees() {
                     </span>{' '}de{' '}
                     <span className="font-semibold text-gray-600">{histTotal}</span>{' '}registros
                   </span>
-                  <div className="flex items-center gap-1">
+                  <div className="flex-wrap flex items-center gap-1">
                     <button onClick={() => setHistPage(1)} disabled={histPage === 1}
                       className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
                       <ChevronsLeft className="w-4 h-4" />
@@ -1530,10 +1530,10 @@ function EmployeeModal({
       onConfirm={doResetPassword}
       onCancel={() => setResetConfirmOpen(false)}
     />
-    {createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+    {createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[92vh]">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0 flex-wrap gap-2">
           <h2 className="text-lg font-semibold text-gray-900">
             {isEdit ? 'Editar Empleado' : 'Nuevo Empleado'}
           </h2>
@@ -1543,7 +1543,7 @@ function EmployeeModal({
         {/* Tabs — solo en edición */}
         {isEdit && (
           <div className="px-6 pt-4 flex-shrink-0">
-            <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+            <div className="flex-wrap flex gap-1 bg-gray-100 rounded-xl p-1">
               {([
                 { key: 'info',       label: 'Información' },
                 { key: 'sales',      label: 'Ventas',     badge: empStats?.totalOrders > 0 ? String(empStats.totalOrders) : undefined },
@@ -1902,7 +1902,7 @@ function EmployeeModal({
         </div>
 
         {/* Footer — siempre visible */}
-        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex-shrink-0">
+        <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex-shrink-0 flex-wrap">
           {isEdit ? (
             <button
               type="button"
@@ -1921,7 +1921,7 @@ function EmployeeModal({
               {resetLoading ? 'Enviando...' : resetSuccess ? 'Enviado' : 'Resetear contraseña'}
             </button>
           ) : <div />}
-          <div className="flex items-center gap-3">
+          <div className="flex-wrap flex items-center gap-3">
             <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
             {(modalTab === 'info' || !isEdit) && (
               <Button type="submit" form="employee-form" disabled={loading}>
@@ -2004,9 +2004,9 @@ function EmployeeQrModal({ employee, onClose }: { employee: any; onClose(): void
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs flex flex-col">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 flex-wrap gap-2">
           <h2 className="text-base font-semibold text-gray-900">QR de Asistencia</h2>
           <button onClick={onClose} className="min-h-[44px] text-gray-400 hover:text-gray-600 transition-colors">✕</button>
         </div>
@@ -2031,7 +2031,7 @@ function EmployeeQrModal({ employee, onClose }: { employee: any; onClose(): void
           <p className="text-xs text-gray-400 text-center max-w-[200px]">
             Escanea en el kiosco para registrar entrada / salida
           </p>
-          <div className="flex gap-2 w-full">
+          <div className="flex-wrap flex gap-2 w-full">
             <button
               onClick={handleDownload}
               disabled={!qrDataUrl}
@@ -2095,9 +2095,9 @@ function RoleModal({
   };
 
   return (
-    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0 flex-wrap gap-2">
           <h2 className="text-lg font-semibold text-gray-900">
             {isEdit ? 'Editar Rol' : 'Nuevo Rol'}
           </h2>
@@ -2153,7 +2153,7 @@ function RoleModal({
               </div>
             </div>
           </div>
-          <div className="flex gap-3 p-6 border-t border-gray-100 flex-shrink-0">
+          <div className="flex-wrap flex gap-3 p-6 border-t border-gray-100 flex-shrink-0">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">Cancelar</Button>
             <Button type="submit" disabled={loading} className="flex-1">
               {loading ? 'Guardando…' : isEdit ? 'Guardar' : 'Crear Rol'}

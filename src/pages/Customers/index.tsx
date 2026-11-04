@@ -267,11 +267,11 @@ export default function Customers() {
   // (Módulo Clientes/CRM liberado)
 
   return (
-    <div className="min-h-screen bg-white p-8">
+    <div className="min-h-screen bg-white p-2 sm:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-wrap gap-3 items-center justify-between mb-8">
         <div>
-          <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
+          <h1 className="text-2xl sm:text-4xl font-bold text-slate-900 mb-2 flex items-center gap-3">
             <Users className="w-10 h-10 text-slate-500" />
             Clientes Recurrentes
           </h1>
@@ -325,7 +325,7 @@ export default function Customers() {
             <Users className="w-4 h-4 text-slate-500" />
             <span className="text-sm text-slate-500">{tabLabel[activeTab]} (vista actual)</span>
           </div>
-          <div className="text-3xl font-bold text-white">{visibleCount}</div>
+          <div className="text-3xl font-bold text-slate-900">{visibleCount}</div>
         </div>
 
         {/* Total global */}
@@ -334,7 +334,7 @@ export default function Customers() {
             <Users className="w-4 h-4 text-slate-600" />
             <span className="text-sm text-slate-500">Total Clientes (global)</span>
           </div>
-          <div className="text-3xl font-bold text-white">{totalCustomers}</div>
+          <div className="text-3xl font-bold text-slate-900">{totalCustomers}</div>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-lg p-4">
@@ -348,7 +348,7 @@ export default function Customers() {
               <Info className="w-3.5 h-3.5 text-slate-500 hover:text-zinc-300" />
             </span>
           </div>
-          <div className="text-3xl font-bold text-white">{vipCustomers}</div>
+          <div className="text-3xl font-bold text-slate-900">{vipCustomers}</div>
         </div>
 
         <div className="bg-white border border-slate-200 rounded-lg p-4">
@@ -456,7 +456,7 @@ export default function Customers() {
                 <tr>
                   <td colSpan={10} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
-                      <div className="w-20 h-20 rounded-full bg-zinc-800/60 flex items-center justify-center mb-4">
+                      <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mb-4">
                         <Users className="w-10 h-10 text-slate-500" />
                       </div>
                       <p className="text-lg font-semibold text-slate-700 mb-1">
@@ -484,10 +484,10 @@ export default function Customers() {
                   const waUrl = buildWhatsAppUrl(customer.phone, customer.name);
                   const segCfg = getSegmentConfig(customer.segment);
                   return (
-                    <tr key={customer.id} className="hover:bg-zinc-800/50 transition-colors">
+                    <tr key={customer.id} className="hover:bg-slate-100 transition-colors">
                       <td className="px-6 py-4">
                         <div>
-                          <div className="font-semibold text-white">{customer.name}</div>
+                          <div className="font-semibold text-slate-900">{customer.name}</div>
                           {customer.sector && (
                             <div className="text-xs text-slate-500">{customer.sector}</div>
                           )}
@@ -537,7 +537,7 @@ export default function Customers() {
                             })}
                           {/* Tag "Sin compras" si totalOrders === 0 */}
                           {Number(customer.totalOrders ?? 0) === 0 && (
-                            <span className="px-2 py-0.5 rounded text-xs font-bold border bg-zinc-700/40 text-slate-600 border-zinc-600/40">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold border bg-slate-50 text-slate-600 border-slate-200">
                               Sin compras
                             </span>
                           )}
@@ -561,7 +561,7 @@ export default function Customers() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm font-semibold text-white">{customer.totalOrders}</div>
+                        <div className="text-sm font-semibold text-slate-900">{customer.totalOrders}</div>
                       </td>
                       <td className="px-6 py-4">
                         {(() => {
@@ -582,7 +582,7 @@ export default function Customers() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex-wrap flex items-center justify-end gap-2">
                           <button
                             onClick={() => {
                               setSelectedCustomer(customer);
@@ -670,14 +670,14 @@ export default function Customers() {
 
       {/* Archive Confirmation (masivo) */}
       {showArchiveConfirm && (
-        createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 text-slate-900">
           <div className="bg-white border border-slate-200 rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+            <h3 className="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
               <Archive className="w-5 h-5 text-amber-400" />
               ¿Archivar {customersWithoutActivity.length} cliente(s)?
             </h3>
             <p className="text-slate-600 mb-6">
-              Se archivarán (soft-delete) todos los clientes con <span className="font-semibold text-white">0 pedidos</span>.
+              Se archivarán (soft-delete) todos los clientes con <span className="font-semibold text-slate-900">0 pedidos</span>.
               Podrás restaurarlos desde la base de datos si es necesario.
             </p>
             <div className="mb-4 max-h-32 overflow-y-auto bg-white rounded-lg p-2 border border-slate-200">
@@ -688,7 +688,7 @@ export default function Customers() {
                 <div className="text-xs text-slate-500 pt-1">...y {customersWithoutActivity.length - 20} más</div>
               )}
             </div>
-            <div className="flex gap-3">
+            <div className="flex-wrap flex gap-3">
               <button
                 onClick={() => setShowArchiveConfirm(false)}
                 disabled={archiving}
@@ -710,14 +710,14 @@ export default function Customers() {
 
       {/* Delete Confirmation */}
       {showDeleteConfirm && selectedCustomer && (
-        createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 text-slate-900">
           <div className="bg-white border border-slate-200 rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-white mb-2">¿Eliminar Cliente?</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-2">¿Eliminar Cliente?</h3>
             <p className="text-slate-600 mb-6">
-              ¿Estás seguro de eliminar a <span className="font-semibold text-white">{selectedCustomer.name}</span>?
+              ¿Estás seguro de eliminar a <span className="font-semibold text-slate-900">{selectedCustomer.name}</span>?
               Esta acción no se puede deshacer.
             </p>
-            <div className="flex gap-3">
+            <div className="flex-wrap flex gap-3">
               <button
                 onClick={() => {
                   setShowDeleteConfirm(false);

@@ -15,7 +15,7 @@ interface ConfirmModalProps {
 const STYLES = {
   danger:  { btn: 'bg-red-600 hover:bg-red-700 focus:ring-red-500',    icon: 'text-red-500',    bg: 'bg-red-50'    },
   warning: { btn: 'bg-amber-500 hover:bg-amber-600 focus:ring-amber-400', icon: 'text-amber-500', bg: 'bg-amber-50' },
-  info:    { btn: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',  icon: 'text-blue-500',   bg: 'bg-blue-50'   },
+  info:    { btn: 'bg-slate-500 hover:bg-slate-700 focus:ring-orange-500',  icon: 'text-slate-500',   bg: 'bg-slate-50'   },
 };
 
 export function ConfirmModal({
@@ -45,7 +45,7 @@ export function ConfirmModal({
           </div>
           <button
             onClick={onCancel}
-            className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-white/60 transition-colors"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-white/60 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -61,14 +61,14 @@ export function ConfirmModal({
           <button
             onClick={onCancel}
             disabled={isLoading}
-            className="flex-1 px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
+            className="min-h-[44px] flex-1 px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className={`flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-1 ${s.btn}`}
+            className={`min-h-[44px] flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-1 ${s.btn}`}
           >
             {isLoading ? 'Procesando…' : confirmLabel}
           </button>

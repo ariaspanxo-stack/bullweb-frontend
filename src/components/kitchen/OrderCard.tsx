@@ -237,7 +237,7 @@ export default function OrderCard({ order }: OrderCardProps) {
             </div>
 
             {/* Botones de acción */}
-            <div className="flex gap-3 mt-4">
+            <div className="flex-wrap flex gap-3 mt-4">
               {item.status === 'PENDING' && (
                 <button
                   onClick={() => handleMarkPreparing(item.id)}

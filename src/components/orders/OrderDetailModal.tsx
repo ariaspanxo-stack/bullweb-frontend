@@ -226,7 +226,7 @@ export default function OrderDetailModal({
         </div>
 
         {/* Botones */}
-        <div className="flex gap-3 pt-4 border-t">
+        <div className="flex-wrap flex gap-3 pt-4 border-t">
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cerrar
           </Button>
@@ -251,7 +251,7 @@ export default function OrderDetailModal({
 
       {/* Sub-modal: motivo de cancelación */}
       {showCancelConfirm && (
-        createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+        createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
             <h3 className="font-bold text-lg mb-1 text-gray-900">Cancelar orden</h3>
             <p className="text-sm text-gray-500 mb-4">Esta acción no se puede deshacer.</p>
@@ -267,7 +267,7 @@ export default function OrderDetailModal({
               className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-400 resize-none mb-4"
             />
 
-            <div className="flex gap-3">
+            <div className="flex-wrap flex gap-3">
               <button
                 onClick={() => { setShowCancelConfirm(false); setCancelReason(''); }}
                 className="min-h-[44px] flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50"

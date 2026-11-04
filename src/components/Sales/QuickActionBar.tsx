@@ -39,7 +39,7 @@ export function QuickActionBar({
   const canPrint  = true;
 
   return (
-    <div className="flex gap-2 p-4 bg-white border-b border-gray-200">
+    <div className="flex-wrap flex gap-2 p-4 bg-white border-b border-gray-200">
       {/* IMPRIMIR */}
       {canPrint && onPrint && (
         <button

@@ -111,7 +111,7 @@ const StationForm: React.FC<StationFormProps> = ({ initial = {}, saving, error, 
           <AlertCircle className="w-3.5 h-3.5" />{error}
         </p>
       )}
-      <div className="flex gap-2 pt-1">
+      <div className="flex-wrap flex gap-2 pt-1">
         <button
           onClick={() => onSave({ name, description: desc, color })}
           disabled={saving}
@@ -269,12 +269,12 @@ export const StationsTab: React.FC<StationsTabProps> = ({ onStationsChange }) =>
     <div className="p-6">
 
       {/* Encabezado — A4/A5 */}
-      <div className="flex items-center justify-between gap-4 mb-5">
+      <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
         <div>
           <h2 className={TITLE}>Estaciones</h2>
           <p className={SUBTITLE}>Estaciones de cocina y la impresora donde sale cada comanda</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex-wrap flex gap-2">
           <button onClick={fetchStations} title="Recargar" aria-label="Recargar estaciones" className={BTN_ICON}>
             <RotateCcw className="w-4 h-4" />
           </button>
@@ -423,7 +423,7 @@ export const StationsTab: React.FC<StationsTabProps> = ({ onStationsChange }) =>
                     </div>
 
                     {/* Acciones */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex-wrap flex items-center gap-2 flex-shrink-0">
                       {/* Editar */}
                       <button
                         onClick={() => { setEditingId(station.id); setEditError(''); }}
@@ -489,7 +489,7 @@ export const StationsTab: React.FC<StationsTabProps> = ({ onStationsChange }) =>
 
       {/* Modal confirmar eliminación */}
       {deleteTarget && (
-        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 text-slate-900">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-[#FEE2E2] rounded-full flex items-center justify-center flex-shrink-0">
@@ -504,7 +504,7 @@ export const StationsTab: React.FC<StationsTabProps> = ({ onStationsChange }) =>
               ¿Eliminar <strong>"{deleteTarget.name}"</strong>? Los productos de esta estación
               quedarán sin estación de destino de impresión.
             </p>
-            <div className="flex gap-3">
+            <div className="flex-wrap flex gap-3">
               <button
                 onClick={handleDelete}
                 disabled={deleting}

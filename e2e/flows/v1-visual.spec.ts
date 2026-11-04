@@ -2,7 +2,7 @@
 // mas una medicion por pantalla: desborde horizontal, botones bajo 44 px, botones con relleno de otro color y tarjetas oscuras.
 // Solo mira: no escribe nada. Salida en _auditoria/evidencia/_lote308b/capturas/<E2E_VISUAL_ETIQUETA>/.
 import { test, expect, goto, loginPanel, creds } from '../lib/base';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { FRONTEND_DIR } from '../lib/guard';
 
@@ -63,11 +63,25 @@ const MEDIR = () => {
     const c = rgb(getComputedStyle(el).backgroundColor);
     if (c.length >= 3 && (c[3] === undefined || c[3] > 0.5) && c[0] * 0.3 + c[1] * 0.59 + c[2] * 0.11 < 70) oscuras.push(`${el.tagName} ${Math.round(r.width)}x${Math.round(r.height)}`);
   }
+  // Lo que se sale a la derecha del area principal sin un contenedor con scroll propio
+  const mr = (main as HTMLElement).getBoundingClientRect().right;
+  const culpables: string[] = [];
+  for (const el of main.querySelectorAll('*')) {
+    const r = el.getBoundingClientRect();
+    if (r.right <= mr + 1 || r.width === 0 || !vis(el)) continue;
+    let ctn = false;
+    for (let p = el.parentElement; p && p !== main; p = p.parentElement) { const o = getComputedStyle(p).overflowX; if (o === 'auto' || o === 'scroll' || o === 'hidden') { ctn = true; break; } }
+    if (ctn) continue;
+    if (el.children.length && [...el.children].some((c) => c.getBoundingClientRect().right > mr + 1)) continue;
+    culpables.push(`${el.tagName} +${Math.round(r.right - mr)} ${String(el.getAttribute('class') || '').slice(0, 70)} | ${(el.textContent || '').trim().slice(0, 20)}`);
+    if (culpables.length >= 4) break;
+  }
   return {
+    culpables,
     url: location.pathname,
     desborde: document.documentElement.scrollWidth > window.innerWidth + 1 ? document.documentElement.scrollWidth - window.innerWidth : 0,
     botones: botones.length, bajos, colores, oscuras: oscuras.slice(0, 5), invisibles,
-    vacia: (main.textContent || '').trim().length < 20,
+    vacia: (main.textContent || '').trim().length < 20, mainOver: Math.max(0, (main as HTMLElement).scrollWidth - (main as HTMLElement).clientWidth),
   };
 };
 
@@ -77,17 +91,20 @@ test('V1 capturas y medicion del panel', async ({ page }) => {
   const c = creds();
   await loginPanel(page, c.admin);
   const medidas: Record<string, unknown> = {};
-  for (const [w, h] of [[1280, 800], [360, 780]]) {
+  const anchos = (process.env.E2E_VISUAL_ANCHOS ?? '1280,360').split(',').map(Number);
+  for (const [w, h] of [[1280, 800], [360, 780]].filter(([a]) => anchos.includes(a))) {
     await page.setViewportSize({ width: w, height: h });
+    const solo = process.env.E2E_VISUAL_SOLO ? new RegExp(process.env.E2E_VISUAL_SOLO) : null;
     for (const [nombre, ruta, pestana] of PANTALLAS) {
       const k = `${nombre}_${w}`;
+      if (solo && !solo.test(nombre)) continue;
       try {
         await goto(page, ruta);
-        await page.waitForLoadState('networkidle', { timeout: 8000 }).catch(() => {});
+        await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
         await page.waitForTimeout(700);
         // Antes del lote el menu lateral partia abierto en celular y tapaba la pantalla
         if (w < 1024) await page.locator('aside button').first().click({ timeout: 1500 }).catch(() => {});
-        await page.getByText(/Cargando/).first().waitFor({ state: 'hidden', timeout: 6000 }).catch(() => {});
+        await page.getByText(/Cargando|Verificando/).first().waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
         if (pestana) {
           await page.getByRole('button', { name: pestana, exact: false }).first().click({ timeout: 4000 }).catch(() => {});
           await page.waitForTimeout(600);
@@ -105,5 +122,7 @@ test('V1 capturas y medicion del panel', async ({ page }) => {
       }
     }
   }
-  writeFileSync(resolve(OUT, 'medicion.json'), JSON.stringify(medidas, null, 1));
+  const mf = resolve(OUT, 'medicion.json');
+  const previas = existsSync(mf) ? JSON.parse(readFileSync(mf, 'utf8')) : {};
+  writeFileSync(mf, JSON.stringify({ ...previas, ...medidas }, null, 1));
 });

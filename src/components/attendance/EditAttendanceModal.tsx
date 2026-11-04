@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { LogIn, LogOut, X, Loader2, AlertTriangle, AlertCircle } from 'lucide-react';
 import api from '@/services/api';
@@ -33,6 +33,15 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
   const [editNote,  setEditNote]  = useState('');
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState<string | null>(null);
+  // LOTE 308b: historial de ediciones de esta marca
+  const [history,   setHistory]   = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!record.editedAt) return;
+    api.get(`/attendance/records/${record.id}/history`)
+      .then(res => setHistory(Array.isArray(res.data) ? res.data : (res.data?.data ?? [])))
+      .catch(() => setHistory([]));
+  }, [record.id, record.editedAt]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +54,8 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
     try {
       await api.patch(`/attendance/records/${record.id}`, {
         type,
-        timestamp,
+        // LOTE 308b: instante con zona; sin esto el servidor leia la hora local como si fuera UTC
+        timestamp: new Date(timestamp).toISOString(),
         notes: notes || null,
         editNote,
       });
@@ -91,6 +101,22 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
                 {record.editNote && <p>Motivo: {record.editNote}</p>}
               </div>
             </div>
+            {history.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-amber-100 max-h-36 overflow-y-auto" data-testid="historial-marca">
+                <p className="text-xs font-semibold text-amber-900 mb-1">Historial de ediciones ({history.length})</p>
+                <ul className="space-y-1.5">
+                  {history.map(h => (
+                    <li key={h.id} className="text-xs text-amber-900">
+                      <span className="font-semibold">{fmtDateTime(h.editedAt)}</span> · {h.editedByName ?? 'Usuario'}
+                      <br />
+                      {h.oldType !== h.newType && <>{h.oldType === 'ENTRY' ? 'Entrada' : 'Salida'} a {h.newType === 'ENTRY' ? 'Entrada' : 'Salida'}. </>}
+                      {new Date(h.oldTimestamp).getTime() !== new Date(h.newTimestamp).getTime() && <>{fmtDateTime(h.oldTimestamp)} a {fmtDateTime(h.newTimestamp)}. </>}
+                      Motivo: {h.editNote}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 

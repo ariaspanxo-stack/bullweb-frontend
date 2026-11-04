@@ -4,6 +4,7 @@ import { formatSaleNumber } from '../../../utils/formatSaleNumber';
 import type { Customer } from '../../Restaurant/types';
 import { getTagConfig } from '../../../utils/customers';
 import customersService from '../../../services/customersService';
+import { usePermission } from '../../../hooks/usePermission';
 
 interface CustomerDetailModalProps {
   isOpen: boolean;
@@ -15,6 +16,38 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [detailedStats, setDetailedStats] = useState<any>(null);
+  // LOTE 308b (FID-01): ajuste manual con el saldo a la vista antes de aplicar
+  const canAdjust = usePermission('customers.loyalty');
+  const [balance, setBalance] = useState<number | null>(null);
+  const [adjustValue, setAdjustValue] = useState('');
+  const [adjustReason, setAdjustReason] = useState('');
+  const [adjustError, setAdjustError] = useState<string | null>(null);
+  const [adjusting, setAdjusting] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !customer?.id) return;
+    setAdjustValue(''); setAdjustReason(''); setAdjustError(null);
+    customersService.getPointsBalance(customer.id)
+      .then((r: any) => setBalance(Number(r?.points ?? 0)))
+      .catch(() => setBalance(null));
+  }, [isOpen, customer?.id]);
+
+  const adjustNumber = Number(adjustValue);
+  const adjustValid = adjustValue.trim() !== '' && Number.isInteger(adjustNumber) && adjustNumber !== 0;
+  const applyAdjust = async () => {
+    if (!adjustValid || adjustReason.trim().length < 5) return;
+    setAdjusting(true);
+    setAdjustError(null);
+    try {
+      const r = await customersService.adjustPoints(customer.id, adjustNumber, adjustReason.trim());
+      setBalance(Number(r?.newPoints ?? 0));
+      setAdjustValue(''); setAdjustReason('');
+    } catch (e: any) {
+      setAdjustError(e?.response?.data?.message ?? e?.response?.data?.error ?? 'No se pudo aplicar el ajuste');
+    } finally {
+      setAdjusting(false);
+    }
+  };
 
   // BUG 3 + BUG 17: cargar datos reales al abrir el modal
   useEffect(() => {
@@ -64,6 +97,46 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          {/* LOTE 308b (FID-01): saldo y ajuste manual de puntos */}
+          {canAdjust && balance !== null && (
+            <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3" data-testid="ajuste-puntos">
+              <p className="text-sm text-slate-700">Saldo actual: <span className="font-bold text-slate-900">{balance.toLocaleString('es-CL')} puntos</span></p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <input
+                  type="number"
+                  value={adjustValue}
+                  onChange={e => setAdjustValue(e.target.value)}
+                  placeholder="+100 o -50"
+                  aria-label="Puntos a ajustar"
+                  className="w-32 min-h-[44px] rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900"
+                />
+                <input
+                  value={adjustReason}
+                  onChange={e => setAdjustReason(e.target.value)}
+                  placeholder="Motivo (obligatorio)"
+                  maxLength={200}
+                  aria-label="Motivo del ajuste"
+                  className="flex-1 min-w-[160px] min-h-[44px] rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900"
+                />
+                <button
+                  type="button"
+                  onClick={applyAdjust}
+                  disabled={adjusting || !adjustValid || adjustReason.trim().length < 5 || balance + adjustNumber < 0}
+                  className="min-h-[44px] rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                >
+                  {adjusting ? 'Aplicando...' : 'Aplicar ajuste'}
+                </button>
+              </div>
+              {adjustValid && (
+                <p className={`mt-2 text-xs ${balance + adjustNumber < 0 ? 'text-red-600' : 'text-slate-600'}`}>
+                  {balance + adjustNumber < 0
+                    ? 'El saldo no puede quedar negativo'
+                    : <>Quedará en <span className="font-bold">{(balance + adjustNumber).toLocaleString('es-CL')} puntos</span></>}
+                </p>
+              )}
+              {adjustError && <p role="alert" className="mt-2 text-xs text-red-600">{adjustError}</p>}
+            </div>
+          )}
           {/* Stats Grid */}
           <div className="grid grid-cols-4 gap-3 mb-4">
             <div className="bg-zinc-800 rounded-lg p-3">

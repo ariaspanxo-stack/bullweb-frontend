@@ -347,8 +347,8 @@ export function TipSettingsPanel() {
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Imprimir propina en</p>
         <div className="bg-gray-50 rounded-xl border border-gray-100 px-4">
-          <ToggleRow label="Control de Mesa"    desc="Incluir línea de propina en el ticket de pre-cuenta" field="print_on_table_control"  />
-          <ToggleRow label="Ticket de Mostrador" desc="Incluir línea de propina en el ticket de venta"      field="print_on_counter_ticket" />
+          <ToggleRow label="Control de Mesa"    desc="Línea de propina en la pre-cuenta de mesas (requiere propina activa en Mesas)" field="print_on_table_control"  />
+          <ToggleRow label="Ticket de Mostrador" desc="Línea de propina en la pre-cuenta de mostrador y delivery (requiere propina activa en ese canal)" field="print_on_counter_ticket" />
         </div>
       </div>
 

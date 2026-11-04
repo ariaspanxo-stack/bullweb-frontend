@@ -161,7 +161,8 @@ export function CouponsPage() {
       value: String(c.value),
       minOrder: c.minOrder !== null && c.minOrder !== undefined ? String(c.minOrder) : '',
       maxUses: c.maxUses !== null && c.maxUses !== undefined ? String(c.maxUses) : '',
-      expiresAt: c.expiresAt ? c.expiresAt.slice(0, 10) : '',
+      // LOTE 308b (CUP-12): el dia de vencimiento en hora Chile
+      expiresAt: c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('en-CA', { timeZone: 'America/Santiago' }) : '',
       isActive: c.isActive,
     });
     setShowModal(true);
@@ -190,10 +191,8 @@ export function CouponsPage() {
       }
     }
 
-    // FUNCIONAL 6: expiresAt con hora 23:59:59 en zona Chile (-04:00)
-    const expiresAtIso = form.expiresAt
-      ? new Date(form.expiresAt + 'T23:59:59-04:00').toISOString()
-      : undefined;
+    // LOTE 308b (CUP-12): se envia el dia; el servidor lo cierra a las 23:59:59 de Chile con el horario que corresponda
+    const expiresAtIso = form.expiresAt || undefined;
 
     const body = {
       code: form.code.toUpperCase().trim(),
@@ -352,7 +351,7 @@ export function CouponsPage() {
                       {c.minOrder != null ? formatCurrency(c.minOrder) : '—'}
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs">
-                      {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('es-CL') : '—'}
+                      {c.expiresAt ? new Date(c.expiresAt).toLocaleDateString('es-CL', { timeZone: 'America/Santiago' }) : '—'}
                     </td>
                     <td className="px-4 py-3">{statusBadge(c)}</td>
                     <td className="px-4 py-3">

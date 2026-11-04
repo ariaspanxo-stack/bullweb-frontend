@@ -55,6 +55,7 @@ interface Category {
   products: Product[];
 }
 interface CartaSettings {
+  couponsEnabled?:  boolean; // LOTE 308b (CUP-9)
   restaurantName:   string;
   logo:             string | null;
   bannerUrl:        string | null;
@@ -869,10 +870,16 @@ function CartSheet({
   paymentMethodsDelivery?:  Array<{ id: string; name: string }>;
   mercadoPago?:             { connected: boolean }; // LOTE MP-A
   whatsapp?:        string | null;
+  couponsEnabled?:  boolean; // LOTE 308b (CUP-9)
   onClose:          () => void;
   onUpdate:         (productId: string, delta: number) => void;
   onOrderSuccess:   () => void;
 }) {
+  // LOTE 308b (CUP-9): cupon validado por el servidor; descuento y total vienen de su respuesta
+  const [couponInput,   setCouponInput]   = useState('');
+  const [couponApplied, setCouponApplied] = useState<{ code: string; discount: number; total: number } | null>(null);
+  const [couponError,   setCouponError]   = useState<string | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
   const [step,          setStep]          = useState<OrderStep>('cart');
   const [orderType,     setOrderType]     = useState<OrderType | null>(null);
   // ── HOTFIX #241/#242 — "Servir en mi mesa" ──
@@ -924,6 +931,40 @@ function CartSheet({
     i.product.price + (i.modifiers ?? []).reduce((s, m) => s + m.priceAdjustment, 0);
   const total    = cart.reduce((s, i) => s + itemUnitPrice(i) * i.quantity, 0);
   const totalQty = cart.reduce((s, i) => s + i.quantity, 0);
+
+  // LOTE 308b (CUP-9): si el carrito cambia, el descuento se vuelve a pedir
+  const cartKey = cart.map(i => `${i.product.id}:${i.quantity}:${(i.modifiers ?? []).map(m => m.optionId).join(',')}`).join('|');
+  useEffect(() => { setCouponApplied(null); }, [cartKey]);
+
+  const applyCoupon = async () => {
+    const code = couponInput.trim();
+    if (!code) return;
+    setCouponLoading(true);
+    setCouponError(null);
+    try {
+      const res = await fetch('/api/public/coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantSlug,
+          code,
+          items: cart.map(i => ({
+            productId: i.product.id,
+            quantity:  i.quantity,
+            modifiers: (i.modifiers ?? []).map(m => ({ optionId: m.optionId })),
+          })),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) { setCouponApplied(null); setCouponError(json.error ?? 'No se pudo validar el cupón'); return; }
+      if (!json.data?.valid) { setCouponApplied(null); setCouponError(json.data?.reason ?? 'Este cupón no se puede usar'); return; }
+      setCouponApplied({ code: json.data.code, discount: Number(json.data.discount), total: Number(json.data.total) });
+    } catch {
+      setCouponError('No se pudo validar el cupón. Revisa tu conexión.');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
 
   // HOTFIX 250 T2 (F4) - mensaje prearmado para el botón "Pedir por WhatsApp".
   // Usa EXCLUSIVAMENTE estados capturados (cart/tableNumber/form/paymentMethod).
@@ -998,6 +1039,7 @@ function CartSheet({
           cashAmount:      isCashSelected && cashAmount
                              ? parseInt(cashAmount)
                              : null,
+          ...(couponApplied ? { couponCode: couponApplied.code } : {}), // LOTE 308b (CUP-9)
           items: cart.map(i => ({
             productId: i.product.id,
             name:      i.product.name,
@@ -1216,6 +1258,45 @@ function CartSheet({
         </div>
 
         <div className="p-4 border-t border-gray-700/50 shrink-0 space-y-2">
+          {/* LOTE 308b (CUP-9): cupon del local; lo valida el servidor */}
+          {couponsEnabled && (
+            <div className="rounded-xl p-3 space-y-2" style={{ border: '1px solid rgba(255,255,255,0.12)' }} data-testid="carta-cupon">
+              {couponApplied ? (
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm text-white">
+                    Cupón <span className="font-bold">{couponApplied.code}</span>: <span className="font-bold">-{fmtCLP(couponApplied.discount)}</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setCouponApplied(null); setCouponInput(''); setCouponError(null); }}
+                    className="min-h-[44px] px-3 rounded-xl text-sm font-bold text-gray-300 border border-gray-600"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input
+                    value={couponInput}
+                    onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(null); }}
+                    placeholder="¿Tienes un cupón?"
+                    maxLength={50}
+                    aria-label="Código de cupón"
+                    className="flex-1 min-w-0 min-h-[44px] bg-gray-800 text-white placeholder-gray-400 rounded-xl px-3 border border-gray-700 focus:outline-none focus:border-orange-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={applyCoupon}
+                    disabled={!couponInput.trim() || couponLoading}
+                    className="min-h-[44px] px-4 rounded-xl text-sm font-bold text-white border border-gray-500 disabled:opacity-50"
+                  >
+                    {couponLoading ? '...' : 'Aplicar'}
+                  </button>
+                </div>
+              )}
+              {couponError && <p role="alert" className="text-xs text-red-300">{couponError}</p>}
+            </div>
+          )}
           {orderingBlocked && (
             <div role="alert" className="rounded-xl px-4 py-3 text-sm font-semibold text-red-200" style={{ backgroundColor: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.35)' }}>
               {orderingBlocked}
@@ -1235,7 +1316,7 @@ function CartSheet({
             disabled={!canConfirm || submitting}
             className={`w-full py-4 rounded-2xl text-white font-extrabold text-lg tracking-wide transition-all duration-200 ${canConfirm && !submitting ? 'bg-gradient-to-r from-orange-500 to-red-500 shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-[0.98]' : 'bg-gray-300 cursor-not-allowed shadow-none'}`}
           >
-            {submitting ? '⏳ Enviando...' : `✅ Confirmar pedido · ${fmtCLP(total)}`}
+            {submitting ? '⏳ Enviando...' : `✅ Confirmar pedido · ${fmtCLP(couponApplied ? couponApplied.total : total)}`}
           </button>
           {!paymentMethod && (
             <p className="text-center text-gray-500 text-xs">Selecciona un método de pago</p>
@@ -2609,6 +2690,7 @@ export default function CartaDigital() {
           paymentMethodsDelivery={cartaSettings?.paymentMethodsDelivery}
           mercadoPago={cartaSettings?.mercadoPago}
           whatsapp={cartaSettings?.whatsapp}
+          couponsEnabled={cartaSettings?.couponsEnabled === true}
           onClose={() => setShowCart(false)}
           onUpdate={updateCartItem}
           onOrderSuccess={() => {

@@ -381,6 +381,42 @@ export default function PrintSettingsPage() {
         </Card>
 
         {/* HOTFIX 270: modificadores, largo del nombre, ID de venta y comanda de cancelación quedan fijos (fuera de la UI) */}
+        {/* LOTE 308b (B3-19): estas opciones ahora si cambian el ticket */}
+        <Card title="Contenido del ticket">
+          <Row
+            label="Imprimir modificadores"
+            description="Muestra los modificadores bajo cada producto en la pre-cuenta y la boleta"
+            control={<Toggle value={cfg.cmPrintModifiers} onChange={v => update('cmPrintModifiers', v)} />}
+          />
+          <Row
+            label="Número de pedido"
+            description="Cómo aparece el número en la pre-cuenta y la boleta"
+            control={
+              <Select
+                value={cfg.cmIdMode === 'LAST_DIGITS' ? 'LAST_DIGITS' : 'FULL'}
+                onChange={v => update('cmIdMode', v)}
+                options={[{ value: 'FULL', label: 'Completo' }, { value: 'LAST_DIGITS', label: 'Últimos dígitos' }]}
+              />
+            }
+          />
+          {cfg.cmIdMode === 'LAST_DIGITS' && (
+            <Row
+              label="Cantidad de dígitos"
+              control={
+                <input
+                  type="number"
+                  min={1}
+                  max={12}
+                  value={cfg.cmIdDigits}
+                  onChange={e => update('cmIdDigits', Math.min(12, Math.max(1, Number(e.target.value) || 1)))}
+                  aria-label="Cantidad de dígitos del número de pedido"
+                  className="w-20 min-h-[44px] text-sm border border-gray-300 rounded-lg px-2.5"
+                />
+              }
+            />
+          )}
+        </Card>
+
         {/* CARD 5 — Símbolo de moneda */}
         <Card title="Símbolo de moneda">
           <Row

@@ -28,6 +28,8 @@ interface OrderItem {
 }
 
 interface QROnlineOrder {
+  couponCode?:   string | null; // LOTE 308b (CUP-9)
+  couponDiscount?: number;
   id:            string;
   customerName:  string | null;
   customerPhone: string | null;
@@ -140,7 +142,12 @@ function OrderCard({ order, defaults, onAccept, onDone, onReject, processing }: 
             </p>
           )}
         </div>
-        <span className="text-xl font-black text-orange-500">{fmtCLP(order.total)}</span>
+        <div className="text-right">
+          <span className="text-xl font-black text-orange-500">{fmtCLP(order.total)}</span>
+          {order.couponCode && (
+            <p className="text-xs text-gray-500">Cupón {order.couponCode}: <span className="font-bold">-{fmtCLP(order.couponDiscount ?? 0)}</span></p>
+          )}
+        </div>
       </div>
 
       {/* Items */}
@@ -304,7 +311,9 @@ export default function OnlineOrders() {
                      : r.status === 'CONFIRMED'         ? 'done'
                      : r.status === 'REJECTED'          ? 'rejected'
                      :                                    'pending',
-        total:         Number(r.total ?? 0),
+        total:         Number(r.total ?? 0) - Number(r.couponDiscount ?? 0), // LOTE 308b (CUP-9)
+        couponCode:    r.couponCode ?? null,
+        couponDiscount: Number(r.couponDiscount ?? 0),
         items:         Array.isArray(r.items) ? r.items : [],
         customerNote:  r.notes ?? null,
         paymentMethod: r.paymentMethod ?? null,

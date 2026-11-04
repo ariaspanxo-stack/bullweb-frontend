@@ -102,7 +102,7 @@ test('V1 capturas y medicion del panel', async ({ page }) => {
       try {
         await goto(page, ruta);
         await page.waitForLoadState('networkidle', { timeout: 3000 }).catch(() => {});
-        await page.waitForTimeout(700);
+        await page.waitForTimeout(1500);
         // Antes del lote el menu lateral partia abierto en celular y tapaba la pantalla
         if (w < 1024) await page.locator('aside button').first().click({ timeout: 1500 }).catch(() => {});
         await page.getByText(/Cargando|Verificando/).first().waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});

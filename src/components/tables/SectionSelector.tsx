@@ -54,7 +54,7 @@ export default function SectionSelector({
       <button
         onClick={() => onSectionChange(null)}
         className={cn(
-          'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all',
+          'min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all',
           'border-2',
           !selectedSection
             ? 'bg-orange-50 text-orange-700 border-slate-200 shadow-md border border-orange-300'
@@ -78,7 +78,7 @@ export default function SectionSelector({
             key={section.id}
             onClick={() => onSectionChange(section.id)}
             className={cn(
-              'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all',
+              'min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all',
               'border-2 flex items-center gap-2',
               isSelected
                 ? 'bg-orange-50 text-orange-700 border-slate-200 shadow-md border border-orange-300'

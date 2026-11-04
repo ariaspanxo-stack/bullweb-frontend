@@ -7,7 +7,7 @@ const F = 'F1';
 test.beforeAll(() => assertFlow(F));
 
 /** Tarjeta del aviso de pago: la del heading, no la pantalla de atras (el panel y el mesero tienen otro "Cerrar sesión" detras). */
-const avisoPago = (page: Page) => page.locator('div', { has: page.getByRole('heading', { name: 'Tu período de prueba terminó' }) }).last();
+const avisoPago = (page: Page, titulo = 'Tu período de prueba terminó') => page.locator('div', { has: page.getByRole('heading', { name: titulo }) }).last();
 
 async function logoutVisibleYAlto(aviso: ReturnType<typeof avisoPago>) {
   const salir = aviso.getByRole('button', { name: 'Cerrar sesión' });
@@ -125,6 +125,23 @@ test('F1 login panel, login mesero y token viejo da Sesion cerrada', async ({ pa
     await page.unrouteAll({ behavior: 'ignoreErrors' });
     await expect.poll(async () => (await api(page, 'GET', '/auth/me', token)).status, { timeout: 90000 }).toBe(401);
   });
+
+  for (const [codigo, titulo] of [['TENANT_SUSPENDED', 'Cuenta suspendida'], ['TENANT_CANCELLED', 'Cuenta cancelada']]) {
+    await test.step(`panel con 403 ${codigo}: cerrar sesion vuelve al login`, async () => {
+      const token = await loginPanel(page, c.admin);
+      await page.route('**/api/billing/status', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: codigo === 'TENANT_SUSPENDED' ? 'SUSPENDED' : 'CANCELLED', trialActive: false, plan: 'TODO', priceCLP: 34000, daysLeft: 0 }) }));
+      await page.route('**/api/tables**', (r) => r.fulfill({ status: 403, contentType: 'application/json', body: JSON.stringify({ code: codigo, error: titulo, message: titulo }) }));
+      await goto(page, '/restaurant');
+      const aviso = avisoPago(page, titulo);
+      await expect(aviso).toBeVisible({ timeout: 90000 });
+      const salir = await logoutVisibleYAlto(aviso);
+      await shot(page, F, `13_aviso_${codigo}`);
+      await salir.click();
+      await page.waitForURL((u) => u.pathname === '/login', { timeout: 90000 });
+      await page.unrouteAll({ behavior: 'ignoreErrors' });
+      await expect.poll(async () => (await api(page, 'GET', '/auth/me', token)).status, { timeout: 90000 }).toBe(401);
+    });
+  }
 
   await test.step('login mesero con PIN', async () => {
     await page.evaluate(() => localStorage.clear());

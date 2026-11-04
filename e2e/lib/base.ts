@@ -31,7 +31,8 @@ export async function guardContext(ctx: BrowserContext, violations: string[]) {
     if (req.url().startsWith('data:') || req.url().startsWith('blob:')) return route.continue();
     const host = new URL(req.url()).host;
     if (hostAllowed(host)) {
-      if (new URL(req.url()).pathname.startsWith('/api/')) await pausaApi();
+      const p = new URL(req.url()).pathname; // el cierre de sesion usa keepalive: retenerlo aqui lo pierde
+      if (p.startsWith('/api/') && !p.endsWith('/logout')) await pausaApi();
       return route.continue().catch(() => {});
     }
     const t = req.resourceType();

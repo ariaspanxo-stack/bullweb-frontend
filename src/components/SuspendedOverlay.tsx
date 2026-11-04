@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useBillingStatus } from '@/hooks/useBillingStatus';
+import { LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * SuspendedOverlay
@@ -14,7 +16,8 @@ import { useBillingStatus } from '@/hooks/useBillingStatus';
  * también lo piden, react-query los une al MISMO ciclo (no lo duplica).
  */
 export default function SuspendedOverlay() {
-  const { isSuperAdmin } = useAuthStore();
+  const { isSuperAdmin, logout } = useAuthStore();
+  const navigate = useNavigate();
   const [suspended, setSuspended] = useState(false);
   const [reason, setReason] = useState<'TENANT_SUSPENDED' | 'TENANT_CANCELLED'>('TENANT_SUSPENDED');
 
@@ -99,9 +102,17 @@ export default function SuspendedOverlay() {
             <button
               onClick={() => billingQ.refetch()}
               disabled={billingQ.isFetching}
-              className="text-gray-400 hover:text-gray-600 text-sm py-2 underline underline-offset-2 transition-colors disabled:opacity-60"
+              className="min-h-[44px] text-gray-400 hover:text-gray-600 text-sm underline underline-offset-2 transition-colors disabled:opacity-60"
             >
               {billingQ.isFetching ? 'Verificando…' : 'Verificar ahora'}
+            </button>
+            {/* HOTFIX logout: siempre se puede salir */}
+            <button
+              onClick={() => { logout('manual'); navigate('/login'); }}
+              className="w-full min-h-[44px] border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-2"
+            >
+              <LogOut size={16} />
+              Cerrar sesión
             </button>
           </div>
         </div>

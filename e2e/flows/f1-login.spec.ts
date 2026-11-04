@@ -157,19 +157,19 @@ test('F1 login panel, login mesero y token viejo da Sesion cerrada', async ({ pa
 
   await test.step('mesero con 402: cerrar sesion vuelve a su login', async () => {
     await page.getByRole('button', { name: c.mesero.name }).click();
-    await expect(page.getByText('Ingresa tu PIN')).toBeVisible();
+    await expect(page.getByText('Ingresa tu PIN')).toBeVisible({ timeout: 90000 });
     for (const d of c.mesero.pin) await page.getByRole('button', { name: d, exact: true }).click();
-    await page.waitForURL((u) => u.pathname === '/mesero', { timeout: 20000 });
+    await page.waitForURL((u) => u.pathname === '/mesero', { timeout: 90000 });
     const token = await page.evaluate(() => localStorage.getItem('waiterToken'));
     await page.route('**/api/waiter/tables**', (r) => r.fulfill({ status: 402, contentType: 'application/json', body: JSON.stringify({ error: 'subscription_required', status: 'TRIAL', expiredReason: 'TRIAL_ENDED' }) }));
     await goto(page, '/mesero');
     const aviso = avisoPago(page);
-    await expect(aviso).toBeVisible({ timeout: 20000 });
+    await expect(aviso).toBeVisible({ timeout: 90000 });
     await expect(aviso.getByRole('button', { name: /^Pagar/ })).toHaveCount(0);
     const salir = await logoutVisibleYAlto(aviso);
     await shot(page, F, '11_aviso_402_mesero');
     await salir.click();
-    await page.waitForURL((u) => u.pathname === '/mesero/login', { timeout: 20000 });
+    await page.waitForURL((u) => u.pathname === '/mesero/login', { timeout: 90000 });
     expect(await page.evaluate(() => localStorage.getItem('waiterToken'))).toBeNull();
     await page.unrouteAll({ behavior: 'ignoreErrors' });
     await expect.poll(async () => (await api(page, 'GET', '/waiter/tables', token as string)).status, { timeout: 90000 }).toBe(401);

@@ -853,6 +853,7 @@ function CartSheet({
   paymentMethodsDelivery,
   mercadoPago,
   whatsapp,
+  couponsEnabled,
   onClose,
   onUpdate,
   onOrderSuccess,

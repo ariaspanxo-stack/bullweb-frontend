@@ -132,6 +132,13 @@ const conteo = () => {
   return r.out.split(/\r?\n/).filter((l) => l.startsWith('CONTEO ')).map((l) => l.trim());
 };
 
+if (bajar) {
+  const l = psqlFile(resolve(here, 'sql/limpieza.sql')); console.log(`limpieza local rc=${l.rc}: ${l.out.trim()}`);
+  const st = psqlFile(resolve(here, 'sql/stock_local_restaurar.sql')); console.log(`stock local repuesto rc=${st.rc} ${st.out.trim()}`);
+  const u = psqlFile(resolve(here, 'sql/usuarios_borrar.sql')); console.log(`usuarios locales fuera rc=${u.rc}: ${u.out.trim()}`);
+  console.log(montaje('down').out.trim());
+  process.exit(0);
+}
 let rc = 1;
 let antes = [];
 try {
@@ -165,12 +172,12 @@ try {
   if (env === 'local') {
     const l = psqlFile(resolve(here, 'sql/limpieza.sql'));
     console.log(`limpieza local rc=${l.rc}: ${l.out.trim()}`);
-    if (!sinMontaje) {
+    if (!sinMontaje && !mantener) {
       const st = psqlFile(resolve(here, 'sql/stock_local_restaurar.sql'));
       console.log(`stock local repuesto rc=${st.rc} ${st.out.trim()}`);
     }
     verificar();
-    if (!sinMontaje) {
+    if (!sinMontaje && !mantener) {
       const u = psqlFile(resolve(here, 'sql/usuarios_borrar.sql'));
       console.log(`usuarios locales fuera rc=${u.rc}: ${u.out.trim()}`);
       console.log(montaje('down').out.trim());

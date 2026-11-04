@@ -20,7 +20,7 @@ const N = {
 
 test('F9 Inventario completo en pantalla', async ({ page }) => {
   test.setTimeout(540_000);
-  page.setDefaultTimeout(10_000);
+  page.setDefaultTimeout(30_000); // lib/base frena la API a 100 por minuto: una pantalla puede tardar en cargar
   const hallazgos: string[] = [];
   const esperados: RegExp[] = [];
   page.on('pageerror', (e) => hallazgos.push(`error de pagina: ${e.message.slice(0, 160)}`));
@@ -49,7 +49,7 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
   const inventario = async (t: string) => { await goto(page, '/inventory'); await tab(t); };
   const fila = (texto: string) => page.locator('tr').filter({ hasText: texto });
   const post = (p: string) => page.waitForResponse((r) => r.url().includes(`/api${p}`) && ['POST', 'PATCH', 'DELETE'].includes(r.request().method()));
-  const toast = (re: RegExp) => expect(page.getByText(re).first()).toBeVisible({ timeout: 8000 });
+  const toast = (re: RegExp) => expect(page.getByText(re).first()).toBeVisible({ timeout: 15000 });
 
   const c = creds();
   const token = await loginPanel(page, c.admin);
@@ -197,8 +197,10 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
     await page.locator('select').filter({ hasText: 'Seleccionar ingrediente...' }).selectOption({ label: `${N.harina} — stock actual: 20 kg` });
     await page.getByPlaceholder('0', { exact: true }).fill('2');
     await page.getByPlaceholder('Descripción del movimiento').fill('mal');
+    const corta = post('/inventory/movements');
     await page.getByRole('button', { name: 'Registrar', exact: true }).click();
-    await toast(/corta|motivo|raz[oó]n/i);
+    expect((await corta).status(), 'motivo corto').toBe(400);
+    await toast(/muy corta/i);
     await shot(page, F, '11_merma_motivo_corto');
     esperados.pop();
     await page.getByPlaceholder('Descripción del movimiento').fill('Se cayo un saco');
@@ -314,7 +316,7 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
 
   await seccion('exportar Excel trae todas las hojas con datos', async () => {
     await goto(page, '/inventory');
-    const d = page.waitForEvent('download', { timeout: 20000 });
+    const d = page.waitForEvent('download', { timeout: 60000 });
     await page.getByRole('button', { name: 'Exportar Excel' }).click();
     const archivo = await (await d).path();
     const req = createRequire(resolve(FRONTEND_DIR, 'package.json'));

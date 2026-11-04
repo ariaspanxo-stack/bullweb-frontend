@@ -800,7 +800,7 @@ function MovementModal({
 
   return (
     createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
-      <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
+      <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-auto shadow-xl">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">Agregar Movimiento</h2>
         </div>
@@ -897,7 +897,7 @@ function SupplierModal({
 
   return (
     createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
-      <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
+      <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-auto shadow-xl">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">{supplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}</h2>
         </div>

@@ -158,8 +158,8 @@ export const EditOrderModal = ({
     : ' ';
   const accentText = accent === 'purple' ? 'text-slate-500' : 'text-slate-500';
   const accentBtn = accent === 'purple'
-    ? ' hover:from-purple-600 hover:to-purple-700'
-    : ' hover:from-blue-600 hover:to-blue-700';
+    ? 'bg-[#F97316] hover:bg-[#ea6a0a]'
+    : 'bg-[#F97316] hover:bg-[#ea6a0a]';
   const accentFocus = accent === 'purple'
     ? 'focus:ring-orange-500 focus:border-orange-500'
     : 'focus:ring-orange-500 focus:border-orange-500';

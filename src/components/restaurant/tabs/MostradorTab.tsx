@@ -123,7 +123,7 @@ export function MostradorTab() {
           <p className="text-sm text-gray-400 mt-1 mb-6">Las nuevas órdenes aparecerán aquí</p>
           <button
             onClick={() => setShowMostradorModal(true)}
-            className="min-h-[44px] flex items-center gap-2 px-6 py-3 hover:from-blue-700 hover:to-blue-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md "
+            className="min-h-[44px] flex items-center gap-2 px-6 py-3 bg-[#F97316] hover:bg-[#ea6a0a] text-white rounded-xl font-semibold text-sm transition-all shadow-md "
           >
             <Plus size={16} />
             Crear primera orden

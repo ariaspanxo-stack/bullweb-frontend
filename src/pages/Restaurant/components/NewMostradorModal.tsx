@@ -930,7 +930,7 @@ export const NewMostradorModal = ({
             <div className="mx-auto w-full max-w-lg">
             <button
               onClick={() => { if (validateClient()) { setStep('order'); setTimeout(() => searchInputRef.current?.focus(), 100); } }}
-              className="min-h-[44px] w-full py-4 text-white rounded-xl text-base font-bold hover:from-blue-700 hover:to-blue-600 transition-all shadow-lg flex items-center justify-center gap-2 group"
+              className="min-h-[44px] w-full py-4 text-white rounded-xl text-base font-bold bg-[#F97316] hover:bg-[#ea6a0a] transition-all shadow-lg flex items-center justify-center gap-2 group"
             >
               <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
               Continuar — Elegir productos

@@ -57,9 +57,9 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
           </div>
         </div>
       )}
-      <div className="px-4 py-2 flex items-center justify-between gap-3">
+      <div className="px-4 py-2 flex flex-wrap items-center justify-between gap-3">
         {/* Tab bar */}
-        <div className="flex-wrap flex basis-full w-full sm:basis-auto sm:inline-flex sm:w-fit items-center gap-1 bg-gray-100 p-1 rounded-xl">
+        <div className="flex basis-full w-full sm:basis-auto sm:inline-flex sm:w-fit items-center gap-1 bg-gray-100 p-1 rounded-xl">
           {/* ── Mesas ── solo si tiene pos.mesas */}
           {canTab('mesas') && (
             <button

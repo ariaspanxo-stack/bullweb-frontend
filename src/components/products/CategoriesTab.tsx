@@ -1,3 +1,4 @@
+import { displayName } from '@/utils/displayFormat';
 import React, { useState, useEffect, useRef } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon, GripVertical, Copy, ToggleLeft, ToggleRight, MoreHorizontal, QrCode, EyeOff } from 'lucide-react';
 import {
@@ -83,7 +84,7 @@ const SortableRow: React.FC<SortableRowProps> = ({ category, color, onEdit, onDe
         <button
           {...attributes}
           {...listeners}
-          className="w-11 h-11 -ml-2 inline-flex items-center justify-center cursor-grab active:cursor-grabbing text-[#94A3B8] hover:text-[#475569] touch-none"
+          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-11 h-11 -ml-2 inline-flex items-center justify-center cursor-grab active:cursor-grabbing text-[#94A3B8] hover:text-[#475569] touch-none"
           title="Arrastrar para reordenar"
           aria-label={`Reordenar ${category.name}`}
         >
@@ -92,14 +93,14 @@ const SortableRow: React.FC<SortableRowProps> = ({ category, color, onEdit, onDe
         {/* Color de la categoría (mismo que la grilla del punto de venta) */}
         <span className="w-5 h-5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
         <div className="min-w-0 flex-1">
-          <h3 className="font-bold text-[#0F172A] truncate" title={category.name}>{category.name}</h3>
+          <h3 className="font-bold text-[#0F172A] truncate" title={category.name}>{displayName(category.name)}</h3>
           <p className="text-sm text-[#64748B]">{category.productsCount} productos</p>
         </div>
       </div>
 
       {/* Acciones visibles: Editar y ⋯ */}
       <div className="flex items-center gap-2 mt-4">
-        <button onClick={() => onEdit(category)} className={`${BTN_OUTLINE} flex-1`}>
+        <button onClick={() => onEdit(category)} className={`min-h-[44px] ${BTN_OUTLINE} flex-1`}>
           <PencilIcon className="w-4 h-4" />
           Editar
         </button>
@@ -141,7 +142,7 @@ const SortableRow: React.FC<SortableRowProps> = ({ category, color, onEdit, onDe
               )}
               <div className="my-1 border-t border-[#E2E8F0]" />
               <button
-                className="w-full flex items-center gap-2 h-11 px-3 text-sm text-left text-[#B91C1C] hover:bg-red-50/60"
+                className="min-h-[44px] w-full flex items-center gap-2 h-11 px-3 text-sm text-left text-[#B91C1C] hover:bg-red-50/60"
                 onClick={() => run(() => onDelete(category.id))}
               >
                 <TrashIcon className="w-4 h-4" /> Eliminar

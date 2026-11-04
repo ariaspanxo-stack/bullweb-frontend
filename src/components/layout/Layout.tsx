@@ -22,7 +22,8 @@ import { useAuthStore } from '@/store/authStore';
 // ============================================================================
 
 export default function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // LOTE 308b: en celular el menu parte cerrado; abierto tapaba la pantalla en cada carga
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const { pendingOrders, acceptOrder, cancelOrder } = useQROrderAlerts();
   const { pendingRequests, dismissRequest } = useTableRequestAlerts();
   const navigate = useNavigate();

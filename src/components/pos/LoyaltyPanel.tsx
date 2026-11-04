@@ -121,7 +121,7 @@ export const LoyaltyPanel = ({ orderId, customerId, customerName, beforeRedeem, 
                   type="button"
                   onClick={handleRedeem}
                   disabled={applying || pointsInput > maxRedeemable || pointsInput < rules.minRedeemPoints}
-                  className="flex-1 h-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-slate-800 bg-white border-[1.5px] border-slate-300 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+                  className="min-h-[44px] flex-1 h-11 px-3 inline-flex items-center justify-center gap-1.5 rounded-lg text-sm font-semibold text-slate-800 bg-white border-[1.5px] border-slate-300 hover:bg-slate-50 disabled:opacity-50 transition-colors"
                 >
                   {applying
                     ? <><Loader2 size={14} className="animate-spin" /> Canjeando...</>

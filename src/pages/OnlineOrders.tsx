@@ -72,7 +72,7 @@ function fmtMin(min: number) {
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
     pending:   { label: '⏳ Pendiente',  cls: 'bg-orange-100 text-orange-700' },
-    preparing: { label: '👨‍🍳 Preparando', cls: 'bg-blue-100 text-blue-700'   },
+    preparing: { label: '👨‍🍳 Preparando', cls: 'bg-slate-100 text-slate-700'   },
     done:      { label: '✅ Listo',       cls: 'bg-green-100 text-green-700'  },
     rejected:  { label: '❌ Rechazado',   cls: 'bg-red-100 text-red-600'     },
   };
@@ -103,9 +103,9 @@ function OrderCard({ order, defaults, onAccept, onDone, onReject, processing }: 
   const isDelivery       = String(order.orderType ?? '').toLowerCase() === 'delivery';
   const unanswered       = order.onlineStatus === 'pending' && order.minutesAgo > QR_UNANSWERED_MINUTES;
   const borderByStatus   = {
-    pending:   'border-orange-400 shadow-orange-100',
-    preparing: 'border-blue-400 shadow-blue-100',
-    done:      'border-green-300 shadow-green-50',
+    pending:   'border-orange-400 ',
+    preparing: 'border-slate-200 ',
+    done:      'border-slate-200 ',
     rejected:  'border-red-200 opacity-60',
   }[order.onlineStatus] ?? 'border-gray-200';
 
@@ -238,7 +238,7 @@ function OrderCard({ order, defaults, onAccept, onDone, onReject, processing }: 
         <button
           onClick={() => onDone(order.id)}
           disabled={isLoading}
-          className="w-full mt-3 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-bold py-2 rounded-lg text-sm transition-colors"
+          className="min-h-[44px] w-full mt-3 flex items-center justify-center gap-2 bg-white hover:bg-slate-50 disabled:bg-green-300 text-slate-700 font-bold py-2 rounded-lg text-sm transition-colors border border-slate-300"
         >
           {isLoading ? (
             <RefreshCw className="w-4 h-4 animate-spin" />
@@ -436,7 +436,7 @@ export default function OnlineOrders() {
         <button
           onClick={() => fetchOrders()}
           disabled={loading}
-          className="p-2 text-gray-400 hover:text-orange-500 transition-colors rounded-lg hover:bg-orange-50"
+          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 text-gray-400 hover:text-orange-500 transition-colors rounded-lg hover:bg-orange-50"
           title="Refrescar"
         >
           <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
@@ -456,7 +456,7 @@ export default function OnlineOrders() {
         {selectedDate !== todayStr && (
           <button
             onClick={() => { setSelectedDate(todayStr); setPage(1); }}
-            className="text-xs text-orange-500 hover:underline"
+            className="min-h-[44px] text-xs text-orange-500 hover:underline"
           >
             Ir a hoy
           </button>
@@ -474,7 +474,7 @@ export default function OnlineOrders() {
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`min-h-[44px] px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               filter === f.key
                 ? 'bg-orange-500 text-white shadow-md'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -519,7 +519,7 @@ export default function OnlineOrders() {
               <button
                 disabled={page === 1}
                 onClick={() => setPage(p => p - 1)}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="min-h-[44px] px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 ← Anterior
               </button>
@@ -529,7 +529,7 @@ export default function OnlineOrders() {
               <button
                 disabled={page >= totalPages}
                 onClick={() => setPage(p => p + 1)}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="min-h-[44px] px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Siguiente →
               </button>

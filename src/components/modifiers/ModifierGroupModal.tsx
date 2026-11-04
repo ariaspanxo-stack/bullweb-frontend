@@ -150,7 +150,7 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-[100]"
         onClick={onClose}
       />
 
@@ -171,7 +171,7 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -193,7 +193,7 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                   value={formData.name}
                   onChange={(e) => handleChange('name', e.target.value)}
                   placeholder="Ej: Tamaño, Ingredientes Extra, Tipo de Masa..."
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${
                     errors.name ? 'border-red-500' : 'border-gray-300'
                   }`}
                 />
@@ -210,7 +210,7 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                   onChange={(e) => handleChange('description', e.target.value)}
                   placeholder="Descripción para el cliente..."
                   rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -223,9 +223,9 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleChange('selectionType', 'single')}
-                    className={`p-4 border-2 rounded-lg transition-all ${
+                    className={`min-h-[44px] p-4 border-2 rounded-lg transition-all ${
                       formData.selectionType === 'single'
-                        ? 'border-blue-600 bg-blue-50'
+                        ? 'border-slate-200 bg-slate-50'
                         : 'border-gray-300 hover:border-gray-400'
                     }`}
                   >
@@ -239,9 +239,9 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleChange('selectionType', 'multiple')}
-                    className={`p-4 border-2 rounded-lg transition-all ${
+                    className={`min-h-[44px] p-4 border-2 rounded-lg transition-all ${
                       formData.selectionType === 'multiple'
-                        ? 'border-blue-600 bg-blue-50'
+                        ? 'border-slate-200 bg-slate-50'
                         : 'border-gray-300 hover:border-gray-400'
                     }`}
                   >
@@ -262,7 +262,7 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                   id="isRequired"
                   checked={formData.isRequired}
                   onChange={(e) => handleChange('isRequired', e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-4 h-4 text-slate-700 border-gray-300 rounded focus:ring-orange-500"
                 />
                 <label htmlFor="isRequired" className="text-sm font-medium text-gray-700">
                   Es obligatorio seleccionar una opción
@@ -283,7 +283,7 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                         handleChange('minSelections', parseInt(e.target.value) || 0)
                       }
                       min="0"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${
                         errors.minSelections ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
@@ -302,7 +302,7 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                         handleChange('maxSelections', parseInt(e.target.value) || 1)
                       }
                       min="1"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${
                         errors.maxSelections ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
@@ -333,7 +333,7 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                       type="checkbox"
                       checked={formData.productIds.includes(product.id)}
                       onChange={() => handleProductToggle(product.id)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-slate-700 border-gray-300 rounded focus:ring-orange-500"
                     />
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">{product.name}</p>
@@ -351,7 +351,7 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
             </div>
 
             {/* Preview */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+            <div className=" rounded-lg p-4 border border-slate-200">
               <p className="text-sm font-semibold text-gray-800 mb-3">👁️ Vista Previa</p>
               <div className="bg-white rounded-lg p-4 border border-gray-200">
                 <p className="font-semibold text-gray-900 mb-1">
@@ -364,8 +364,8 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
                   <span
                     className={`px-2 py-1 rounded ${
                       formData.selectionType === 'single'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-purple-100 text-purple-800'
+                        ? 'bg-slate-100 text-slate-700'
+                        : 'bg-slate-100 text-slate-700'
                     }`}
                   >
                     {formData.selectionType === 'single' ? 'Una opción' : 'Múltiples opciones'}
@@ -384,13 +384,13 @@ export const ModifierGroupModal: React.FC<ModifierGroupModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="min-h-[44px] flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="min-h-[44px] flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
               >
                 {mode === 'create' ? 'Crear Grupo' : 'Guardar Cambios'}
               </button>

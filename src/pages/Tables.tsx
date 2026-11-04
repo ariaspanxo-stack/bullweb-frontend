@@ -126,12 +126,12 @@ export default function Tables() {
       ==================================================================== */}
       <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border border-gray-200 p-6">
         <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-blue-600"></div>
+          <div className="w-2 h-2 rounded-full bg-slate-500"></div>
           Leyenda de Estados
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="flex items-center gap-3 bg-white rounded-lg p-3 border border-gray-200">
-            <div className="w-6 h-6 rounded-lg bg-green-500 shadow-sm"></div>
+            <div className="w-6 h-6 rounded-lg bg-slate-500 shadow-sm"></div>
             <div>
               <p className="font-medium text-gray-900 text-sm">Disponible</p>
               <p className="text-xs text-gray-500">Lista para usar</p>
@@ -165,12 +165,12 @@ export default function Tables() {
       </div>
 
       {/* Instrucciones de uso */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
         <div className="flex gap-3">
-          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-900">
+          <Info className="w-5 h-5 text-slate-700 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-slate-700">
             <p className="font-semibold mb-1">💡 Consejos de uso:</p>
-            <ul className="space-y-1 text-blue-800">
+            <ul className="space-y-1 text-slate-700">
               <li>• <strong>Click en una mesa</strong> para ver detalles y orden activa</li>
               <li>• <strong>Crear nueva mesa</strong> con el botón "Nueva Mesa"</li>
               <li>• <strong>Organiza por secciones</strong> para mejor gestión</li>

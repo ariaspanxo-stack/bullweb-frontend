@@ -87,13 +87,13 @@ export function ProductosTab() {
                     ? <span className="font-bold">{formatCurrency(p.totalCost)}</span>
                     : <span className="text-xs text-gray-400">Sin costo cargado</span>}
                 </td>
-                <td className={cn('px-5 py-3.5 text-right font-semibold tabular-nums', p.profit == null ? 'text-gray-400' : p.profit >= 0 ? 'text-green-600' : 'text-red-600')}>
+                <td className={cn('px-5 py-3.5 text-right font-semibold tabular-nums', p.profit == null ? 'text-gray-400' : p.profit >= 0 ? 'text-slate-700' : 'text-red-600')}>
                   {p.profit != null ? formatCurrency(p.profit) : '—'}
                 </td>
                 <td className="px-5 py-3.5 text-right tabular-nums">
                   {p.margin != null ? (
                     <span className={cn('inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold',
-                      p.margin >= 60 ? 'bg-green-100 text-green-700' :
+                      p.margin >= 60 ? 'bg-slate-100 text-slate-700' :
                       p.margin >= 30 ? 'bg-yellow-100 text-yellow-700' :
                       'bg-red-100 text-red-700')}>
                       {p.margin.toFixed(0)}%

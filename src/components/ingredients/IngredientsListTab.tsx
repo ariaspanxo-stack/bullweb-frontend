@@ -267,7 +267,7 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
                   {ingredient.supplier && <p className="text-xs text-[#64748B] truncate">🏢 {ingredient.supplier}</p>}
 
                   <div className="flex items-center gap-2 pt-1 mt-auto">
-                    <button onClick={() => onEditIngredient(ingredient)} className={`${BTN_OUTLINE} flex-1`}>
+                    <button onClick={() => onEditIngredient(ingredient)} className={`min-h-[44px] ${BTN_OUTLINE} flex-1`}>
                       <Pencil className="w-4 h-4" />
                       Editar
                     </button>

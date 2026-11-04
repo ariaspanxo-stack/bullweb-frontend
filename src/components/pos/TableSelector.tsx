@@ -88,7 +88,7 @@ export default function TableSelector({
             placeholder="Buscar mesa..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         </div>
 
@@ -97,10 +97,10 @@ export default function TableSelector({
           <div className="flex gap-2 overflow-x-auto pb-2">
             <button
               onClick={() => setSelectedSection(null)}
-              className={cn(
+              className={cn('min-h-[44px]', 
                 'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors',
                 !selectedSection
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-orange-50 text-orange-700 border border-orange-300'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               )}
             >
@@ -110,10 +110,10 @@ export default function TableSelector({
               <button
                 key={section.id}
                 onClick={() => setSelectedSection(section.id)}
-                className={cn(
+                className={cn('min-h-[44px]', 
                   'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors',
                   selectedSection === section.id
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-orange-50 text-orange-700 border border-orange-300'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 )}
               >
@@ -143,22 +143,22 @@ export default function TableSelector({
               <button
                 key={table.id}
                 onClick={() => handleSelect(table)}
-                className={cn(
+                className={cn('min-h-[44px]', 
                   'aspect-square rounded-lg border-2 p-4 flex flex-col items-center justify-center gap-2',
                   'transition-all hover:shadow-md active:scale-95',
                   selectedTable?.id === table.id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-blue-300 hover:bg-gray-50'
+                    ? 'border-slate-200 bg-slate-50'
+                    : 'border-gray-200 hover:border-slate-300 hover:bg-gray-50'
                 )}
               >
                 <Utensils className={cn(
                   'w-6 h-6',
-                  selectedTable?.id === table.id ? 'text-blue-600' : 'text-gray-600'
+                  selectedTable?.id === table.id ? 'text-slate-700' : 'text-gray-600'
                 )} />
                 <div className="text-center">
                   <div className={cn(
                     'text-lg font-bold',
-                    selectedTable?.id === table.id ? 'text-blue-700' : 'text-gray-900'
+                    selectedTable?.id === table.id ? 'text-slate-700' : 'text-gray-900'
                   )}>
                     {table.number}
                   </div>

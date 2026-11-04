@@ -19,7 +19,7 @@ const flujo = flags.includes('--flujo') ? flags[flags.indexOf('--flujo') + 1] : 
 const ref = flags.includes('--ref') ? flags[flags.indexOf('--ref') + 1] : null;
 if (ref && env !== 'local') { console.error('--ref solo aplica a local'); process.exit(2); }
 if (ref && !/^[\w./-]+$/.test(ref)) { console.error('ref invalida'); process.exit(2); }
-if (ref) process.env.E2E_BACKEND_REF = ref;
+if (ref) process.env.E2E_BACKEND_REF = process.env.E2E_BACKEND_REF ?? ref; // E2E_BACKEND_REF deja elegir otra rama de backend (main frente a master)
 
 const dotenv = () => Object.fromEntries(readFileSync(resolve(FE, '.env.e2e'), 'utf8').split(/\r?\n/).map((l) => l.match(/^([A-Z0-9_]+)=(.*)$/)).filter(Boolean).map((m) => [m[1], m[2].trim()]));
 const GIT_BASH = 'C:/Program Files/Git/bin/bash.exe';

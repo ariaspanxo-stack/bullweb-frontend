@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { Bell, Receipt, HandHelping } from 'lucide-react';
 import type { TableRequest } from '@/hooks/useTableRequestAlerts';
 
@@ -20,15 +21,15 @@ export default function TableRequestAlert({ requests, onDismiss }: TableRequestA
   );
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full mx-4 text-center space-y-4 animate-bounce-once">
         <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto ${
-          isCallWaiter ? 'bg-orange-100' : 'bg-blue-100'
+          isCallWaiter ? 'bg-orange-100' : 'bg-slate-100'
         }`}>
           {isCallWaiter ? (
             <HandHelping className="w-10 h-10 text-orange-500 animate-ring" />
           ) : (
-            <Receipt className="w-10 h-10 text-blue-500 animate-ring" />
+            <Receipt className="w-10 h-10 text-slate-500 animate-ring" />
           )}
         </div>
         <h2 className="text-2xl font-extrabold text-gray-900">{title}</h2>
@@ -43,10 +44,10 @@ export default function TableRequestAlert({ requests, onDismiss }: TableRequestA
         </p>
         <button
           onClick={() => onDismiss(current.id)}
-          className={`w-full py-4 font-bold text-lg rounded-xl transition-colors active:scale-95 ${
+          className={`min-h-[44px] w-full py-4 font-bold text-lg rounded-xl transition-colors active:scale-95 ${
             isCallWaiter
               ? 'bg-orange-500 text-white hover:bg-orange-600'
-              : 'bg-gray-900 text-white hover:bg-gray-800'
+              : 'bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-300'
           }`}
         >
           ¡Voy! (Atendido)
@@ -57,6 +58,6 @@ export default function TableRequestAlert({ requests, onDismiss }: TableRequestA
           </p>
         )}
       </div>
-    </div>
+    </div>, document.body)
   );
 }

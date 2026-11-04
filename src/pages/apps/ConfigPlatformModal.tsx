@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { X, Eye, EyeOff, CheckCircle2, XCircle, Loader2, Copy } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
@@ -127,7 +128,7 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
@@ -139,7 +140,7 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
               Paso {step} de 3
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -153,7 +154,7 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
                 step === i + 1
                   ? 'bg-orange-50 text-orange-600 border-b-2 border-orange-500'
                   : step > i + 1
-                  ? 'text-green-600'
+                  ? 'text-slate-700'
                   : 'text-gray-400'
               }`}
             >
@@ -189,7 +190,7 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
                       <button
                         type="button"
                         onClick={() => setShowPasswords((p) => ({ ...p, [field.key]: !p[field.key] }))}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
                         {showPasswords[field.key] ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
@@ -202,7 +203,7 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
               <button
                 onClick={() => saveMutation.mutate()}
                 disabled={saveMutation.isPending || !canSave}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg py-2.5 font-medium transition-colors disabled:opacity-50"
+                className="min-h-[44px] w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg py-2.5 font-medium transition-colors disabled:opacity-50"
               >
                 {saveMutation.isPending ? (
                   <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</span>
@@ -219,31 +220,31 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
               </p>
 
               {testResult && (
-                <div className={`flex items-center gap-3 p-3 rounded-lg ${testResult.ok ? 'bg-green-50' : 'bg-red-50'}`}>
+                <div className={`flex items-center gap-3 p-3 rounded-lg ${testResult.ok ? 'bg-slate-50' : 'bg-red-50'}`}>
                   {testResult.ok
-                    ? <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0" />
+                    ? <CheckCircle2 className="w-5 h-5 text-slate-500 flex-shrink-0" />
                     : <XCircle className="w-5 h-5 text-red-500 flex-shrink-0" />}
-                  <span className={`text-sm ${testResult.ok ? 'text-green-700' : 'text-red-700'}`}>
+                  <span className={`text-sm ${testResult.ok ? 'text-slate-700' : 'text-red-700'}`}>
                     {testResult.message}
                   </span>
                 </div>
               )}
 
               <div className="flex gap-3">
-                <button onClick={() => setStep(1)} className="flex-1 border border-gray-200 rounded-lg py-2.5 text-sm text-gray-600 hover:bg-gray-50">
+                <button onClick={() => setStep(1)} className="min-h-[44px] flex-1 border border-gray-200 rounded-lg py-2.5 text-sm text-gray-600 hover:bg-gray-50">
                   ← Atrás
                 </button>
                 <button
                   onClick={() => testMutation.mutate()}
                   disabled={testMutation.isPending}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2.5 font-medium transition-colors disabled:opacity-50"
+                  className="min-h-[44px] flex-1 bg-white hover:bg-slate-50 text-slate-700 rounded-lg py-2.5 font-medium transition-colors disabled:opacity-50 border border-slate-300"
                 >
                   {testMutation.isPending
                     ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Validando...</span>
                     : '✓ Validar datos'}
                 </button>
                 {testResult?.ok && (
-                  <button onClick={() => setStep(3)} className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded-lg py-2.5 font-medium">
+                  <button onClick={() => setStep(3)} className="min-h-[44px] flex-1 bg-orange-500 hover:bg-orange-600 text-white rounded-lg py-2.5 font-medium">
                     Continuar →
                   </button>
                 )}
@@ -254,11 +255,11 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
           {/* PASO 3 — URL webhook + activar */}
           {step === 3 && (
             <>
-              <div className="bg-green-50 rounded-lg p-4 flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+              <div className="bg-slate-50 rounded-lg p-4 flex items-start gap-3">
+                <CheckCircle2 className="w-5 h-5 text-slate-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-green-800">¡Credenciales guardadas!</p>
-                  <p className="text-xs text-green-600 mt-0.5">Ahora configura el webhook en la plataforma.</p>
+                  <p className="text-sm font-medium text-slate-700">¡Credenciales guardadas!</p>
+                  <p className="text-xs text-slate-700 mt-0.5">Ahora configura el webhook en la plataforma.</p>
                 </div>
               </div>
 
@@ -272,7 +273,7 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
                   </code>
                   <button
                     onClick={copyUrl}
-                    className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 flex-shrink-0"
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 border border-gray-200 rounded-lg hover:bg-gray-50 flex-shrink-0"
                     title="Copiar URL"
                   >
                     <Copy className="w-4 h-4 text-gray-500" />
@@ -300,7 +301,7 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
                     );
                   });
                 }}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg py-2.5 font-bold transition-colors"
+                className="min-h-[44px] w-full bg-white hover:bg-slate-50 text-slate-700 rounded-lg py-2.5 font-bold transition-colors border border-slate-300"
               >
                 ✅ Activar integración
               </button>
@@ -308,6 +309,6 @@ export function ConfigPlatformModal({ platform, existingConfig, tenantId, onClos
           )}
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

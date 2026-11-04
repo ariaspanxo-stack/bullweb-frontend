@@ -94,7 +94,7 @@ export const SalesLineChart: React.FC<SalesLineChartProps> = ({ data }) => {
         beginAtZero: true,
         ticks: {
           callback: function (value: any) {
-            return '$' + (value / 1000).toFixed(0) + 'k';
+            return '$' + Math.round(Number(value)).toLocaleString('es-CL'); // LOTE 308b: montos sin abreviar
           },
         },
       },

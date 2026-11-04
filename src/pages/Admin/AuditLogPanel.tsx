@@ -60,9 +60,9 @@ const dateStrToLocalEnd = (dateStr: string): string => {
 // ---------------------------------------------------------------------------
 const SeverityBadge = ({ severity }: { severity: AuditSeverity }) => {
   const map = {
-    INFO:     { icon: Info,          cls: 'bg-blue-50   text-blue-700   border-blue-200'  },
+    INFO:     { icon: Info,          cls: 'bg-slate-50 text-slate-700 border-slate-200'  },
     WARNING:  { icon: AlertTriangle, cls: 'bg-yellow-50 text-yellow-700 border-yellow-200' },
-    CRITICAL: { icon: AlertCircle,   cls: 'bg-red-50    text-red-700    border-red-200'   },
+    CRITICAL: { icon: AlertCircle,   cls: 'bg-red-50 text-red-700 border-red-200'   },
   };
   const { icon: Icon, cls } = map[severity] ?? map.INFO;
 
@@ -111,7 +111,7 @@ const LogRow = ({ log }: { log: AuditLog & { before?: any; after?: any } }) => {
           <code className="text-xs bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded font-mono">{log.action}</code>
         </td>
         <td className="px-4 py-3 text-xs">
-          <span className="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-xs">{log.module}</span>
+          <span className="bg-slate-50 text-slate-700 px-1.5 py-0.5 rounded text-xs">{log.module}</span>
         </td>
         {/* Columna Actor — Nombre arriba / Correo abajo (o "Sistema" si es automático) */}
         <td className="px-4 py-3">
@@ -154,8 +154,8 @@ const LogRow = ({ log }: { log: AuditLog & { before?: any; after?: any } }) => {
               )}
               {log.after && (
                 <div>
-                  <p className="text-xs font-semibold text-green-600 mb-1">DESPUÉS</p>
-                  <pre className="text-xs bg-green-50 border border-green-100 rounded-lg p-3 overflow-auto max-h-40 text-gray-700">
+                  <p className="text-xs font-semibold text-slate-700 mb-1">DESPUÉS</p>
+                  <pre className="text-xs bg-slate-50 border border-slate-200 rounded-lg p-3 overflow-auto max-h-40 text-gray-700">
                     {JSON.stringify(log.after, null, 2)}
                   </pre>
                 </div>
@@ -243,7 +243,7 @@ export const AuditLogPanel = () => {
         </div>
         <button
           onClick={handleExport}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+          className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
         >
           <FileDown size={14} /> Exportar Excel
         </button>
@@ -255,7 +255,7 @@ export const AuditLogPanel = () => {
           <div className="relative flex-1 min-w-[200px]">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
-              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               placeholder="Buscar por acción, email o descripción..."
               value={filters.search}
               onChange={(e) => setF('search', e.target.value)}
@@ -263,7 +263,7 @@ export const AuditLogPanel = () => {
           </div>
 
           <select
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
             value={filters.module}
             onChange={(e) => setF('module', e.target.value)}
           >
@@ -272,7 +272,7 @@ export const AuditLogPanel = () => {
           </select>
 
           <select
-            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
             value={filters.severity}
             onChange={(e) => setF('severity', e.target.value)}
           >
@@ -286,14 +286,14 @@ export const AuditLogPanel = () => {
             <Calendar size={14} className="text-gray-400" />
             <input
               type="date"
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               value={filters.dateFrom}
               onChange={(e) => setF('dateFrom', e.target.value)}
             />
             <span className="text-gray-400 text-sm">a</span>
             <input
               type="date"
-              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               value={filters.dateTo}
               onChange={(e) => setF('dateTo', e.target.value)}
             />
@@ -301,7 +301,7 @@ export const AuditLogPanel = () => {
 
           {(filters.search || filters.module || filters.severity || filters.dateFrom) && (
             <button
-              className="text-sm text-blue-600 hover:text-blue-700"
+              className="min-h-[44px] text-sm text-slate-700 hover:text-slate-700"
               onClick={() => {
                 // Al limpiar, volvemos al default: "Hoy".
                 const t = todayStr();
@@ -369,12 +369,12 @@ export const AuditLogPanel = () => {
             <span>Página {meta.page} de {meta.pages}</span>
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40"
+                className="min-h-[44px] px-3 py-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40"
                 disabled={meta.page <= 1}
                 onClick={() => setFilters((f) => ({ ...f, page: f.page - 1 }))}
               >← Anterior</button>
               <button
-                className="px-3 py-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40"
+                className="min-h-[44px] px-3 py-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40"
                 disabled={meta.page >= meta.pages}
                 onClick={() => setFilters((f) => ({ ...f, page: f.page + 1 }))}
               >Siguiente →</button>

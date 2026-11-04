@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState } from 'react';
 import { 
   User, 
@@ -98,7 +99,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
               <p className="text-sm text-gray-500">Total Clientes</p>
               <p className="text-2xl font-bold text-gray-900">{totalCustomers}</p>
             </div>
-            <User className="w-10 h-10 text-blue-500" />
+            <User className="w-10 h-10 text-slate-500" />
           </div>
         </div>
 
@@ -108,7 +109,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
               <p className="text-sm text-gray-500">Con Compras</p>
               <p className="text-2xl font-bold text-gray-900">{customersWithOrders}</p>
             </div>
-            <ChartBar className="w-10 h-10 text-green-500" />
+            <ChartBar className="w-10 h-10 text-slate-500" />
           </div>
         </div>
 
@@ -145,7 +146,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
             placeholder="Buscar por nombre, email, teléfono o RUT..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
           />
         </div>
         <button
@@ -153,7 +154,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
             setEditingCustomer(null);
             setIsModalOpen(true);
           }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
+          className="min-h-[44px] px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 flex items-center gap-2 transition-colors"
         >
           <Plus className="w-5 h-5" />
           Nuevo Cliente
@@ -171,7 +172,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
             {!searchQuery && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="min-h-[44px] mt-4 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
               >
                 Crear primer cliente
               </button>
@@ -213,8 +214,8 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
                   <tr key={customer.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                          <User className="w-5 h-5 text-blue-600" />
+                        <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
+                          <User className="w-5 h-5 text-slate-700" />
                         </div>
                         <div>
                           <p className="font-semibold text-gray-900">{customer.name}</p>
@@ -261,7 +262,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
                         {customer.totalOrders} {customer.totalOrders === 1 ? 'compra' : 'compras'}
                       </span>
                     </td>
@@ -279,21 +280,21 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleViewDetails(customer.id)}
-                          className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 text-slate-700 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
                           title="Ver Detalles"
                         >
                           <Eye className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleEdit(customer)}
-                          className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 text-slate-700 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"
                           title="Editar"
                         >
                           <Pencil className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => setDeleteConfirm({ id: customer.id, name: customer.name })}
-                          className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
                           title="Eliminar"
                           disabled={customer.totalOrders > 0}
                         >
@@ -330,13 +331,13 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
             <div className="space-y-3">
               {topCustomers.map((customer, index) => {
                 const badge = index === 0 ? '👑' : index === 1 ? '🥈' : index === 2 ? '🥉' : '⭐';
-                const bgColor = index === 0 ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300' : 'bg-white border-gray-200';
+                const bgColor = index === 0 ? ' to-orange-50 border-yellow-300' : 'bg-white border-gray-200';
                 
                 return (
                   <button
                     key={customer.id}
                     onClick={() => handleViewDetails(customer.id)}
-                    className={`w-full p-3 border-2 rounded-lg hover:shadow-md transition-all text-left ${bgColor}`}
+                    className={`min-h-[44px] w-full p-3 border-2 rounded-lg hover:shadow-md transition-all text-left ${bgColor}`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex-shrink-0">
@@ -349,7 +350,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
                         <div className="flex items-center gap-2 text-xs text-gray-500">
                           <span>{customer.totalOrders} órdenes</span>
                           <span>•</span>
-                          <span className="font-semibold text-green-600">
+                          <span className="font-semibold text-slate-700">
                             {formatCurrency(customer.totalSpent)}
                           </span>
                         </div>
@@ -388,7 +389,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
 
       {/* Modal confirmación eliminar */}
       {deleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        createPortal(<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-bold text-gray-900 mb-2">Confirmar eliminación</h3>
             <p className="text-gray-600 mb-4">
@@ -398,19 +399,19 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteConfirm(null)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="min-h-[44px] flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm.id)}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                className="min-h-[44px] flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
                 Eliminar
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
     </div>
   );

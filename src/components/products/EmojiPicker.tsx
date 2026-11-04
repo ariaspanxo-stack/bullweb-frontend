@@ -70,12 +70,12 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Buscar emoji..."
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
         />
       </div>
 
       {/* Emoji seleccionado */}
-      <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+      <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
         <span className="text-3xl">{selectedEmoji || '❓'}</span>
         <div>
           <p className="text-sm font-medium text-gray-900">Emoji seleccionado</p>
@@ -98,9 +98,7 @@ export const EmojiPicker: React.FC<EmojiPickerProps> = ({
                   key={emoji}
                   type="button"
                   onClick={() => onSelect(emoji)}
-                  className={`
-                    text-2xl p-2 rounded hover:bg-gray-100 transition-colors
-                    ${selectedEmoji === emoji ? 'bg-blue-100 ring-2 ring-blue-500' : ''}
+                  className={`min-h-[44px]  text-2xl p-2 rounded hover:bg-gray-100 transition-colors ${selectedEmoji === emoji ? 'bg-slate-100 ring-2 ring-slate-300' : ''}
                   `}
                 >
                   {emoji}

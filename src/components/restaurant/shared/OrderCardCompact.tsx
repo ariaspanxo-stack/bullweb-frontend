@@ -374,7 +374,7 @@ export function OrderCardCompact({
           {/* Botón Editar cliente — solo ícono, siempre presente */}
           <button
             onClick={e => { e.stopPropagation(); setShowEditModal(true); }}
-            className={`${BTN_ICON} order-3 ml-auto`}
+            className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${BTN_ICON} order-3 ml-auto`}
             aria-label="Editar cliente"
             title="Editar cliente"
           >
@@ -408,7 +408,7 @@ export function OrderCardCompact({
                   {canCancel && (
                   <button
                     onClick={() => { setShowMenu(false); onCancel(order); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    className="min-h-[44px] w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
                     <X size={13} className="text-red-400" />
                     Cancelar orden

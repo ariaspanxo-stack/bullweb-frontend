@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Printer, ChevronDown, ChevronUp, Check, Save, Eye, X } from 'lucide-react';
@@ -126,11 +127,11 @@ function TextModal({
   const [h, setH] = useState(headerText);
   const [f, setF] = useState(footerText);
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <h3 className="font-semibold text-gray-900">{title}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -159,19 +160,19 @@ function TextModal({
         <div className="flex justify-end gap-2 px-5 py-3 border-t border-gray-100">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={() => { onSave(h, f); onClose(); }}
-            className="px-4 py-2 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+            className="min-h-[44px] px-4 py-2 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
           >
             Guardar
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -247,7 +248,7 @@ function SectionBlock({
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-100 transition-colors"
+        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-full flex items-center justify-between px-5 py-4 hover:bg-gray-100 transition-colors"
       >
         <div className="flex items-center gap-2">
           <span className="text-base font-bold text-orange-600">{title}</span>
@@ -344,7 +345,7 @@ export default function PrintSettingsPage() {
         </div>
         <button
           onClick={() => setShowPreview(v => !v)}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          className="min-h-[44px] flex items-center gap-1.5 px-3 py-2 text-sm font-medium bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
         >
           <Eye className="w-4 h-4" />
           {showPreview ? 'Ocultar vista previa' : 'Vista previa'}
@@ -434,7 +435,7 @@ export default function PrintSettingsPage() {
             control={
               <button
                 onClick={() => setShowCmText(true)}
-                className="px-3 py-1.5 text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+                className="min-h-[44px] px-3 py-1.5 text-sm font-medium bg-white hover:bg-slate-50 text-slate-700 rounded-lg transition-colors border border-slate-300"
               >
                 Configurar
               </button>
@@ -461,7 +462,7 @@ export default function PrintSettingsPage() {
               <button
                 onClick={() => handlePrintTest('precuenta')}
                 disabled={testing !== null}
-                className="flex items-center gap-1.5 min-h-[44px] px-4 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors disabled:opacity-60"
+                className="flex items-center gap-1.5 min-h-[44px] px-4 text-sm font-semibold bg-white hover:bg-slate-50 text-slate-700 rounded-lg transition-colors disabled:opacity-60 border border-slate-300"
               >
                 <Printer className="w-4 h-4" />
                 {testing === 'precuenta' ? 'Enviando...' : 'Imprimir prueba'}
@@ -489,7 +490,7 @@ export default function PrintSettingsPage() {
             control={
               <button
                 onClick={() => setShowKdText(true)}
-                className="px-3 py-1.5 text-sm font-medium bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+                className="min-h-[44px] px-3 py-1.5 text-sm font-medium bg-white hover:bg-slate-50 text-slate-700 rounded-lg transition-colors border border-slate-300"
               >
                 Configurar
               </button>
@@ -516,7 +517,7 @@ export default function PrintSettingsPage() {
               <button
                 onClick={() => handlePrintTest('comanda')}
                 disabled={testing !== null}
-                className="flex items-center gap-1.5 min-h-[44px] px-4 text-sm font-semibold bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors disabled:opacity-60"
+                className="flex items-center gap-1.5 min-h-[44px] px-4 text-sm font-semibold bg-white hover:bg-slate-50 text-slate-700 rounded-lg transition-colors disabled:opacity-60 border border-slate-300"
               >
                 <Printer className="w-4 h-4" />
                 {testing === 'comanda' ? 'Enviando...' : 'Imprimir prueba'}
@@ -531,9 +532,9 @@ export default function PrintSettingsPage() {
         <button
           onClick={() => handleSave()}
           disabled={saving}
-          className={`flex items-center gap-2 px-6 py-2.5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-60 ${
+          className={`min-h-[44px] flex items-center gap-2 px-6 py-2.5 text-sm font-semibold rounded-lg transition-colors disabled:opacity-60 ${
             saved
-              ? 'bg-green-600 text-white'
+              ? 'bg-orange-500 text-white'
               : 'bg-orange-500 hover:bg-orange-600 text-white'
           }`}
         >

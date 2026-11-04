@@ -31,11 +31,11 @@ export const Restaurant = () => {
 
         {/* Content */}
         <div className="space-y-6">
-          <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+          <div className="bg-slate-50 border-l-4 border-slate-200 p-4 rounded">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg 
-                  className="h-5 w-5 text-blue-500" 
+                  className="h-5 w-5 text-slate-500" 
                   viewBox="0 0 20 20" 
                   fill="currentColor"
                 >
@@ -47,10 +47,10 @@ export const Restaurant = () => {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">
+                <h3 className="text-sm font-medium text-slate-700">
                   Estado Actual
                 </h3>
-                <div className="mt-2 text-sm text-blue-700">
+                <div className="mt-2 text-sm text-slate-700">
                   <p>
                     Este módulo está siendo optimizado para mejorar el rendimiento 
                     y la experiencia de usuario. Estará disponible próximamente.
@@ -60,11 +60,11 @@ export const Restaurant = () => {
             </div>
           </div>
 
-          <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+          <div className="bg-slate-50 border-l-4 border-slate-200 p-4 rounded">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg 
-                  className="h-5 w-5 text-green-500" 
+                  className="h-5 w-5 text-slate-500" 
                   viewBox="0 0 20 20" 
                   fill="currentColor"
                 >
@@ -76,10 +76,10 @@ export const Restaurant = () => {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-green-800">
+                <h3 className="text-sm font-medium text-slate-700">
                   Módulos Disponibles
                 </h3>
-                <div className="mt-2 text-sm text-green-700">
+                <div className="mt-2 text-sm text-slate-700">
                   <ul className="list-disc list-inside space-y-1">
                     <li>Dashboard - Estadísticas y reportes</li>
                     <li>Customers - Gestión de clientes</li>
@@ -95,13 +95,13 @@ export const Restaurant = () => {
           <div className="flex gap-4 pt-4">
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+              className="min-h-[44px] flex-1 bg-white hover:bg-slate-50 text-slate-700 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg border border-slate-300"
             >
               Ir al Dashboard
             </button>
             <button
               onClick={() => navigate('/customers')}
-              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+              className="min-h-[44px] flex-1 bg-gray-600 hover:bg-slate-50 text-slate-700 font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg border border-slate-300"
             >
               Ver Clientes
             </button>

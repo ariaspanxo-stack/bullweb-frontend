@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { formatSaleNumber } from '@/utils/formatSaleNumber';
 import { formatCurrency } from '@/lib/utils';
@@ -42,9 +43,9 @@ const STATUS_CONFIG: Record<
   { label: string; color: string; bg: string; icon: React.ElementType }
 > = {
   PENDING: { label: 'Pendiente', color: 'text-yellow-700', bg: 'bg-yellow-100', icon: Clock },
-  ASSIGNED: { label: 'Asignado', color: 'text-blue-700', bg: 'bg-blue-100', icon: Bike },
-  PICKED_UP: { label: 'En camino', color: 'text-purple-700', bg: 'bg-purple-100', icon: PackageOpen },
-  DELIVERED: { label: 'Entregado', color: 'text-green-700', bg: 'bg-green-100', icon: CheckCircle2 },
+  ASSIGNED: { label: 'Asignado', color: 'text-slate-700', bg: 'bg-slate-100', icon: Bike },
+  PICKED_UP: { label: 'En camino', color: 'text-slate-700', bg: 'bg-slate-100', icon: PackageOpen },
+  DELIVERED: { label: 'Entregado', color: 'text-slate-700', bg: 'bg-slate-100', icon: CheckCircle2 },
   CANCELLED: { label: 'Cancelado', color: 'text-red-700', bg: 'bg-red-100', icon: XCircle },
 };
 
@@ -81,11 +82,11 @@ function AssignDriverModal({ delivery, onClose, onAssign, loading }: AssignModal
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-bold text-gray-900">Asignar Repartidor</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -131,7 +132,7 @@ function AssignDriverModal({ delivery, onClose, onAssign, loading }: AssignModal
               min={1}
               value={estimatedTime}
               onChange={(e) => setEstimatedTime(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500"
               placeholder="ej. 30"
             />
           </div>
@@ -140,7 +141,7 @@ function AssignDriverModal({ delivery, onClose, onAssign, loading }: AssignModal
         <div className="flex gap-3 p-6 border-t">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+            className="min-h-[44px] flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
           >
             Cancelar
           </button>
@@ -149,13 +150,13 @@ function AssignDriverModal({ delivery, onClose, onAssign, loading }: AssignModal
               onAssign(driverId, estimatedTime ? parseInt(estimatedTime) : undefined)
             }
             disabled={loading || !driverId.trim()}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            className="min-h-[44px] flex-1 px-4 py-2 bg-white text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 border border-slate-300"
           >
             {loading ? 'Asignando...' : 'Asignar'}
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -256,9 +257,9 @@ export default function Delivery() {
           {[
             { key: 'total', label: 'Total', value: stats.total, color: 'bg-gray-100 text-gray-800' },
             { key: 'pending', label: 'Pendientes', value: stats.pending, color: 'bg-yellow-100 text-yellow-800' },
-            { key: 'assigned', label: 'Asignados', value: stats.assigned, color: 'bg-blue-100 text-blue-800' },
-            { key: 'pickedUp', label: 'En camino', value: stats.pickedUp, color: 'bg-purple-100 text-purple-800' },
-            { key: 'delivered', label: 'Entregados', value: stats.delivered, color: 'bg-green-100 text-green-800' },
+            { key: 'assigned', label: 'Asignados', value: stats.assigned, color: 'bg-slate-100 text-slate-700' },
+            { key: 'pickedUp', label: 'En camino', value: stats.pickedUp, color: 'bg-slate-100 text-slate-700' },
+            { key: 'delivered', label: 'Entregados', value: stats.delivered, color: 'bg-slate-100 text-slate-700' },
             { key: 'cancelled', label: 'Cancelados', value: stats.cancelled, color: 'bg-red-100 text-red-800' },
           ].map((s) => (
             <div key={s.key} className="bg-white rounded-xl border p-4 text-center">
@@ -275,8 +276,8 @@ export default function Delivery() {
       <div className="bg-white rounded-xl border p-4 flex flex-wrap gap-2 items-center">
         <button
           onClick={() => setStatusFilter('')}
-          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            statusFilter === '' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          className={`min-h-[44px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            statusFilter === '' ? 'bg-orange-50 text-orange-700 border border-orange-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
           }`}
         >
           Todos
@@ -287,7 +288,7 @@ export default function Delivery() {
             <button
               key={s}
               onClick={() => setStatusFilter(statusFilter === s ? '' : s)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`min-h-[44px] px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 statusFilter === s
                   ? `${cfg.bg} ${cfg.color} ring-2 ring-current ring-offset-1`
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -303,7 +304,7 @@ export default function Delivery() {
             queryClient.invalidateQueries({ queryKey: ['delivery-orders'] });
             queryClient.invalidateQueries({ queryKey: ['delivery-stats'] });
           }}
-          className="ml-auto p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
+          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center ml-auto p-2 text-gray-500 hover:bg-gray-100 rounded-lg"
           title="Actualizar"
         >
           <RefreshCw className="w-4 h-4" />
@@ -385,7 +386,7 @@ export default function Delivery() {
                       <td className="px-4 py-3">
                         {d.users ? (
                           <div className="flex items-center gap-1.5">
-                            <Bike className="w-3.5 h-3.5 text-blue-500" />
+                            <Bike className="w-3.5 h-3.5 text-slate-500" />
                             <span className="text-sm text-gray-700">{d.users.name}</span>
                           </div>
                         ) : (
@@ -416,7 +417,7 @@ export default function Delivery() {
                           {canManage && ['PENDING', 'ASSIGNED'].includes(d.status) && (
                             <button
                               onClick={() => setAssigningDelivery(d)}
-                              className="px-2 py-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg transition-colors"
+                              className="min-h-[44px] px-2 py-1 text-xs bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                               title="Asignar repartidor"
                             >
                               <Bike className="w-3.5 h-3.5 inline mr-1" />
@@ -429,7 +430,7 @@ export default function Delivery() {
                             <button
                               onClick={() => pickupMutation.mutate(d.id)}
                               disabled={pickupMutation.isPending}
-                              className="px-2 py-1 text-xs bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg transition-colors"
+                              className="min-h-[44px] px-2 py-1 text-xs bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                               title="Marcar como recogido"
                             >
                               <PackageOpen className="w-3.5 h-3.5 inline mr-1" />
@@ -442,7 +443,7 @@ export default function Delivery() {
                             <button
                               onClick={() => deliveredMutation.mutate(d.id)}
                               disabled={deliveredMutation.isPending}
-                              className="px-2 py-1 text-xs bg-green-50 text-green-700 hover:bg-green-100 rounded-lg transition-colors"
+                              className="min-h-[44px] px-2 py-1 text-xs bg-slate-50 text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
                               title="Marcar como entregado"
                             >
                               <PackageCheck className="w-3.5 h-3.5 inline mr-1" />
@@ -455,7 +456,7 @@ export default function Delivery() {
                             <button
                               onClick={() => handleCancel(d)}
                               disabled={cancelMutation.isPending}
-                              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                               title="Cancelar"
                             >
                               <XCircle className="w-4 h-4" />

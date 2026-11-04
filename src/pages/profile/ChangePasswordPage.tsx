@@ -84,7 +84,7 @@ export function ChangePasswordPage() {
               <button
                 type="button"
                 onClick={() => setShow(s => ({ ...s, current: !s.current }))}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center absolute right-3 top-3 text-gray-400 hover:text-gray-600"
               >
                 {show.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -107,7 +107,7 @@ export function ChangePasswordPage() {
               <button
                 type="button"
                 onClick={() => setShow(s => ({ ...s, new: !s.new }))}
-                className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center absolute right-3 top-3 text-gray-400 hover:text-gray-600"
               >
                 {show.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -138,14 +138,14 @@ export function ChangePasswordPage() {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="flex-1 border border-gray-200 text-gray-600 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm"
+              className="min-h-[44px] flex-1 border border-gray-200 text-gray-600 font-medium py-3 rounded-xl hover:bg-gray-50 transition-colors text-sm"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
+              className="min-h-[44px] flex-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 text-sm"
             >
               {loading ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>

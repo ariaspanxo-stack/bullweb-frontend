@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { LogIn, LogOut, X, Loader2, AlertTriangle, AlertCircle } from 'lucide-react';
@@ -70,7 +71,7 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl">
 
         {/* Header */}
@@ -81,7 +82,7 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded-xl hover:bg-gray-100 transition-colors"
           >
             <X className="w-5 h-5 text-gray-400" />
           </button>
@@ -130,9 +131,9 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
               <button
                 type="button"
                 onClick={() => setType('ENTRY')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors border-2 ${
+                className={`min-h-[44px] flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors border-2 ${
                   type === 'ENTRY'
-                    ? 'bg-green-50 border-green-400 text-green-700'
+                    ? 'bg-slate-50 border-slate-200 text-slate-700'
                     : 'bg-white border-gray-200 text-gray-500'
                 }`}
               >
@@ -141,9 +142,9 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
               <button
                 type="button"
                 onClick={() => setType('EXIT')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors border-2 ${
+                className={`min-h-[44px] flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors border-2 ${
                   type === 'EXIT'
-                    ? 'bg-blue-50 border-blue-400 text-blue-700'
+                    ? 'bg-slate-50 border-slate-200 text-slate-700'
                     : 'bg-white border-gray-200 text-gray-500'
                 }`}
               >
@@ -160,7 +161,7 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
               value={timestamp}
               onChange={e => setTimestamp(e.target.value)}
               required
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-400"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-orange-500"
             />
           </div>
 
@@ -174,7 +175,7 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="Ej: Trabajó en sala VIP"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-400"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-orange-500"
             />
           </div>
 
@@ -189,7 +190,7 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
               required
               rows={2}
               placeholder="Ej: Empleado olvidó marcar entrada"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-400 resize-none"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-orange-500 resize-none"
             />
             <p className="text-xs text-gray-400 mt-1">Queda registrado en el historial de auditoría</p>
           </div>
@@ -207,14 +208,14 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+              className="min-h-[44px] flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || !editNote.trim()}
-              className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="min-h-[44px] flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading ? 'Guardando...' : 'Guardar cambios'}
@@ -222,6 +223,6 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
           </div>
         </form>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

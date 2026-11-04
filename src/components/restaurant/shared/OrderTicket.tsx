@@ -70,7 +70,7 @@ export interface OrderTicketProps {
 }
 
 const accentText = (accent: 'blue' | 'purple' | 'orange') =>
-  accent === 'blue' ? 'text-blue-500' : accent === 'purple' ? 'text-purple-600' : 'text-[#F97316]';
+  accent === 'blue' ? 'text-slate-500' : accent === 'purple' ? 'text-slate-700' : 'text-[#F97316]';
 
 export const OrderTicket = ({
   items,
@@ -148,7 +148,7 @@ export const OrderTicket = ({
                     <div className="flex items-center gap-1.5">
                       <button
                         onClick={() => onDecreaseQuantity(item.id)}
-                        className="w-11 h-11 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors"
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-11 h-11 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors"
                         aria-label="Restar"
                       >
                         <Minus size={14} className="text-gray-700" />
@@ -158,7 +158,7 @@ export const OrderTicket = ({
                       </span>
                       <button
                         onClick={() => onIncreaseQuantity(item.id)}
-                        className="w-11 h-11 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors"
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-11 h-11 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg flex items-center justify-center transition-colors"
                         aria-label="Sumar"
                       >
                         <Plus size={14} className="text-gray-700" />
@@ -179,7 +179,7 @@ export const OrderTicket = ({
                     )}
                     <button
                       onClick={() => onRemoveItem(item.id)}
-                      className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 text-gray-400 hover:text-red-500 transition-colors"
                       aria-label="Eliminar"
                     >
                       <X size={14} />
@@ -225,7 +225,7 @@ export const OrderTicket = ({
             <button
               onClick={onConfirm}
               disabled={saving || confirmDisabled}
-              className="w-full h-12 bg-[#F97316] hover:bg-[#ea6a0a] text-white rounded-lg font-bold text-base transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="min-h-[44px] w-full h-12 bg-[#F97316] hover:bg-[#ea6a0a] text-white rounded-lg font-bold text-base transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {saving ? (
                 <>
@@ -247,7 +247,7 @@ export const OrderTicket = ({
               <button
                 onClick={onGuardarSinProductos}
                 disabled={saving || !canSaveEmpty}
-                className="w-full mt-2 text-xs text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed py-1"
+                className="min-h-[44px] w-full mt-2 text-xs text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed py-1"
               >
                 Guardar sin productos
               </button>

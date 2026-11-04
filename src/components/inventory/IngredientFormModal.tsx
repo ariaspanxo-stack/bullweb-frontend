@@ -263,14 +263,14 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+            className="min-h-[44px] flex-1 px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
           >
             Cancelar
           </button>
           <button
             type="submit"
             disabled={mutation.isPending}
-            className="flex-1 px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg transition-colors font-medium shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            className="min-h-[44px] flex-1 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors font-medium shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {mutation.isPending ? 'Guardando...' : isEdit ? 'Guardar Cambios' : 'Crear Ingrediente'}
           </button>

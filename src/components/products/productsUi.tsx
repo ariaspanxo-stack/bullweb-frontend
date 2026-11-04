@@ -32,7 +32,7 @@ export const BTN_TRASH =
 export const TrashButton: React.FC<{ onClick: () => void; label: string; className?: string; disabled?: boolean }> = ({
   onClick, label, className = '', disabled,
 }) => (
-  <button type="button" onClick={onClick} title={label} aria-label={label} disabled={disabled} className={`${BTN_TRASH} ${className}`}>
+  <button type="button" onClick={onClick} title={label} aria-label={label} disabled={disabled} className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center ${BTN_TRASH} ${className}`}>
     <Trash2 className="w-5 h-5" />
   </button>
 );

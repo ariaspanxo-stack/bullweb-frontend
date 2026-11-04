@@ -120,7 +120,7 @@ export function ModifierGroupsModal({
             <h3 id="modgroups-title" className="font-bold text-gray-900 text-lg truncate">{product?.name}</h3>
             <p className="text-sm text-gray-500">Elige las opciones</p>
           </div>
-          <button onClick={onClose} aria-label="Cerrar" className="w-11 h-11 flex-shrink-0 inline-flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100">
+          <button onClick={onClose} aria-label="Cerrar" className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-11 h-11 flex-shrink-0 inline-flex items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100">
             <X size={20} />
           </button>
         </div>

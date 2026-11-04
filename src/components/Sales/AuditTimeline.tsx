@@ -39,8 +39,8 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
       description: `Mesa ${sale.tableNumber || 'N/A'} - ${sale.waiterName}`,
       timestamp: new Date(sale.startTime),
       icon: FileText,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
+      color: 'text-slate-700',
+      bgColor: 'bg-slate-100'
     });
 
     // 2. EVENTO: Items agregados
@@ -52,8 +52,8 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
         description: sale.items.map(item => `${item.quantity}x ${item.productName}`).join(', '),
         timestamp: new Date(sale.createdAt),
         icon: ShoppingCart,
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-100'
+        color: 'text-slate-700',
+        bgColor: 'bg-slate-100'
       });
     }
 
@@ -67,8 +67,8 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
           description: `$${payment.amount.toLocaleString('es-CL')} ${payment.reference ? `- Ref: ${payment.reference}` : ''}`,
           timestamp: payment.createdAt ? new Date(payment.createdAt) : new Date(),
           icon: CreditCard,
-          color: 'text-green-600',
-          bgColor: 'bg-green-100'
+          color: 'text-slate-700',
+          bgColor: 'bg-slate-100'
         });
       });
     }
@@ -98,8 +98,8 @@ export function AuditTimeline({ sale }: AuditTimelineProps) {
         description: `Total: $${sale.total.toLocaleString('es-CL')}`,
         timestamp: new Date(sale.closeTime),
         icon: CheckCircle,
-        color: 'text-green-700',
-        bgColor: 'bg-green-100'
+        color: 'text-slate-700',
+        bgColor: 'bg-slate-100'
       });
     } else if (sale.status === 'cancelled') {
       events.push({

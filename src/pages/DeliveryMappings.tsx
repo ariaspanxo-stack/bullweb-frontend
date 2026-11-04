@@ -92,7 +92,7 @@ interface HistoryItem {
 
 const PLATFORMS: Array<{ slug: PlatformSlug; label: string; badge: string }> = [
   { slug: 'ubereats', label: 'Uber Eats', badge: 'bg-black text-white' },
-  { slug: 'rappi', label: 'Rappi', badge: 'bg-pink-100 text-pink-700 border border-pink-200' },
+  { slug: 'rappi', label: 'Rappi', badge: 'bg-slate-100 text-slate-700 border border-slate-200' },
   { slug: 'pedidosya', label: 'PedidosYa', badge: 'bg-orange-100 text-orange-700 border border-orange-200' },
 ];
 
@@ -615,13 +615,13 @@ export default function DeliveryMappings() {
             <p className="mt-2 text-sm text-gray-600">{stockWarning}. Si vendes igual, el stock queda en negativo.</p>
             <div className="mt-5 flex gap-3">
               <button type="button" className="min-h-[44px] flex-1 rounded-xl border border-gray-300 px-4 font-semibold text-gray-700" onClick={() => setStockWarning(null)}>Cancelar</button>
-              <button type="button" className="min-h-[44px] flex-1 rounded-xl bg-[#F97316] px-4 font-semibold text-white" onClick={() => { setStockWarning(null); submitManualOrder(true); }}>Vender igual</button>
+              <button type="button" className="min-h-[44px] flex-1 rounded-xl bg-white px-4 font-semibold text-slate-700 border border-slate-300" onClick={() => { setStockWarning(null); submitManualOrder(true); }}>Vender igual</button>
             </div>
           </div>
         </div>,
         document.body,
       )}
-    <div className="min-h-screen bg-gray-950 text-white">
+    <div className="min-h-screen bg-white text-slate-900 border border-slate-200">
       {/* Header */}
       <header className="bg-gray-950/90 backdrop-blur border-b border-white/5 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center gap-4">
@@ -645,7 +645,7 @@ export default function DeliveryMappings() {
           <button
             onClick={loadAll}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-50 transition-colors"
+            className="min-h-[44px] inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-50 transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Actualizar
@@ -658,7 +658,7 @@ export default function DeliveryMappings() {
               <button
                 key={p.slug}
                 onClick={() => setPlatform(p.slug)}
-                className={`text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${
+                className={`min-h-[44px] text-xs font-semibold px-3 py-1.5 rounded-full transition-all ${
                   platform === p.slug
                     ? 'ring-2 ring-brand-500 ' + p.badge
                     : 'bg-white/5 text-gray-400 hover:bg-white/10'
@@ -682,8 +682,8 @@ export default function DeliveryMappings() {
                   aria-checked={deductStock}
                   disabled={toggleSaving}
                   onClick={() => handleToggleDeductStock(!deductStock)}
-                  className={`relative w-9 h-5 rounded-full transition-colors disabled:opacity-50 ${
-                    deductStock ? 'bg-emerald-500' : 'bg-white/10'
+                  className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center relative w-9 h-5 rounded-full transition-colors disabled:opacity-50 ${
+                    deductStock ? 'bg-orange-50 border border-orange-300' : 'bg-white/10'
                   }`}
                   title="Al activarlo, cada pedido manual registrado descontará stock de los ingredientes (según las recetas vinculadas)"
                 >
@@ -700,7 +700,7 @@ export default function DeliveryMappings() {
               {toggleMsg && (
                 <span
                   className={`text-[10px] mt-0.5 ${
-                    toggleMsg.kind === 'ok' ? 'text-emerald-400' : 'text-red-400'
+                    toggleMsg.kind === 'ok' ? 'text-slate-500' : 'text-red-400'
                   }`}
                 >
                   {toggleMsg.text}
@@ -717,7 +717,7 @@ export default function DeliveryMappings() {
             {false && (
               <button
                 onClick={() => setTab('mappings')}
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                className={`min-h-[44px] inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   tab === 'mappings' ? 'bg-brand-500 text-white' : 'text-gray-400 hover:text-white'
                 }`}
               >
@@ -727,7 +727,7 @@ export default function DeliveryMappings() {
             )}
             <button
               onClick={() => setTab('manual')}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`min-h-[44px] inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 tab === 'manual' ? 'bg-brand-500 text-white' : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -736,7 +736,7 @@ export default function DeliveryMappings() {
             </button>
             <button
               onClick={() => setTab('history')}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`min-h-[44px] inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 tab === 'history' ? 'bg-brand-500 text-white' : 'text-gray-400 hover:text-white'
               }`}
             >
@@ -765,7 +765,7 @@ export default function DeliveryMappings() {
               <p className="text-sm text-red-400/90 mt-1">{error}</p>
               <button
                 onClick={loadAll}
-                className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 transition-colors"
+                className="min-h-[44px] mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm hover:bg-red-700 transition-colors"
               >
                 <RefreshCw className="w-4 h-4" /> Reintentar
               </button>
@@ -809,7 +809,7 @@ export default function DeliveryMappings() {
                 <button
                   onClick={handleCreateMapping}
                   disabled={creating || !newExternalName.trim() || !newProductId}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 disabled:bg-white/10 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                  className="min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 disabled:bg-white/10 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
                 >
                   <Plus className="w-4 h-4" />
                   {creating ? 'Guardando…' : 'Agregar mapeo'}
@@ -841,7 +841,7 @@ export default function DeliveryMappings() {
                         →
                       </div>
                       <div className="md:col-span-5">
-                        <span className="inline-flex items-center gap-1.5 text-sm text-emerald-400">
+                        <span className="inline-flex items-center gap-1.5 text-sm text-slate-500">
                           <CheckCircle2 className="w-4 h-4" />
                           {m.product_name ?? 'Producto'}
                         </span>
@@ -855,8 +855,8 @@ export default function DeliveryMappings() {
             {/* Items sin mapear detectados (tabla restaurada de f6c582d) */}
             {items.length === 0 ? (
               <div className="bg-white/5 rounded-2xl border border-white/10 p-12 text-center">
-                <div className="w-16 h-16 mx-auto bg-emerald-500/10 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-400" />
+                <div className="w-16 h-16 mx-auto bg-slate-500 rounded-full flex items-center justify-center mb-4">
+                  <CheckCircle2 className="w-8 h-8 text-slate-500" />
                 </div>
                 <h3 className="text-lg font-bold text-white">
                   {mappings.length > 0
@@ -885,7 +885,7 @@ export default function DeliveryMappings() {
                   </div>
                   <button
                     onClick={handleAutoMatch}
-                    className="inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-brand-400 bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/20 transition-colors"
+                    className="min-h-[44px] inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-brand-400 bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/20 transition-colors"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     Auto-match
@@ -963,7 +963,7 @@ export default function DeliveryMappings() {
                             <button
                               onClick={() => handleSave(item)}
                               disabled={!selected || isSaving}
-                              className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 disabled:bg-white/10 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
+                              className="min-h-[44px] w-full md:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 disabled:bg-white/10 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
                             >
                               {isSaving ? (
                                 <>
@@ -1060,14 +1060,14 @@ export default function DeliveryMappings() {
                               key={p.id}
                               type="button"
                               onClick={() => addProductToOrder(p.id)}
-                              className={`relative text-left p-2.5 rounded-xl border transition-all active:scale-[0.97] ${
+                              className={`min-h-[44px] relative text-left p-2.5 rounded-xl border transition-all active:scale-[0.97] ${
                                 inOrderItem
                                   ? 'border-brand-500 bg-brand-500/10 ring-1 ring-brand-500/40'
                                   : 'border-white/10 bg-white/5 hover:border-brand-500/40 hover:bg-white/10'
                               }`}
                             >
                               {isMapped && (
-                                <span className="absolute top-1.5 right-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">
+                                <span className="absolute top-1.5 right-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-500 text-slate-500 border border-slate-200">
                                   mapeado
                                 </span>
                               )}
@@ -1140,7 +1140,7 @@ export default function DeliveryMappings() {
                           <button
                             onClick={() => changeManualQty(it.key, -1)}
                             disabled={it.quantity <= 1}
-                            className="w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center transition-colors"
                             title="Restar (mínimo 1)"
                           >
                             <Minus className="w-3.5 h-3.5" />
@@ -1150,7 +1150,7 @@ export default function DeliveryMappings() {
                           </span>
                           <button
                             onClick={() => changeManualQty(it.key, 1)}
-                            className="w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 flex items-center justify-center transition-colors"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-7 h-7 rounded-lg border border-white/10 bg-white/5 text-gray-300 hover:bg-white/10 flex items-center justify-center transition-colors"
                             title="Sumar"
                           >
                             <Plus className="w-3.5 h-3.5" />
@@ -1163,7 +1163,7 @@ export default function DeliveryMappings() {
                           onClick={() =>
                             setManualItems((prev) => prev.filter((x) => x.key !== it.key))
                           }
-                          className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0"
                           title="Quitar"
                         >
                           <X className="w-4 h-4" />
@@ -1258,7 +1258,7 @@ export default function DeliveryMappings() {
                                   prev.filter((r) => r.key !== row.key)
                                 )
                               }
-                              className="p-1 rounded-md text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0"
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 rounded-md text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0"
                               title="Quitar comisión"
                             >
                               <X className="w-3.5 h-3.5" />
@@ -1310,7 +1310,7 @@ export default function DeliveryMappings() {
                           { key: `c-${Date.now()}`, name: '', type: 'amount', value: '' },
                         ])
                       }
-                      className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-brand-400 bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/20 transition-colors"
+                      className="min-h-[44px] w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-brand-400 bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/20 transition-colors"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       Agregar comisión
@@ -1331,9 +1331,9 @@ export default function DeliveryMappings() {
                     <span>Total</span>
                     <span className="tabular-nums">{fmtCLP(manualTotal)}</span>
                   </div>
-                  <div className="flex justify-between items-center rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-3 py-2">
-                    <span className="font-bold text-emerald-300 text-sm">TE QUEDA</span>
-                    <span className="font-bold text-emerald-300 tabular-nums text-base">
+                  <div className="flex justify-between items-center rounded-lg bg-slate-500 border border-slate-200 px-3 py-2">
+                    <span className="font-bold text-slate-500 text-sm">TE QUEDA</span>
+                    <span className="font-bold text-slate-500 tabular-nums text-base">
                       {fmtCLP(manualNet)}
                     </span>
                   </div>
@@ -1341,7 +1341,7 @@ export default function DeliveryMappings() {
                 <button
                   onClick={() => submitManualOrder()}
                   disabled={submitting || manualItems.length === 0}
-                  className="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-brand-500 hover:bg-brand-600 disabled:bg-white/10 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
+                  className="min-h-[44px] mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-bold text-white bg-brand-500 hover:bg-brand-600 disabled:bg-white/10 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors"
                 >
                   {submitting ? (
                     <>
@@ -1375,7 +1375,7 @@ export default function DeliveryMappings() {
               <button
                 onClick={() => loadHistory(historyPage)}
                 disabled={historyLoading}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-50"
+                className="min-h-[44px] inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${historyLoading ? 'animate-spin' : ''}`} />
                 Actualizar
@@ -1419,7 +1419,7 @@ export default function DeliveryMappings() {
                             Comisiones{' '}
                             {h.totals.totalComisiones != null ? fmtCLP(h.totals.totalComisiones) : '—'}
                           </span>
-                          <span className="font-bold text-emerald-300">
+                          <span className="font-bold text-slate-500">
                             Te queda {h.totals.neto != null ? fmtCLP(h.totals.neto) : '—'}
                           </span>
                         </div>
@@ -1436,7 +1436,7 @@ export default function DeliveryMappings() {
                             totals: h.totals,
                           })
                         }
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-brand-400 bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/20 transition-colors flex-shrink-0 no-print"
+                        className="min-h-[44px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-brand-400 bg-brand-500/10 border border-brand-500/30 hover:bg-brand-500/20 transition-colors flex-shrink-0 no-print"
                       >
                         <Printer className="w-3.5 h-3.5" />
                         Ticket
@@ -1449,7 +1449,7 @@ export default function DeliveryMappings() {
                     <button
                       onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
                       disabled={historyPage <= 1 || historyLoading}
-                      className="px-3 py-1.5 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-40"
+                      className="min-h-[44px] px-3 py-1.5 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-40"
                     >
                       ← Anterior
                     </button>
@@ -1459,7 +1459,7 @@ export default function DeliveryMappings() {
                     <button
                       onClick={() => setHistoryPage((p) => p + 1)}
                       disabled={historyPage >= Math.ceil(historyTotal / 20) || historyLoading}
-                      className="px-3 py-1.5 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-40"
+                      className="min-h-[44px] px-3 py-1.5 rounded-md bg-white/5 border border-white/10 hover:bg-white/10 disabled:opacity-40"
                     >
                       Siguiente →
                     </button>
@@ -1475,19 +1475,19 @@ export default function DeliveryMappings() {
           PROHIBIDO reutilizar estilos de comanda de cocina). Contenedor dedicado
           + @media print ocultando el resto de la UI. */}
       {ticketData && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm no-print"
+        createPortal(<div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm no-print"
           onClick={() => setTicketData(null)}
         >
           <div
-            className="bg-gray-900 border border-white/10 rounded-xl max-w-sm w-full max-h-[85vh] overflow-y-auto"
+            className="bg-white border border-slate-200 rounded-xl max-w-sm w-full max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between">
-              <span className="text-sm font-semibold text-white">Ticket interno</span>
+            <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+              <span className="text-sm font-semibold text-slate-900">Ticket interno</span>
               <button
                 onClick={() => setTicketData(null)}
-                className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -1576,14 +1576,14 @@ export default function DeliveryMappings() {
               <div className="flex gap-2 mt-4">
                 <button
                   onClick={() => window.print()}
-                  className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold text-white bg-brand-500 hover:bg-brand-600 transition-colors"
+                  className="min-h-[44px] flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold text-slate-900 bg-brand-500 hover:bg-brand-600 transition-colors"
                 >
                   <Printer className="w-4 h-4" />
                   Imprimir ticket
                 </button>
                 <button
                   onClick={() => setTicketData(null)}
-                  className="px-4 py-2.5 rounded-lg text-sm text-gray-300 bg-white/5 border border-white/10 hover:bg-white/10"
+                  className="min-h-[44px] px-4 py-2.5 rounded-lg text-sm text-slate-700 bg-slate-50 border border-slate-200 hover:bg-slate-100"
                 >
                   Cerrar
                 </button>
@@ -1597,7 +1597,7 @@ export default function DeliveryMappings() {
               </Link>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
     </div>
     </>

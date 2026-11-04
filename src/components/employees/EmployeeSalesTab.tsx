@@ -35,7 +35,7 @@ export function EmployeeSalesTab({ employeeId }: Props) {
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-12">
-      <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
+      <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
     </div>
   );
 
@@ -61,8 +61,8 @@ export function EmployeeSalesTab({ employeeId }: Props) {
           <p className="text-xl font-black text-gray-800">{totalOrders}</p>
           <p className="text-xs text-gray-400 mt-0.5">Órdenes</p>
         </div>
-        <div className="bg-indigo-50 rounded-xl p-3 text-center">
-          <p className="text-sm font-black text-indigo-600 leading-tight">{formatCLP(totalSales)}</p>
+        <div className="bg-slate-50 rounded-xl p-3 text-center">
+          <p className="text-sm font-black text-slate-700 leading-tight">{formatCLP(totalSales)}</p>
           <p className="text-xs text-gray-400 mt-0.5">En ventas</p>
         </div>
         <div className="bg-gray-50 rounded-xl p-3 text-center">

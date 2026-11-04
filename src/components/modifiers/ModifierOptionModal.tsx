@@ -90,7 +90,7 @@ export const ModifierOptionModal: React.FC<ModifierOptionModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-[100]"
         onClick={onClose}
       />
 
@@ -109,7 +109,7 @@ export const ModifierOptionModal: React.FC<ModifierOptionModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -127,7 +127,7 @@ export const ModifierOptionModal: React.FC<ModifierOptionModalProps> = ({
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
                 placeholder="Ej: Mediana, Queso extra, Masa gruesa..."
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -147,14 +147,14 @@ export const ModifierOptionModal: React.FC<ModifierOptionModalProps> = ({
                 }
                 placeholder="0"
                 step="100"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
               />
               <p className="mt-1 text-xs text-gray-500">
                 Ingresa un valor positivo para agregar costo, negativo para descuento, o 0 sin
                 cambio
               </p>
               {formData.priceAdjustment !== 0 && (
-                <p className="mt-2 text-sm font-semibold text-blue-600">
+                <p className="mt-2 text-sm font-semibold text-slate-700">
                   {formData.priceAdjustment > 0 ? '+' : ''}{formatCurrency(formData.priceAdjustment)}
                 </p>
               )}
@@ -167,7 +167,7 @@ export const ModifierOptionModal: React.FC<ModifierOptionModalProps> = ({
                 id="isDefault"
                 checked={formData.isDefault}
                 onChange={(e) => handleChange('isDefault', e.target.checked)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-slate-700 border-gray-300 rounded focus:ring-orange-500"
               />
               <label htmlFor="isDefault" className="text-sm font-medium text-gray-700">
                 Marcar como opción por defecto
@@ -175,8 +175,8 @@ export const ModifierOptionModal: React.FC<ModifierOptionModalProps> = ({
             </div>
 
             {/* Preview */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm font-semibold text-blue-900 mb-2">👁️ Vista Previa</p>
+            <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+              <p className="text-sm font-semibold text-slate-700 mb-2">👁️ Vista Previa</p>
               <div className="bg-white rounded-lg p-3 border border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
@@ -192,7 +192,7 @@ export const ModifierOptionModal: React.FC<ModifierOptionModalProps> = ({
                     </p>
                   </div>
                   {formData.isDefault && (
-                    <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
+                    <span className="text-xs px-2 py-1 rounded bg-slate-100 text-slate-700">
                       Por defecto
                     </span>
                   )}
@@ -205,13 +205,13 @@ export const ModifierOptionModal: React.FC<ModifierOptionModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="min-h-[44px] flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="min-h-[44px] flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
               >
                 {mode === 'create' ? 'Crear Opción' : 'Guardar Cambios'}
               </button>

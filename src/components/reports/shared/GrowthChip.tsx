@@ -8,7 +8,7 @@ export function GrowthChip({ curr, prev }: { curr: number; prev: number }) {
   return (
     <div className={cn(
       'flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full',
-      pos ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
+      pos ? 'bg-slate-50 text-slate-700' : 'bg-red-50 text-red-600'
     )}>
       {pos ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
       {pos ? '+' : ''}{pct.toFixed(1)}%

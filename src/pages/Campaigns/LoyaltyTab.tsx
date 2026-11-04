@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { Gift, Crown, TrendingUp, Save, Loader2, Coins, RefreshCw } from 'lucide-react';
 import fidelizacionService from '@/services/fidelizacionService';
@@ -18,10 +19,10 @@ interface CustomerRow {
 
 const SEGMENT_COLORS: Record<string, string> = {
   VIP:      'bg-yellow-100 text-yellow-800',
-  FREQUENT: 'bg-blue-100   text-blue-800',
-  REGULAR:  'bg-gray-100   text-gray-700',
-  NEW:      'bg-green-100  text-green-800',
-  INACTIVE: 'bg-red-100    text-red-700',
+  FREQUENT: 'bg-slate-100 text-slate-700',
+  REGULAR:  'bg-gray-100 text-gray-700',
+  NEW:      'bg-slate-100 text-slate-700',
+  INACTIVE: 'bg-red-100 text-red-700',
   AT_RISK:  'bg-orange-100 text-orange-700',
 };
 
@@ -141,7 +142,7 @@ export function LoyaltyTab() {
         {loadError && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
             <span>{loadError}</span>
-            <button onClick={load} className="text-xs underline font-medium ml-4">Reintentar</button>
+            <button onClick={load} className="min-h-[44px] text-xs underline font-medium ml-4">Reintentar</button>
           </div>
         )}
         <div className="space-y-6 animate-pulse">
@@ -158,16 +159,16 @@ export function LoyaltyTab() {
       {loadError && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
           <span>{loadError}</span>
-          <button onClick={load} className="text-xs underline font-medium ml-4">Reintentar</button>
+          <button onClick={load} className="min-h-[44px] text-xs underline font-medium ml-4">Reintentar</button>
         </div>
       )}
       {/* ── Métricas globales ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'Puntos emitidos',     value: fmt(totalPointsIssued),  icon: Coins,      color: 'bg-amber-50 text-amber-700 border-amber-100' },
-          { label: 'Clientes con puntos', value: fmt(customersWithPoints), icon: Gift,       color: 'bg-green-50 text-green-700 border-green-100' },
-          { label: 'En ranking top 10',    value: fmt(topByPoints.length),  icon: Crown,      color: 'bg-blue-50  text-blue-700  border-blue-100'  },
-          { label: 'Devolución sobre lo gastado', value: `${returnPctOf(settings?.loyalty ?? DEFAULT_RULES)}%`, icon: TrendingUp, color: 'bg-purple-50 text-purple-700 border-purple-100' },
+          { label: 'Clientes con puntos', value: fmt(customersWithPoints), icon: Gift,       color: 'bg-slate-50 text-slate-700 border-slate-200' },
+          { label: 'En ranking top 10',    value: fmt(topByPoints.length),  icon: Crown,      color: 'bg-slate-50 text-slate-700 border-slate-200'  },
+          { label: 'Devolución sobre lo gastado', value: `${returnPctOf(settings?.loyalty ?? DEFAULT_RULES)}%`, icon: TrendingUp, color: 'bg-slate-50 text-slate-700 border-slate-200' },
         ].map((m) => {
           const Icon = m.icon;
           return (
@@ -239,7 +240,7 @@ export function LoyaltyTab() {
             onClick={handleSaveConfig}
             disabled={saving || returnPctOf(editRules) > (settings?.maxReturnPct ?? 20)
               || !(editRules.maxRedeemPctPerSale >= 1 && editRules.maxRedeemPctPerSale <= 100) /* HOTFIX 298 */}
-            className="flex items-center gap-2 h-11 px-4 bg-[#F97316] text-white rounded-lg hover:bg-[#EA580C] text-sm font-semibold disabled:opacity-50 transition-colors"
+            className="min-h-[44px] flex items-center gap-2 h-11 px-4 bg-[#F97316] text-white rounded-lg hover:bg-[#EA580C] text-sm font-semibold disabled:opacity-50 transition-colors"
           >
             {saving ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -269,7 +270,7 @@ export function LoyaltyTab() {
             <button
               onClick={() => setConfirmRecalc(true)}
               disabled={recalculating}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-amber-300 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 disabled:opacity-50 transition-colors font-medium"
+              className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 text-xs border border-amber-300 bg-amber-50 text-amber-700 rounded-lg hover:bg-amber-100 disabled:opacity-50 transition-colors font-medium"
               title="Asigna puntos a clientes con compras anteriores al sistema de puntos"
             >
               {recalculating ? (
@@ -281,7 +282,7 @@ export function LoyaltyTab() {
             </button>
             <button
               onClick={load}
-              className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600"
+              className="min-h-[44px] flex items-center gap-1 px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600"
             >
               <RefreshCw className="h-3 w-3" />
               Actualizar
@@ -355,7 +356,7 @@ export function LoyaltyTab() {
 
       {/* Confirm recalculate modal */}
       {confirmRecalc && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        createPortal(<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
             <h3 className="font-semibold text-gray-900 mb-2">¿Recalcular puntos históricos?</h3>
             <p className="text-sm text-gray-500 mb-5">
@@ -364,19 +365,19 @@ export function LoyaltyTab() {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setConfirmRecalc(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
+                className="min-h-[44px] px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => { setConfirmRecalc(false); handleRecalculate(); }}
-                className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600"
+                className="min-h-[44px] px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600"
               >
                 Confirmar
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
     </div>
   );

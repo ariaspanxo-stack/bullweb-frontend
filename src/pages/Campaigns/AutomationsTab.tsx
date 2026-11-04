@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { UserX, Cake, Smile, Crown, PlayCircle, Settings2, CheckCircle2, XCircle, Edit2, X, Loader2, TrendingUp } from 'lucide-react';
 import fidelizacionService from '@/services/fidelizacionService';
@@ -39,7 +40,7 @@ function AutomationCard({
           {onEdit && (
             <button
               onClick={onEdit}
-              className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               title="Editar configuración"
             >
               <Edit2 className="h-3.5 w-3.5" />
@@ -65,18 +66,18 @@ function AutomationCard({
       <div className="mt-4 flex items-center justify-between pt-3 border-t border-gray-100">
         <div className="flex items-center gap-2 flex-wrap">
           {enabled ? (
-            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+            <CheckCircle2 className="h-3.5 w-3.5 text-slate-500" />
           ) : (
             <XCircle className="h-3.5 w-3.5 text-gray-400" />
           )}
-          <span className={`text-xs font-medium ${enabled ? 'text-green-600' : 'text-gray-400'}`}>
+          <span className={`text-xs font-medium ${enabled ? 'text-slate-700' : 'text-gray-400'}`}>
             {enabled ? 'Activo' : 'Desactivado'}
           </span>
           {statValue > 0 && (
             <>
               <span className="text-gray-300">·</span>
               <span className="text-xs text-gray-500 flex items-center gap-1">
-                <TrendingUp className="h-3 w-3 text-blue-400" />
+                <TrendingUp className="h-3 w-3 text-slate-500" />
                 {statValue.toLocaleString('es-CL')} {statLabel}
               </span>
             </>
@@ -92,7 +93,7 @@ function AutomationCard({
           <button
             onClick={onTest}
             disabled={testing}
-            className="flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 font-medium disabled:opacity-50"
+            className="min-h-[44px] flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700 font-medium disabled:opacity-50"
           >
             <PlayCircle className="h-3.5 w-3.5" />
             {testing ? 'Enviando...' : 'Probar'}
@@ -144,11 +145,11 @@ function AutomationEditModal({ automationType, settings, onSave, onClose }: Edit
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
       <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h3 className="font-semibold text-gray-900">{titles[automationType]}</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -211,9 +212,9 @@ function AutomationEditModal({ automationType, settings, onSave, onClose }: Edit
           )}
 
           {automationType === 'welcome' && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-700">
               <p className="font-medium mb-1">Automatización sin configuración adicional</p>
-              <p className="text-xs text-blue-600">
+              <p className="text-xs text-slate-700">
                 El email de bienvenida se envía automáticamente a clientes nuevos. 
                 Para personalizar el contenido, edita la plantilla de email.
               </p>
@@ -241,20 +242,20 @@ function AutomationEditModal({ automationType, settings, onSave, onClose }: Edit
         </div>
 
         <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-white">
+          <button onClick={onClose} className="min-h-[44px] px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-white">
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-5 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 disabled:opacity-50"
+            className="min-h-[44px] flex items-center gap-1.5 px-5 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 disabled:opacity-50"
           >
             {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
             Guardar cambios
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -309,7 +310,7 @@ function LogsTable({ logs }: { logs: CampaignLog[] }) {
               </td>
               <td className="py-2">
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                  log.status === 'SENT' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'
+                  log.status === 'SENT' ? 'bg-slate-50 text-slate-700' : 'bg-gray-100 text-gray-600'
                 }`}>
                   {log.status}
                 </span>
@@ -425,7 +426,7 @@ export function AutomationsTab() {
         {loadError && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
             <span>{loadError}</span>
-            <button onClick={load} className="text-xs underline font-medium ml-4">Reintentar</button>
+            <button onClick={load} className="min-h-[44px] text-xs underline font-medium ml-4">Reintentar</button>
           </div>
         )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-pulse">
@@ -452,7 +453,7 @@ export function AutomationsTab() {
                     ? 'bg-rose-500/10 text-rose-400 ring-rose-500/20'
                     : (settings as any).usage.sent >= (settings as any).usage.limit * 0.8
                     ? 'bg-amber-500/10 text-amber-400 ring-amber-500/20'
-                    : 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20'
+                    : 'bg-slate-500 text-slate-500 ring-slate-300'
                 }`}
               >
                 {(settings as any).usage.sent}/{(settings as any).usage.limit} emails este mes
@@ -467,7 +468,7 @@ export function AutomationsTab() {
           {saving && <span className="text-xs text-orange-500 animate-pulse">Guardando…</span>}
           <button
             onClick={() => setShowLogs(!showLogs)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600"
+            className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-600"
           >
             <Settings2 className="h-3.5 w-3.5" />
             {showLogs ? 'Ocultar historial' : 'Ver historial'}
@@ -479,7 +480,7 @@ export function AutomationsTab() {
       {loadError && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
           <span>{loadError}</span>
-          <button onClick={load} className="text-xs underline font-medium ml-4">Reintentar</button>
+          <button onClick={load} className="min-h-[44px] text-xs underline font-medium ml-4">Reintentar</button>
         </div>
       )}
 
@@ -487,12 +488,12 @@ export function AutomationsTab() {
       {fStats && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           {[
-            { label: 'Enviados total',  value: fStats.totalSent,     color: 'bg-orange-50  border-orange-100 text-orange-700' },
-            { label: 'Últimos 30 días', value: fStats.last30Days,    color: 'bg-blue-50    border-blue-100   text-blue-700'   },
-            { label: 'Inactivos',       value: fStats.inactiveCount, color: 'bg-red-50     border-red-100    text-red-700'    },
-            { label: 'Cumpleaños',      value: fStats.birthdayCount, color: 'bg-pink-50    border-pink-100   text-pink-700'   },
-            { label: 'Bienvenida',      value: fStats.welcomeCount,  color: 'bg-green-50   border-green-100  text-green-700'  },
-            { label: 'VIP',             value: fStats.vipCount,      color: 'bg-yellow-50  border-yellow-100 text-yellow-700' },
+            { label: 'Enviados total',  value: fStats.totalSent,     color: 'bg-orange-50 border-orange-100 text-orange-700' },
+            { label: 'Últimos 30 días', value: fStats.last30Days,    color: 'bg-slate-50 border-slate-200 text-slate-700'   },
+            { label: 'Inactivos',       value: fStats.inactiveCount, color: 'bg-red-50 border-red-100 text-red-700'    },
+            { label: 'Cumpleaños',      value: fStats.birthdayCount, color: 'bg-slate-50 border-slate-200 text-slate-700'   },
+            { label: 'Bienvenida',      value: fStats.welcomeCount,  color: 'bg-slate-50 border-slate-200 text-slate-700'  },
+            { label: 'VIP',             value: fStats.vipCount,      color: 'bg-yellow-50 border-yellow-100 text-yellow-700' },
           ].map((s) => (
             <div key={s.label} className={`border rounded-xl px-4 py-3 text-center ${s.color}`}>
               <p className="text-xl font-bold">{Number(s.value ?? 0).toLocaleString('es-CL')}</p>
@@ -521,8 +522,8 @@ export function AutomationsTab() {
         />
         <AutomationCard
           icon={Cake}
-          iconColor="text-pink-500"
-          bgColor="bg-pink-50"
+          iconColor="text-slate-500"
+          bgColor="bg-slate-50"
           title="Felicitar cumpleaños"
           description={`Regalo: "${settings.birthdayGift}" a clientes que cumplen hoy. Ejecución: 08:00.`}
           enabled={settings.autoBirthdayEnabled}
@@ -536,8 +537,8 @@ export function AutomationsTab() {
         />
         <AutomationCard
           icon={Smile}
-          iconColor="text-blue-500"
-          bgColor="bg-blue-50"
+          iconColor="text-slate-500"
+          bgColor="bg-slate-50"
           title="Bienvenida a nuevos clientes"
           description="Email de bienvenida a clientes registrados en la última hora. Ejecución: cada hora."
           enabled={settings.autoWelcomeEnabled}
@@ -575,7 +576,7 @@ export function AutomationsTab() {
             <div className="mt-4 text-center">
               <button
                 onClick={() => { setLogLimit((l) => l + 50); load(); }}
-                className="text-xs text-orange-600 hover:text-orange-700 font-medium underline"
+                className="min-h-[44px] text-xs text-orange-600 hover:text-orange-700 font-medium underline"
               >
                 Cargar más
               </button>
@@ -586,7 +587,7 @@ export function AutomationsTab() {
 
       {/* Confirm test modal — con input de email y feedback */}
       {confirmTest && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+        createPortal(<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
             <h3 className="font-semibold text-gray-900 mb-1">Ejecutar prueba de email</h3>
             <p className="text-sm text-gray-500 mb-4">
@@ -607,27 +608,27 @@ export function AutomationsTab() {
               <p className="text-xs text-red-600 mb-2">{testError}</p>
             )}
             {testSuccess && (
-              <p className="text-xs text-green-600 font-medium mb-2">Email enviado correctamente ✅</p>
+              <p className="text-xs text-slate-700 font-medium mb-2">Email enviado correctamente ✅</p>
             )}
 
             <div className="flex gap-3 justify-end mt-3">
               <button
                 onClick={() => { setConfirmTest(null); setTestEmail(''); setTestError(null); setTestSuccess(false); }}
                 disabled={testLoading}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50"
+                className="min-h-[44px] px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleConfirmTestEmail}
                 disabled={testLoading || testSuccess}
-                className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {testLoading ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Enviando...</> : 'Confirmar envío'}
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
 
       {/* Edit modal */}

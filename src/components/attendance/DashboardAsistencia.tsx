@@ -133,7 +133,7 @@ export function DashboardAsistencia({ employees }: DashboardAsistenciaProps) {
 
       {/* ── Stats del día ── */}
       <div>
-        <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
+        <h2 className="text-sm font-semibold text-gray-500 tracking-wide mb-3">
           Resumen de hoy — {new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' })}
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -147,7 +147,7 @@ export function DashboardAsistencia({ employees }: DashboardAsistenciaProps) {
             label="Presentes hoy"
             value={presentesHoy}
             sub={`${employees.length > 0 ? Math.round((presentesHoy / employees.length) * 100) : 0}% del equipo`}
-            color="bg-green-50 border-green-100"
+            color="bg-slate-50 border-slate-200"
             icon={CheckCircle}
           />
           <StatCard
@@ -176,7 +176,7 @@ export function DashboardAsistencia({ employees }: DashboardAsistenciaProps) {
         <StatCard
           label="Aún en local"
           value={Math.max(0, presentesHoy - conSalida)}
-          color="bg-indigo-50 border-indigo-100"
+          color="bg-slate-50 border-slate-200"
           icon={LogIn}
         />
         <StatCard
@@ -193,7 +193,7 @@ export function DashboardAsistencia({ employees }: DashboardAsistenciaProps) {
         {/* Turnos */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-            <Clock className="h-4 w-4 text-indigo-500" /> Distribución por turno
+            <Clock className="h-4 w-4 text-slate-500" /> Distribución por turno
           </h3>
           {Object.keys(turnosMap).length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-4">Sin datos de turnos</p>
@@ -209,7 +209,7 @@ export function DashboardAsistencia({ employees }: DashboardAsistenciaProps) {
                     </div>
                     <div className="w-full bg-gray-100 rounded-full h-2">
                       <div
-                        className="bg-indigo-500 h-2 rounded-full transition-all"
+                        className="bg-slate-500 h-2 rounded-full transition-all"
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -223,7 +223,7 @@ export function DashboardAsistencia({ employees }: DashboardAsistenciaProps) {
         {/* Últimos movimientos */}
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
-            <Clock className="h-4 w-4 text-indigo-500" /> Últimos movimientos hoy
+            <Clock className="h-4 w-4 text-slate-500" /> Últimos movimientos hoy
           </h3>
           {ultimosMovimientos.length === 0 ? (
             <p className="text-sm text-gray-400 text-center py-4">Sin movimientos hoy</p>
@@ -233,7 +233,7 @@ export function DashboardAsistencia({ employees }: DashboardAsistenciaProps) {
                 <div key={i} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     {r.type === 'ENTRY'
-                      ? <LogIn  className="h-4 w-4 text-green-500 flex-shrink-0" />
+                      ? <LogIn  className="h-4 w-4 text-slate-500 flex-shrink-0" />
                       : <LogOut className="h-4 w-4 text-gray-400 flex-shrink-0" />}
                     <span className="text-gray-700 truncate max-w-[140px]">
                       {r.employeeName ?? 'Empleado'}

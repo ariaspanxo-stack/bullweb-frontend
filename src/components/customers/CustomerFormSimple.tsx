@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Customer, CustomerFormData } from '../../types/customer.types';
@@ -107,7 +108,7 @@ const CustomerFormSimple: React.FC<CustomerFormSimpleProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    createPortal(<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-gray-200">
@@ -117,7 +118,7 @@ const CustomerFormSimple: React.FC<CustomerFormSimpleProps> = ({
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -137,7 +138,7 @@ const CustomerFormSimple: React.FC<CustomerFormSimpleProps> = ({
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Ej: Juan Pérez González"
@@ -157,7 +158,7 @@ const CustomerFormSimple: React.FC<CustomerFormSimpleProps> = ({
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   disabled={isSubmitting}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                     errors.email ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="correo@ejemplo.com"
@@ -175,7 +176,7 @@ const CustomerFormSimple: React.FC<CustomerFormSimpleProps> = ({
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   disabled={isSubmitting}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                     errors.phone ? 'border-red-500' : 'border-gray-300'
                   }`}
                   placeholder="+56900000000"
@@ -195,7 +196,7 @@ const CustomerFormSimple: React.FC<CustomerFormSimpleProps> = ({
                 value={formData.rut}
                 onChange={(e) => setFormData({ ...formData, rut: e.target.value })}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                   errors.rut ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="12345678-9"
@@ -214,7 +215,7 @@ const CustomerFormSimple: React.FC<CustomerFormSimpleProps> = ({
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 disabled={isSubmitting}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="Calle 123, Departamento 45"
               />
             </div>
@@ -229,7 +230,7 @@ const CustomerFormSimple: React.FC<CustomerFormSimpleProps> = ({
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 disabled={isSubmitting}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 placeholder="Santiago, Chile"
               />
             </div>
@@ -245,7 +246,7 @@ const CustomerFormSimple: React.FC<CustomerFormSimpleProps> = ({
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 disabled={isSubmitting}
                 rows={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
                 placeholder="Preferencias, alergias, notas especiales..."
               />
             </div>
@@ -258,20 +259,20 @@ const CustomerFormSimple: React.FC<CustomerFormSimpleProps> = ({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold disabled:opacity-50"
+            className="min-h-[44px] flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold disabled:opacity-50 disabled:bg-blue-400"
+            className="min-h-[44px] flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold disabled:opacity-50 disabled:bg-blue-400"
           >
             {isSubmitting ? 'Guardando...' : customer ? 'Actualizar' : 'Crear Cliente'}
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 

@@ -41,7 +41,7 @@ export default function SalesChart({ data, type, title, comparison }: SalesChart
         </div>
         {comparison && (
           <div className={`flex items-center gap-1 px-3 py-1.5 rounded-lg ${
-            comparison.isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+            comparison.isPositive ? 'bg-slate-100 text-slate-700' : 'bg-red-100 text-red-700'
           }`}>
             {comparison.isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
             <span className="font-bold">{Math.abs(comparison.value).toFixed(1)}%</span>

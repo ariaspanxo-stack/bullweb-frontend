@@ -48,7 +48,7 @@ function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) =>
     <button
       type="button"
       onClick={() => onChange(!value)}
-      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${value ? 'bg-blue-600' : 'bg-gray-200'}`}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${value ? 'bg-orange-50 border border-orange-300' : 'bg-gray-200'}`}
     >
       <span
         className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${value ? 'translate-x-6' : 'translate-x-1'}`}
@@ -66,8 +66,8 @@ function Section({ title, icon: Icon, children }: {
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
-        <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
-          <Icon className="w-4 h-4 text-blue-600" />
+        <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center">
+          <Icon className="w-4 h-4 text-slate-700" />
         </div>
         <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
       </div>
@@ -150,7 +150,7 @@ export default function AppSettings() {
             <select
               value={prefs.autoRefreshInterval}
               onChange={e => update('autoRefreshInterval', Number(e.target.value))}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value={0}>Desactivado</option>
               <option value={5}>5 segundos</option>
@@ -167,7 +167,7 @@ export default function AppSettings() {
             <select
               value={prefs.defaultDateRange}
               onChange={e => update('defaultDateRange', e.target.value as AppPreferences['defaultDateRange'])}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value="7d">Últimos 7 días</option>
               <option value="30d">Últimos 30 días</option>
@@ -197,7 +197,7 @@ export default function AppSettings() {
             <select
               value={prefs.language}
               onChange={e => update('language', e.target.value as AppPreferences['language'])}
-              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value="es-CL">Español (Chile)</option>
               <option value="es-PE">Español (Perú)</option>
@@ -228,7 +228,7 @@ export default function AppSettings() {
         <Section title="Configuración del sistema" icon={ShieldCheck}>
           <button
             onClick={() => navigate('/admin/settings')}
-            className="w-full flex items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left"
+            className="min-h-[44px] w-full flex items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left"
           >
             <div>
               <p className="text-sm font-medium text-gray-800">Ajustes del sistema</p>
@@ -240,7 +240,7 @@ export default function AppSettings() {
           </button>
           <button
             onClick={() => navigate('/admin')}
-            className="w-full flex items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left"
+            className="min-h-[44px] w-full flex items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left"
           >
             <div>
               <p className="text-sm font-medium text-gray-800">Panel de administración</p>
@@ -252,12 +252,12 @@ export default function AppSettings() {
       )}
 
       {/* Acerca de */}
-      <div className="bg-blue-50 border border-blue-100 rounded-xl px-6 py-4 flex items-start gap-3">
-        <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-        <div className="text-xs text-blue-700 space-y-0.5">
+      <div className="bg-slate-50 border border-slate-200 rounded-xl px-6 py-4 flex items-start gap-3">
+        <Info className="w-4 h-4 text-slate-500 mt-0.5 flex-shrink-0" />
+        <div className="text-xs text-slate-700 space-y-0.5">
           <p className="font-semibold">Bullweb 3.0</p>
           <p>Sistema de gestión para restaurantes · Entorno de desarrollo</p>
-          <p className="text-blue-500">API: 72.62.86.188 · v1.0.0</p>
+          <p className="text-slate-500">API: 72.62.86.188 · v1.0.0</p>
         </div>
       </div>
 
@@ -265,10 +265,10 @@ export default function AppSettings() {
       <div className="flex justify-end pb-4">
         <button
           onClick={handleSave}
-          className={`flex items-center gap-2 px-6 py-2.5 text-sm font-semibold rounded-lg transition-colors ${
+          className={`min-h-[44px] flex items-center gap-2 px-6 py-2.5 text-sm font-semibold rounded-lg transition-colors ${
             saved
-              ? 'bg-green-600 text-white'
-              : 'bg-blue-600 text-white hover:bg-blue-700'
+              ? 'bg-orange-500 text-white'
+              : 'bg-orange-500 text-white hover:bg-orange-600'
           }`}
         >
           {saved ? <Check className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}

@@ -1,3 +1,4 @@
+import { displayName } from '@/utils/displayFormat';
 import React from 'react';
 import { PencilIcon, CopyIcon, Info } from 'lucide-react';
 import type { Product } from '../../types/product.types';
@@ -86,7 +87,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                   </td>
                   <td className="px-4 py-3">
                     <div className="max-w-xs">
-                      <p className="text-sm font-semibold text-[#0F172A] truncate">{product.name}</p>
+                      <p className="text-sm font-semibold text-[#0F172A] truncate">{displayName(product.name)}</p>
                       {product.description && <p className="text-xs text-[#64748B] truncate">{product.description}</p>}
                       {product.popular && <span className="inline-flex items-center mt-1 text-xs text-[#92400E]">⭐ Popular</span>}
                     </div>

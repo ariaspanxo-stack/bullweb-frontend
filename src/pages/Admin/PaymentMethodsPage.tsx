@@ -7,6 +7,7 @@
  *  - Panel izquierdo: lista de métodos con drag-to-reorder
  *  - Panel derecho: formulario de edición
  */
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef } from 'react';
 import {
   GripVertical,
@@ -33,11 +34,11 @@ import toast from 'react-hot-toast';
 function MethodIcon({ name }: { name: string }) {
   const n = name.toLowerCase();
   if (n.includes('efectivo') || n.includes('cash'))
-    return <Banknote size={16} className="text-green-600" />;
+    return <Banknote size={16} className="text-slate-700" />;
   if (n.includes('débito') || n.includes('debito') || n.includes('crédito') || n.includes('credito') || n.includes('tarjeta'))
-    return <CreditCard size={16} className="text-blue-600" />;
+    return <CreditCard size={16} className="text-slate-700" />;
   if (n.includes('transferencia') || n.includes('cuenta') || n.includes('cheque'))
-    return <Building2 size={16} className="text-violet-600" />;
+    return <Building2 size={16} className="text-slate-700" />;
   return <CreditCard size={16} className="text-gray-500" />;
 }
 
@@ -61,11 +62,11 @@ function NewMethodModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 z-[100] bg-black/40 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-gray-900">Nuevo Medio de Pago</h3>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600">
             <X size={20} />
           </button>
         </div>
@@ -76,25 +77,25 @@ function NewMethodModal({
           onChange={e => setName(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()}
           placeholder="Ej: MercadoPago"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 mb-4"
         />
         <div className="flex gap-2 justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="min-h-[44px] px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={submit}
             disabled={!name.trim()}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="min-h-[44px] px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Crear
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -240,9 +241,9 @@ export default function PaymentMethodsPage() {
         <div className="flex gap-2">
           <button
             onClick={() => setReordering(r => !r)}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+            className={`min-h-[44px] flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
               reordering
-                ? 'bg-indigo-600 text-white border-indigo-600'
+                ? 'bg-orange-50 text-orange-700 border-slate-200 border border-orange-300'
                 : 'text-gray-700 bg-white border-gray-300 hover:bg-gray-50'
             }`}
           >
@@ -251,7 +252,7 @@ export default function PaymentMethodsPage() {
           </button>
           <button
             onClick={() => setShowNew(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+            className="min-h-[44px] flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors"
           >
             <Plus size={15} />
             Nuevo Medio de Pago
@@ -281,9 +282,9 @@ export default function PaymentMethodsPage() {
                 className={`
                   flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all text-sm
                   ${selected?.id === m.id && !reordering
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-slate-500 text-white'
                     : 'text-gray-700 hover:bg-gray-100'}
-                  ${dragOverId === m.id ? 'ring-2 ring-indigo-400 bg-indigo-50' : ''}
+                  ${dragOverId === m.id ? 'ring-2 ring-slate-300 bg-slate-50' : ''}
                   ${draggingId === m.id ? 'opacity-40' : ''}
                   ${!m.active ? 'opacity-50' : ''}
                 `}
@@ -314,7 +315,7 @@ export default function PaymentMethodsPage() {
                 {selected && (
                   <button
                     onClick={() => handleDelete(selected.id)}
-                    className="flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 transition-colors"
+                    className="min-h-[44px] flex items-center gap-1.5 text-xs text-red-500 hover:text-red-700 transition-colors"
                   >
                     <Trash2 size={13} />
                     Eliminar
@@ -328,7 +329,7 @@ export default function PaymentMethodsPage() {
                 <input
                   value={editing.name}
                   onChange={e => patchEditing({ name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -347,10 +348,10 @@ export default function PaymentMethodsPage() {
                 </div>
                 <button
                   onClick={() => patchEditing({ active: !editing.active })}
-                  className="transition-colors"
+                  className="min-h-[44px] transition-colors"
                 >
                   {editing.active ? (
-                    <ToggleRight size={32} className="text-indigo-600" />
+                    <ToggleRight size={32} className="text-slate-700" />
                   ) : (
                     <ToggleLeft size={32} className="text-gray-300" />
                   )}
@@ -374,9 +375,9 @@ export default function PaymentMethodsPage() {
                       <button
                         key={opt.value}
                         onClick={() => patchEditing({ arqueoMode: opt.value as PaymentMethod['arqueoMode'] })}
-                        className={`flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                        className={`min-h-[44px] flex-1 py-2 text-sm font-medium rounded-lg border transition-colors ${
                           editing.arqueoMode === opt.value
-                            ? 'bg-indigo-600 text-white border-indigo-600'
+                            ? 'bg-orange-50 text-orange-700 border-slate-200 border border-orange-300'
                             : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
                         }`}
                       >
@@ -398,10 +399,10 @@ export default function PaymentMethodsPage() {
                   </div>
                   <button
                     onClick={() => patchEditing({ manualBalance: !editing.manualBalance })}
-                    className="transition-colors ml-4 flex-shrink-0"
+                    className="min-h-[44px] transition-colors ml-4 flex-shrink-0"
                   >
                     {editing.manualBalance ? (
-                      <ToggleRight size={32} className="text-indigo-600" />
+                      <ToggleRight size={32} className="text-slate-700" />
                     ) : (
                       <ToggleLeft size={32} className="text-gray-300" />
                     )}
@@ -413,7 +414,7 @@ export default function PaymentMethodsPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={handleCancel}
-                  className="flex items-center gap-1.5 px-5 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="min-h-[44px] flex items-center gap-1.5 px-5 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   <X size={14} />
                   Cancelar
@@ -421,7 +422,7 @@ export default function PaymentMethodsPage() {
                 <button
                   onClick={handleSave}
                   disabled={!isDirty || isSaving}
-                  className="flex items-center gap-1.5 px-5 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="min-h-[44px] flex items-center gap-1.5 px-5 py-2 text-sm font-medium text-white bg-orange-500 rounded-lg hover:bg-orange-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   <Save size={14} />
                   {isSaving ? 'Guardando...' : 'Guardar'}

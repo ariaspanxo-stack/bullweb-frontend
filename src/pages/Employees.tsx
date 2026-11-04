@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { employeesService } from '@/services/employeesService';
@@ -33,8 +34,8 @@ type Tab = 'employees' | 'roles' | 'attendance' | 'justificativos' | 'alertas' |
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const BADGE: Record<string, string> = {
-  active:   'bg-green-100 text-green-700',
-  inactive: 'bg-gray-100  text-gray-500',
+  active:   'bg-slate-100 text-slate-700',
+  inactive: 'bg-gray-100 text-gray-500',
 };
 // ─── Helpers ────────────────────────────────────────────────────────────────────────────
 const formatTime = (dt: string | Date) =>
@@ -81,24 +82,24 @@ const labelByType: Record<string, string> = {
 };
 
 const colorByType: Record<string, string> = {
-  ENTRADA:          'bg-green-400',
+  ENTRADA:          'bg-slate-500',
   SALIDA_COLACION:  'bg-yellow-400',
   ENTRADA_COLACION: 'bg-orange-400',
   SALIDA:           'bg-red-400',
-  ENTRY:            'bg-green-400',
+  ENTRY:            'bg-slate-500',
   EXIT:             'bg-red-400',
-  IN:               'bg-green-400',
+  IN:               'bg-slate-500',
   OUT:              'bg-red-400',
 };
 
 const badgeByType: Record<string, string> = {
-  ENTRADA:          'bg-green-100 text-green-700',
+  ENTRADA:          'bg-slate-100 text-slate-700',
   SALIDA_COLACION:  'bg-yellow-100 text-yellow-700',
   ENTRADA_COLACION: 'bg-orange-100 text-orange-700',
   SALIDA:           'bg-red-100 text-red-700',
-  ENTRY:            'bg-green-100 text-green-700',
+  ENTRY:            'bg-slate-100 text-slate-700',
   EXIT:             'bg-red-100 text-red-700',
-  IN:               'bg-green-100 text-green-700',
+  IN:               'bg-slate-100 text-slate-700',
   OUT:              'bg-red-100 text-red-700',
 };
 // ─── Main Page ────────────────────────────────────────────────────────────────
@@ -483,7 +484,7 @@ export default function Employees() {
           {(activeTab === 'employees' || activeTab === 'roles') && (
             <button
               onClick={handleExport}
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+              className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
             >
               <FileDown className="h-4 w-4" /> Exportar Excel
             </button>
@@ -512,9 +513,9 @@ export default function Employees() {
             <button
               key={value}
               onClick={() => setActiveTab(value)}
-              className={`flex items-center gap-2 py-3 px-1 border-b-2 text-sm font-medium transition-colors whitespace-nowrap ${
+              className={`min-h-[44px] flex items-center gap-2 py-3 px-1 border-b-2 text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === value
-                  ? 'border-indigo-600 text-indigo-600'
+                  ? 'border-slate-200 text-slate-700'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -546,7 +547,7 @@ export default function Employees() {
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4">
               <p className="text-sm text-gray-500">Activos</p>
-              <p className="text-2xl font-bold mt-1 text-green-600">{employees.filter((e) => e.active !== false).length}</p>
+              <p className="text-2xl font-bold mt-1 text-slate-700">{employees.filter((e) => e.active !== false).length}</p>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4">
               <p className="text-sm text-gray-500">Inactivos</p>
@@ -572,7 +573,7 @@ export default function Employees() {
               placeholder="Buscar empleado..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-4 py-2 w-full border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="pl-9 pr-4 py-2 w-full border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </div>
 
@@ -625,7 +626,7 @@ export default function Employees() {
                     <tr key={emp.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-semibold text-xs">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-semibold text-xs">
                             {emp.name?.charAt(0)?.toUpperCase() ?? '?'}
                           </div>
                           <div>
@@ -638,7 +639,7 @@ export default function Employees() {
                       </td>
                       <td className="px-4 py-3">
                         {(emp.roles?.name ?? emp.role?.name) ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-slate-50 text-slate-700">
                             <Shield className="h-3 w-3" />
                             {emp.roles?.name ?? emp.role?.name}
                           </span>
@@ -682,20 +683,20 @@ export default function Employees() {
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           {canManage && (
-                            <button onClick={() => openEditEmp(emp)} className="p-1.5 rounded hover:bg-indigo-50 text-indigo-600 transition-colors" title="Editar">
+                            <button onClick={() => openEditEmp(emp)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-slate-100 text-slate-700 transition-colors" title="Editar">
                               <Pencil className="h-3.5 w-3.5" />
                             </button>
                           )}
-                          <button onClick={() => setProfilEmp(emp)} className="p-1.5 rounded hover:bg-emerald-50 text-emerald-600 transition-colors" title="Ver Perfil">
+                          <button onClick={() => setProfilEmp(emp)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-slate-100 text-slate-700 transition-colors" title="Ver Perfil">
                             <Eye className="h-3.5 w-3.5" />
                           </button>
                           {!isBasico && (
-                            <button onClick={() => setQrEmp(emp)} className="p-1.5 rounded hover:bg-purple-50 text-purple-500 transition-colors" title="QR Asistencia">
+                            <button onClick={() => setQrEmp(emp)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-slate-100 text-slate-500 transition-colors" title="QR Asistencia">
                               <QrCode className="h-3.5 w-3.5" />
                             </button>
                           )}
                           {canManage && (
-                            <button onClick={() => confirmDeleteEmp(emp)} className="p-1.5 rounded hover:bg-red-50 text-red-500 transition-colors" title="Eliminar">
+                            <button onClick={() => confirmDeleteEmp(emp)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-red-50 text-red-500 transition-colors" title="Eliminar">
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           )}
@@ -722,10 +723,10 @@ export default function Employees() {
                 placeholder="Buscar rol o permiso..."
                 value={rolesSearch}
                 onChange={e => setRolesSearch(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                className="w-full pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
               />
               {rolesSearch && (
-                <button onClick={() => setRolesSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                <button onClick={() => setRolesSearch('')} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center absolute right-2.5 top-1/2 -translate-y-1/2">
                   <X className="w-3.5 h-3.5 text-gray-400 hover:text-gray-600" />
                 </button>
               )}
@@ -740,7 +741,7 @@ export default function Employees() {
             <div className="flex flex-col items-center justify-center py-16 gap-2">
               <Search className="w-10 h-10 text-gray-200" />
               <p className="text-sm text-gray-400">No hay roles que coincidan con "{rolesSearch}"</p>
-              <button onClick={() => setRolesSearch('')} className="text-sm text-indigo-500 hover:text-indigo-700">Limpiar búsqueda</button>
+              <button onClick={() => setRolesSearch('')} className="min-h-[44px] text-sm text-slate-500 hover:text-slate-700">Limpiar búsqueda</button>
             </div>
           ) : filteredRoles.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400">
@@ -760,12 +761,12 @@ export default function Employees() {
                     </div>
                     <div className="flex items-center gap-1">
                       {canManage && (
-                        <button onClick={() => openEditRole(role)} className="p-1.5 rounded hover:bg-indigo-50 text-indigo-600 transition-colors">
+                        <button onClick={() => openEditRole(role)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-slate-100 text-slate-700 transition-colors">
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
                       )}
                       {canManage && (
-                        <button onClick={() => confirmDeleteRole(role)} className="p-1.5 rounded hover:bg-red-50 text-red-500 transition-colors">
+                        <button onClick={() => confirmDeleteRole(role)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-red-50 text-red-500 transition-colors">
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       )}
@@ -804,26 +805,26 @@ export default function Employees() {
           <div className="bg-white rounded-2xl border border-gray-100 p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold text-gray-800 text-sm flex items-center gap-2">
-                <Clock className="w-4 h-4 text-indigo-500" />
+                <Clock className="w-4 h-4 text-slate-500" />
                 Estado de Hoy
               </h3>
               {todayLoading && <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />}
             </div>
             {/* Tarjetas resumen */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              <div className="rounded-xl p-4 bg-gray-900 border-2 border-green-500 flex flex-col items-center justify-center text-center min-h-[90px]">
-                <span className="text-4xl font-black text-green-400 leading-none">{todayStats.trabajandoAhora}</span>
-                <span className="text-xs text-green-300 mt-1 font-medium">Trabajando ahora</span>
+              <div className="rounded-xl p-4 bg-white border-2 border-slate-200 flex flex-col items-center justify-center text-center min-h-[90px]">
+                <span className="text-4xl font-black text-slate-500 leading-none">{todayStats.trabajandoAhora}</span>
+                <span className="text-xs text-slate-500 mt-1 font-medium">Trabajando ahora</span>
               </div>
-              <div className="rounded-xl p-4 bg-gray-900 border-2 border-yellow-500 flex flex-col items-center justify-center text-center min-h-[90px]">
+              <div className="rounded-xl p-4 bg-white border-2 border-yellow-500 flex flex-col items-center justify-center text-center min-h-[90px]">
                 <span className="text-4xl font-black text-yellow-400 leading-none">{todayStats.enColacion}</span>
-                <span className="text-xs text-yellow-300 mt-1 font-medium">En colacion</span>
+                <span className="text-xs text-amber-800 mt-1 font-medium">En colacion</span>
               </div>
-              <div className="rounded-xl p-4 bg-gray-900 border-2 border-gray-500 flex flex-col items-center justify-center text-center min-h-[90px]">
-                <span className="text-4xl font-black text-gray-200 leading-none">{todayStats.sinMarcar}</span>
-                <span className="text-xs text-gray-400 mt-1 font-medium">Sin marcar hoy</span>
+              <div className="rounded-xl p-4 bg-white border-2 border-gray-500 flex flex-col items-center justify-center text-center min-h-[90px]">
+                <span className="text-4xl font-black text-slate-700 leading-none">{todayStats.sinMarcar}</span>
+                <span className="text-xs text-slate-500 mt-1 font-medium">Sin marcar hoy</span>
               </div>
-              <div className="rounded-xl p-4 bg-gray-900 border-2 border-red-500 flex flex-col items-center justify-center text-center min-h-[90px]">
+              <div className="rounded-xl p-4 bg-white border-2 border-red-500 flex flex-col items-center justify-center text-center min-h-[90px]">
                 <span className="text-4xl font-black text-red-400 leading-none">{todayStats.finalizados}</span>
                 <span className="text-xs text-red-300 mt-1 font-medium">Turno finalizado</span>
               </div>
@@ -833,17 +834,17 @@ export default function Employees() {
               <div className="divide-y divide-gray-50">
                   {(todayDashboard.empleados ?? []).map((emp: any) => {
                     const estadoColors: Record<string, string> = {
-                      presente:   'bg-green-100 text-green-700',
+                      presente:   'bg-slate-100 text-slate-700',
                       tardanza:   'bg-amber-100 text-amber-700',
                       ausente:    'bg-red-100 text-red-700',
-                      justificado:'bg-blue-100 text-blue-700',
+                      justificado:'bg-slate-100 text-slate-700',
                       libre:      'bg-gray-100 text-gray-500',
                     };
                     const badgeCls = estadoColors[emp.estado] ?? 'bg-gray-100 text-gray-500';
                     return (
                       <div key={emp.employeeId} className="flex items-center gap-3 py-2">
-                        <div className="w-7 h-7 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs font-bold text-indigo-600">{emp.employeeName.charAt(0)}</span>
+                        <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-slate-700">{emp.employeeName.charAt(0)}</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-800 truncate">{emp.employeeName}</p>
@@ -856,13 +857,13 @@ export default function Employees() {
                             </span>
                           )}
                           {emp.enLocal && !emp.colacionEnCurso && (
-                            <span className="text-xs bg-green-50 text-green-600 px-1.5 py-0.5 rounded font-medium">En local</span>
+                            <span className="text-xs bg-slate-50 text-slate-700 px-1.5 py-0.5 rounded font-medium">En local</span>
                           )}
                           {emp.colacionEnCurso && (
-                            <span className="text-xs bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded font-medium">Colación</span>
+                            <span className="text-xs bg-slate-50 text-slate-700 px-1.5 py-0.5 rounded font-medium">Colación</span>
                           )}
                           {emp.netMinutes > 0 && emp.lastExit && (
-                            <span className="text-xs font-bold text-indigo-600">
+                            <span className="text-xs font-bold text-slate-700">
                               {Math.floor(emp.netMinutes / 60)}h {(emp.netMinutes % 60).toString().padStart(2, '0')}m
                             </span>
                           )}
@@ -886,7 +887,7 @@ export default function Employees() {
                 type="date"
                 value={localDateFrom}
                 onChange={e => setLocalDateFrom(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -895,13 +896,13 @@ export default function Employees() {
                 type="date"
                 value={localDateTo}
                 onChange={e => setLocalDateTo(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
             <select
               value={attEmployeeId}
               onChange={e => { setAttEmployeeId(e.target.value); setAttPage(1); setHistPage(1); }}
-              className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white min-w-[160px]"
+              className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white min-w-[160px]"
             >
               <option value="">Todos los empleados</option>
               {employees.length > 0
@@ -916,7 +917,7 @@ export default function Employees() {
             <select
               value={attShift}
               onChange={e => { setAttShift(e.target.value); setAttPage(1); }}
-              className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+              className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
             >
               <option value="">Todos los turnos</option>
               <option value="morning">🌅 Mañana</option>
@@ -924,12 +925,12 @@ export default function Employees() {
               <option value="night">🌙 Noche</option>
             </select>
             {attEmployeeId && (
-              <span className="flex items-center gap-1.5 bg-indigo-100 text-indigo-700 text-xs font-medium px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1.5 bg-slate-100 text-slate-700 text-xs font-medium px-2.5 py-1 rounded-full">
                 <User className="w-3 h-3" />
                 {(employees.find((e: any) => e.id === attEmployeeId)?.name) ??
                  (attSummary.find((s: any) => s.employeeId === attEmployeeId)?.employeeName) ??
                  'Empleado'}
-                <button onClick={() => { setAttEmployeeId(''); setAttPage(1); setHistPage(1); }} className="ml-0.5 hover:text-indigo-900">
+                <button onClick={() => { setAttEmployeeId(''); setAttPage(1); setHistPage(1); }} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center ml-0.5 hover:text-slate-700">
                   <X className="w-3 h-3" />
                 </button>
               </span>
@@ -938,21 +939,21 @@ export default function Employees() {
               <button
                 onClick={handleAttExport}
                 disabled={!attRecords.length && !attSummary.length}
-                className="flex items-center gap-2 px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="min-h-[44px] flex items-center gap-2 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <FileSpreadsheet className="w-4 h-4" />
                 Exportar Excel
               </button>
               <button
                 onClick={handlePdfExport}
-                className="flex items-center gap-2 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-medium rounded-xl transition-colors"
+                className="min-h-[44px] flex items-center gap-2 px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 text-sm font-medium rounded-xl transition-colors"
               >
                 <FileDown className="w-4 h-4" />
                 Libro PDF
               </button>
               <button
                 onClick={() => window.open(`/kiosk/${user?.tenantSlug ?? user?.tenantId ?? ''}`, '_blank')}
-                className="flex items-center gap-2 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-xl transition-colors shadow-sm"
+                className="min-h-[44px] flex items-center gap-2 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-xl transition-colors shadow-sm"
               >
                 <QrCode className="w-4 h-4" />
                 Abrir Kiosco
@@ -964,9 +965,9 @@ export default function Employees() {
           <div className="flex gap-2 border-b border-gray-200">
             <button
               onClick={() => setAttView('diaria')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              className={`min-h-[44px] px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 attView === 'diaria'
-                  ? 'border-indigo-600 text-indigo-600'
+                  ? 'border-slate-200 text-slate-700'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -974,9 +975,9 @@ export default function Employees() {
             </button>
             <button
               onClick={() => { setAttView('historial'); setHistPage(1); }}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              className={`min-h-[44px] px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                 attView === 'historial'
-                  ? 'border-indigo-600 text-indigo-600'
+                  ? 'border-slate-200 text-slate-700'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -988,7 +989,7 @@ export default function Employees() {
           {attView === 'diaria' && groupedByEmployee.length > 0 && (
             <div className="space-y-2">
               <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-indigo-500" />
+                <Clock className="w-4 h-4 text-slate-500" />
                 Timeline del periodo
               </h3>
               <div className="space-y-2">
@@ -1012,8 +1013,8 @@ export default function Employees() {
                     {/* Header tarjeta */}
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-xs font-bold text-indigo-600">
+                        <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-xs font-bold text-slate-700">
                             {(emp.employeeName ?? '?').charAt(0).toUpperCase()}
                           </span>
                         </div>
@@ -1037,7 +1038,7 @@ export default function Employees() {
                         {renderDot(sorted[sorted.length - 1], sorted.length - 1, sorted)}
                         <button
                           onClick={() => toggleExpandEmp(empKey)}
-                          className="text-xs text-indigo-500 hover:text-indigo-700 ml-2 underline"
+                          className="min-h-[44px] text-xs text-slate-500 hover:text-slate-700 ml-2 underline"
                         >
                           Ver todos
                         </button>
@@ -1047,7 +1048,7 @@ export default function Employees() {
                         {sorted.map((r, i) => renderDot(r, i, sorted))}
                         {sorted.length === 0 && <span className="text-xs text-gray-400">Sin registros</span>}
                         {isExpanded && sorted.length > 4 && (
-                          <button onClick={() => toggleExpandEmp(empKey)} className="text-xs text-gray-400 hover:text-gray-600 ml-2 underline">
+                          <button onClick={() => toggleExpandEmp(empKey)} className="min-h-[44px] text-xs text-gray-400 hover:text-gray-600 ml-2 underline">
                             Colapsar
                           </button>
                         )}
@@ -1056,8 +1057,8 @@ export default function Employees() {
                     {/* Metricas */}
                     {(emp.hoursWorked || emp.colacionMin) && (
                       <div className="mt-2 pt-2 border-t border-gray-50 flex gap-4 text-xs text-gray-400">
-                        {emp.hoursWorked && <span>Horas: <strong className="text-indigo-600">{emp.hoursWorked}</strong></span>}
-                        {emp.colacionMin != null && <span>Colacion: <strong className="text-purple-500">{emp.colacionMin}min</strong></span>}
+                        {emp.hoursWorked && <span>Horas: <strong className="text-slate-700">{emp.hoursWorked}</strong></span>}
+                        {emp.colacionMin != null && <span>Colacion: <strong className="text-slate-500">{emp.colacionMin}min</strong></span>}
                       </div>
                     )}
                   </div>
@@ -1075,8 +1076,8 @@ export default function Employees() {
                   className="bg-white rounded-2xl border border-gray-100 p-4 hover:shadow-sm transition-shadow">
                   {/* Header */}
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs font-bold text-indigo-600">
+                    <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs font-bold text-slate-700">
                         {s.employeeName.charAt(0).toUpperCase()}
                       </span>
                     </div>
@@ -1084,10 +1085,10 @@ export default function Employees() {
                   </div>
                   {/* Conteos */}
                   <div className="flex gap-2 mb-3">
-                    <span className="flex items-center gap-1 bg-green-50 text-green-600 text-xs font-medium px-2 py-1 rounded-lg">
+                    <span className="flex items-center gap-1 bg-slate-50 text-slate-700 text-xs font-medium px-2 py-1 rounded-lg">
                       <LogIn className="w-3 h-3" />{s.entries ?? 0} entrada{(s.entries ?? 0) !== 1 ? 's' : ''}
                     </span>
-                    <span className="flex items-center gap-1 bg-blue-50 text-blue-600 text-xs font-medium px-2 py-1 rounded-lg">
+                    <span className="flex items-center gap-1 bg-slate-50 text-slate-700 text-xs font-medium px-2 py-1 rounded-lg">
                       <LogOut className="w-3 h-3" />{s.exits ?? 0} salida{(s.exits ?? 0) !== 1 ? 's' : ''}
                     </span>
                   </div>
@@ -1109,13 +1110,13 @@ export default function Employees() {
                       {s.firstEntry && s.lastExit && (
                         <div className="flex items-center justify-between pt-1">
                           <span className="text-xs text-gray-400">Horas trabajadas</span>
-                          <span className="text-xs font-bold text-indigo-600">{calcWorkedHours(s.firstEntry, s.lastExit, s.colacionMin ?? 0)}</span>
+                          <span className="text-xs font-bold text-slate-700">{calcWorkedHours(s.firstEntry, s.lastExit, s.colacionMin ?? 0)}</span>
                         </div>
                       )}
                       {(s.colacionMin ?? 0) > 0 && (
                         <div className="flex items-center justify-between">
                           <span className="text-xs text-gray-400">Colación</span>
-                          <span className="text-xs text-purple-500">{s.colacionMin} min</span>
+                          <span className="text-xs text-slate-500">{s.colacionMin} min</span>
                         </div>
                       )}
                     </div>
@@ -1154,23 +1155,23 @@ export default function Employees() {
                         </td>
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 bg-indigo-100 rounded-full flex items-center justify-center flex-shrink-0">
-                              <span className="text-[10px] font-bold text-indigo-600">
+                            <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center flex-shrink-0">
+                              <span className="text-[10px] font-bold text-slate-700">
                                 {(row.employeeName ?? '?').charAt(0).toUpperCase()}
                               </span>
                             </div>
                             <span className="text-sm font-medium text-gray-800">{row.employeeName}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-2.5 text-xs text-green-600 font-mono font-medium">{row.entrada ?? '--'}</td>
+                        <td className="px-4 py-2.5 text-xs text-slate-700 font-mono font-medium">{row.entrada ?? '--'}</td>
                         <td className="px-4 py-2.5 text-xs text-yellow-600 font-mono">{row.salidaColacion ?? '--'}</td>
                         <td className="px-4 py-2.5 text-xs text-orange-600 font-mono">{row.entradaColacion ?? '--'}</td>
                         <td className="px-4 py-2.5 text-xs text-red-500 font-mono font-medium">{row.salida ?? '--'}</td>
-                        <td className="px-4 py-2.5 text-xs text-indigo-600 font-bold">{row.horasNetas ?? '--'}</td>
+                        <td className="px-4 py-2.5 text-xs text-slate-700 font-bold">{row.horasNetas ?? '--'}</td>
                         <td className="px-4 py-2.5">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                             row.estado === 'COMPLETO'
-                              ? 'bg-green-100 text-green-700'
+                              ? 'bg-slate-100 text-slate-700'
                               : row.estado === 'EN_CURSO'
                               ? 'bg-yellow-100 text-yellow-700'
                               : 'bg-gray-100 text-gray-500'
@@ -1195,22 +1196,22 @@ export default function Employees() {
                   </span>
                   <div className="flex items-center gap-1">
                     <button onClick={() => setHistPage(1)} disabled={histPage === 1}
-                      className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
                       <ChevronsLeft className="w-4 h-4" />
                     </button>
                     <button onClick={() => setHistPage(p => p - 1)} disabled={histPage === 1}
-                      className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
                       <ChevronLeft className="w-4 h-4" />
                     </button>
                     <span className="text-sm text-gray-600 px-2">
                       <span className="font-bold">{histPage}</span> / <span className="font-bold">{histTotalPages}</span>
                     </span>
                     <button onClick={() => setHistPage(p => p + 1)} disabled={histPage >= histTotalPages}
-                      className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
                       <ChevronRight className="w-4 h-4" />
                     </button>
                     <button onClick={() => setHistPage(histTotalPages)} disabled={histPage >= histTotalPages}
-                      className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">
                       <ChevronsRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -1529,14 +1530,14 @@ function EmployeeModal({
       onConfirm={doResetPassword}
       onCancel={() => setResetConfirmOpen(false)}
     />
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    {createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">
             {isEdit ? 'Editar Empleado' : 'Nuevo Empleado'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+          <button onClick={onClose} className="min-h-[44px] text-gray-400 hover:text-gray-600">✕</button>
         </div>
 
         {/* Tabs — solo en edición */}
@@ -1550,12 +1551,12 @@ function EmployeeModal({
               ] as { key: string; label: string; badge?: string }[]).map(t => (
                 <button key={t.key} type="button"
                   onClick={() => setModalTab(t.key as any)}
-                  className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
-                    modalTab === t.key ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                  className={`min-h-[44px] flex-1 py-1.5 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5 ${
+                    modalTab === t.key ? 'bg-white text-slate-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   {t.label}
-                  {t.badge && <span className="bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-full px-1.5 py-0.5">{t.badge}</span>}
+                  {t.badge && <span className="bg-slate-100 text-slate-700 text-xs font-semibold rounded-full px-1.5 py-0.5">{t.badge}</span>}
                 </button>
               ))}
             </div>
@@ -1576,13 +1577,13 @@ function EmployeeModal({
               {/* Stats cards — solo edición */}
               {isEdit && empStats && (
                 <div className="grid grid-cols-3 gap-3 pb-4 border-b border-gray-100">
-                  <div className="bg-indigo-50 rounded-xl p-3 text-center">
-                    <p className="text-xs text-indigo-500 font-medium mb-0.5">Órdenes</p>
-                    <p className="text-lg font-bold text-indigo-700">{empStats.totalOrders ?? 0}</p>
+                  <div className="bg-slate-50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-slate-500 font-medium mb-0.5">Órdenes</p>
+                    <p className="text-lg font-bold text-slate-700">{empStats.totalOrders ?? 0}</p>
                   </div>
-                  <div className="bg-green-50 rounded-xl p-3 text-center">
-                    <p className="text-xs text-green-500 font-medium mb-0.5">Total ventas</p>
-                    <p className="text-base font-bold text-green-700">{formatCLP(empStats.totalSales)}</p>
+                  <div className="bg-slate-50 rounded-xl p-3 text-center">
+                    <p className="text-xs text-slate-500 font-medium mb-0.5">Total ventas</p>
+                    <p className="text-base font-bold text-slate-700">{formatCLP(empStats.totalSales)}</p>
                   </div>
                   <div className="bg-amber-50 rounded-xl p-3 text-center">
                     <p className="text-xs text-amber-500 font-medium mb-0.5">Ticket prom.</p>
@@ -1593,8 +1594,8 @@ function EmployeeModal({
 
               {/* ─── SECCIÓN 1: Datos Personales ───────────────────────── */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <User className="w-3.5 h-3.5 text-indigo-400" />
+                <h3 className="text-xs font-semibold text-gray-500 tracking-widest mb-3 flex items-center gap-2">
+                  <User className="w-3.5 h-3.5 text-slate-500" />
                   Datos Personales
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -1602,7 +1603,7 @@ function EmployeeModal({
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Nombre completo *</label>
                     <input value={form.name} onChange={set('name')} required
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="Nombre completo" />
                   </div>
                   {/* RUT */}
@@ -1617,7 +1618,7 @@ function EmployeeModal({
                       className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${
                         rutError
                           ? 'border-red-400 focus:ring-red-400'
-                          : 'border-gray-200 focus:ring-indigo-500'
+                          : 'border-gray-200 focus:ring-orange-500'
                       }`}
                       placeholder="12.345.678-9"
                     />
@@ -1627,7 +1628,7 @@ function EmployeeModal({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de nacimiento</label>
                     <input type="date" value={form.fecha_nacimiento} onChange={set('fecha_nacimiento')}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
                   </div>
                   {/* Teléfono */}
                   <div>
@@ -1636,7 +1637,7 @@ function EmployeeModal({
                       value={form.phone}
                       onChange={set('phone')}
                       onBlur={handlePhoneBlur}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="+56 9 XXXX XXXX"
                     />
                   </div>
@@ -1644,14 +1645,14 @@ function EmployeeModal({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                     <input type="email" value={form.email} onChange={set('email')} required
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="empleado@restaurante.cl" />
                   </div>
                   {/* Dirección */}
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Dirección</label>
                     <input value={form.direccion} onChange={set('direccion')}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="Calle, número, comuna, ciudad" />
                   </div>
                 </div>
@@ -1659,8 +1660,8 @@ function EmployeeModal({
 
               {/* ─── SECCIÓN 2: Datos Laborales ────────────────────────── */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                <h3 className="text-xs font-semibold text-gray-500 tracking-widest mb-3 flex items-center gap-2">
+                  <Clock className="w-3.5 h-3.5 text-slate-500" />
                   Datos Laborales
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -1668,14 +1669,14 @@ function EmployeeModal({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Cargo / Puesto</label>
                     <input value={form.cargo} onChange={handleCargoChange}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="Ej: Mesero, Cajero, Cocinero" />
                   </div>
                   {/* Tipo contrato */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de contrato</label>
                     <select value={form.tipo_contrato} onChange={set('tipo_contrato')}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white">
                       <option value="">Seleccionar…</option>
                       <option value="indefinido">Indefinido</option>
                       <option value="plazo_fijo">Plazo fijo</option>
@@ -1686,7 +1687,7 @@ function EmployeeModal({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de inicio</label>
                     <input type="date" value={form.fecha_inicio} onChange={set('fecha_inicio')}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
                   </div>
                   {/* Fecha término */}
                   <div>
@@ -1702,7 +1703,7 @@ function EmployeeModal({
                       onChange={set('fecha_termino')}
                       required={isFechaTerminoRequired}
                       disabled={form.tipo_contrato === 'indefinido'}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:bg-gray-50 disabled:text-gray-300 disabled:cursor-not-allowed"
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-50 disabled:text-gray-300 disabled:cursor-not-allowed"
                     />
                   </div>
                   {/* Turno */}
@@ -1712,54 +1713,54 @@ function EmployeeModal({
                       <span className="ml-1 text-xs text-gray-400 font-normal">(vinculado al QR de asistencia)</span>
                     </label>
                     <select value={form.shift} onChange={set('shift')}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white">
                       <option value="morning">🌅 Mañana</option>
                       <option value="afternoon">☀️ Tarde</option>
                       <option value="night">🌙 Noche</option>
                       <option value="custom">Personalizado</option>
                     </select>
                     {form.shift === 'custom' && (
-                      <div className="mt-3 grid grid-cols-2 gap-3 p-3 bg-indigo-50 rounded-xl border border-indigo-200">
+                      <div className="mt-3 grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
                         <div>
-                          <label className="block text-xs font-medium text-indigo-700 mb-1">Hora inicio *</label>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Hora inicio *</label>
                           <input
                             type="time"
                             value={form.shiftStart}
                             onChange={e => setForm(f => ({ ...f, shiftStart: e.target.value }))}
                             required
-                            className="w-full border border-indigo-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-indigo-700 mb-1">Hora término *</label>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Hora término *</label>
                           <input
                             type="time"
                             value={form.shiftEnd}
                             onChange={e => setForm(f => ({ ...f, shiftEnd: e.target.value }))}
                             required
-                            className="w-full border border-indigo-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-indigo-700 mb-1">Colación — salida (opcional)</label>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Colación — salida (opcional)</label>
                           <input
                             type="time"
                             value={form.lunchStart}
                             onChange={e => setForm(f => ({ ...f, lunchStart: e.target.value }))}
-                            className="w-full border border-indigo-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs font-medium text-indigo-700 mb-1">Colación — entrada (opcional)</label>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Colación — entrada (opcional)</label>
                           <input
                             type="time"
                             value={form.lunchEnd}
                             onChange={e => setForm(f => ({ ...f, lunchEnd: e.target.value }))}
-                            className="w-full border border-indigo-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-white"
                           />
                         </div>
                         <div className="col-span-2">
-                          <label className="block text-xs font-medium text-indigo-700 mb-1">Días de trabajo (opcional)</label>
+                          <label className="block text-xs font-medium text-slate-700 mb-1">Días de trabajo (opcional)</label>
                           <div className="flex flex-wrap gap-2">
                             {[
                               { label: 'L', value: 'mon' },
@@ -1779,10 +1780,10 @@ function EmployeeModal({
                                     ? f.workDays.filter((x: string) => x !== d.value)
                                     : [...f.workDays, d.value],
                                 }))}
-                                className={`px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${
+                                className={`min-h-[44px] px-3 py-1.5 text-xs font-semibold rounded-full border transition-colors ${
                                   form.workDays.includes(d.value)
-                                    ? 'bg-indigo-600 text-white border-indigo-600'
-                                    : 'bg-white text-indigo-700 border-indigo-300 hover:border-indigo-500'
+                                    ? 'bg-orange-50 text-orange-700 border-slate-200 border border-orange-300'
+                                    : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
                                 }`}
                               >
                                 {d.label}
@@ -1798,7 +1799,7 @@ function EmployeeModal({
 
               {/* ─── SECCIÓN 3: Acceso al Sistema ─────────────────────── */}
               <div>
-                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                <h3 className="text-xs font-semibold text-gray-500 tracking-widest mb-3 flex items-center gap-2">
                   <KeyRound className="w-3.5 h-3.5 text-amber-400" />
                   Acceso al Sistema
                 </h3>
@@ -1812,11 +1813,11 @@ function EmployeeModal({
                           type={showPwd ? 'text' : 'password'}
                           value={form.password}
                           onChange={set('password')}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full border border-gray-200 rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                           placeholder="Mín. 8 caracteres, 1 mayúscula y 1 número"
                         />
                         <button type="button" onClick={() => setShowPwd(v => !v)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                           {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
@@ -1826,7 +1827,7 @@ function EmployeeModal({
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Rol *</label>
                     <select value={form.roleId} onChange={set('roleId')} required
-                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
                       <option value="">Seleccionar rol…</option>
                       {roles.map((r: any) => {
                         const desc = ROLE_DESCRIPTIONS[r.name];
@@ -1841,7 +1842,7 @@ function EmployeeModal({
                       const rol = roles.find((r: any) => r.id === form.roleId);
                       const desc = rol ? ROLE_DESCRIPTIONS[rol.name] : undefined;
                       return desc ? (
-                        <p className="text-xs text-indigo-500 mt-1">{desc}</p>
+                        <p className="text-xs text-slate-500 mt-1">{desc}</p>
                       ) : null;
                     })()}
                   </div>
@@ -1852,12 +1853,12 @@ function EmployeeModal({
                       <span className="ml-1 text-gray-400 font-normal text-xs">(4 dígitos)</span>
                     </label>
                     {isEdit && hasPin && !changingPin ? (
-                      <div className="flex items-center gap-2 py-2 px-3 bg-green-50 border border-green-200 rounded-lg">
-                        <span className="text-green-700 text-sm font-medium">✅ PIN configurado</span>
+                      <div className="flex items-center gap-2 py-2 px-3 bg-slate-50 border border-slate-200 rounded-lg">
+                        <span className="text-slate-700 text-sm font-medium">✅ PIN configurado</span>
                         <button
                           type="button"
                           onClick={() => setChangingPin(true)}
-                          className="text-xs text-indigo-500 hover:text-indigo-700 underline ml-auto"
+                          className="min-h-[44px] text-xs text-slate-500 hover:text-slate-700 underline ml-auto"
                         >
                           Cambiar PIN
                         </button>
@@ -1871,7 +1872,7 @@ function EmployeeModal({
                         inputMode="numeric"
                         pattern="\d{4}"
                         autoComplete="new-password"
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 tracking-widest"
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 tracking-widest"
                         placeholder="••••"
                       />
                     )}
@@ -1889,7 +1890,7 @@ function EmployeeModal({
                         id="emp-active"
                         checked={form.active}
                         onChange={(e) => setForm(prev => ({ ...prev, active: e.target.checked }))}
-                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        className="rounded border-gray-300 text-slate-700 focus:ring-orange-500"
                       />
                       <label htmlFor="emp-active" className="text-sm text-gray-700">Empleado activo</label>
                     </div>
@@ -1907,8 +1908,8 @@ function EmployeeModal({
               type="button"
               onClick={handleResetPassword}
               disabled={resetLoading}
-              className={`flex items-center gap-2 text-sm transition-colors disabled:opacity-40 ${
-                resetSuccess ? 'text-green-500' : 'text-gray-400 hover:text-amber-500'
+              className={`min-h-[44px] flex items-center gap-2 text-sm transition-colors disabled:opacity-40 ${
+                resetSuccess ? 'text-slate-500' : 'text-gray-400 hover:text-amber-500'
               }`}
             >
               {resetLoading
@@ -1930,7 +1931,7 @@ function EmployeeModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>, document.body)}
     </>
   );
 }
@@ -2003,14 +2004,14 @@ function EmployeeQrModal({ employee, onClose }: { employee: any; onClose(): void
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xs flex flex-col">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-900">QR de Asistencia</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">✕</button>
+          <button onClick={onClose} className="min-h-[44px] text-gray-400 hover:text-gray-600 transition-colors">✕</button>
         </div>
         <div className="p-6 flex flex-col items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-lg">
+          <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-lg">
             {employee.name?.charAt(0)?.toUpperCase() ?? '?'}
           </div>
           <div className="text-center">
@@ -2034,7 +2035,7 @@ function EmployeeQrModal({ employee, onClose }: { employee: any; onClose(): void
             <button
               onClick={handleDownload}
               disabled={!qrDataUrl}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="min-h-[44px] flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Download className="w-4 h-4" />
               Descargar PNG
@@ -2042,7 +2043,7 @@ function EmployeeQrModal({ employee, onClose }: { employee: any; onClose(): void
             <button
               onClick={handlePrint}
               disabled={!qrDataUrl}
-              className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="min-h-[44px] flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Printer className="w-4 h-4" />
               Imprimir
@@ -2050,7 +2051,7 @@ function EmployeeQrModal({ employee, onClose }: { employee: any; onClose(): void
           </div>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -2094,13 +2095,13 @@ function RoleModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-shrink-0">
           <h2 className="text-lg font-semibold text-gray-900">
             {isEdit ? 'Editar Rol' : 'Nuevo Rol'}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">✕</button>
+          <button onClick={onClose} className="min-h-[44px] text-gray-400 hover:text-gray-600">✕</button>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
           <div className="p-6 space-y-4 overflow-y-auto flex-1">
@@ -2110,7 +2111,7 @@ function RoleModal({
               <input value={form.name}
                 onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))}
                 required
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 placeholder="Ej: Cajero, Mesero, Chef..." />
             </div>
             {/* Descripción */}
@@ -2118,7 +2119,7 @@ function RoleModal({
               <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
               <input value={form.description}
                 onChange={(e) => setForm(p => ({ ...p, description: e.target.value }))}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 placeholder="Descripción opcional del rol" />
             </div>
             {/* Permisos */}
@@ -2137,10 +2138,10 @@ function RoleModal({
                           key={p}
                           type="button"
                           onClick={() => toggle(p)}
-                          className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+                          className={`min-h-[44px] px-2.5 py-1 text-xs rounded-full border transition-colors ${
                             selected.has(p)
-                              ? 'bg-indigo-600 text-white border-indigo-600'
-                              : 'bg-white text-gray-600 border-gray-200 hover:border-indigo-300'
+                              ? 'bg-orange-50 text-orange-700 border-slate-200 border border-orange-300'
+                              : 'bg-white text-gray-600 border-gray-200 hover:border-slate-300'
                           }`}
                         >
                           {p}
@@ -2160,6 +2161,6 @@ function RoleModal({
           </div>
         </form>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

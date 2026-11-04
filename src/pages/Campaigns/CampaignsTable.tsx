@@ -15,9 +15,9 @@ interface CampaignsTableProps {
 
 const statusColors: Record<string, { bg: string; text: string }> = {
   DRAFT:     { bg: 'bg-gray-100',   text: 'text-gray-700'   },
-  SCHEDULED: { bg: 'bg-blue-100',   text: 'text-blue-700'   },
-  RUNNING:   { bg: 'bg-green-100',  text: 'text-green-700'  },
-  COMPLETED: { bg: 'bg-purple-100', text: 'text-purple-700' },
+  SCHEDULED: { bg: 'bg-slate-100',   text: 'text-slate-700'   },
+  RUNNING:   { bg: 'bg-slate-100',  text: 'text-slate-700'  },
+  COMPLETED: { bg: 'bg-slate-100', text: 'text-slate-700' },
   PAUSED:    { bg: 'bg-orange-100', text: 'text-orange-700' },
   CANCELLED: { bg: 'bg-red-100',    text: 'text-red-700'    },
 };
@@ -39,9 +39,9 @@ const typeIcons: Record<string, React.ElementType> = {
 };
 
 const typeColors: Record<string, string> = {
-  EMAIL:    'bg-blue-50 text-blue-600',
-  SMS:      'bg-green-50 text-green-600',
-  PUSH:     'bg-purple-50 text-purple-600',
+  EMAIL:    'bg-slate-50 text-slate-700',
+  SMS:      'bg-slate-50 text-slate-700',
+  PUSH:     'bg-slate-50 text-slate-700',
   WHATSAPP: 'bg-emerald-50 text-emerald-600',
 };
 
@@ -99,12 +99,12 @@ function CampaignCard({
         {(campaign.successfulDeliveries ?? 0) > 0 && (
           <div className="flex items-center gap-1">
             <BarChart2 className="h-3 w-3" />
-            <span className="font-medium text-blue-700">{((campaign.openRate ?? 0) * 100).toFixed(0)}%</span>
+            <span className="font-medium text-slate-700">{((campaign.openRate ?? 0) * 100).toFixed(0)}%</span>
             <span>apertura</span>
           </div>
         )}
         {(campaign.actualRevenue ?? 0) > 0 && (
-          <div className="ml-auto font-semibold text-emerald-600">
+          <div className="ml-auto font-semibold text-slate-700">
             ${(campaign.actualRevenue ?? 0).toLocaleString('es-CL')}
           </div>
         )}

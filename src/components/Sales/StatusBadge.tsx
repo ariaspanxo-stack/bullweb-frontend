@@ -9,12 +9,12 @@ const STATUS_CONFIG = {
   },
   paying: {
     label: 'Cobrando',
-    className: 'bg-blue-100 text-blue-700 border-blue-200',
+    className: 'bg-slate-100 text-slate-700 border-slate-200',
     icon: '●'
   },
   closed: {
     label: 'Cerrada',
-    className: 'bg-green-100 text-green-700 border-green-200',
+    className: 'bg-slate-100 text-slate-700 border-slate-200',
     icon: '●'
   },
   cancelled: {

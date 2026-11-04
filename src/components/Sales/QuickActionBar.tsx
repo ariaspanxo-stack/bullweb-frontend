@@ -44,7 +44,7 @@ export function QuickActionBar({
       {canPrint && onPrint && (
         <button
           onClick={onPrint}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
+          className="min-h-[44px] flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors"
         >
           <Printer className="w-4 h-4" />
           {printLabel}
@@ -55,7 +55,7 @@ export function QuickActionBar({
       {canEdit && onEdit && (
         <button
           onClick={onEdit}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg font-medium transition-colors"
+          className="min-h-[44px] flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg font-medium transition-colors"
         >
           <Pencil className="w-4 h-4" />
           Editar
@@ -67,7 +67,7 @@ export function QuickActionBar({
         <button
           onClick={() => handleAction('cancel', onCancel)}
           disabled={loading !== null}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
+          className="min-h-[44px] flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
         >
           {loading === 'cancel' ? (
             <RefreshCw className="w-4 h-4 animate-spin" />

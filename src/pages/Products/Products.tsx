@@ -4,6 +4,7 @@
 // Diseño superior a FUDO y TOTEAT
 // ═══════════════════════════════════════════════════════════════
 
+import { createPortal } from 'react-dom';
 import { useState, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { Product, ProductCategory } from '../../types/product.types';
@@ -771,14 +772,14 @@ const Products = () => {
     <div className={`min-h-full flex ${PAGE_BG}`}>
       {/* Loading overlay — solo para operaciones de guardado/eliminación */}
       {(loadingTab === 'saving' || loadingTab === 'delete') && (
-        <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
+        createPortal(<div className="fixed inset-0 bg-black/20 flex items-center justify-center z-[100]">
           <div className="bg-white rounded-xl p-6 shadow-xl border border-[#E2E8F0]">
             <div className="flex items-center space-x-3">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#F97316]"></div>
               <span className="text-[#0F172A] font-medium">Guardando...</span>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
       
       {/* Error message */}
@@ -795,14 +796,14 @@ const Products = () => {
               <p className="mt-1 text-sm text-red-300">{error}</p>
               <button
                 onClick={() => reloadTab(activeTab)}
-                className="mt-2 text-sm font-medium text-red-400 hover:text-red-300"
+                className="min-h-[44px] mt-2 text-sm font-medium text-red-400 hover:text-red-300"
               >
                 Reintentar
               </button>
             </div>
             <button
               onClick={() => setError(null)}
-              className="ml-auto flex-shrink-0 text-red-400 hover:text-red-500"
+              className="min-h-[44px] ml-auto flex-shrink-0 text-red-400 hover:text-red-500"
             >
               <span className="sr-only">Cerrar</span>
               <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">

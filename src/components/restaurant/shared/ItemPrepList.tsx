@@ -79,7 +79,7 @@ export function ItemPrepList({ orderId, items, onChanged }: {
               {/* HOTFIX 291: modificadores elegidos */}
               {modifierNames(i.modifiers) && <span className="block text-xs text-slate-500 truncate">+ {modifierNames(i.modifiers)}</span>}
               {st === 'PREPARING' && <span className="block text-xs font-semibold text-amber-700">En preparación</span>}
-              {isDone(st) && <span className="block text-xs font-semibold text-green-700">Listo</span>}
+              {isDone(st) && <span className="block text-xs font-semibold text-slate-700">Listo</span>}
             </p>
             {st === 'PENDING' && (
               <button type="button" className={BTN_SECONDARY} disabled={loading} onClick={() => change(i.id, 'PREPARING')}>

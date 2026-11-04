@@ -152,7 +152,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-[100]"
         onClick={onClose}
       />
 
@@ -173,7 +173,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-slate-600 transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -307,7 +307,7 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
                   ? 'bg-red-50 border-red-200'
                   : stockAlert.type === 'warning'
                   ? 'bg-yellow-50 border-yellow-200'
-                  : 'bg-green-50 border-green-200'
+                  : 'bg-slate-50 border-slate-200'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -333,13 +333,13 @@ export const IngredientModal: React.FC<IngredientModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+                className="min-h-[44px] flex-1 px-4 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium shadow-sm"
+                className="min-h-[44px] flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium shadow-sm"
               >
                 {mode === 'create' ? 'Crear Ingrediente' : 'Guardar Cambios'}
               </button>

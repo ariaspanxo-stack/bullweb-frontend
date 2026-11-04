@@ -3,6 +3,7 @@
  * Vista completa de un usuario: info, seguridad, rol, actividad.
  */
 
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -30,7 +31,7 @@ function initials(name: string) {
 
 function SeverityDot({ severity }: { severity: string }) {
   const colors: Record<string, string> = {
-    INFO:     'bg-blue-400',
+    INFO:     'bg-slate-500',
     WARNING:  'bg-amber-400',
     CRITICAL: 'bg-red-500',
   };
@@ -67,7 +68,7 @@ function AssignRoleModal({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Cambiar rol</h2>
         <div className="space-y-2 mb-6 max-h-64 overflow-y-auto">
@@ -75,7 +76,7 @@ function AssignRoleModal({
             <label
               key={role.id}
               className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer border transition-colors ${
-                selectedRole === role.id ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-gray-300'
+                selectedRole === role.id ? 'border-slate-200 bg-slate-50' : 'border-gray-200 hover:border-gray-300'
               }`}
             >
               <input
@@ -84,7 +85,7 @@ function AssignRoleModal({
                 value={role.id}
                 checked={selectedRole === role.id}
                 onChange={() => setSelectedRole(role.id)}
-                className="accent-indigo-600"
+                className="accent-orange-500"
               />
               <div
                 className="w-3 h-3 rounded-full flex-shrink-0"
@@ -98,19 +99,19 @@ function AssignRoleModal({
           ))}
         </div>
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 px-4 py-2 text-sm border rounded-xl hover:bg-gray-50">
+          <button onClick={onClose} className="min-h-[44px] flex-1 px-4 py-2 text-sm border rounded-xl hover:bg-gray-50">
             Cancelar
           </button>
           <button
             onClick={() => assign.mutate()}
             disabled={assign.isPending || selectedRole === currentRoleId}
-            className="flex-1 px-4 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50"
+            className="min-h-[44px] flex-1 px-4 py-2 text-sm bg-white text-slate-700 rounded-xl hover:bg-slate-50 disabled:opacity-50 border border-slate-300"
           >
             {assign.isPending ? 'Guardando…' : 'Asignar'}
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -163,7 +164,7 @@ export default function UserDetail() {
     return (
       <div className="p-6 text-center text-gray-400">
         <p className="text-lg">Usuario no encontrado</p>
-        <button onClick={() => navigate('/admin/users')} className="mt-4 text-sm text-indigo-600 underline">
+        <button onClick={() => navigate('/admin/users')} className="min-h-[44px] mt-4 text-sm text-slate-700 underline">
           Volver a usuarios
         </button>
       </div>
@@ -179,7 +180,7 @@ export default function UserDetail() {
       {/* Back */}
       <button
         onClick={() => navigate('/admin/users')}
-        className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800"
+        className="min-h-[44px] flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800"
       >
         <ChevronLeft className="w-4 h-4" /> Usuarios
       </button>
@@ -196,7 +197,7 @@ export default function UserDetail() {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold text-gray-900">{u.name}</h1>
             {u.active ? (
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-700">
+              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-700">
                 <CheckCircle2 className="w-3 h-3" /> Activo
               </span>
             ) : (
@@ -221,15 +222,15 @@ export default function UserDetail() {
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={() => { setEditing(!editing); if (!editing) setForm({ name: u.name ?? '', email: u.email ?? '', phone: u.phone ?? '' }); }}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm border rounded-xl hover:bg-gray-50"
+            className="min-h-[44px] flex items-center gap-1.5 px-3 py-2 text-sm border rounded-xl hover:bg-gray-50"
           >
             <Edit3 className="w-4 h-4" /> {editing ? 'Cancelar' : 'Editar'}
           </button>
           <button
             onClick={() => toggleActive.mutate()}
             disabled={toggleActive.isPending}
-            className={`px-3 py-2 text-sm rounded-xl border transition-colors ${
-              u.active ? 'hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-gray-600' : 'hover:bg-green-50 hover:border-green-200 hover:text-green-600 text-gray-600'
+            className={`min-h-[44px] px-3 py-2 text-sm rounded-xl border transition-colors ${
+              u.active ? 'hover:bg-red-50 hover:border-red-200 hover:text-red-600 text-gray-600' : 'hover:bg-slate-100 hover:border-slate-300 hover:text-slate-700 text-gray-600'
             }`}
           >
             {u.active ? 'Suspender' : 'Activar'}
@@ -251,7 +252,7 @@ export default function UserDetail() {
                   <input
                     value={form.name}
                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    className="w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
                 <div>
@@ -260,7 +261,7 @@ export default function UserDetail() {
                     value={form.email}
                     onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                     type="email"
-                    className="w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
                 <div>
@@ -269,14 +270,14 @@ export default function UserDetail() {
                     value={form.phone}
                     onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                     type="tel"
-                    className="w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 text-sm border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
               </div>
               <button
                 onClick={() => updateMut.mutate()}
                 disabled={updateMut.isPending}
-                className="flex items-center gap-2 px-4 py-2 text-sm bg-indigo-600 text-white rounded-xl hover:bg-indigo-700"
+                className="min-h-[44px] flex items-center gap-2 px-4 py-2 text-sm bg-orange-500 text-white rounded-xl hover:bg-orange-600"
               >
                 <Save className="w-4 h-4" /> {updateMut.isPending ? 'Guardando…' : 'Guardar cambios'}
               </button>
@@ -289,12 +290,12 @@ export default function UserDetail() {
               <Shield className="w-4 h-4" /> Seguridad
             </h2>
             <div className="grid grid-cols-2 gap-4 mb-5">
-              <div className={`rounded-xl p-4 border ${sec?.twoFactorEnabled ? 'bg-green-50 border-green-200' : 'bg-gray-50'}`}>
+              <div className={`rounded-xl p-4 border ${sec?.twoFactorEnabled ? 'bg-slate-50 border-slate-200' : 'bg-gray-50'}`}>
                 <div className="flex items-center gap-2 mb-1">
-                  <ShieldCheck className={`w-4 h-4 ${sec?.twoFactorEnabled ? 'text-green-600' : 'text-gray-400'}`} />
+                  <ShieldCheck className={`w-4 h-4 ${sec?.twoFactorEnabled ? 'text-slate-700' : 'text-gray-400'}`} />
                   <span className="text-xs font-medium text-gray-600">Autenticación 2FA</span>
                 </div>
-                <p className={`text-sm font-semibold ${sec?.twoFactorEnabled ? 'text-green-700' : 'text-gray-500'}`}>
+                <p className={`text-sm font-semibold ${sec?.twoFactorEnabled ? 'text-slate-700' : 'text-gray-500'}`}>
                   {sec?.twoFactorEnabled ? 'Activada' : 'No configurada'}
                 </p>
               </div>
@@ -376,13 +377,13 @@ export default function UserDetail() {
             </div>
             <button
               onClick={() => setShowRoleModal(true)}
-              className="w-full px-4 py-2 text-sm border rounded-xl hover:bg-gray-50 text-gray-600"
+              className="min-h-[44px] w-full px-4 py-2 text-sm border rounded-xl hover:bg-gray-50 text-gray-600"
             >
               Cambiar rol
             </button>
             <button
               onClick={() => setShowPerms(v => !v)}
-              className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 text-sm border border-indigo-200 rounded-xl hover:bg-indigo-50 text-indigo-600"
+              className="min-h-[44px] w-full mt-2 flex items-center justify-center gap-2 px-4 py-2 text-sm border border-slate-200 rounded-xl hover:bg-slate-100 text-slate-700"
             >
               <Key className="w-4 h-4" />
               {showPerms ? 'Ocultar' : 'Ver'} permisos granulares
@@ -522,7 +523,7 @@ function UserPermissionsPanel({ userId, roleId, userName }: { userId: string; ro
   return (
     <div className="bg-white rounded-2xl border overflow-hidden">
       <div className="px-5 py-4 border-b flex items-center gap-2">
-        <Key className="w-4 h-4 text-indigo-500" />
+        <Key className="w-4 h-4 text-slate-500" />
         <h2 className="font-semibold text-gray-800 text-sm flex-1">Permisos Granulares</h2>
         <span className="text-xs text-gray-400">Sobreescribe los permisos del rol para este usuario específicamente</span>
       </div>
@@ -530,11 +531,11 @@ function UserPermissionsPanel({ userId, roleId, userName }: { userId: string; ro
       {/* Leyenda */}
       <div className="px-5 py-2 flex items-center gap-5 text-xs text-gray-500 border-b bg-gray-50">
         <span className="flex items-center gap-1.5">
-          <span className="w-3.5 h-3.5 rounded bg-green-100 border border-green-300 inline-block" />
+          <span className="w-3.5 h-3.5 rounded bg-slate-100 border border-slate-200 inline-block" />
           Del rol
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-3.5 h-3.5 rounded bg-indigo-200 border-2 border-indigo-500 inline-block" />
+          <span className="w-3.5 h-3.5 rounded bg-slate-100 border-2 border-slate-200 inline-block" />
           Override: otorgado
         </span>
         <span className="flex items-center gap-1.5">
@@ -579,15 +580,15 @@ function UserPermissionsPanel({ userId, roleId, userName }: { userId: string; ro
                             'override-deny': 'Override denegado — click para quitar',
                             'none':          'Sin permiso — click para otorgar override',
                           }[state]}
-                          className={`w-6 h-6 rounded flex items-center justify-center mx-auto transition-all hover:scale-110 border ${
-                            state === 'role-grant'    ? 'bg-green-100 border-green-300' :
-                            state === 'override-grant'? 'bg-indigo-200 border-indigo-500 ring-1 ring-indigo-400' :
+                          className={`min-h-[44px] w-6 h-6 rounded flex items-center justify-center mx-auto transition-all hover:scale-110 border ${
+                            state === 'role-grant'    ? 'bg-slate-100 border-slate-200' :
+                            state === 'override-grant'? 'bg-slate-100 border-slate-200 ring-1 ring-slate-300' :
                             state === 'override-deny' ? 'bg-red-100 border-red-400 ring-1 ring-red-300' :
                             'bg-gray-50 border-gray-200 hover:bg-gray-100'
                           }`}
                         >
-                          {state === 'role-grant'     && <CheckCircle2 size={11} className="text-green-600" />}
-                          {state === 'override-grant' && <Plus size={11} className="text-indigo-600" />}
+                          {state === 'role-grant'     && <CheckCircle2 size={11} className="text-slate-700" />}
+                          {state === 'override-grant' && <Plus size={11} className="text-slate-700" />}
                           {state === 'override-deny'  && <Ban size={11} className="text-red-500" />}
                         </button>
                       </td>
@@ -605,7 +606,7 @@ function UserPermissionsPanel({ userId, roleId, userName }: { userId: string; ro
         {overrides.length > 0 && (
           <button
             onClick={() => overrides.forEach((o: Override) => delOverride.mutate(o.id))}
-            className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700"
+            className="min-h-[44px] flex items-center gap-1 text-xs text-red-500 hover:text-red-700"
           >
             <Trash2 size={11} /> Quitar todos los overrides
           </button>

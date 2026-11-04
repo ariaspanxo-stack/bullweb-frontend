@@ -3,6 +3,7 @@
 // Búsqueda rápida + categorías + productos populares
 // ═══════════════════════════════════════════════════════════════
 
+import { displayName } from '@/utils/displayFormat';
 import { Search, Star, Plus, Clock } from 'lucide-react';
 import type { Product, ProductCategory } from '../../../types/restaurant.types';
 
@@ -52,7 +53,7 @@ export const ProductSelector = ({
           {searchQuery && (
             <button
               onClick={() => onSearchChange('')}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="min-h-[44px] absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
               <span className="text-xl">×</span>
             </button>
@@ -65,7 +66,7 @@ export const ProductSelector = ({
         <div className="flex items-center gap-2 overflow-x-auto pb-2">
           <button
             onClick={() => onCategoryChange('')}
-            className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
+            className={`min-h-[44px] px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
               !selectedCategory
                 ? 'bg-orange-500 text-white shadow-lg'
                 : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
@@ -77,13 +78,13 @@ export const ProductSelector = ({
             <button
               key={category.id}
               onClick={() => onCategoryChange(category.id)}
-              className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
+              className={`min-h-[44px] px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
                 selectedCategory === category.id
                   ? 'bg-orange-500 text-white shadow-lg'
                   : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
               }`}
             >
-              {category.name}
+              {displayName(category.name)}
             </button>
           ))}
         </div>
@@ -101,14 +102,14 @@ export const ProductSelector = ({
               <button
                 key={product.id}
                 onClick={() => onSelectProduct(product)}
-                className="bg-white border border-yellow-300 rounded-lg p-3 hover:shadow-md hover:border-orange-500 transition-all group"
+                className="min-h-[44px] bg-white border border-yellow-300 rounded-lg p-3 hover:shadow-md hover:border-orange-500 transition-all group"
               >
                 <div className="text-center">
                   <div className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-orange-500">
-                    {product.name}
+                    {displayName(product.name)}
                   </div>
                   <div className="text-xs font-bold text-orange-500">
-                    ${product.price.toLocaleString()}
+                    ${product.price.toLocaleString('es-CL')}
                   </div>
                 </div>
               </button>
@@ -137,7 +138,7 @@ export const ProductSelector = ({
               <button
                 key={product.id}
                 onClick={() => onSelectProduct(product)}
-                className="bg-white border-2 border-gray-200 rounded-xl p-4 hover:border-orange-500 hover:shadow-xl transition-all group"
+                className="min-h-[44px] bg-white border-2 border-gray-200 rounded-xl p-4 hover:border-orange-500 hover:shadow-xl transition-all group"
               >
                 {/* Imagen placeholder */}
                 <div className="w-full aspect-square bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg mb-3 flex items-center justify-center group-hover:from-orange-200 group-hover:to-orange-300 transition-colors">
@@ -148,7 +149,7 @@ export const ProductSelector = ({
 
                 {/* Nombre */}
                 <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-orange-500 transition-colors">
-                  {product.name}
+                  {displayName(product.name)}
                 </h3>
 
                 {/* Descripción */}
@@ -177,7 +178,7 @@ export const ProductSelector = ({
                 {/* Precio y botón */}
                 <div className="flex items-center justify-between">
                   <div className="text-xl font-bold text-orange-500">
-                    ${product.price.toLocaleString()}
+                    ${product.price.toLocaleString('es-CL')}
                   </div>
                   <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                     <Plus size={16} className="text-white" />

@@ -85,7 +85,7 @@ export const TabDescuentos = ({ sales, isLoading, hasSearched }: Props) => {
       <div className="flex justify-end">
         <button
           onClick={handleExport}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+          className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
         >
           <FileDown className="w-4 h-4" /> Exportar Excel
         </button>
@@ -126,7 +126,7 @@ export const TabDescuentos = ({ sales, isLoading, hasSearched }: Props) => {
                 <td className="px-4 py-3 text-sm text-gray-700 font-medium">{sale.saleNumber}</td>
                 <td className="px-4 py-3 text-sm text-gray-700">{sale.tableNumber || '—'}</td>
                 <td className="px-4 py-3">
-                  <span className="px-3 py-1 rounded text-sm font-medium bg-blue-100 text-blue-700">
+                  <span className="px-3 py-1 rounded text-sm font-medium bg-slate-100 text-slate-700">
                     {formatType(sale.discountType)}
                   </span>
                 </td>

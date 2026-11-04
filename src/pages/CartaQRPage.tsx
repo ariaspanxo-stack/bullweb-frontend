@@ -807,7 +807,7 @@ export default function CartaQRPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2
+              className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center flex-1 flex items-center justify-center gap-2
                 px-3 py-2.5 rounded-lg text-sm font-medium transition-all
                 ${activeTab === tab.id
                   ? 'bg-white shadow text-gray-800'
@@ -826,8 +826,7 @@ export default function CartaQRPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
           {/* QR generado */}
-          <div className="bg-white rounded-2xl border border-gray-100
-                          shadow-sm p-6 flex flex-col items-center gap-4">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col items-center gap-4">
 
             {/* Selector de mesa */}
             <div className="w-full bg-gray-50 rounded-xl p-3">
@@ -838,8 +837,7 @@ export default function CartaQRPage() {
                 <select
                   value={selectedTable}
                   onChange={e => setSelectedTable(e.target.value)}
-                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2
-                             text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-400"
                 >
                   <option value="">🌐 QR general (todas las mesas)</option>
                   {loadingTables ? (
@@ -856,7 +854,7 @@ export default function CartaQRPage() {
                 {selectedTable && (
                   <button
                     onClick={() => setSelectedTable('')}
-                    className="p-2 rounded-xl border border-gray-200 hover:bg-gray-100 text-gray-400"
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded-xl border border-gray-200 hover:bg-gray-100 text-gray-400"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -899,15 +897,14 @@ export default function CartaQRPage() {
               </p>
               {/* URL actual */}
               <div className="flex items-center gap-2">
-                <code className="flex-1 text-sm bg-white border border-gray-200
-                                 rounded-lg px-3 py-2 text-gray-700 truncate">
+                <code className="flex-1 text-sm bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-700 truncate">
                   {cartaUrl}
                 </code>
                 <button
                   onClick={handleCopy}
-                  className={`flex-shrink-0 p-2 rounded-lg border-2 transition-all
+                  className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center flex-shrink-0 p-2 rounded-lg border-2 transition-all
                     ${copied
-                      ? 'border-green-400 bg-green-50 text-green-600'
+                      ? 'border-slate-200 bg-slate-50 text-slate-700'
                       : 'border-gray-200 hover:border-gray-300 text-gray-500'
                     }`}
                   title="Copiar URL"
@@ -929,10 +926,10 @@ export default function CartaQRPage() {
                     <button
                       onClick={handleCopy}
                       title="Copiar URL completa"
-                      className="p-1 text-gray-400 hover:text-orange-500 transition-colors"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 text-gray-400 hover:text-orange-500 transition-colors"
                     >
                       {copied
-                        ? <Check className="w-3.5 h-3.5 text-green-500" />
+                        ? <Check className="w-3.5 h-3.5 text-slate-500" />
                         : <Copy className="w-3.5 h-3.5" />}
                     </button>
                   </div>
@@ -951,7 +948,7 @@ export default function CartaQRPage() {
                     key={preset.label}
                     onClick={() => { setQrFgColor(preset.fg); setQrBgColor(preset.bg); }}
                     title={preset.label}
-                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                    className={`min-h-[44px] flex items-center gap-1.5 px-2.5 py-1 rounded-full
                       border-2 text-xs font-medium transition-all
                       ${qrFgColor === preset.fg && qrBgColor === preset.bg
                         ? 'border-orange-400 bg-orange-50 text-orange-700'
@@ -1005,18 +1002,14 @@ export default function CartaQRPage() {
                 <button
                   onClick={handleDownloadPNG}
                   disabled={!qrDataUrl}
-                  className="flex-1 py-3 bg-orange-500 hover:bg-orange-400 disabled:opacity-40
-                             text-white font-medium rounded-xl text-sm
-                             flex items-center justify-center gap-2 transition-colors"
+                  className="min-h-[44px] flex-1 py-3 bg-white hover:bg-slate-50 disabled:opacity-40 text-slate-700 font-medium rounded-xl text-sm flex items-center justify-center gap-2 transition-colors border border-slate-300"
                 >
                   <Download className="w-4 h-4" />
                   PNG
                 </button>
                 <button
                   onClick={handleDownloadSVG}
-                  className="flex-1 py-3 border-2 border-gray-200 hover:border-gray-300
-                             text-gray-600 font-medium rounded-xl text-sm
-                             flex items-center justify-center gap-2 transition-colors"
+                  className="min-h-[44px] flex-1 py-3 border-2 border-gray-200 hover:border-gray-300 text-gray-600 font-medium rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
                 >
                   <Download className="w-4 h-4" />
                   SVG
@@ -1024,9 +1017,7 @@ export default function CartaQRPage() {
                 <button
                   onClick={handlePrint}
                   disabled={!qrDataUrl}
-                  className="flex-1 py-3 border-2 border-gray-200 hover:border-gray-300
-                             disabled:opacity-40 text-gray-600 font-medium rounded-xl
-                             text-sm flex items-center justify-center gap-2 transition-colors"
+                  className="min-h-[44px] flex-1 py-3 border-2 border-gray-200 hover:border-gray-300 disabled:opacity-40 text-gray-600 font-medium rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
                   title="Imprimir QR"
                 >
                   <Printer className="w-4 h-4" />
@@ -1037,9 +1028,7 @@ export default function CartaQRPage() {
               <button
                 onClick={handlePrintTemplate}
                 disabled={!qrDataUrl}
-                className="mt-2 w-full py-3 border-2 border-orange-200 hover:border-orange-300
-                           hover:bg-orange-50 disabled:opacity-40 text-orange-600 font-medium
-                           rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
+                className="min-h-[44px] mt-2 w-full py-3 border-2 border-orange-200 hover:border-orange-300 hover:bg-orange-50 disabled:opacity-40 text-orange-600 font-medium rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
               >
                 <LayoutGrid className="w-4 h-4" />
                 Imprimir hoja A4 (4 tarjetas)
@@ -1048,10 +1037,7 @@ export default function CartaQRPage() {
               {tables.length > 0 && (
                 <button
                   onClick={handlePrintAllTables}
-                  className="mt-2 w-full py-3 border-2 border-dashed border-gray-300
-                             hover:border-orange-300 text-gray-500 hover:text-orange-600
-                             font-medium rounded-xl text-sm flex items-center justify-center
-                             gap-2 transition-colors"
+                  className="min-h-[44px] mt-2 w-full py-3 border-2 border-dashed border-gray-300 hover:border-orange-300 text-gray-500 hover:text-orange-600 font-medium rounded-xl text-sm flex items-center justify-center gap-2 transition-colors"
                 >
                   <LayoutGrid className="w-4 h-4" />
                   Imprimir QR de todas las mesas ({tables.length})
@@ -1066,10 +1052,7 @@ export default function CartaQRPage() {
                 href={cartaUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-center gap-2 py-3
-                           border-2 border-orange-200 text-orange-600 font-medium
-                           rounded-xl text-sm hover:bg-orange-50 transition-colors
-                           min-w-[120px]"
+                className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-orange-200 text-orange-600 font-medium rounded-xl text-sm hover:bg-orange-50 transition-colors min-w-[120px]"
               >
                 <ExternalLink className="w-4 h-4" />
                 Ver carta
@@ -1080,9 +1063,7 @@ export default function CartaQRPage() {
                 href={`https://wa.me/?text=${whatsappMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 py-3 px-4
-                           bg-green-600 hover:bg-green-500
-                           text-white font-medium rounded-xl text-sm transition-all"
+                className="flex items-center justify-center gap-2 py-3 px-4 bg-green-600 hover:bg-green-500 text-slate-700 font-medium rounded-xl text-sm transition-all"
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
@@ -1094,9 +1075,7 @@ export default function CartaQRPage() {
               {'share' in navigator && (
                 <button
                   onClick={handleShare}
-                  className="flex items-center justify-center gap-2 py-3 px-4
-                             border-2 border-gray-200 text-gray-600 font-medium
-                             rounded-xl text-sm hover:border-gray-300 transition-colors"
+                  className="min-h-[44px] flex items-center justify-center gap-2 py-3 px-4 border-2 border-gray-200 text-gray-600 font-medium rounded-xl text-sm hover:border-gray-300 transition-colors"
                 >
                   <Share2 className="w-4 h-4" />
                   Compartir
@@ -1105,11 +1084,11 @@ export default function CartaQRPage() {
             </div>
 
             {/* Info */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-              <p className="text-xs font-semibold text-blue-700 mb-1">
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+              <p className="text-xs font-semibold text-slate-700 mb-1">
                 💡 ¿Cómo usarlo?
               </p>
-              <ul className="text-xs text-blue-600 space-y-1">
+              <ul className="text-xs text-slate-700 space-y-1">
                 <li>• Descarga el PNG e imprímelo en cada mesa</li>
                 <li>• Usa "4 tarjetas A4" para imprimir y recortar</li>
                 <li>• El cliente escanea → ve el menú completo</li>
@@ -1125,13 +1104,12 @@ export default function CartaQRPage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
           {/* Barra tipo browser */}
-          <div className="flex items-center justify-between px-4 py-3
-                          border-b border-gray-100 bg-gray-50">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50">
             <div className="flex items-center gap-2">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-red-400" />
                 <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                <div className="w-3 h-3 rounded-full bg-green-400" />
+                <div className="w-3 h-3 rounded-full bg-slate-500" />
               </div>
               <span className="text-xs text-gray-500 font-mono ml-2 hidden sm:block">
                 {cartaUrl}
@@ -1187,17 +1165,14 @@ export default function CartaQRPage() {
             },
           ]).map(item => (
             <div key={item.step}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5
-                         flex items-start gap-4"
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-start gap-4"
             >
-              <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center
-                              justify-center flex-shrink-0 text-xl">
+              <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0 text-xl">
                 {item.icon}
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-bold text-orange-500 bg-orange-50
-                                   px-2 py-0.5 rounded-full">
+                  <span className="text-xs font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-full">
                     Paso {item.step}
                   </span>
                   <h3 className="font-semibold text-gray-800 text-sm">{item.title}</h3>
@@ -1275,9 +1250,7 @@ export default function CartaQRPage() {
               <button
                 onClick={handleSaveHours}
                 disabled={savingHours}
-                className="w-full py-4 bg-orange-500 hover:bg-orange-400 text-white font-bold
-                           rounded-2xl flex items-center justify-center gap-2
-                           disabled:opacity-50 transition-colors mt-2"
+                className="min-h-[44px] w-full py-4 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition-colors mt-2"
               >
                 {savingHours ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -1346,9 +1319,7 @@ export default function CartaQRPage() {
               <button
                 onClick={handleSavePayMethods}
                 disabled={savingPayMethods}
-                className="w-full py-4 bg-orange-500 hover:bg-orange-400 text-white font-bold
-                           rounded-2xl flex items-center justify-center gap-2
-                           disabled:opacity-50 transition-colors mt-2"
+                className="min-h-[44px] w-full py-4 bg-orange-500 hover:bg-orange-400 text-white font-bold rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition-colors mt-2"
               >
                 {savingPayMethods ? (
                   <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</>
@@ -1473,7 +1444,7 @@ export default function CartaQRPage() {
                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                 <button
                   onClick={() => setCartaBanner('')}
-                  className="shrink-0 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center shrink-0 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
                   title="Quitar banner"
                 >
                   <X size={14} />
@@ -1492,7 +1463,7 @@ export default function CartaQRPage() {
                   key={p.color}
                   onClick={() => setCartaTheme(p.color)}
                   title={p.label}
-                  className={`w-8 h-8 rounded-full border-2 transition-all ${
+                  className={`min-h-[44px] w-8 h-8 rounded-full border-2 transition-all ${
                     cartaTheme === p.color ? 'border-gray-800 scale-110' : 'border-transparent hover:scale-105'
                   }`}
                   style={{ background: p.color }}
@@ -1604,7 +1575,7 @@ export default function CartaQRPage() {
               </div>
               <button
                 onClick={() => setHideUnavailable(v => !v)}
-                className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${
+                className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${
                   hideUnavailable ? 'bg-orange-500' : 'bg-gray-300'
                 }`}
               >
@@ -1619,7 +1590,7 @@ export default function CartaQRPage() {
           <button
             onClick={handleSavePersonal}
             disabled={savingPersonal}
-            className="w-full py-4 text-white font-bold rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+            className="min-h-[44px] w-full py-4 text-white font-bold rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
             style={{ background: cartaTheme }}
           >
             {savingPersonal ? (
@@ -1702,14 +1673,14 @@ export default function CartaQRPage() {
                           <button
                             onClick={() => downloadMesaQr(String(table.id), mesaLabel(table))}
                             disabled={!mesaQrUrls[table.id]}
-                            className="flex-1 py-2 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-40 transition-colors"
+                            className="min-h-[44px] flex-1 py-2 bg-white text-slate-700 rounded-lg text-sm font-semibold hover:bg-slate-50 disabled:opacity-40 transition-colors border border-slate-300"
                           >
                             Descargar
                           </button>
                           <button
                             onClick={() => printMesaQr(String(table.id), mesaLabel(table))}
                             disabled={!mesaQrUrls[table.id]}
-                            className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 disabled:opacity-40 transition-colors"
+                            className="min-h-[44px] flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 disabled:opacity-40 transition-colors"
                           >
                             Imprimir
                           </button>
@@ -1723,7 +1694,7 @@ export default function CartaQRPage() {
               {/* Print all */}
               <button
                 onClick={handlePrintAllMesaQrs}
-                className="w-full py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-extrabold text-lg rounded-xl shadow-lg shadow-orange-500/30 hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
+                className="min-h-[44px] w-full py-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-extrabold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center gap-2"
               >
                 🖨️ Imprimir todos los QR de mesa ({tables.length})
               </button>
@@ -1768,7 +1739,7 @@ export default function CartaQRPage() {
                   <div className="text-2xl font-black text-gray-900 leading-tight">
                     <span className="text-orange-600">{analytics.mobile ?? 0}%</span>
                     <span className="text-gray-300 mx-1">·</span>
-                    <span className="text-blue-600">{analytics.tablet ?? 0}%</span>
+                    <span className="text-slate-700">{analytics.tablet ?? 0}%</span>
                     <span className="text-gray-300 mx-1">·</span>
                     <span className="text-gray-700">{analytics.desktop ?? 0}%</span>
                   </div>

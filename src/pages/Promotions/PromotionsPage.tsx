@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { promotionsService, type Promotion, type PromotionType } from '@/services/promotionsService';
@@ -80,11 +81,11 @@ function typeBadge(p: Promotion) {
   const base = 'px-2 py-0.5 rounded-full text-xs font-medium';
   switch (p.type) {
     case 'PERCENTAGE':
-      return <span className={`${base} bg-blue-100 text-blue-700`}>{p.value}%</span>;
+      return <span className={`${base} bg-slate-100 text-slate-700`}>{p.value}%</span>;
     case 'FIXED_PRICE':
-      return <span className={`${base} bg-green-100 text-green-700`}>${p.value.toLocaleString('es-CL')}</span>;
+      return <span className={`${base} bg-slate-100 text-slate-700`}>${p.value.toLocaleString('es-CL')}</span>;
     case 'X_FOR_Y':
-      return <span className={`${base} bg-purple-100 text-purple-700`}>{p.buyQuantity}×{p.getQuantity}</span>;
+      return <span className={`${base} bg-slate-100 text-slate-700`}>{p.buyQuantity}×{p.getQuantity}</span>;
     case 'PACK_PRICE': {
       // HOTFIX 296: muestra el tamano de pack efectivo (igual que el backend)
       const n = packGroupSize(p.buyQuantity, p.productIds?.length ?? 0);
@@ -272,20 +273,20 @@ export default function PromotionsPage() {
   return (
     <div className="space-y-0">
       {/* ── Header ── */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl -mx-2 px-6 pt-6 pb-6 mb-6 shadow-xl border border-slate-700/40">
+      <div className=" rounded-2xl -mx-2 px-6 pt-6 pb-6 mb-6 border border-slate-200">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30">
-              <Percent className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg ">
+              <Percent className="w-5 h-5 text-slate-900" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Promociones</h1>
-              <p className="text-xs text-slate-400">{total} promociones · {activos} activas</p>
+              <h1 className="text-xl font-bold text-slate-900">Promociones</h1>
+              <p className="text-xs text-slate-500">{total} promociones · {activos} activas</p>
             </div>
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-orange-500/25"
+            className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg "
             style={canManage ? undefined : { display: 'none' }}
           >
             <Plus className="w-4 h-4" />
@@ -307,7 +308,7 @@ export default function PromotionsPage() {
         {search && (
           <button
             onClick={() => setSearch('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="min-h-[44px] absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             aria-label="Limpiar búsqueda"
           >
             ✕
@@ -360,11 +361,11 @@ export default function PromotionsPage() {
                       <button
                         onClick={() => !isToggling && toggleMutation.mutate({ id: p.id, active: !p.active })}
                         disabled={isToggling}
-                        className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors ${
+                        className={`min-h-[44px] inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full transition-colors ${
                           isToggling
                             ? 'opacity-50 cursor-not-allowed bg-gray-100 text-gray-400'
                             : p.active
-                              ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                              ? 'bg-slate-100 text-slate-700 hover:bg-slate-100'
                               : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                         }`}
                         title={p.active ? 'Desactivar' : 'Activar'}
@@ -378,7 +379,7 @@ export default function PromotionsPage() {
                         {canManage && (
                           <button
                             onClick={() => openEdit(p)}
-                            className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
                             title="Editar"
                           >
                             <Pencil className="w-4 h-4" />
@@ -387,7 +388,7 @@ export default function PromotionsPage() {
                         {canManage && (
                           <button
                             onClick={() => setDeletePromo(p)}
-                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                             title="Eliminar"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -405,7 +406,7 @@ export default function PromotionsPage() {
 
       {/* ── Modal Crear / Editar ── */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <form
             onSubmit={handleSubmit}
             className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
@@ -479,7 +480,7 @@ export default function PromotionsPage() {
 
               {/* Campos condicionales X_FOR_Y */}
               {form.type === 'X_FOR_Y' && (
-                <div className="grid grid-cols-2 gap-3 bg-purple-50 -mx-1 px-4 py-3 rounded-xl">
+                <div className="grid grid-cols-2 gap-3 bg-slate-50 -mx-1 px-4 py-3 rounded-xl">
                   <div>
                     <label className="block text-xs font-semibold text-gray-500 mb-1">Cantidad a pagar</label>
                     <input
@@ -487,7 +488,7 @@ export default function PromotionsPage() {
                       min="1"
                       value={form.buyQuantity}
                       onChange={(e) => setForm({ ...form, buyQuantity: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-purple-400"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="2"
                     />
                   </div>
@@ -498,7 +499,7 @@ export default function PromotionsPage() {
                       min="1"
                       value={form.getQuantity}
                       onChange={(e) => setForm({ ...form, getQuantity: e.target.value })}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-purple-400"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-orange-500"
                       placeholder="1"
                     />
                   </div>
@@ -570,7 +571,7 @@ export default function PromotionsPage() {
                         key={d.value}
                         type="button"
                         onClick={() => toggleDay(d.value)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        className={`min-h-[44px] px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
                           checked
                             ? 'bg-orange-500 text-white'
                             : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
@@ -615,25 +616,25 @@ export default function PromotionsPage() {
             <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end sticky bottom-0 bg-white">
               <button
                 type="button" onClick={closeModal}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="min-h-[44px] px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="px-4 py-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors disabled:opacity-60"
+                className="min-h-[44px] px-4 py-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors disabled:opacity-60"
               >
                 {(createMutation.isPending || updateMutation.isPending) ? 'Guardando…' : editPromo ? 'Guardar cambios' : 'Crear promoción'}
               </button>
             </div>
           </form>
-        </div>
+        </div>, document.body)
       )}
 
       {/* ── Modal Confirmar Eliminación ── */}
       {deletePromo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -647,20 +648,20 @@ export default function PromotionsPage() {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setDeletePromo(null)}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="min-h-[44px] px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => deleteMutation.mutate(deletePromo.id)}
                 disabled={deleteMutation.isPending}
-                className="px-4 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-60"
+                className="min-h-[44px] px-4 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-60"
               >
                 {deleteMutation.isPending ? 'Eliminando…' : 'Eliminar'}
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
     </div>
   );

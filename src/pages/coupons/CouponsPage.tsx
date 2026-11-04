@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/services/api';
@@ -220,13 +221,13 @@ export function CouponsPage() {
     if (!c.isActive) return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500"><XCircle className="w-3 h-3" />Inactivo</span>;
     if (isExpired(c)) return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-600"><AlertTriangle className="w-3 h-3" />Expirado</span>;
     if (isExhausted(c)) return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-600"><AlertTriangle className="w-3 h-3" />Agotado</span>;
-    return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700"><CheckCircle className="w-3 h-3" />Activo</span>;
+    return <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700"><CheckCircle className="w-3 h-3" />Activo</span>;
   };
 
   // MENOR 11: badge tipo con valor contextual
   const typeBadge = (c: Coupon) => (
     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-      c.type === 'PERCENTAGE' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'
+      c.type === 'PERCENTAGE' ? 'bg-slate-100 text-slate-700' : 'bg-slate-100 text-slate-700'
     }`}>
       {c.type === 'PERCENTAGE' ? `${c.value}% desc.` : `$${c.value.toLocaleString('es-CL')} fijo`}
     </span>
@@ -251,20 +252,20 @@ export function CouponsPage() {
     <div className="space-y-0">
 
       {/* ── Header ── */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl -mx-2 px-6 pt-6 pb-6 mb-6 shadow-xl border border-slate-700/40">
+      <div className=" rounded-2xl -mx-2 px-6 pt-6 pb-6 mb-6 border border-slate-200">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/30">
-              <Tag className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-slate-500 rounded-xl flex items-center justify-center shadow-lg ">
+              <Tag className="w-5 h-5 text-slate-900" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">Cupones & Promociones</h1>
-              <p className="text-xs text-slate-400">{total} cupones en total</p>
+              <h1 className="text-xl font-bold text-slate-900">Cupones & Promociones</h1>
+              <p className="text-xs text-slate-500">{total} cupones en total</p>
             </div>
           </div>
           <button
             onClick={openCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg shadow-purple-500/25"
+            className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-xl transition-colors shadow-lg "
             style={canManage ? undefined : { display: 'none' }}
           >
             <Plus className="w-4 h-4" />
@@ -297,12 +298,12 @@ export function CouponsPage() {
           placeholder="Buscar por código o descripción…"
           value={search}
           onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-          className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-purple-400 bg-white shadow-sm"
+          className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-orange-500 bg-white shadow-sm"
         />
         {search && (
           <button
             onClick={() => { setSearch(''); setPage(1); }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="min-h-[44px] absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
             aria-label="Limpiar búsqueda"
           >
             ✕
@@ -313,7 +314,7 @@ export function CouponsPage() {
       {/* ── Tabla ── */}
       {isLoading ? (
         <div className="flex items-center justify-center py-20">
-          <div className="w-8 h-8 border-4 border-purple-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : coupons.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center">
@@ -360,11 +361,11 @@ export function CouponsPage() {
                         <button
                           onClick={() => !isToggling && toggleMutation.mutate({ id: c.id, isActive: !c.isActive })}
                           disabled={isToggling}
-                          className={`p-1.5 rounded-lg transition-colors ${
+                          className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg transition-colors ${
                             isToggling
                               ? 'opacity-50 cursor-not-allowed text-gray-400'
                               : c.isActive
-                                ? 'text-green-600 hover:bg-green-50'
+                                ? 'text-slate-700 hover:bg-slate-100'
                                 : 'text-gray-400 hover:bg-gray-100'
                           }`}
                           title={c.isActive ? 'Desactivar' : 'Activar'}
@@ -374,7 +375,7 @@ export function CouponsPage() {
                         {canManage && (
                         <button
                           onClick={() => openEdit(c)}
-                          className="p-1.5 rounded-lg text-blue-500 hover:bg-blue-50 transition-colors"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors"
                           title="Editar"
                         >
                           <Pencil className="w-4 h-4" />
@@ -383,7 +384,7 @@ export function CouponsPage() {
                         {canManage && (
                         <button
                           onClick={() => setDeleteId(c.id)}
-                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition-colors"
                           title="Eliminar"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -407,14 +408,14 @@ export function CouponsPage() {
                 <button
                   onClick={() => setPage(p => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 transition-colors"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 transition-colors"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -426,7 +427,7 @@ export function CouponsPage() {
 
       {/* ── Modal Crear / Editar ── */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <form
             onSubmit={handleSubmit}
             className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto"
@@ -444,7 +445,7 @@ export function CouponsPage() {
                 <input
                   value={form.code}
                   onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono outline-none focus:ring-2 focus:ring-purple-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm font-mono outline-none focus:ring-2 focus:ring-orange-500"
                   placeholder="Ej: VERANO20"
                   required
                 />
@@ -456,7 +457,7 @@ export function CouponsPage() {
                 <input
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-purple-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-orange-500"
                   placeholder="Descripción interna del cupón"
                 />
               </div>
@@ -468,7 +469,7 @@ export function CouponsPage() {
                   <select
                     value={form.type}
                     onChange={(e) => setForm({ ...form, type: e.target.value as 'PERCENTAGE' | 'FIXED' })}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-purple-400"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-orange-500"
                   >
                     <option value="PERCENTAGE">Porcentaje (%)</option>
                     <option value="FIXED">Monto fijo ($)</option>
@@ -489,7 +490,7 @@ export function CouponsPage() {
                       if (form.type === 'PERCENTAGE' && Number(val) > 100) val = '100';
                       setForm({ ...form, value: val });
                     }}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-purple-400"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-orange-500"
                     placeholder={form.type === 'PERCENTAGE' ? '10' : '5000'}
                     required
                   />
@@ -507,7 +508,7 @@ export function CouponsPage() {
                     type="number" min="0"
                     value={form.minOrder}
                     onChange={(e) => setForm({ ...form, minOrder: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-purple-400"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-orange-500"
                     placeholder="Sin mínimo"
                   />
                 </div>
@@ -517,7 +518,7 @@ export function CouponsPage() {
                     type="number" min="1"
                     value={form.maxUses}
                     onChange={(e) => setForm({ ...form, maxUses: e.target.value })}
-                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-purple-400"
+                    className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-orange-500"
                     placeholder="Ilimitado"
                   />
                 </div>
@@ -531,7 +532,7 @@ export function CouponsPage() {
                   min={todayLocal}
                   value={form.expiresAt}
                   onChange={(e) => setForm({ ...form, expiresAt: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-purple-400"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
 
@@ -542,7 +543,7 @@ export function CouponsPage() {
                     type="checkbox"
                     checked={form.isActive}
                     onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-                    className="w-4 h-4 accent-purple-500"
+                    className="w-4 h-4 accent-orange-500"
                   />
                   <span className="text-sm text-gray-700">Cupón activo</span>
                 </label>
@@ -552,25 +553,25 @@ export function CouponsPage() {
             <div className="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
               <button
                 type="button" onClick={closeModal}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="min-h-[44px] px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={createMutation.isPending || updateMutation.isPending}
-                className="px-4 py-2 text-sm font-semibold text-white bg-purple-500 hover:bg-purple-600 rounded-lg transition-colors disabled:opacity-60"
+                className="min-h-[44px] px-4 py-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors disabled:opacity-60"
               >
                 {(createMutation.isPending || updateMutation.isPending) ? 'Guardando…' : editCoupon ? 'Guardar cambios' : 'Crear cupón'}
               </button>
             </div>
           </form>
-        </div>
+        </div>, document.body)
       )}
 
       {/* ── Modal Confirmar Eliminación ── */}
       {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -584,20 +585,20 @@ export function CouponsPage() {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setDeleteId(null)}
-                className="px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="min-h-[44px] px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => deleteMutation.mutate(deleteId)}
                 disabled={deleteMutation.isPending}
-                className="px-4 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-60"
+                className="min-h-[44px] px-4 py-2 text-sm font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors disabled:opacity-60"
               >
                 {deleteMutation.isPending ? 'Eliminando…' : 'Eliminar'}
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
 
     </div>

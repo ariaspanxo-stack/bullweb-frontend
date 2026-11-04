@@ -111,7 +111,7 @@ export const SalesTable = ({
             </p>
             <button
               onClick={() => handleExport(sales)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+              className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
             >
               <FileDown className="w-3.5 h-3.5" />
               Exportar Excel
@@ -180,7 +180,7 @@ export const SalesTable = ({
                         🚴 Delivery
                       </span>
                     ) : sale.tableNumber ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-slate-50 text-slate-700 rounded text-xs font-medium">
                         👨‍🍴 Mesa {sale.tableNumber}
                       </span>
                     ) : (
@@ -201,7 +201,7 @@ export const SalesTable = ({
                   {/* GARZÓN */}
                   <td className="px-4 py-3 text-sm">
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-semibold">
+                      <div className="w-6 h-6 rounded-full bg-slate-100 text-slate-700 flex items-center justify-center text-xs font-semibold">
                         {(sale.waiterName || '?').charAt(0).toUpperCase()}
                       </div>
                       <span className="text-gray-700">{sale.waiterName || '—'}</span>
@@ -214,7 +214,7 @@ export const SalesTable = ({
                       {sale.customerId && sale.customerName ? (
                         <button
                           onClick={(e) => { e.stopPropagation(); navigate(`/customers?customerId=${sale.customerId}`); }}
-                          className="text-orange-600 hover:text-orange-800 hover:underline font-medium truncate"
+                          className="min-h-[44px] text-orange-600 hover:text-orange-800 hover:underline font-medium truncate"
                           title="Ver cliente en el CRM"
                         >
                           {sale.customerName}
@@ -263,11 +263,11 @@ export const SalesTable = ({
             Pág. {page} / {totalPages} &bull; {sales.length} registros
           </span>
           <div className="flex items-center gap-1">
-            <button onClick={() => setPage(1)}           disabled={page === 1}          className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-30"><ChevronsLeft  className="w-4 h-4" /></button>
-            <button onClick={() => setPage(p => p - 1)} disabled={page === 1}          className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-30"><ChevronLeft   className="w-4 h-4" /></button>
+            <button onClick={() => setPage(1)}           disabled={page === 1}          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-gray-200 disabled:opacity-30"><ChevronsLeft  className="w-4 h-4" /></button>
+            <button onClick={() => setPage(p => p - 1)} disabled={page === 1}          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-gray-200 disabled:opacity-30"><ChevronLeft   className="w-4 h-4" /></button>
             <span className="px-2 py-1 text-xs font-semibold bg-orange-500 text-white rounded">{page}</span>
-            <button onClick={() => setPage(p => p + 1)} disabled={page === totalPages} className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-30"><ChevronRight  className="w-4 h-4" /></button>
-            <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="p-1.5 rounded hover:bg-gray-200 disabled:opacity-30"><ChevronsRight className="w-4 h-4" /></button>
+            <button onClick={() => setPage(p => p + 1)} disabled={page === totalPages} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-gray-200 disabled:opacity-30"><ChevronRight  className="w-4 h-4" /></button>
+            <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-gray-200 disabled:opacity-30"><ChevronsRight className="w-4 h-4" /></button>
           </div>
         </div>
       )}

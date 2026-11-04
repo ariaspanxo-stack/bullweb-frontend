@@ -66,9 +66,9 @@ export function SmartSuggestions({
         title: `Excelente propina (${tipPercentage.toFixed(1)}%)`,
         description: 'Cliente muy satisfecho. Registrar en perfil para futuras atenciones especiales.',
         icon: TrendingUp,
-        color: 'text-green-700',
-        bgColor: 'bg-green-50',
-        borderColor: 'border-green-200',
+        color: 'text-slate-700',
+        bgColor: 'bg-slate-50',
+        borderColor: 'border-slate-200',
         priority: 'low'
       });
     }
@@ -83,9 +83,9 @@ export function SmartSuggestions({
         title: `Alto ticket per cápita ($${Math.round(ticketPerPerson).toLocaleString('es-CL')})`,
         description: 'Cliente premium. Ofrecer programa de fidelización o beneficios exclusivos.',
         icon: Target,
-        color: 'text-purple-700',
-        bgColor: 'bg-purple-50',
-        borderColor: 'border-purple-200',
+        color: 'text-slate-700',
+        bgColor: 'bg-slate-50',
+        borderColor: 'border-slate-200',
         priority: 'high'
       });
     } else if (ticketPerPerson < lowTicketThreshold && sale.numberOfPeople >= groupSizeThreshold) {
@@ -95,9 +95,9 @@ export function SmartSuggestions({
         title: 'Oportunidad de upselling',
         description: 'Grupo grande con ticket bajo. Sugerir platos para compartir o promos grupales.',
         icon: Gift,
-        color: 'text-blue-700',
-        bgColor: 'bg-blue-50',
-        borderColor: 'border-blue-200',
+        color: 'text-slate-700',
+        bgColor: 'bg-slate-50',
+        borderColor: 'border-slate-200',
         priority: 'medium'
       });
     }
@@ -141,9 +141,9 @@ export function SmartSuggestions({
         title: `Grupo grande (${sale.numberOfPeople} personas)`,
         description: 'Verificar disponibilidad de menú familiar o descuentos por volumen.',
         icon: Users,
-        color: 'text-indigo-700',
-        bgColor: 'bg-indigo-50',
-        borderColor: 'border-indigo-200',
+        color: 'text-slate-700',
+        bgColor: 'bg-slate-50',
+        borderColor: 'border-slate-200',
         priority: 'low'
       });
     }
@@ -175,9 +175,9 @@ export function SmartSuggestions({
         title: `${paymentMethodsCount} métodos de pago`,
         description: 'Grupo dividiendo cuenta. Verificar que todos los pagos estén correctamente asignados.',
         icon: DollarSign,
-        color: 'text-teal-700',
-        bgColor: 'bg-teal-50',
-        borderColor: 'border-teal-200',
+        color: 'text-slate-700',
+        bgColor: 'bg-slate-50',
+        borderColor: 'border-slate-200',
         priority: 'low'
       });
     }
@@ -191,9 +191,9 @@ export function SmartSuggestions({
         title: `Descuento aplicado (${discountPercentage.toFixed(1)}%)`,
         description: 'Verificar autorización y motivo del descuento en sistema.',
         icon: Gift,
-        color: 'text-pink-700',
-        bgColor: 'bg-pink-50',
-        borderColor: 'border-pink-200',
+        color: 'text-slate-700',
+        bgColor: 'bg-slate-50',
+        borderColor: 'border-slate-200',
         priority: 'low'
       });
     }
@@ -275,17 +275,17 @@ export function SmartSuggestions({
       </div>
 
       {/* RESUMEN */}
-      <div className="mt-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-        <div className="flex items-center gap-2 text-xs text-blue-800">
+      <div className="mt-4 p-3 rounded-lg border border-slate-200">
+        <div className="flex items-center gap-2 text-xs text-slate-700">
           <Target className="w-4 h-4" />
           <span className="font-semibold">
             {suggestions.filter(s => s.priority === 'high').length} prioritarias
           </span>
-          <span className="text-blue-600">•</span>
+          <span className="text-slate-700">•</span>
           <span>
             {suggestions.filter(s => s.type === 'opportunity').length} oportunidades
           </span>
-          <span className="text-blue-600">•</span>
+          <span className="text-slate-700">•</span>
           <span>
             {suggestions.filter(s => s.type === 'warning').length} alertas
           </span>

@@ -42,9 +42,9 @@ export function MesasTab() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Ingresos Totales',  value: formatCurrency(totalRevenue),                                                               Icon: DollarSign,   color: 'bg-orange-100 text-orange-600'  },
-          { label: 'Órdenes Totales',   value: totalOrders.toString(),                                                                     Icon: ShoppingCart, color: 'bg-indigo-100 text-indigo-600'  },
-          { label: 'Mesas Activas',     value: tablesChart.length.toString(),                                                              Icon: LayoutGrid,   color: 'bg-emerald-100 text-emerald-600' },
-          { label: 'Ingr. Prom./Mesa',  value: formatCurrency(tablesChart.length > 0 ? totalRevenue / tablesChart.length : 0),             Icon: ArrowUpRight, color: 'bg-purple-100 text-purple-600'  },
+          { label: 'Órdenes Totales',   value: totalOrders.toString(),                                                                     Icon: ShoppingCart, color: 'bg-slate-100 text-slate-700'  },
+          { label: 'Mesas Activas',     value: tablesChart.length.toString(),                                                              Icon: LayoutGrid,   color: 'bg-slate-100 text-slate-700' },
+          { label: 'Ingr. Prom./Mesa',  value: formatCurrency(tablesChart.length > 0 ? totalRevenue / tablesChart.length : 0),             Icon: ArrowUpRight, color: 'bg-slate-100 text-slate-700'  },
         ].map(kpi => (
           <div key={kpi.label} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-3">
@@ -84,7 +84,7 @@ export function MesasTab() {
               {tablesChart.map((t: any, i: number) => (
                 <tr key={i} className="hover:bg-gray-50 transition-colors">
                   <td className="px-5 py-3.5 font-semibold text-gray-900">{t.name}</td>
-                  <td className="px-5 py-3.5"><span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded text-xs font-medium">{t.section}</span></td>
+                  <td className="px-5 py-3.5"><span className="px-2 py-0.5 bg-slate-50 text-slate-700 rounded text-xs font-medium">{t.section}</span></td>
                   <td className="px-5 py-3.5 text-right font-medium text-gray-700">{t.orders}</td>
                   <td className="px-5 py-3.5 text-right font-bold text-gray-900">{formatCurrency(t.revenue)}</td>
                   <td className="px-5 py-3.5 text-right text-xs text-gray-500">{t.rotation.toFixed(2)}</td>

@@ -1,3 +1,4 @@
+import { displayName } from '@/utils/displayFormat';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
@@ -312,7 +313,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                   className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                   style={{ backgroundColor: colorForCategory(categories, cat.id) }}
                 />
-                {cat.name}
+                {displayName(cat.name)}
                 <span className="text-xs text-[#64748B]">
                   ({products.filter(p => p.categoryId === cat.id).length})
                 </span>
@@ -358,7 +359,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
             {selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''}
           </span>
           {selectedIds.size < currentItems.length && (
-            <button onClick={toggleSelectAll} className="text-sm text-[#475569] hover:text-[#0F172A] underline">
+            <button onClick={toggleSelectAll} className="min-h-[44px] text-sm text-[#475569] hover:text-[#0F172A] underline">
               Seleccionar todos ({currentItems.length})
             </button>
           )}
@@ -504,11 +505,11 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                     {category && (
                       <span className="inline-flex items-center gap-1.5 text-xs text-[#475569] mb-1">
                         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: catColor }} />
-                        {category.name}
+                        {displayName(category.name)}
                       </span>
                     )}
                     <h3 className="font-bold text-[#0F172A] text-[15px] mb-1 line-clamp-1" title={product.name}>
-                      {product.name}
+                      {displayName(product.name)}
                     </h3>
                     {product.description && (
                       <p className="text-xs text-[#64748B] mb-2 line-clamp-1">{product.description}</p>
@@ -527,7 +528,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                           aria-checked={product.showInQr !== false}
                           aria-label={`Mostrar ${product.name} en carta QR`}
                           onClick={() => onToggleShowInQr(product, product.showInQr === false)}
-                          className="w-full h-11 mb-2 inline-flex items-center gap-2 px-2 rounded-lg hover:bg-slate-50"
+                          className="min-h-[44px] w-full h-11 mb-2 inline-flex items-center gap-2 px-2 rounded-lg hover:bg-slate-50"
                         >
                           <span className={`relative inline-flex w-10 h-6 rounded-full transition-colors flex-shrink-0 ${product.showInQr !== false ? 'bg-[#1E2A4A]' : 'bg-[#CBD5E1]'}`}>
                             <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${product.showInQr !== false ? 'left-5' : 'left-1'}`} />
@@ -542,7 +543,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                             onClick={() => onEditProduct(product)}
                             title="Editar"
                             aria-label={`Editar ${product.name}`}
-                            className={`${BTN_OUTLINE} flex-1`}
+                            className={`min-h-[44px] ${BTN_OUTLINE} flex-1`}
                           >
                             <Pencil className="w-4 h-4" />
                             Editar

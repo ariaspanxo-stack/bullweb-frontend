@@ -97,7 +97,7 @@ export function useAdminPin() {
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
               onKeyDown={(e) => { if (e.key === 'Enter' && pin) finish(pin); }}
-              className="mt-3 w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-center text-lg font-bold tracking-[0.4em] text-slate-900 focus:outline-none focus:border-slate-500"
+              className="mt-3 w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-center text-lg font-bold tracking-[0.4em] text-slate-900 focus:outline-none focus:border-orange-500"
               placeholder="••••"
             />
             <div className="mt-4 grid grid-cols-2 gap-2">

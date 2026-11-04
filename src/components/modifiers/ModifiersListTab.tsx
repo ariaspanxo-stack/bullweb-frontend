@@ -180,7 +180,7 @@ export const ModifiersListTab: React.FC<ModifiersListTabProps> = ({
 
                     <button
                       onClick={() => onAddOption(group.id)}
-                      className="w-full h-11 flex items-center justify-center gap-2 px-4 border-[1.5px] border-dashed border-[#CBD5E1] rounded-lg text-sm font-semibold text-[#1E2A4A] hover:bg-slate-50 transition-colors"
+                      className="min-h-[44px] w-full h-11 flex items-center justify-center gap-2 px-4 border-[1.5px] border-dashed border-[#CBD5E1] rounded-lg text-sm font-semibold text-[#1E2A4A] hover:bg-slate-50 transition-colors"
                     >
                       <PlusIcon className="w-4 h-4" />
                       Agregar opción

@@ -158,7 +158,7 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                       <button
                         type="button"
                         onClick={() => handleRemoveIngredient(index)}
-                        className="text-red-600 hover:bg-red-50 p-1 rounded"
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-red-600 hover:bg-red-50 p-1 rounded"
                       >
                         <TrashIcon className="w-4 h-4" />
                       </button>
@@ -225,7 +225,7 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
         <button
           type="button"
           onClick={() => setShowSelector(true)}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors"
+          className="min-h-[44px] w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-slate-300 hover:text-slate-700 transition-colors"
         >
           <PlusIcon className="w-5 h-5" />
           Agregar Ingrediente
@@ -241,7 +241,7 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                 setSearchQuery('');
                 setActiveCategory('all');
               }}
-              className="text-gray-600 hover:text-gray-900"
+              className="min-h-[44px] text-gray-600 hover:text-gray-900"
             >
               Cancelar
             </button>
@@ -266,9 +266,9 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
               <button
                 type="button"
                 onClick={() => setActiveCategory('all')}
-                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                className={`min-h-[44px] rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   activeCategory === 'all'
-                    ? 'bg-amber-500 text-white'
+                    ? 'bg-orange-50 text-orange-700 border border-orange-300'
                     : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                 }`}
               >
@@ -279,9 +279,9 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                   key={cat.id}
                   type="button"
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                  className={`min-h-[44px] rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                     activeCategory === cat.id
-                      ? 'bg-amber-500 text-white'
+                      ? 'bg-orange-50 text-orange-700 border border-orange-300'
                       : 'bg-slate-200 text-slate-700 hover:bg-slate-300'
                   }`}
                 >
@@ -312,7 +312,7 @@ export const IngredientSelector: React.FC<IngredientSelectorProps> = ({
                   key={ingredient.id}
                   type="button"
                   onClick={() => handleAddIngredient(ingredient.id)}
-                  className="w-full text-left px-3 py-2 hover:bg-blue-50 rounded flex items-center gap-2"
+                  className="min-h-[44px] w-full text-left px-3 py-2 hover:bg-slate-100 rounded flex items-center gap-2"
                 >
                   <span className="text-xl">
                     {getCategoryIcon(ingredient.categoryId)}

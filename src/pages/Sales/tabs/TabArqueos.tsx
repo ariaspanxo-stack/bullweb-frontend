@@ -337,12 +337,12 @@ export const TabArqueos = () => {
       <div className="flex-1 flex flex-col overflow-hidden bg-white border-r border-gray-200">
 
         <div className="px-6 py-3 border-b border-gray-200 flex items-center justify-between bg-white">
-          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Arqueos de Caja</h2>
+          <h2 className="text-sm font-bold text-gray-700 tracking-wider">Arqueos de Caja</h2>
           <div className="flex items-center gap-2">
             {!activeSession && registerId && (
               <button
                 onClick={handleShowOpenModal}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-orange-500 rounded hover:bg-orange-600 transition-colors"
+                className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-orange-500 rounded hover:bg-orange-600 transition-colors"
               >
                 <PlusCircle size={13} />
                 Nueva Caja
@@ -351,14 +351,14 @@ export const TabArqueos = () => {
             <button
               onClick={handleExport}
               disabled={!selectedSession || byMethod.length === 0}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded hover:bg-emerald-100 transition-colors disabled:opacity-40"
+              className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded hover:bg-slate-100 transition-colors disabled:opacity-40"
             >
               <FileDown size={13} />
               Exportar
             </button>
             <button
               onClick={() => { refetchSessions(); refetchCuadre(); }}
-              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
             >
               <RefreshCw size={14} />
             </button>
@@ -405,7 +405,7 @@ export const TabArqueos = () => {
           ) : sessionsError ? (
             <div className="text-center py-16 text-sm text-red-500 px-4">
               Error al cargar arqueos.{' '}
-              <button onClick={() => refetchSessions()} className="mt-2 text-orange-500 underline text-xs">Reintentar</button>
+              <button onClick={() => refetchSessions()} className="min-h-[44px] mt-2 text-orange-500 underline text-xs">Reintentar</button>
             </div>
           ) : sessions.length === 0 ? (
             <div className="text-center py-16 text-gray-400 text-sm">Sin arqueos registrados</div>
@@ -494,7 +494,7 @@ export const TabArqueos = () => {
                           <button
                             onClick={() => setConfirmDeleteId(s.id)}
                             title="Eliminar arqueo"
-                            className="p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 rounded text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"
                           >
                             <Trash2 size={14} />
                           </button>
@@ -510,7 +510,7 @@ export const TabArqueos = () => {
             <div className="py-2 text-center border-t border-gray-100">
               <button
                 onClick={() => setDisplayLimit(d => d + 20)}
-                className="text-xs text-orange-500 hover:underline"
+                className="min-h-[44px] text-xs text-orange-500 hover:underline"
               >
                 Ver más ({sessions.length - displayLimit} restantes)
               </button>
@@ -525,7 +525,7 @@ export const TabArqueos = () => {
 
           {/* Header */}
           <div className="bg-orange-500 px-5 py-3 flex items-center justify-between flex-shrink-0">
-            <h3 className="text-white font-bold text-sm uppercase tracking-wider">Arqueo de Caja</h3>
+            <h3 className="text-white font-bold text-sm tracking-wider">Arqueo de Caja</h3>
             <div className="flex items-center gap-2">
               {isActiveSelected && (canIncome || canExpense) && (
                 <>
@@ -547,7 +547,7 @@ export const TabArqueos = () => {
                   )}
                 </>
               )}
-              <button onClick={() => refetchCuadre()} className="p-1 rounded hover:bg-orange-400 transition-colors">
+              <button onClick={() => refetchCuadre()} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 rounded hover:bg-orange-400 transition-colors">
                 <RefreshCw size={14} className="text-white" />
               </button>
             </div>
@@ -601,7 +601,7 @@ export const TabArqueos = () => {
               <button
                 onClick={() => printArqueoMutation.mutate(selectedSession.id)}
                 disabled={printArqueoMutation.isPending}
-                className="w-full min-h-[44px] mt-1 flex items-center justify-center gap-2 text-sm font-semibold text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors disabled:opacity-50"
+                className="w-full min-h-[44px] mt-1 flex items-center justify-center gap-2 text-sm font-semibold text-slate-700 bg-white hover:bg-slate-50 rounded-lg transition-colors disabled:opacity-50 border border-slate-300"
               >
                 {printArqueoMutation.isPending ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />}
                 {isActiveSelected ? 'Imprimir arqueo parcial' : 'Imprimir arqueo'}
@@ -694,8 +694,8 @@ export const TabArqueos = () => {
               )}
               {totalCashIn > 0 && (
                 <div className="flex justify-between py-1.5 border-t border-gray-100">
-                  <span className="text-green-600 text-xs font-semibold">+ Ingresos manuales</span>
-                  <span className="font-bold text-green-600">{fmt(totalCashIn)}</span>
+                  <span className="text-slate-700 text-xs font-semibold">+ Ingresos manuales</span>
+                  <span className="font-bold text-slate-700">{fmt(totalCashIn)}</span>
                 </div>
               )}
               {totalCashOut > 0 && (
@@ -750,7 +750,7 @@ export const TabArqueos = () => {
                   <div className="space-y-1">
                     {movements.map((mov: any) => (
                       <div key={mov.id} className="flex justify-between text-xs bg-gray-50 rounded px-2 py-1.5">
-                        <span className={`font-semibold ${mov.type === 'CASH_IN' ? 'text-green-600' : 'text-red-500'}`}>
+                        <span className={`font-semibold ${mov.type === 'CASH_IN' ? 'text-slate-700' : 'text-red-500'}`}>
                           {mov.type === 'CASH_IN' ? '+ Ingreso' : '- Egreso'}: {fmt(mov.amount)}
                         </span>
                         <div className="flex flex-col items-end ml-2">
@@ -947,8 +947,8 @@ export const TabArqueos = () => {
       {confirmDeleteId && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className="bg-gray-900 px-5 py-3">
-              <h3 className="text-white font-bold text-sm uppercase tracking-wide">Eliminar Arqueo</h3>
+            <div className="bg-white px-5 py-3">
+              <h3 className="text-white font-bold text-sm tracking-wide">Eliminar Arqueo</h3>
             </div>
             <div className="px-6 py-5">
               <p className="text-sm text-gray-700 mb-1">
@@ -994,10 +994,10 @@ export const TabArqueos = () => {
 
       {/* ── Modal: Nueva Caja ── */}
       {showOpenModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="bg-orange-500 px-5 py-3">
-              <h3 className="text-white font-bold text-sm uppercase tracking-wide">Nuevo Arqueo de Caja</h3>
+              <h3 className="text-white font-bold text-sm tracking-wide">Nuevo Arqueo de Caja</h3>
             </div>
             <div className="px-6 py-5 space-y-4">
               <div>
@@ -1041,21 +1041,21 @@ export const TabArqueos = () => {
             <div className="px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => setShowOpenModal(false)}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                className="min-h-[44px] px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 disabled={openMutation.isPending || !openDate || !openTime}
                 onClick={() => openMutation.mutate()}
-                className="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
+                className="min-h-[44px] px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
               >
                 {openMutation.isPending && <Loader2 className="animate-spin" size={15} />}
                 Iniciar Arqueo
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
 
       {/* ── Modal: Movimiento manual ── */}
@@ -1073,11 +1073,11 @@ export const TabArqueos = () => {
 
       {/* ── Modal: Confirmar cierre diferencia grande ── */}
       {showCloseConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="bg-red-600 px-5 py-3 flex items-center gap-2">
               <AlertTriangle size={16} className="text-white" />
-              <h3 className="text-white font-bold text-sm uppercase tracking-wide">Diferencia Grande</h3>
+              <h3 className="text-white font-bold text-sm tracking-wide">Diferencia Grande</h3>
             </div>
             <div className="px-6 py-5">
               <p className="text-sm text-gray-700 mb-2">
@@ -1090,21 +1090,21 @@ export const TabArqueos = () => {
             <div className="px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => setShowCloseConfirm(false)}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                className="min-h-[44px] px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 Revisar montos
               </button>
               <button
                 disabled={closeMutation.isPending}
                 onClick={() => closeMutation.mutate()}
-                className="px-4 py-2 text-sm rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
+                className="min-h-[44px] px-4 py-2 text-sm rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
               >
                 {closeMutation.isPending ? <Loader2 className="animate-spin" size={15} /> : <Check size={15} />}
                 Cerrar de todas formas
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
 
     </div>

@@ -98,13 +98,13 @@ export default function IngredientsTable({
                   <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => onEdit(ingredient)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-slate-700 hover:bg-slate-100 rounded"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => onDelete(ingredient)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-red-600 hover:bg-red-50 rounded"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -132,7 +132,7 @@ export default function IngredientsTable({
           {!searchQuery && !showLowStock && onCreate && (
             <button
               onClick={onCreate}
-              className="px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+              className="min-h-[44px] px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Crear Primer Ingrediente

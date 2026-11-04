@@ -1,6 +1,7 @@
 // ── components/print/PrinterRoutingManager.tsx ────────────────────────────────
 // Gestión de reglas de enrutamiento de impresión por categoría/producto.
 
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -61,12 +62,12 @@ function RuleRow({
             <span className="text-sm font-medium text-gray-800">{rule.label}</span>
           )}
           {catNames && (
-            <span className="text-xs bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-full truncate max-w-[200px]">
+            <span className="text-xs bg-slate-50 text-slate-700 px-1.5 py-0.5 rounded-full truncate max-w-[200px]">
               📦 {catNames}
             </span>
           )}
           {(rule.order_types ?? []).length > 0 && (
-            <span className="text-xs bg-purple-50 text-purple-700 px-1.5 py-0.5 rounded-full">
+            <span className="text-xs bg-slate-50 text-slate-700 px-1.5 py-0.5 rounded-full">
               🛒 {rule.order_types!.join(', ')}
             </span>
           )}
@@ -83,7 +84,7 @@ function RuleRow({
       <div className="flex items-center gap-1 shrink-0">
         <button
           onClick={() => onEdit(rule)}
-          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"
+          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-gray-100 text-gray-500"
           title="Editar"
         >
           <Pencil className="w-3.5 h-3.5" />
@@ -91,7 +92,7 @@ function RuleRow({
         <button
           onClick={() => onDelete(rule.id)}
           disabled={deleting}
-          className="p-1.5 rounded-lg hover:bg-red-50 text-red-400 disabled:opacity-40"
+          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-red-50 text-red-400 disabled:opacity-40"
           title="Eliminar"
         >
           {deleting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
@@ -160,13 +161,13 @@ function RuleModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white">
           <h2 className="text-base font-semibold text-gray-900">
             {rule ? 'Editar regla' : 'Nueva regla de enrutamiento'}
           </h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-gray-100">
             <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
@@ -219,7 +220,7 @@ function RuleModal({
                       type="checkbox"
                       checked={form.category_ids.includes(cat.id)}
                       onChange={() => toggleCategory(cat.id)}
-                      className="w-3.5 h-3.5 text-indigo-600 rounded"
+                      className="w-3.5 h-3.5 text-slate-700 rounded"
                     />
                     <span className="text-sm text-gray-700 truncate">{cat.name}</span>
                   </label>
@@ -240,7 +241,7 @@ function RuleModal({
                     type="checkbox"
                     checked={form.order_types.includes(ot)}
                     onChange={() => toggleOrderType(ot)}
-                    className="w-3.5 h-3.5 text-indigo-600 rounded"
+                    className="w-3.5 h-3.5 text-slate-700 rounded"
                   />
                   <span className="text-sm text-gray-700">{ot}</span>
                 </label>
@@ -277,27 +278,27 @@ function RuleModal({
                 type="checkbox"
                 checked={form.is_active}
                 onChange={e => set('is_active', e.target.checked)}
-                className="mt-2 w-4 h-4 text-indigo-600 rounded"
+                className="mt-2 w-4 h-4 text-slate-700 rounded"
               />
             </div>
           </div>
         </div>
 
         <div className="flex justify-end gap-2 p-5 border-t border-gray-100 sticky bottom-0 bg-white">
-          <button onClick={onClose} className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+          <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+            className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50"
           >
             {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
             Guardar
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -354,13 +355,13 @@ export function PrinterRoutingManager({ branchId, printers }: Props) {
         {/* Header */}
         <button
           onClick={() => setExpanded(e => !e)}
-          className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
+          className="min-h-[44px] w-full flex items-center justify-between px-4 py-3 bg-gray-50 hover:bg-gray-100 transition-colors"
         >
           <div className="flex items-center gap-2">
-            <GitBranch className="w-4 h-4 text-indigo-600" />
+            <GitBranch className="w-4 h-4 text-slate-700" />
             <span className="text-sm font-medium text-gray-800">Enrutamiento por categoría</span>
             {rules.length > 0 && (
-              <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded-full">
+              <span className="text-xs bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded-full">
                 {rules.length} {rules.length === 1 ? 'regla' : 'reglas'}
               </span>
             )}
@@ -371,7 +372,7 @@ export function PrinterRoutingManager({ branchId, printers }: Props) {
         {expanded && (
           <div className="p-4 space-y-3">
             <p className="text-xs text-gray-500 flex items-start gap-1.5">
-              <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-blue-400" />
+              <Info className="w-3.5 h-3.5 mt-0.5 shrink-0 text-slate-500" />
               Define qué impresora recibe cada ítem según su categoría. Si un ítem no matchea ninguna regla, va a las impresoras del tipo correspondiente (cocina o caja).
             </p>
 
@@ -400,7 +401,7 @@ export function PrinterRoutingManager({ branchId, printers }: Props) {
 
             <button
               onClick={() => setEditRule(null)}
-              className="flex items-center gap-1.5 text-sm text-indigo-600 hover:text-indigo-800"
+              className="min-h-[44px] flex items-center gap-1.5 text-sm text-slate-700 hover:text-slate-700"
             >
               <Plus className="w-4 h-4" /> Agregar regla
             </button>

@@ -152,7 +152,7 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
                 />
                 <button
                   onClick={() => removeItem(index)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 text-red-600 hover:bg-red-50 rounded"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

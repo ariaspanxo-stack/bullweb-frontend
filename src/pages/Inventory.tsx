@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inventoryService } from '@/services/inventoryService';
@@ -261,7 +262,7 @@ export default function Inventory() {
             ], 'Inventario');
             toast.success('Inventario exportado a Excel (4 hojas)');
           }}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+          className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
         >
           <FileDown className="w-4 h-4" />
           Exportar Excel
@@ -289,7 +290,7 @@ export default function Inventory() {
               </div>
               <button
                 onClick={() => setShowLowStock(!showLowStock)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors ${
+                className={`min-h-[44px] flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors ${
                   showLowStock
                     ? 'border-red-500 bg-red-50 text-red-700'
                     : 'border-gray-200 hover:border-gray-300'
@@ -375,7 +376,7 @@ export default function Inventory() {
                         <td className="px-4 py-3">
                           <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
                             purchase.status === 'RECEIVED'
-                              ? 'bg-green-100 text-green-700'
+                              ? 'bg-slate-100 text-slate-700'
                               : 'bg-yellow-100 text-yellow-700'
                           }`}>
                             {purchase.status === 'RECEIVED' ? 'Recibido' : 'Pendiente'}
@@ -433,8 +434,8 @@ export default function Inventory() {
                         ADJUSTMENT: 'Ajuste',
                       };
                       const typeColor: Record<string, string> = {
-                        PURCHASE: 'bg-blue-100 text-blue-700',
-                        SALE: 'bg-purple-100 text-purple-700',
+                        PURCHASE: 'bg-slate-100 text-slate-700',
+                        SALE: 'bg-slate-100 text-slate-700',
                         WASTE: 'bg-red-100 text-red-700',
                         ADJUSTMENT: 'bg-yellow-100 text-yellow-700',
                       };
@@ -455,7 +456,7 @@ export default function Inventory() {
                               {typeLabel[mov.type] ?? mov.type}
                             </span>
                           </td>
-                          <td className={`px-4 py-3 font-semibold ${mov.quantity < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                          <td className={`px-4 py-3 font-semibold ${mov.quantity < 0 ? 'text-red-600' : 'text-slate-700'}`}>
                             {mov.quantity > 0 ? '+' : ''}{mov.quantity}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-500">{mov.previousStock}</td>
@@ -515,7 +516,7 @@ export default function Inventory() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => { setEditingSupplier(s); setIsSupplierModalOpen(true); }}
-                              className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-gray-400 hover:text-slate-700 hover:bg-slate-100 rounded"
                             >
                               <Pencil className="w-4 h-4" />
                             </button>
@@ -524,7 +525,7 @@ export default function Inventory() {
                                 const ok = await confirmDialog({ message: `¿Eliminar proveedor "${s.name}"?`, confirmLabel: 'Eliminar' });
                                 if (ok) deleteSupplierMutation.mutate(s.id);
                               }}
-                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -664,7 +665,7 @@ function PurchaseModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
       <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-auto shadow-xl">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">Nueva Compra</h2>
@@ -690,7 +691,7 @@ function PurchaseModal({
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700">Ítems</label>
-              <button type="button" onClick={addItem} className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+              <button type="button" onClick={addItem} className="min-h-[44px] text-sm text-primary-600 hover:text-primary-700 font-medium">
                 + Agregar ítem
               </button>
             </div>
@@ -723,7 +724,7 @@ function PurchaseModal({
                     className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                   />
                   {items.length > 1 ? (
-                    <button type="button" onClick={() => removeItem(i)} className="text-red-400 hover:text-red-600 text-xl leading-none">×</button>
+                    <button type="button" onClick={() => removeItem(i)} className="min-h-[44px] text-red-400 hover:text-red-600 text-xl leading-none">×</button>
                   ) : <span />}
                 </div>
               ))}
@@ -740,13 +741,13 @@ function PurchaseModal({
           </div>
         </div>
         <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
+          <button type="button" onClick={onClose} className="min-h-[44px] px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? 'Guardando...' : 'Registrar Compra'}
           </Button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -775,7 +776,7 @@ function MovementModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
       <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">Agregar Movimiento</h2>
@@ -823,13 +824,13 @@ function MovementModal({
           </div>
         </div>
         <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
+          <button type="button" onClick={onClose} className="min-h-[44px] px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? 'Guardando...' : 'Registrar'}
           </Button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -872,7 +873,7 @@ function SupplierModal({
   );
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
       <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">{supplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}</h2>
@@ -894,12 +895,12 @@ function SupplierModal({
           </div>
         </div>
         <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
+          <button type="button" onClick={onClose} className="min-h-[44px] px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
           <Button onClick={handleSubmit} disabled={isSubmitting || !name.trim()}>
             {isSubmitting ? 'Guardando...' : supplier ? 'Actualizar' : 'Crear Proveedor'}
           </Button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

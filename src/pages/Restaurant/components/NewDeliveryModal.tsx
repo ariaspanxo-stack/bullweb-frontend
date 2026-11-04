@@ -432,19 +432,19 @@ export const NewDeliveryModal = ({
       )}
       {/* Overlay — sin onClick para no cerrar al hacer click fuera */}
       <div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
       />
 
       {/* Modal fullscreen — Hotfix 245 C1 */}
       <div className="fixed inset-0 bg-white shadow-2xl z-50 flex flex-col overflow-hidden">
         
         {/* ========== HEADER ========== */}
-        <div className="bg-gradient-to-r from-purple-700 via-purple-600 to-purple-500 text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
+        <div className=" text-slate-900 px-5 py-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             {step === 'order' ? (
               <button
                 onClick={() => { setStep('client'); setErrors([]); }}
-                className="w-11 h-11 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-11 h-11 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors"
               >
                 <ArrowLeft size={20} />
               </button>
@@ -458,16 +458,16 @@ export const NewDeliveryModal = ({
                 <h2 className="font-bold text-lg leading-tight">Nueva Orden</h2>
                 <span className="bg-white/25 text-white text-xs font-semibold px-2.5 py-0.5 rounded-full tracking-wide">DELIVERY</span>
               </div>
-              <p className="text-purple-100 text-xs font-medium">
+              <p className="text-slate-500 text-xs font-medium">
                 {step === 'client' ? 'Paso 1 · Datos del cliente' : `Paso 2 · Productos · ${cart.length} ${cart.length === 1 ? 'item' : 'items'}`}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1 mr-1">
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step === 'client' ? 'bg-white text-purple-600' : 'bg-white/25 text-white/70'}`}>1</div>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step === 'client' ? 'bg-white text-slate-700' : 'bg-white/25 text-white/70'}`}>1</div>
               <div className="w-3 h-px bg-white/40" />
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step === 'order' ? 'bg-white text-purple-600' : 'bg-white/25 text-white/70'}`}>2</div>
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${step === 'order' ? 'bg-white text-slate-700' : 'bg-white/25 text-white/70'}`}>2</div>
             </div>
             {cart.length > 0 && (
               <button
@@ -479,14 +479,14 @@ export const NewDeliveryModal = ({
                   }
                 }}
                 title="Limpiar carrito y empezar nueva orden"
-                className="w-9 h-9 bg-white/20 hover:bg-red-500/80 rounded-lg flex items-center justify-center transition-colors"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-9 h-9 bg-white/20 hover:bg-red-500/80 rounded-lg flex items-center justify-center transition-colors"
               >
                 <Trash2 size={17} />
               </button>
             )}
             <button
               onClick={handleClose}
-              className="w-9 h-9 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-9 h-9 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
             >
               <X size={18} />
             </button>
@@ -501,10 +501,10 @@ export const NewDeliveryModal = ({
             {/* ── Card: Datos del cliente ── */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 space-y-3.5">
               <p className="flex items-center gap-1.5 text-xs font-bold text-gray-400 uppercase tracking-wider pb-2 border-b border-gray-100">
-                <User size={12} className="text-purple-400" />Datos del cliente
+                <User size={12} className="text-slate-500" />Datos del cliente
               </p>
               <div className="relative">
-                <label className="block text-xs font-semibold text-purple-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                   <User size={12} />Nombre *
                 </label>
                 <div className="relative">
@@ -525,24 +525,24 @@ export const NewDeliveryModal = ({
                         if (stillValid) setShowSuggestions(true);
                       }
                     }}
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-100 transition-all pr-8"
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all pr-8"
                   />
                   {searchingCustomer && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
                   )}
                 </div>
                 {/* Dropdown sugerencias */}
                 {showSuggestions && customerSuggestions.length > 0 && (
-                  <div ref={suggestionsRef} className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border-2 border-purple-200 rounded-xl shadow-xl overflow-hidden">
+                  <div ref={suggestionsRef} className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border-2 border-slate-200 rounded-xl shadow-xl overflow-hidden">
                     {customerSuggestions.map((c) => (
                       <button
                         key={c.id}
                         type="button"
                         onMouseDown={() => handleSelectCustomer(c)}
-                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-purple-50 transition-colors text-left border-b border-gray-100 last:border-0"
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-100 transition-colors text-left border-b border-gray-100 last:border-0"
                       >
-                        <div className="w-7 h-7 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                          <User size={13} className="text-purple-600" />
+                        <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                          <User size={13} className="text-slate-700" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-gray-900 truncate">{c.name}</p>
@@ -554,7 +554,7 @@ export const NewDeliveryModal = ({
                 )}
               </div>
               <div>
-                <label className="block text-xs font-semibold text-purple-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                   <Phone size={12} />Teléfono *
                 </label>
                 <input
@@ -562,17 +562,17 @@ export const NewDeliveryModal = ({
                   placeholder="+56 9 1234 5678"
                   value={customerPhone}
                   onChange={(e) => { setCustomerPhone(e.target.value); setErrors([]); }}
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-100 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
                 />
               </div>
             </div>
             {/* ── Card: Dirección de entrega ── */}
-            <div className="bg-white rounded-2xl shadow-sm border border-purple-100 p-4 space-y-3.5">
-              <p className="flex items-center gap-1.5 text-xs font-bold text-purple-400 uppercase tracking-wider pb-2 border-b border-purple-100">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 space-y-3.5">
+              <p className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider pb-2 border-b border-slate-200">
                 <MapPin size={12} />Dirección de entrega
               </p>
               <div>
-                <label className="block text-xs font-semibold text-purple-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                   <MapPin size={12} />Dirección *
                 </label>
                 <input
@@ -580,12 +580,12 @@ export const NewDeliveryModal = ({
                   placeholder="Calle, número, depto..."
                   value={customerAddress}
                   onChange={(e) => { setCustomerAddress(e.target.value); setErrors([]); }}
-                  className="w-full px-4 py-3.5 bg-purple-50 border-2 border-purple-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-100 transition-all"
+                  className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-purple-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                     <MapPin size={12} />Ciudad *
                   </label>
                   <input
@@ -593,21 +593,21 @@ export const NewDeliveryModal = ({
                     placeholder="Ej: Santiago"
                     value={deliveryCity}
                     onChange={(e) => { setDeliveryCity(e.target.value); setErrors([]); }}
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-100 transition-all"
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-purple-600 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                     <Truck size={12} />Costo envío
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-purple-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-500">$</span>
                     <input
                       type="number"
                       placeholder="2000"
                       value={deliveryCost}
                       onChange={(e) => setDeliveryCost(e.target.value)}
-                      className="w-full pl-7 pr-3 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-100 transition-all"
+                      className="w-full pl-7 pr-3 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
                     />
                   </div>
                 </div>
@@ -622,7 +622,7 @@ export const NewDeliveryModal = ({
                   placeholder="Timbre 2B, portería, sin ascensor..."
                   value={deliveryNotes}
                   onChange={(e) => setDeliveryNotes(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-100 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
                 />
               </div>
               {/* ── Hotfix #88: Email opcional ── */}
@@ -637,7 +637,7 @@ export const NewDeliveryModal = ({
                   placeholder="cliente@email.com"
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:bg-white focus:ring-2 focus:ring-purple-100 transition-all"
+                  className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
                 />
               </div>
             </div>
@@ -645,19 +645,19 @@ export const NewDeliveryModal = ({
             <button
               type="button"
               onClick={() => setMarketingOptIn(v => !v)}
-              className={`flex items-center gap-2 w-full px-4 py-3 rounded-xl border-2 transition-all ${
+              className={`min-h-[44px] flex items-center gap-2 w-full px-4 py-3 rounded-xl border-2 transition-all ${
                 marketingOptIn
-                  ? 'border-purple-400 bg-purple-50'
+                  ? 'border-slate-200 bg-slate-50'
                   : 'border-dashed border-gray-300 bg-white'
               }`}
             >
               <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                marketingOptIn ? 'bg-purple-500 border-purple-500' : 'border-gray-300 bg-white'
+                marketingOptIn ? 'bg-slate-500 border-slate-200' : 'border-gray-300 bg-white'
               }`}>
                 {marketingOptIn && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>}
               </div>
               <span className={`text-xs font-bold ${
-                marketingOptIn ? 'text-purple-700' : 'text-gray-500'
+                marketingOptIn ? 'text-slate-700' : 'text-gray-500'
               }`}>
                 Quiero recibir ofertas y promociones por email
               </span>
@@ -667,20 +667,20 @@ export const NewDeliveryModal = ({
               <button
                 type="button"
                 onClick={() => setSaveToCustomers(v => !v)}
-                className={`flex items-center gap-2 w-full px-4 py-3 rounded-xl border-2 transition-all ${
+                className={`min-h-[44px] flex items-center gap-2 w-full px-4 py-3 rounded-xl border-2 transition-all ${
                   saveToCustomers
-                    ? 'border-purple-400 bg-purple-50'
+                    ? 'border-slate-200 bg-slate-50'
                     : 'border-dashed border-gray-300 bg-white'
                 }`}
               >
                 <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                  saveToCustomers ? 'bg-purple-500 border-purple-500' : 'border-gray-300 bg-white'
+                  saveToCustomers ? 'bg-slate-500 border-slate-200' : 'border-gray-300 bg-white'
                 }`}>
                   {saveToCustomers && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>}
                 </div>
-                <UserPlus size={13} className={saveToCustomers ? 'text-purple-600' : 'text-gray-400'} />
+                <UserPlus size={13} className={saveToCustomers ? 'text-slate-700' : 'text-gray-400'} />
                 <span className={`text-xs font-bold ${
-                  saveToCustomers ? 'text-purple-700' : 'text-gray-500'
+                  saveToCustomers ? 'text-slate-700' : 'text-gray-500'
                 }`}>
                   Guardar "{customerName.trim()}" en base de Clientes
                 </span>
@@ -701,15 +701,15 @@ export const NewDeliveryModal = ({
                 placeholder="Buscar producto..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-24 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-24 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
               {/* Hotfix #244: toggle Búsqueda↔Categorías, persistido por dispositivo */}
               <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex gap-1">
                 <button
                   onClick={() => toggleViewMode('search')}
                   title="Búsqueda"
-                  className={`p-1.5 rounded-lg transition-colors ${
-                    viewMode === 'search' ? 'bg-purple-500 text-white' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                  className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg transition-colors ${
+                    viewMode === 'search' ? 'bg-orange-50 text-orange-700 border border-orange-300' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
                   }`}
                 >
                   <Search size={16} />
@@ -717,8 +717,8 @@ export const NewDeliveryModal = ({
                 <button
                   onClick={() => toggleViewMode('grid')}
                   title="Categorías"
-                  className={`p-1.5 rounded-lg transition-colors ${
-                    viewMode === 'grid' ? 'bg-purple-500 text-white' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                  className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg transition-colors ${
+                    viewMode === 'grid' ? 'bg-orange-50 text-orange-700 border border-orange-300' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
                   }`}
                 >
                   <LayoutGrid size={16} />
@@ -727,7 +727,7 @@ export const NewDeliveryModal = ({
               {searchQuery && viewMode === 'search' && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-20 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center absolute right-20 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   <X size={16} />
                 </button>
@@ -740,7 +740,7 @@ export const NewDeliveryModal = ({
                     <button
                       key={cat.id}
                       onClick={() => { setSearchQuery(''); setSelectedCategory(cat.id); setViewMode('grid'); }}
-                      className="h-11 px-3 rounded-full text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      className="min-h-[44px] h-11 px-3 rounded-full text-sm font-medium transition-colors bg-gray-100 text-gray-700 hover:bg-gray-200"
                     >
                       {categoryLabel(cat)}
                     </button>
@@ -751,7 +751,7 @@ export const NewDeliveryModal = ({
               {/* Dropdown de resultados — Hotfix 245 C6: visible en AMBOS modos;
                   busca en toda la carta ignorando selectedCategory */}
               {searchQuery && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-purple-500 rounded-lg shadow-xl max-h-[300px] overflow-y-auto z-50">
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-slate-200 rounded-lg shadow-xl max-h-[300px] overflow-y-auto z-50">
                   {searchResults.map((product) => (
                     <button
                       key={product.id}
@@ -759,7 +759,7 @@ export const NewDeliveryModal = ({
                         pickProduct(product);
                         setSearchQuery('');
                       }}
-                      className="w-full p-3 hover:bg-purple-50 transition-colors text-left border-b border-gray-100 last:border-0"
+                      className="min-h-[44px] w-full p-3 hover:bg-slate-100 transition-colors text-left border-b border-gray-100 last:border-0"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
@@ -772,9 +772,9 @@ export const NewDeliveryModal = ({
                           {product.description && (
                             <p className="text-xs text-gray-500 line-clamp-1 mb-1">{product.description}</p>
                           )}
-                          <span className="text-lg font-bold text-purple-500">${fmt(product.price)}</span>
+                          <span className="text-lg font-bold text-slate-500">${fmt(product.price)}</span>
                         </div>
-                        <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 bg-slate-500 rounded-lg flex items-center justify-center flex-shrink-0">
                           <Plus size={16} className="text-white" />
                         </div>
                       </div>
@@ -806,7 +806,7 @@ export const NewDeliveryModal = ({
           <button
             key={cat.id}
             onClick={() => setSelectedCategory(cat.id)}
-            className="text-left rounded-2xl overflow-hidden border border-gray-200 bg-white hover:border-purple-300 hover:bg-purple-50 transition-all min-h-[120px] flex flex-col"
+            className="text-left rounded-2xl overflow-hidden border border-gray-200 bg-white hover:border-slate-300 hover:bg-slate-100 transition-all min-h-[120px] flex flex-col"
           >
             {(cat as any).image ? (
               <div className="h-16 w-full overflow-hidden bg-gray-100">
@@ -832,7 +832,7 @@ export const NewDeliveryModal = ({
     <div className="px-3 pt-3 flex items-center gap-2.5">
       <button
         onClick={() => setSelectedCategory(null)}
-        className="h-11 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+        className="min-h-[44px] h-11 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
       >
         <ArrowLeft size={16} />
         Categorías
@@ -850,7 +850,7 @@ export const NewDeliveryModal = ({
         <button
           key={cat.id}
           onClick={() => setSelectedCategory(cat.id)}
-          className={`px-3 py-1 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+          className={`min-h-[44px] px-3 py-1 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
             selectedCategory === cat.id
               ? 'bg-[#F97316] text-white'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -878,10 +878,10 @@ export const NewDeliveryModal = ({
                 setTimeout(() => setTappedProductId(null), 120);
                 pickProduct(product);
               }}
-              className={`relative text-left p-2.5 bg-gray-50 hover:bg-purple-50 border border-gray-200 hover:border-purple-300 rounded-xl transition-all duration-100 ${tappedProductId === product.id ? 'scale-95' : 'scale-100'}`}
+              className={`min-h-[44px] relative text-left p-2.5 bg-gray-50 hover:bg-slate-100 border border-gray-200 hover:border-slate-300 rounded-xl transition-all duration-100 ${tappedProductId === product.id ? 'scale-95' : 'scale-100'}`}
             >
               {qtyInCart > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1 rounded-full bg-purple-600 text-white text-xs font-bold flex items-center justify-center z-10">{qtyInCart}</span>
+                <span className="absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1 rounded-full bg-slate-500 text-white text-xs font-bold flex items-center justify-center z-10">{qtyInCart}</span>
               )}
               {(product as any).image ? (
                 <div className="w-full h-16 mb-1.5 rounded-lg overflow-hidden bg-gray-100">
@@ -893,7 +893,7 @@ export const NewDeliveryModal = ({
                 </div>
               )}
               <p className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</p>
-              <p className="text-sm font-bold text-purple-600">${fmt(product.price)}</p>
+              <p className="text-sm font-bold text-slate-700">${fmt(product.price)}</p>
             </button>
           );
         })}
@@ -943,7 +943,7 @@ export const NewDeliveryModal = ({
             promoLines={promoLines}
             promoDiscount={promoDiscount}
             extraTotals={
-              <div className="flex justify-between text-sm text-purple-600">
+              <div className="flex justify-between text-sm text-slate-700">
                 <span>Delivery</span>
                 <span className="font-medium">${fmt(deliveryFeeValue)}</span>
               </div>
@@ -952,16 +952,16 @@ export const NewDeliveryModal = ({
               /* ====== RESUMEN CLIENTE (paso 2) — chip editable en 1 tap ====== */
               <button
                 onClick={() => { setStep('client'); setErrors([]); }}
-                className="w-full text-left bg-purple-50 border-b-2 border-purple-100 px-4 py-2.5 flex-shrink-0 hover:bg-purple-100 transition-colors"
+                className="min-h-[44px] w-full text-left bg-slate-50 border-b-2 border-slate-200 px-4 py-2.5 flex-shrink-0 hover:bg-slate-100 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-full bg-purple-200 flex items-center justify-center flex-shrink-0">
-                    <User size={13} className="text-purple-700" />
+                  <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+                    <User size={13} className="text-slate-700" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-purple-900 truncate">{customerName}</p>
-                    <p className="text-xs text-purple-600 truncate">{customerPhone} · {customerAddress}, {deliveryCity}</p>
-                    {deliveryNotes && <p className="text-xs text-purple-500 italic truncate">{deliveryNotes}</p>}
+                    <p className="text-sm font-bold text-slate-700 truncate">{customerName}</p>
+                    <p className="text-xs text-slate-700 truncate">{customerPhone} · {customerAddress}, {deliveryCity}</p>
+                    {deliveryNotes && <p className="text-xs text-slate-500 italic truncate">{deliveryNotes}</p>}
                   </div>
                 </div>
               </button>
@@ -982,7 +982,7 @@ export const NewDeliveryModal = ({
               <>
                 {/* ====== MEDIO DE PAGO (paso 2) ====== */}
                 <div className="mt-3">
-                  <p className="flex items-center gap-1.5 text-xs font-bold text-indigo-400 uppercase tracking-wider pb-2 mb-2 border-b border-indigo-100">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider pb-2 mb-2 border-b border-slate-200">
                     <CreditCard size={12} />Medio de pago
                   </p>
                   {paymentMethods.length === 0 ? (
@@ -996,10 +996,10 @@ export const NewDeliveryModal = ({
                             key={m.id}
                             type="button"
                             onClick={() => setPaymentMethodId(m.id)}
-                            className={`px-3 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
+                            className={`min-h-[44px] px-3 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
                               selected
-                                ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                                : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-indigo-300'
+                                ? 'border-slate-200 bg-slate-50 text-slate-700'
+                                : 'border-gray-200 bg-gray-50 text-gray-600 hover:border-slate-300'
                             }`}
                           >
                             <CreditCard size={11} className="inline mr-1 -mt-0.5" />
@@ -1020,7 +1020,7 @@ export const NewDeliveryModal = ({
                         value={cashAmount}
                         onChange={(e) => setCashAmount(e.target.value.replace(/[^0-9]/g, ''))}
                         placeholder={`Ej: ${fmt(Math.ceil(total / 1000) * 1000 || 10000)}`}
-                        className="w-full min-h-[44px] px-3 border-2 border-gray-200 rounded-xl text-sm font-bold focus:border-indigo-400 focus:outline-none"
+                        className="w-full min-h-[44px] px-3 border-2 border-gray-200 rounded-xl text-sm font-bold focus:border-orange-500 focus:outline-none"
                       />
                       {cashNum > 0 && (
                         <p className="text-xs mt-1 text-gray-600">
@@ -1035,7 +1035,7 @@ export const NewDeliveryModal = ({
                 <button
                   onClick={() => setShowPrintControl(true)}
                   disabled={cart.length === 0}
-                  className="w-full mt-2 py-2 border-2 border-indigo-400 text-indigo-600 rounded-lg font-bold hover:bg-indigo-50 transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="min-h-[44px] w-full mt-2 py-2 border-2 border-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Printer size={17} />
                   Imprimir control de mesa
@@ -1068,7 +1068,7 @@ export const NewDeliveryModal = ({
             )}
             <button
               onClick={() => { if (validateClient()) { setStep('order'); setTimeout(() => searchInputRef.current?.focus(), 100); } }}
-              className="w-full py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white rounded-xl text-base font-bold hover:from-purple-700 hover:to-purple-600 transition-all shadow-lg shadow-purple-500/25 flex items-center justify-center gap-2 group"
+              className="min-h-[44px] w-full py-4 text-white rounded-xl text-base font-bold hover:from-purple-700 hover:to-purple-600 transition-all shadow-lg flex items-center justify-center gap-2 group"
             >
               <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
               Continuar — Elegir productos

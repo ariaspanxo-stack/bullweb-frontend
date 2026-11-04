@@ -118,7 +118,7 @@ function CafSection({ config, onSaved }: { config: DteConfig | null; onSaved: ()
 
       {/* HOTFIX #100: confirmación de validación server-side */}
       {validatedInfo && (
-        <p className="text-xs text-emerald-700 font-medium bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+        <p className="text-xs text-slate-700 font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
           ✓ {validatedInfo}
         </p>
       )}
@@ -155,7 +155,7 @@ function CafSection({ config, onSaved }: { config: DteConfig | null; onSaved: ()
             value={folioInicio}
             onChange={e => setFolioInicio(e.target.value)}
             placeholder="1"
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500"
           />
         </div>
         <div>
@@ -166,7 +166,7 @@ function CafSection({ config, onSaved }: { config: DteConfig | null; onSaved: ()
             value={folioFin}
             onChange={e => setFolioFin(e.target.value)}
             placeholder="1000"
-            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500"
+            className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500"
           />
         </div>
       </div>
@@ -187,7 +187,7 @@ function CafSection({ config, onSaved }: { config: DteConfig | null; onSaved: ()
             <span className="font-medium">Último folio usado:</span>{' '}
             {boletaFolio.folioActual ?? 0}
           </p>
-          <p className={`font-semibold ${remaining !== null && remaining < 50 ? 'text-red-600' : 'text-emerald-600'}`}>
+          <p className={`font-semibold ${remaining !== null && remaining < 50 ? 'text-red-600' : 'text-slate-700'}`}>
             Folios restantes: {remaining ?? '—'}
           </p>
         </div>
@@ -334,7 +334,7 @@ export default function DteConfigPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500" />
       </div>
     );
   }
@@ -344,7 +344,7 @@ export default function DteConfigPage() {
       {/* Encabezado */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-blue-600/15 flex items-center justify-center text-xl">
+          <div className="w-10 h-10 rounded-xl bg-slate-500 flex items-center justify-center text-xl">
             🧾
           </div>
           <div>
@@ -352,7 +352,7 @@ export default function DteConfigPage() {
             <p className="text-sm text-gray-500">Facturación electrónica vía motor nativo SII</p>
           </div>
           {config?.active && (
-            <span className="ml-auto text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+            <span className="ml-auto text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
               ● Activo
             </span>
           )}
@@ -406,8 +406,8 @@ export default function DteConfigPage() {
               <button
                 onClick={() => handleToggleActive(!config.active)}
                 disabled={togglingActive}
-                className={`relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ml-4 disabled:opacity-60
-                            ${config.active ? 'bg-green-500' : 'bg-gray-300'}`}
+                className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center relative w-11 h-6 rounded-full transition-colors flex-shrink-0 ml-4 disabled:opacity-60
+                            ${config.active ? 'bg-orange-50 border border-orange-300' : 'bg-gray-300'}`}
               >
                 <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform
                                   ${config.active ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -443,7 +443,7 @@ export default function DteConfigPage() {
             )}
             {/* HOTFIX #100: confirmación de validación real post-guardado */}
             {saveFeedback && !certError && (
-              <p className="mt-2 text-xs text-emerald-700 font-medium bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+              <p className="mt-2 text-xs text-slate-700 font-medium bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
                 {saveFeedback}
               </p>
             )}
@@ -457,7 +457,7 @@ export default function DteConfigPage() {
               placeholder={config?.hasCertificado ? '•••••• (dejar vacío para no cambiar)' : 'Contraseña del .pfx'}
               value={form.certificadoPassword}
               onChange={e => setForm(f => ({ ...f, certificadoPassword: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
         </fieldset>
@@ -473,7 +473,7 @@ export default function DteConfigPage() {
                 placeholder="76XXXXXXXX-X"
                 value={form.contribuyenteRut}
                 onChange={e => setForm(f => ({ ...f, contribuyenteRut: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
             <div>
@@ -483,7 +483,7 @@ export default function DteConfigPage() {
                 placeholder="Mi Empresa SpA"
                 value={form.contribuyenteRazonSocial}
                 onChange={e => setForm(f => ({ ...f, contribuyenteRazonSocial: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -494,7 +494,7 @@ export default function DteConfigPage() {
               placeholder="Restaurante"
               value={form.contribuyenteGiro}
               onChange={e => setForm(f => ({ ...f, contribuyenteGiro: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
           <div>
@@ -504,7 +504,7 @@ export default function DteConfigPage() {
               placeholder="Av. Ejemplo 123"
               value={form.contribuyenteDireccion}
               onChange={e => setForm(f => ({ ...f, contribuyenteDireccion: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -515,7 +515,7 @@ export default function DteConfigPage() {
                 placeholder="Santiago"
                 value={form.contribuyenteComuna}
                 onChange={e => setForm(f => ({ ...f, contribuyenteComuna: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
             <div>
@@ -525,7 +525,7 @@ export default function DteConfigPage() {
                 placeholder="Santiago"
                 value={form.contribuyenteCiudad}
                 onChange={e => setForm(f => ({ ...f, contribuyenteCiudad: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -539,7 +539,7 @@ export default function DteConfigPage() {
                 placeholder="0"
                 value={form.resolucionNumero}
                 onChange={e => setForm(f => ({ ...f, resolucionNumero: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
             <div>
@@ -548,7 +548,7 @@ export default function DteConfigPage() {
                 type="date"
                 value={form.resolucionFecha}
                 onChange={e => setForm(f => ({ ...f, resolucionFecha: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -565,7 +565,7 @@ export default function DteConfigPage() {
             <button
               type="button"
               onClick={() => setForm(f => ({ ...f, ambiente: 'certificacion' }))}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold border transition-colors ${
+              className={`min-h-[44px] flex-1 py-2.5 rounded-lg text-sm font-semibold border transition-colors ${
                 form.ambiente === 'certificacion'
                   ? 'bg-yellow-50 border-yellow-300 text-yellow-800'
                   : 'border-gray-200 text-gray-500 hover:bg-gray-50'
@@ -576,9 +576,9 @@ export default function DteConfigPage() {
             <button
               type="button"
               onClick={() => setForm(f => ({ ...f, ambiente: 'produccion' }))}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold border transition-colors ${
+              className={`min-h-[44px] flex-1 py-2.5 rounded-lg text-sm font-semibold border transition-colors ${
                 form.ambiente === 'produccion'
-                  ? 'bg-green-50 border-green-300 text-green-800'
+                  ? 'bg-slate-50 border-slate-200 text-slate-700'
                   : 'border-gray-200 text-gray-500 hover:bg-gray-50'
               }`}
             >
@@ -593,7 +593,7 @@ export default function DteConfigPage() {
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-60"
+          className="min-h-[44px] w-full py-2.5 px-4 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg transition-colors disabled:opacity-60"
         >
           {saving ? 'Guardando...' : '💾 Guardar configuración'}
         </button>
@@ -603,7 +603,7 @@ export default function DteConfigPage() {
       <CafSection config={config} onSaved={loadConfig} />
 
       {/* Info */}
-      <div className="mt-8 p-4 rounded-xl border border-blue-100 bg-blue-50 text-xs text-blue-700 space-y-1">
+      <div className="mt-8 p-4 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-700 space-y-1">
         <p className="font-semibold">¿Qué necesitas para facturar electrónicamente?</p>
         <p>1. Un <strong>certificado digital .pfx</strong> emitido por una entidad autorizada (e.g., E-Cert, Acepta)</p>
         <p>2. Los <strong>datos de tu empresa</strong> (RUT, razón social, giro, dirección)</p>

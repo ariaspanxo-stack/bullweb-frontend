@@ -378,7 +378,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                       <button
                         onClick={() => handleEdit(recipe)}
                         disabled={editingRecipeId !== null || deletingId !== null}
-                        className={`${BTN_OUTLINE} flex-1`}
+                        className={`min-h-[44px] ${BTN_OUTLINE} flex-1`}
                         title="Editar ficha"
                         aria-label={`Editar ficha de ${productName}`}
                       >

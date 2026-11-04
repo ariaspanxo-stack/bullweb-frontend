@@ -264,7 +264,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
             {sale.customerId && sale.customerName ? (
               <button
                 onClick={() => navigate(`/customers?customerId=${sale.customerId}`)}
-                className="font-medium text-orange-600 hover:text-orange-800 hover:underline truncate"
+                className="min-h-[44px] font-medium text-orange-600 hover:text-orange-800 hover:underline truncate"
                 title="Ver cliente en el CRM"
               >
                 {sale.customerName}
@@ -398,7 +398,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
               label: 'Venta creada',
               detail: sale.waiterName ? `por ${sale.waiterName}` : undefined,
               time:  sale.startTime ? new Date(sale.startTime) : undefined,
-              colorClass: 'bg-blue-100 text-blue-700',
+              colorClass: 'bg-slate-100 text-slate-700',
             });
 
             // 2 — Pagos
@@ -408,7 +408,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                 label: `Pago registrado — ${p.method}`,
                 detail: new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(p.amount),
                 time:  p.createdAt ? new Date(p.createdAt) : undefined,
-                colorClass: 'bg-green-100 text-green-700',
+                colorClass: 'bg-slate-100 text-slate-700',
               });
             });
 
@@ -451,7 +451,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                 time: (sale as any).discountedAt
                   ? new Date((sale as any).discountedAt)
                   : sale.startTime ? new Date(sale.startTime) : undefined,
-                colorClass: 'bg-purple-100 text-purple-700',
+                colorClass: 'bg-slate-100 text-slate-700',
               });
             }
 
@@ -473,7 +473,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                 icon: <CheckCircle className="w-3.5 h-3.5" />,
                 label: 'Venta cerrada / confirmada',
                 time:  new Date(sale.closedAt),
-                colorClass: 'bg-emerald-100 text-emerald-700',
+                colorClass: 'bg-slate-100 text-slate-700',
               });
             }
 
@@ -546,7 +546,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
                   <span className="text-gray-600">
                     {tip.waiterName}
                   </span>
-                  <span className="font-medium text-green-600">
+                  <span className="font-medium text-slate-700">
                     {formatCurrency(tip.amount)}
                   </span>
                 </div>
@@ -570,7 +570,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
 
           {/* Descuento */}
           {sale.discount > 0 && (
-            <div className="flex justify-between text-sm text-green-300">
+            <div className="flex justify-between text-sm text-slate-500">
               <span>Descuento:</span>
               <span>- {formatCurrency(sale.discount)}</span>
             </div>
@@ -641,11 +641,11 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
 
     {/* ── MODAL PAGO ──────────────────────────────────────── */}
     {showPayModal && (
-      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+      createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
         <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-900">Registrar Pago</h3>
-            <button onClick={() => setShowPayModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+            <button onClick={() => setShowPayModal(false)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded-lg">
               <X className="w-5 h-5 text-gray-500" />
             </button>
           </div>
@@ -692,20 +692,20 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
           <div className="flex gap-2 mt-6">
             <button
               onClick={() => setShowPayModal(false)}
-              className="flex-1 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="min-h-[44px] flex-1 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
             >
               Cancelar
             </button>
             <button
               onClick={handleConfirmPay}
               disabled={payLoading}
-              className="flex-1 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-bold disabled:opacity-50"
+              className="min-h-[44px] flex-1 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-bold disabled:opacity-50"
             >
               {payLoading ? 'Procesando...' : 'Registrar'}
             </button>
           </div>
         </div>
-      </div>
+      </div>, document.body)
     )}
 
     {/* ── MODAL ANULACIÓN ─────────────────────────────────── */}

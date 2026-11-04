@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useMemo } from 'react';
 import { X, Loader2, BarChart2 } from 'lucide-react';
 import { adminService } from '@/services/adminService';
@@ -39,7 +40,7 @@ export function PrinterHistoryModal({
   }), [history]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-end sm:items-center justify-center p-4">
       <div className="bg-white rounded-3xl w-full max-w-xl max-h-[85vh] flex flex-col">
 
         {/* Header */}
@@ -48,7 +49,7 @@ export function PrinterHistoryModal({
             <h2 className="font-black text-gray-800 text-lg">Historial — {printer.name}</h2>
             <p className="text-sm text-gray-400 mt-0.5">Últimos 30 días</p>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded-xl hover:bg-gray-100">
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
@@ -57,13 +58,13 @@ export function PrinterHistoryModal({
         <div className="grid grid-cols-4 gap-2 p-4 border-b border-gray-100">
           {[
             { label: 'Total',      value: totals.jobs,      color: 'text-gray-800', bg: 'bg-gray-50' },
-            { label: 'Exitosos',   value: totals.successful, color: 'text-green-600', bg: 'bg-green-50' },
+            { label: 'Exitosos',   value: totals.successful, color: 'text-slate-700', bg: 'bg-slate-50' },
             { label: 'Fallidos',   value: totals.failed,    color: 'text-red-500',   bg: 'bg-red-50' },
             {
               label: 'Tasa éxito',
               value: `${totals.avgRate.toFixed(0)}%`,
-              color: totals.avgRate >= 95 ? 'text-green-600' : totals.avgRate >= 80 ? 'text-amber-500' : 'text-red-500',
-              bg:    totals.avgRate >= 95 ? 'bg-green-50'    : totals.avgRate >= 80 ? 'bg-amber-50'    : 'bg-red-50',
+              color: totals.avgRate >= 95 ? 'text-slate-700' : totals.avgRate >= 80 ? 'text-amber-500' : 'text-red-500',
+              bg:    totals.avgRate >= 95 ? 'bg-slate-50'    : totals.avgRate >= 80 ? 'bg-amber-50'    : 'bg-red-50',
             },
           ].map(stat => (
             <div key={stat.label} className={`${stat.bg} rounded-2xl p-3 text-center`}>
@@ -96,13 +97,13 @@ export function PrinterHistoryModal({
                     <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all ${
-                          rate >= 95 ? 'bg-green-500' : rate >= 80 ? 'bg-amber-400' : 'bg-red-500'
+                          rate >= 95 ? 'bg-slate-500' : rate >= 80 ? 'bg-amber-400' : 'bg-red-500'
                         }`}
                         style={{ width: `${rate}%` }}
                       />
                     </div>
                     <div className="flex gap-3 text-xs flex-shrink-0">
-                      <span className="text-green-600 font-medium">✓ {Number(day.successful)}</span>
+                      <span className="text-slate-700 font-medium">✓ {Number(day.successful)}</span>
                       {Number(day.failed) > 0 && (
                         <span className="text-red-500 font-medium">✗ {Number(day.failed)}</span>
                       )}
@@ -115,6 +116,6 @@ export function PrinterHistoryModal({
           )}
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

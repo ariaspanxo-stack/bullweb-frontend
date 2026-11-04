@@ -345,7 +345,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Overlay */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-[100]"
         onClick={handleClose}
       />
 
@@ -369,7 +369,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             </div>
             <button
               onClick={handleClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors"
               disabled={isSubmitting}
             >
               <X className="w-6 h-6 text-gray-500" />
@@ -386,9 +386,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
           {/* Success Message */}
           {showSuccessMessage && (
-            <div className="mx-6 mt-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-              <p className="text-sm text-green-800 font-medium">
+            <div className="mx-6 mt-4 p-4 bg-slate-50 border border-slate-200 rounded-lg flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-slate-700 flex-shrink-0" />
+              <p className="text-sm text-slate-700 font-medium">
                 {isEditMode
                   ? '¡Producto actualizado exitosamente!'
                   : '¡Producto creado exitosamente!'}
@@ -443,7 +443,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     <button
                       type="button"
                       onClick={generateNewSku}
-                      className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
+                      className="min-h-[44px] px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium"
                       disabled={isSubmitting}
                     >
                       Generar
@@ -518,7 +518,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                         type="button"
                         onClick={() => setFormData((prev) => ({ ...prev, stationId: station.id }))}
                         disabled={isSubmitting}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                        className={`min-h-[44px] px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${
                           formData.stationId === station.id
                             ? 'bg-orange-500 border-orange-500 text-white shadow-sm'
                             : 'bg-white border-gray-300 text-gray-700 hover:border-orange-400 hover:text-orange-600'
@@ -620,7 +620,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
               {/* Panel de Métricas Financieras */}
               {formData.price && formData.cost && !errors.price && !errors.cost && (
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+                <div className=" rounded-lg p-4 border border-slate-200">
                   <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
                     📊 Métricas Financieras
                   </h4>
@@ -632,7 +632,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                         <span className="text-xs text-gray-600">Margen $</span>
                         <div className="group relative">
                           <Info className="w-4 h-4 text-gray-400 cursor-help" />
-                          <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
+                          <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-48 p-2 bg-white text-slate-900 text-xs rounded-lg shadow-lg z-10 border border-slate-200">
                             {metricDescriptions.marginAmount}
                           </div>
                         </div>
@@ -648,13 +648,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                         <span className="text-xs text-gray-600">Margen %</span>
                         <div className="group relative">
                           <Info className="w-4 h-4 text-gray-400 cursor-help" />
-                          <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
+                          <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-48 p-2 bg-white text-slate-900 text-xs rounded-lg shadow-lg z-10 border border-slate-200">
                             {metricDescriptions.marginPercent}
                           </div>
                         </div>
                       </div>
                       <p className={`text-lg font-bold ${
-                        metrics.marginPercent >= 40 ? 'text-green-600' : 
+                        metrics.marginPercent >= 40 ? 'text-slate-700' : 
                         metrics.marginPercent >= 20 ? 'text-yellow-600' : 
                         'text-red-600'
                       }`}>
@@ -668,13 +668,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                         <span className="text-xs text-gray-600">Markup %</span>
                         <div className="group relative">
                           <Info className="w-4 h-4 text-gray-400 cursor-help" />
-                          <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
+                          <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-48 p-2 bg-white text-slate-900 text-xs rounded-lg shadow-lg z-10 border border-slate-200">
                             {metricDescriptions.markupPercent}
                           </div>
                         </div>
                       </div>
                       <p className={`text-lg font-bold ${
-                        metrics.markupPercent >= 67 ? 'text-green-600' : 
+                        metrics.markupPercent >= 67 ? 'text-slate-700' : 
                         metrics.markupPercent >= 25 ? 'text-yellow-600' : 
                         'text-red-600'
                       }`}>
@@ -688,12 +688,12 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                         <span className="text-xs text-gray-600">ROI</span>
                         <div className="group relative">
                           <Info className="w-4 h-4 text-gray-400 cursor-help" />
-                          <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg z-10">
+                          <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-48 p-2 bg-white text-slate-900 text-xs rounded-lg shadow-lg z-10 border border-slate-200">
                             {metricDescriptions.roi}
                           </div>
                         </div>
                       </div>
-                      <p className="text-lg font-bold text-blue-600">
+                      <p className="text-lg font-bold text-slate-700">
                         {metrics.roi}%
                       </p>
                     </div>
@@ -704,14 +704,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     const recipe = recipes?.find((r: any) => r.productId === (product?.id || ''));
                     if (recipe) {
                       return (
-                        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                           <div className="flex items-center gap-2">
-                            <span className="text-green-600">✅</span>
+                            <span className="text-slate-700">✅</span>
                             <div>
-                              <p className="text-sm font-semibold text-green-900">
+                              <p className="text-sm font-semibold text-slate-700">
                                 Tiene Ficha Técnica
                               </p>
-                              <p className="text-xs text-green-700">
+                              <p className="text-xs text-slate-700">
                                 Costo real calculado: {formatCurrency(recipe.totalCost)}
                               </p>
                             </div>
@@ -723,11 +723,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                   })()}
 
                   {/* Semáforo visual */}
-                  <div className="mt-3 pt-3 border-t border-blue-200">
+                  <div className="mt-3 pt-3 border-t border-slate-200">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-gray-600">Estado:</span>
                       <span className={`font-semibold ${
-                        metrics.marginPercent >= 40 ? 'text-green-600' : 
+                        metrics.marginPercent >= 40 ? 'text-slate-700' : 
                         metrics.marginPercent >= 20 ? 'text-yellow-600' : 
                         'text-red-600'
                       }`}>
@@ -859,11 +859,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                           setFormData((prev) => ({ ...prev, image: '' }));
                           setImagePreview('');
                         }}
-                        className="absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full w-6 h-6 flex items-center justify-center text-gray-500 hover:text-red-500 shadow-sm transition-colors text-xs font-bold"
+                        className="min-h-[44px] absolute top-2 right-2 bg-white/80 hover:bg-white rounded-full w-6 h-6 flex items-center justify-center text-gray-500 hover:text-red-500 shadow-sm transition-colors text-xs font-bold"
                       >
                         ✕
                       </button>
-                      <span className="absolute top-2 left-2 bg-green-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                      <span className="absolute top-2 left-2 bg-slate-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
                         ✓ Imagen válida
                       </span>
                     </div>
@@ -1026,7 +1026,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                             active ? prev.filter((t) => t !== tag.key) : [...prev, tag.key]
                           )
                         }
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                        className={`min-h-[44px] inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all ${
                           active
                             ? 'bg-orange-500 border-orange-500 text-white shadow-sm'
                             : 'bg-white border-gray-300 text-gray-600 hover:border-orange-400 hover:text-orange-600'
@@ -1047,7 +1047,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
             <button
               type="button"
               onClick={handleClose}
-              className="px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors"
+              className="min-h-[44px] px-6 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100 transition-colors"
               disabled={isSubmitting}
             >
               Cancelar
@@ -1056,7 +1056,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               type="submit"
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="px-6 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="min-h-[44px] px-6 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>

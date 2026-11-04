@@ -41,8 +41,7 @@ export default function MeseroAppPage() {
           href={meseroUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 bg-white text-orange-500 font-medium text-sm
-                     rounded-xl px-4 py-2.5 hover:bg-orange-50 transition-colors shrink-0"
+          className="flex items-center gap-2 bg-white text-orange-500 font-medium text-sm rounded-xl px-4 py-2.5 hover:bg-orange-50 transition-colors shrink-0"
         >
           <ExternalLink size={15} />
           Abrir app
@@ -70,11 +69,11 @@ export default function MeseroAppPage() {
           </span>
           <button
             onClick={handleCopy}
-            className={`shrink-0 flex items-center gap-1.5 text-xs font-medium rounded-lg
+            className={`min-h-[44px] shrink-0 flex items-center gap-1.5 text-xs font-medium rounded-lg
                         px-3 py-2 transition-all
                         ${copied
-                          ? 'bg-green-500 text-white'
-                          : 'bg-orange-500 text-white hover:bg-orange-600'
+                          ? 'bg-orange-50 text-orange-700 border border-orange-300'
+                          : 'bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-300'
                         }`}
           >
             {copied
@@ -85,9 +84,9 @@ export default function MeseroAppPage() {
         </div>
 
         {/* Pasos para el mesero */}
-        <div className="mt-4 bg-blue-50 border border-blue-100 rounded-xl p-3">
-          <p className="text-xs font-semibold text-blue-700 mb-2">📱 El mesero debe:</p>
-          <ol className="text-xs text-blue-600 space-y-1 list-decimal list-inside">
+        <div className="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-3">
+          <p className="text-xs font-semibold text-slate-700 mb-2">📱 El mesero debe:</p>
+          <ol className="text-xs text-slate-700 space-y-1 list-decimal list-inside">
             <li>Abrir el enlace en su celular</li>
             <li>Seleccionar su nombre</li>
             <li>Ingresar su PIN de 4 dígitos</li>

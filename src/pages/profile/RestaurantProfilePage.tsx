@@ -111,7 +111,7 @@ export function RestaurantProfilePage() {
 
       {/* Logo */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <h2 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wide">Logo</h2>
+        <h2 className="font-bold text-gray-900 mb-4 text-sm tracking-wide">Logo</h2>
         <div className="flex items-center gap-5">
           <div className="relative w-20 h-20 rounded-2xl bg-gray-100 overflow-hidden flex items-center justify-center border border-gray-200">
             {profile?.logo_url ? (
@@ -130,7 +130,7 @@ export function RestaurantProfilePage() {
               type="button"
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
-              className="flex items-center gap-2 border border-gray-200 text-gray-700 font-medium px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors text-sm disabled:opacity-50"
+              className="min-h-[44px] flex items-center gap-2 border border-gray-200 text-gray-700 font-medium px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors text-sm disabled:opacity-50"
             >
               <Camera className="w-4 h-4" />
               {uploading ? 'Subiendo...' : 'Cambiar logo'}
@@ -151,7 +151,7 @@ export function RestaurantProfilePage() {
       <form onSubmit={handleSave} className="space-y-5">
         {/* Info básica */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-          <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide">Información básica</h2>
+          <h2 className="font-bold text-gray-900 text-sm tracking-wide">Información básica</h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Nombre del negocio" required>
@@ -175,7 +175,7 @@ export function RestaurantProfilePage() {
 
         {/* Ubicación */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-          <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide">Ubicación</h2>
+          <h2 className="font-bold text-gray-900 text-sm tracking-wide">Ubicación</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Dirección" className="sm:col-span-2">
               <input value={form.address ?? ''} onChange={set('address')}
@@ -194,7 +194,7 @@ export function RestaurantProfilePage() {
 
         {/* Personalización */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-          <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide">Personalización</h2>
+          <h2 className="font-bold text-gray-900 text-sm tracking-wide">Personalización</h2>
           <Field label="Color principal">
             <div className="flex items-center gap-3">
               <input
@@ -215,7 +215,7 @@ export function RestaurantProfilePage() {
 
         {/* Redes sociales */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-4">
-          <h2 className="font-bold text-gray-900 text-sm uppercase tracking-wide">Presencia digital</h2>
+          <h2 className="font-bold text-gray-900 text-sm tracking-wide">Presencia digital</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="Instagram">
               <div className="relative">
@@ -246,7 +246,7 @@ export function RestaurantProfilePage() {
           <button
             type="submit"
             disabled={saving}
-            className="bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold px-8 py-3 rounded-xl transition-colors flex items-center gap-2 text-sm"
+            className="min-h-[44px] bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-bold px-8 py-3 rounded-xl transition-colors flex items-center gap-2 text-sm"
           >
             {saving ? <><Loader2 className="w-4 h-4 animate-spin" /> Guardando...</> : 'Guardar cambios'}
           </button>

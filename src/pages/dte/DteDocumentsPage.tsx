@@ -1,4 +1,5 @@
-﻿import { useState, useEffect, useCallback } from 'react';
+﻿import { createPortal } from 'react-dom';
+import { useState, useEffect, useCallback } from 'react';
 import {
   FileText,
   Download,
@@ -34,7 +35,7 @@ function todayYM() {
 // ─── Status config ─────────────────────────────────────────────────────────────
 
 const STATUS_CFG: Record<string, { label: string; cls: string; Icon: React.ElementType }> = {
-  ISSUED:    { label: 'Emitida',   cls: 'bg-emerald-100 text-emerald-700', Icon: CheckCircle },
+  ISSUED:    { label: 'Emitida',   cls: 'bg-slate-100 text-slate-700', Icon: CheckCircle },
   PENDING:   { label: 'Pendiente', cls: 'bg-yellow-100 text-yellow-700',   Icon: Clock       },
   ERROR:     { label: 'Error',     cls: 'bg-red-100 text-red-700',         Icon: XCircle     },
   CANCELLED: { label: 'Anulada',  cls: 'bg-gray-100 text-gray-500',       Icon: Ban         },
@@ -209,7 +210,7 @@ export function DteDocumentsPage() {
             <div className="flex flex-wrap gap-3">
               <Link
                 to="/apps/dte"
-                className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-6 py-3 rounded-xl transition-colors shadow-sm border border-slate-300"
               >
                 🔑 Configurar DTE
               </Link>
@@ -221,7 +222,7 @@ export function DteDocumentsPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-xs text-gray-600">
               <div className="flex justify-between items-center mb-2">
                 <span className="font-semibold text-gray-800">Boleta Electrónica</span>
-                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs font-medium">
                   ✅ Emitida
                 </span>
               </div>
@@ -234,7 +235,7 @@ export function DteDocumentsPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-xs text-gray-600">
               <div className="flex justify-between items-center mb-2">
                 <span className="font-semibold text-gray-800">Factura Electrónica</span>
-                <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs font-medium">
                   ✅ Emitida
                 </span>
               </div>
@@ -294,7 +295,7 @@ export function DteDocumentsPage() {
 
         {/* Pasos 1-2-3 */}
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-semibold text-gray-700 mb-4 text-sm uppercase tracking-wide">
+          <h3 className="font-semibold text-gray-700 mb-4 text-sm tracking-wide">
             ¿Cómo activarlo?
           </h3>
           <div className="flex flex-col md:flex-row gap-4">
@@ -309,13 +310,13 @@ export function DteDocumentsPage() {
                 n: '2',
                 title: 'Configura tus datos',
                 desc: 'Ingresa RUT, razón social y sube tu certificado .pfx',
-                color: 'bg-blue-100 text-blue-600',
+                color: 'bg-slate-100 text-slate-700',
               },
               {
                 n: '3',
                 title: 'Activa y prueba',
                 desc: 'Ve a Configurar → Apps → DTE y activa el módulo para empezar',
-                color: 'bg-green-100 text-green-600',
+                color: 'bg-slate-100 text-slate-700',
               },
             ].map(step => (
               <div key={step.n} className="flex gap-3 flex-1">
@@ -342,7 +343,7 @@ export function DteDocumentsPage() {
       value:    summary?.summary?.issued ?? 0,
       sub:      `${summary?.summary?.cancelled ?? 0} anuladas`,
       icon:     '📄',
-      iconBg:   'bg-green-100',
+      iconBg:   'bg-slate-100',
       valColor: 'text-gray-800',
     },
     {
@@ -350,7 +351,7 @@ export function DteDocumentsPage() {
       value:    summary?.amounts?.totalNetFormatted ?? '$0',
       sub:      'Sin IVA',
       icon:     '💵',
-      iconBg:   'bg-blue-100',
+      iconBg:   'bg-slate-100',
       valColor: 'text-gray-800',
     },
     {
@@ -358,7 +359,7 @@ export function DteDocumentsPage() {
       value:    summary?.amounts?.totalTaxFormatted ?? '$0',
       sub:      'A declarar en SII',
       icon:     '🏛️',
-      iconBg:   'bg-purple-100',
+      iconBg:   'bg-slate-100',
       valColor: 'text-gray-800',
     },
     {
@@ -384,10 +385,10 @@ export function DteDocumentsPage() {
           <h1 className="text-2xl font-bold text-gray-800">📄 Boletas & DTE</h1>
           <p className="text-sm text-gray-500 mt-0.5">Facturación electrónica</p>
         </div>
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
-          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-sm text-green-700 font-medium">DTE conectado</span>
-          <Link to="/apps/dte" className="text-xs text-green-600 underline ml-1">
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2">
+          <span className="w-2 h-2 rounded-full bg-slate-500 animate-pulse" />
+          <span className="text-sm text-slate-700 font-medium">DTE conectado</span>
+          <Link to="/apps/dte" className="text-xs text-slate-700 underline ml-1">
             Config
           </Link>
         </div>
@@ -401,7 +402,7 @@ export function DteDocumentsPage() {
             <p className="text-red-700 font-bold text-sm">Error al cargar documentos</p>
             <p className="text-red-500 text-xs mt-0.5">{loadError}</p>
           </div>
-          <button onClick={load} className="text-red-400 hover:text-red-600 text-xs underline shrink-0">
+          <button onClick={load} className="min-h-[44px] text-red-400 hover:text-red-600 text-xs underline shrink-0">
             Reintentar
           </button>
         </div>
@@ -479,7 +480,7 @@ export function DteDocumentsPage() {
           {/* Exportar */}
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 border border-gray-200 hover:border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+            className="min-h-[44px] flex items-center gap-2 border border-gray-200 hover:border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
           >
             📥 Exportar CSV
           </button>
@@ -558,7 +559,7 @@ export function DteDocumentsPage() {
                             href={doc.pdfUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-blue-500 hover:text-blue-700 transition-colors"
+                            className="text-slate-500 hover:text-slate-700 transition-colors"
                             title="Descargar PDF"
                           >
                             <Download className="w-4 h-4" />
@@ -578,7 +579,7 @@ export function DteDocumentsPage() {
                                 saving: false,
                               })}
                               title="Anular documento"
-                              className="text-red-400 hover:text-red-600 transition-colors"
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-red-400 hover:text-red-600 transition-colors"
                             >
                               <Ban className="w-4 h-4" />
                             </button>
@@ -588,7 +589,7 @@ export function DteDocumentsPage() {
                               <button
                                 onClick={() => handleRetry(doc.id)}
                                 title="Reintentar emisión"
-                                className="text-yellow-500 hover:text-yellow-700 transition-colors"
+                                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-yellow-500 hover:text-yellow-700 transition-colors"
                               >
                                 <RefreshCw className="w-4 h-4" />
                               </button>
@@ -618,14 +619,14 @@ export function DteDocumentsPage() {
               <button
                 onClick={() => setPage(p => p - 1)}
                 disabled={page === 1}
-                className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+                className="min-h-[44px] px-3 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition-colors"
               >
                 ← Anterior
               </button>
               <button
                 onClick={() => setPage(p => p + 1)}
                 disabled={page === totalPages}
-                className="px-3 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition-colors"
+                className="min-h-[44px] px-3 py-1.5 text-xs border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-100 disabled:opacity-40 transition-colors"
               >
                 Siguiente →
               </button>
@@ -636,9 +637,9 @@ export function DteDocumentsPage() {
 
       {/* Bloque SII */}
       {(summary?.summary?.issued ?? 0) > 0 && (
-        <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-          <p className="text-purple-700 text-sm font-bold mb-1">💡 Resumen para declaración SII</p>
-          <p className="text-purple-600 text-xs leading-relaxed">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <p className="text-slate-700 text-sm font-bold mb-1">💡 Resumen para declaración SII</p>
+          <p className="text-slate-700 text-xs leading-relaxed">
             Este mes emitiste{' '}
             <strong>{summary.summary.issued} boletas</strong>{' '}
             por un total de{' '}
@@ -652,7 +653,7 @@ export function DteDocumentsPage() {
 
       {/* Modal anulación */}
       {cancelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-white rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl border border-gray-200">
             <h3 className="text-gray-800 font-bold text-lg mb-1">Anular documento</h3>
             <p className="text-gray-500 text-xs mb-5">
@@ -667,28 +668,26 @@ export function DteDocumentsPage() {
               placeholder="Ej: Error en monto, pedido cancelado por cliente..."
               value={cancelModal.motivo}
               onChange={e => setCancelModal(m => m ? { ...m, motivo: e.target.value } : null)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-gray-800 text-sm
-                         placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none mb-5"
+              className="w-full px-3 py-2 rounded-lg border border-gray-200 text-gray-800 text-sm placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none mb-5"
             />
             <div className="flex gap-3">
               <button
                 onClick={() => setCancelModal(null)}
                 disabled={cancelModal.saving}
-                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-colors"
+                className="min-h-[44px] flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 text-sm hover:bg-gray-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleCancel}
                 disabled={cancelModal.saving || !cancelModal.motivo.trim()}
-                className="flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold
-                           transition-colors disabled:opacity-50"
+                className="min-h-[44px] flex-1 py-2.5 rounded-xl bg-red-500 hover:bg-red-600 text-white text-sm font-semibold transition-colors disabled:opacity-50"
               >
                 {cancelModal.saving ? 'Anulando...' : '❌ Confirmar anulación'}
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
     </div>
   );

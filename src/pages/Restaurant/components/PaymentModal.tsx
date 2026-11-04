@@ -68,7 +68,7 @@ const fmt = (n: number) => Math.round(Math.abs(n)).toLocaleString('es-CL');
 // Hotfix #256 (D4): un solo patrón de tarjeta, campos y botones de contorno
 const CARD        = 'rounded-xl border border-slate-200 bg-white p-3';
 const CARD_TITLE  = 'text-xs font-bold uppercase tracking-wider text-slate-600';
-const FIELD       = 'w-full min-h-[44px] border border-slate-300 rounded-xl bg-white text-base font-bold text-slate-900 focus:outline-none focus:border-slate-500 transition-colors';
+const FIELD       = 'w-full min-h-[44px] border border-slate-300 rounded-xl bg-white text-base font-bold text-slate-900 focus:outline-none focus:border-orange-500 transition-colors';
 const BTN_OUTLINE = 'min-h-[44px] px-3 border border-slate-300 rounded-xl bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed';
 const BTN_ICON    = 'w-11 h-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors flex-shrink-0';
 const AMBER_NOTE  = 'flex items-start gap-2 text-sm font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2';
@@ -99,7 +99,7 @@ const RowInput = memo(({ row, onMethod, onAmount, onRemove, canRemove, placehold
         <select
           value={row.method}
           onChange={e => onMethod(e.target.value)}
-          className="appearance-none min-h-[44px] pl-9 pr-8 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800 cursor-pointer focus:outline-none focus:border-slate-500 transition-colors"
+          className="appearance-none min-h-[44px] pl-9 pr-8 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800 cursor-pointer focus:outline-none focus:border-orange-500 transition-colors"
         >
           <option value="" disabled>Método...</option>
           {activeMethods.map(m => (
@@ -123,7 +123,7 @@ const RowInput = memo(({ row, onMethod, onAmount, onRemove, canRemove, placehold
         />
       </div>
       {quickFill !== undefined && quickFill > 0 && (
-        <button type="button" onClick={() => onAmount(String(quickFill))} className={`${BTN_OUTLINE} flex-shrink-0`}>
+        <button type="button" onClick={() => onAmount(String(quickFill))} className={`min-h-[44px] ${BTN_OUTLINE} flex-shrink-0`}>
           Exacto
         </button>
       )}
@@ -452,7 +452,7 @@ export const PaymentModal = ({
               setPaymentCompleted(false);
               onClose();
             }}
-            className={`${BTN_OUTLINE} w-full`}
+            className={`min-h-[44px] ${BTN_OUTLINE} w-full`}
           >
             Cerrar
           </button>
@@ -597,7 +597,7 @@ export const PaymentModal = ({
                             type="button"
                             onClick={() => persistDiscount(currentDiscount)}
                             disabled={applyingDiscount}
-                            className={`${BTN_OUTLINE} flex-shrink-0`}
+                            className={`min-h-[44px] ${BTN_OUTLINE} flex-shrink-0`}
                           >
                             {applyingDiscount ? '…' : 'Aplicar'}
                           </button>
@@ -626,7 +626,7 @@ export const PaymentModal = ({
                       type="button"
                       onClick={handleValidateCoupon}
                       disabled={couponLoading || !couponCode.trim()}
-                      className={`${BTN_OUTLINE} flex-shrink-0`}
+                      className={`min-h-[44px] ${BTN_OUTLINE} flex-shrink-0`}
                     >
                       {couponLoading ? '…' : 'Aplicar'}
                     </button>

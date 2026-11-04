@@ -3,6 +3,7 @@
 // Se abre al hacer click en la tarjeta en /restaurant
 // ═══════════════════════════════════════════════════════════════
 
+import { displayName } from '@/utils/displayFormat';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -41,7 +42,7 @@ function statusLabel(status: string): { label: string; color: string } {
     PENDING:   { label: 'Pendiente',       color: 'bg-red-100 text-red-700'    },
     PREPARING: { label: 'En Preparación',  color: 'bg-yellow-100 text-yellow-700' },
     READY:     { label: 'Listo',       color: 'bg-orange-100 text-orange-700' },
-    DELIVERED: { label: 'Entregado',       color: 'bg-blue-100 text-blue-700'  },
+    DELIVERED: { label: 'Entregado',       color: 'bg-slate-100 text-slate-700'  },
   };
   return map[status] ?? { label: status, color: 'bg-gray-100 text-gray-700' };
 }
@@ -120,8 +121,8 @@ export function DeliveryOrderModal({
 
   // ── Colores según variante ────────────────────────────────────
   const isDelivery = variant === 'delivery';
-  const headerBg   = isDelivery ? 'bg-purple-600' : 'bg-blue-600';
-  const accentRing = isDelivery ? 'ring-purple-300' : 'ring-blue-300';
+  const headerBg   = isDelivery ? 'bg-slate-500' : 'bg-slate-500';
+  const accentRing = isDelivery ? 'ring-slate-300' : 'ring-slate-300';
   // Hotfix 251 C4: accentBg retirado — Cobrar pasa a contorno con texto del acento
 
   // ── Cargar orden fresca ────────────────────────────────────────
@@ -423,7 +424,7 @@ export function DeliveryOrderModal({
           handleProductClick(product);
         }}
         disabled={submitting}
-        className={`text-left bg-white rounded-xl border overflow-hidden transition-all duration-100 disabled:opacity-60 disabled:cursor-not-allowed ring-0 focus:ring-2 ${accentRing} ${
+        className={`min-h-[44px] text-left bg-white rounded-xl border overflow-hidden transition-all duration-100 disabled:opacity-60 disabled:cursor-not-allowed ring-0 focus:ring-2 ${accentRing} ${
           tappedProductId === product.id
             ? 'scale-95 border-[#F97316]'
             : 'scale-100 border-gray-100 hover:border-gray-300 hover:shadow-sm'
@@ -440,7 +441,7 @@ export function DeliveryOrderModal({
         )}
         <div className="p-2">
           <p className="text-sm font-semibold text-gray-800 leading-tight line-clamp-2">
-            {product.name}
+            {displayName(product.name)}
           </p>
           <div className="flex items-center justify-between mt-1">
             <p className="text-sm font-bold text-gray-700">{fmt(product.price)}</p>
@@ -483,7 +484,7 @@ export function DeliveryOrderModal({
     <>
       {/* ── Backdrop ── */}
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-6"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-6"
         onClick={onClose}
       >
         {/* ── Panel ── */}
@@ -526,7 +527,7 @@ export function DeliveryOrderModal({
                 {/* Cerrar */}
                 <button
                   onClick={onClose}
-                  className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/25 flex items-center justify-center transition-colors"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white/10 hover:bg-white/25 flex items-center justify-center transition-colors"
                 >
                   <X size={16} />
                 </button>
@@ -576,15 +577,15 @@ export function DeliveryOrderModal({
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
                     placeholder="Buscar producto..."
-                    className="w-full pl-8 pr-16 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-purple-200"
+                    className="w-full pl-8 pr-16 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-0 focus:ring-orange-500"
                   />
                   {/* Hotfix #244: toggle Búsqueda↔Categorías, persistido por dispositivo */}
                   <div className="absolute top-1/2 -translate-y-1/2 right-2 flex gap-1">
                     <button
                       onClick={() => toggleViewMode('search')}
                       title="Búsqueda"
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        viewMode === 'search' ? `${isDelivery ? 'bg-purple-600' : 'bg-blue-600'} text-white` : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                      className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg transition-colors ${
+                        viewMode === 'search' ? `${isDelivery ? 'bg-orange-50 border border-orange-300' : 'bg-orange-50 border border-orange-300'} text-white` : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
                       }`}
                     >
                       <Search size={14} />
@@ -592,8 +593,8 @@ export function DeliveryOrderModal({
                     <button
                       onClick={() => toggleViewMode('grid')}
                       title="Categorías"
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        viewMode === 'grid' ? `${isDelivery ? 'bg-purple-600' : 'bg-blue-600'} text-white` : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                      className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg transition-colors ${
+                        viewMode === 'grid' ? `${isDelivery ? 'bg-orange-50 border border-orange-300' : 'bg-orange-50 border border-orange-300'} text-white` : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
                       }`}
                     >
                       <LayoutGrid size={14} />
@@ -617,7 +618,7 @@ export function DeliveryOrderModal({
                           <button
                             key={cat.id}
                             onClick={() => { setSearchQuery(''); setSelectedCategory(cat.id); setViewMode('grid'); }}
-                            className="h-11 px-3 rounded-full text-sm font-medium transition-colors bg-white text-gray-600 border border-gray-200 hover:border-gray-300"
+                            className="min-h-[44px] h-11 px-3 rounded-full text-sm font-medium transition-colors bg-white text-gray-600 border border-gray-200 hover:border-gray-300"
                           >
                             {categoryLabel(cat)}
                           </button>
@@ -670,7 +671,7 @@ export function DeliveryOrderModal({
                   <>
                     <button
                       onClick={() => setSelectedCategory(null)}
-                      className="h-11 w-full flex items-center gap-2 px-3 mb-2 rounded-xl bg-white border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
+                      className="min-h-[44px] h-11 w-full flex items-center gap-2 px-3 mb-2 rounded-xl bg-white border border-gray-200 text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
                     >
                       <LayoutGrid size={14} className="text-[#F97316]" />
                       ← Categorías
@@ -680,7 +681,7 @@ export function DeliveryOrderModal({
                         <button
                           key={cat.id}
                           onClick={() => setSelectedCategory(cat.id)}
-                          className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                          className={`min-h-[44px] px-2.5 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
                             selectedCategory === cat.id
                               ? 'bg-[#F97316] text-white'
                               : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
@@ -737,7 +738,7 @@ export function DeliveryOrderModal({
                         <button
                           onClick={() => setEditingPendingNote(isEditP ? null : pi.localId)}
                           title="Agregar nota"
-                          className={`flex-shrink-0 p-1 rounded transition-colors ${
+                          className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center flex-shrink-0 p-1 rounded transition-colors ${
                             pi.note ? 'text-amber-500 hover:text-amber-700' : 'text-gray-300 hover:text-gray-500'
                           }`}
                         ><Pencil size={13} /></button>
@@ -779,7 +780,7 @@ export function DeliveryOrderModal({
                           onClick={handleRemoveDiscount}
                           disabled={submitting}
                           title="Eliminar descuento"
-                          className="w-4 h-4 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 text-xs font-bold leading-none transition-colors disabled:opacity-40"
+                          className="min-h-[44px] w-4 h-4 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 text-xs font-bold leading-none transition-colors disabled:opacity-40"
                         >×</button>
                       </div>
                     </div>
@@ -830,7 +831,7 @@ export function DeliveryOrderModal({
                                 <button
                                   onClick={() => setEditingNote(isEditing ? null : item.id)}
                                   title="Agregar nota"
-                                  className={`flex-shrink-0 p-1 rounded transition-colors ${
+                                  className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center flex-shrink-0 p-1 rounded transition-colors ${
                                     hasNote
                                       ? 'text-[#F97316] hover:text-[#ea6a0a]'
                                       : 'text-gray-300 hover:text-gray-500'
@@ -842,7 +843,7 @@ export function DeliveryOrderModal({
                                 <button
                                   onClick={() => !submitting && handleRemoveItem(item)}
                                   disabled={submitting}
-                                  className="flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 transition-colors disabled:opacity-40"
+                                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-red-100 hover:bg-red-200 text-red-500 transition-colors disabled:opacity-40"
                                 >
                                   <Minus size={10} />
                                 </button>
@@ -908,11 +909,11 @@ export function DeliveryOrderModal({
                       <div className="flex rounded-lg overflow-hidden border border-gray-200">
                         <button
                           onClick={() => setDiscountType('%')}
-                          className={`px-2.5 py-1 text-xs font-bold transition-colors ${discountType === '%' ? 'bg-gray-700 text-white' : 'bg-white text-gray-500'}`}
+                          className={`min-h-[44px] px-2.5 py-1 text-xs font-bold transition-colors ${discountType === '%' ? 'bg-orange-50 text-orange-700 border border-orange-300' : 'bg-white text-gray-500'}`}
                         >%</button>
                         <button
                           onClick={() => setDiscountType('$')}
-                          className={`px-2.5 py-1 text-xs font-bold transition-colors ${discountType === '$' ? 'bg-gray-700 text-white' : 'bg-white text-gray-500'}`}
+                          className={`min-h-[44px] px-2.5 py-1 text-xs font-bold transition-colors ${discountType === '$' ? 'bg-orange-50 text-orange-700 border border-orange-300' : 'bg-white text-gray-500'}`}
                         >$</button>
                       </div>
                       <input
@@ -928,13 +929,13 @@ export function DeliveryOrderModal({
                       <button
                         onClick={handleApplyDiscount}
                         disabled={submitting}
-                        className="px-3 py-1 bg-gray-700 hover:bg-gray-800 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-colors"
+                        className="min-h-[44px] px-3 py-1 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white text-xs font-bold rounded-lg transition-colors"
                       >
                         Aplicar
                       </button>
                       <button
                         onClick={() => setShowDiscount(false)}
-                        className="text-xs text-gray-400 hover:text-gray-600"
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-xs text-gray-400 hover:text-gray-600"
                       >
                         <X size={14} />
                       </button>
@@ -952,7 +953,7 @@ export function DeliveryOrderModal({
               {/* Descuento */}
               <button
                 onClick={() => setShowDiscount(v => !v)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+                className="min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 <Tag size={13} />
                 Descuento
@@ -961,7 +962,7 @@ export function DeliveryOrderModal({
               <button
                 onClick={handlePrecuenta}
                 disabled={submitting}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                className="min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 <Printer size={13} />
                 Pre-cuenta
@@ -974,7 +975,7 @@ export function DeliveryOrderModal({
               <button
                 onClick={handleCocina}
                 disabled={submitting || pendingItems.length === 0 || !canSendToKitchen}
-                className={`flex-1 relative flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm transition-colors shadow-sm text-white ${
+                className={`min-h-[44px] flex-1 relative flex items-center justify-center gap-2 h-12 rounded-xl font-bold text-sm transition-colors shadow-sm text-white ${
                   pendingItems.length === 0
                     ? 'bg-[#FDBA74] cursor-not-allowed'
                     : 'bg-[#F97316] hover:bg-[#ea6a0a]'
@@ -991,10 +992,10 @@ export function DeliveryOrderModal({
               {/* Cobrar — Hotfix 251 C4: contorno con texto del acento de la variante */}
               <button
                 onClick={handleCobrar}
-                className={`flex-1 flex items-center justify-center gap-2 h-12 rounded-xl border-2 font-bold text-sm transition-colors ${
+                className={`min-h-[44px] flex-1 flex items-center justify-center gap-2 h-12 rounded-xl border-2 font-bold text-sm transition-colors ${
                   isDelivery
-                    ? 'border-purple-600 text-purple-600 hover:bg-purple-50'
-                    : 'border-blue-600 text-blue-600 hover:bg-blue-50'
+                    ? 'border-slate-200 text-slate-700 hover:bg-slate-100'
+                    : 'border-slate-200 text-slate-700 hover:bg-slate-100'
                 }`}
               >
                 <CreditCard size={16} />

@@ -31,7 +31,7 @@ export default function InventoryTabs({ activeTab, onTabChange, onlyStockSimple 
             <button
               key={tab.value}
               onClick={() => onTabChange(tab.value)}
-              className={cn(
+              className={cn('min-h-[44px]', 
                 'flex items-center gap-2 px-4 py-3 border-b-2 transition-colors',
                 isActive
                   ? 'border-orange-500 text-orange-600 font-medium'

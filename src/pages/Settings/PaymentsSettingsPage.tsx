@@ -170,7 +170,7 @@ export default function PaymentsSettingsPage() {
             <p className="text-sm text-gray-600">La carta dejara de ofrecer el pago en linea. Podras volver a conectar cuando quieras.</p>
             <div className="flex gap-2">
               <button type="button" onClick={() => setConfirmOpen(false)} disabled={busy} className="flex-1 min-h-[44px] rounded-lg text-sm font-semibold text-slate-800 bg-white border-[1.5px] border-slate-300">Volver</button>
-              <button type="button" onClick={disconnect} disabled={busy} className="flex-1 min-h-[44px] rounded-lg text-sm font-semibold text-white bg-[#F97316] disabled:opacity-50">Desconectar</button>
+              <button type="button" onClick={disconnect} disabled={busy} className="flex-1 min-h-[44px] rounded-lg text-sm font-semibold text-slate-700 bg-white disabled:opacity-50 border border-slate-300">Desconectar</button>
             </div>
           </div>
         </div>,

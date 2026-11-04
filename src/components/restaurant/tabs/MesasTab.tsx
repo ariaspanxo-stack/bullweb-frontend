@@ -46,7 +46,7 @@ function TableCard({ table, onClick }: { table: Table; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className={`h-full w-full flex flex-col text-left p-4 rounded-xl border border-slate-200 hover:shadow-md transition-all active:scale-95 ${style.bg} ${
+      className={`min-h-[44px] h-full w-full flex flex-col text-left p-4 rounded-xl border border-slate-200 hover:shadow-md transition-all active:scale-95 ${style.bg} ${
         isAvailable ? '' : `border-l-4 ${style.border}`
       }`}
     >
@@ -187,7 +187,7 @@ export function MesasTab() {
             placeholder="Buscar mesa por número..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-slate-100 border border-transparent rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:bg-white focus:border-transparent transition-colors"
+            className="w-full pl-10 pr-4 py-2 bg-slate-100 border border-transparent rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white focus:border-transparent transition-colors"
           />
         </div>
 
@@ -200,9 +200,9 @@ export function MesasTab() {
                 <button
                   key={section.id}
                   onClick={() => setSelectedSection(section.id)}
-                  className={`px-5 py-2.5 rounded-md font-medium text-sm tracking-wide transition-all border-[1.5px] tabular-nums ${
+                  className={`min-h-[44px] px-5 py-2.5 rounded-md font-medium text-sm tracking-wide transition-all border-[1.5px] tabular-nums ${
                     selectedSection === section.id
-                      ? 'bg-blue-50 border-slate-800 text-slate-800 font-semibold'
+                      ? 'bg-slate-50 border-slate-800 text-slate-800 font-semibold'
                       : 'border-transparent text-slate-500 hover:text-slate-900'
                   }`}
                 >
@@ -217,7 +217,7 @@ export function MesasTab() {
         <div className="relative">
           <button
             onClick={() => setShowFilterMenu(p => !p)}
-            className={`px-4 py-2 border rounded-lg text-sm transition-colors ${
+            className={`min-h-[44px] px-4 py-2 border rounded-lg text-sm transition-colors ${
               filterCapacity
                 ? 'bg-orange-500 text-white border-orange-500'
                 : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
@@ -234,7 +234,7 @@ export function MesasTab() {
                 <button
                   key={cap ?? 'all'}
                   onClick={() => { setFilterCapacity(cap); setShowFilterMenu(false); }}
-                  className={`w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                  className={`min-h-[44px] w-full text-left px-3 py-1.5 rounded-lg text-sm transition-colors ${
                     filterCapacity === cap
                       ? 'bg-orange-50 text-orange-600 font-medium'
                       : 'hover:bg-gray-50'

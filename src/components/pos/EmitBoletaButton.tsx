@@ -9,6 +9,7 @@
  * Nota de estilos: Todos los textos usan !text-white / !text-gray-* para forzar
  * visibilidad sobre fondo oscuro, evitando problemas de herencia de Tailwind.
  */
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { usePermission } from '@/hooks/usePermission';
 import api from '@/services/api';
@@ -160,7 +161,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
       {/* Botón principal que abre el modal */}
       <button
         onClick={() => setOpen(true)}
-        className="w-full py-2 rounded-lg !bg-gray-800 !text-white !text-sm !font-medium
+        className="min-h-[44px] w-full py-2 rounded-lg !bg-gray-800 !text-white !text-sm !font-medium
                    border !border-gray-700 hover:!bg-gray-700 transition-colors"
       >
         🧾 Emitir Boleta Electrónica
@@ -168,7 +169,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
 
       {/* Modal */}
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="!bg-gray-900 !border !border-gray-700 rounded-2xl w-full max-w-sm shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-5 pb-3 !bg-gray-900">
@@ -177,7 +178,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
               </h3>
               <button
                 onClick={handleClose}
-                className="!text-gray-400 hover:!text-white transition-colors"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center !text-gray-400 hover:!text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -211,7 +212,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-2.5 rounded-lg !bg-orange-500 hover:!bg-orange-600
+                    className="min-h-[44px] w-full py-2.5 rounded-lg !bg-orange-500 hover:!bg-orange-600
                                !text-white !text-sm !font-semibold transition-colors
                                disabled:opacity-60 flex items-center justify-center gap-2"
                   >
@@ -229,7 +230,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
                     type="button"
                     onClick={handleClose}
                     disabled={loading}
-                    className="w-full py-2 rounded-lg !bg-gray-700 hover:!bg-gray-600
+                    className="min-h-[44px] w-full py-2 rounded-lg !bg-gray-700 hover:!bg-gray-600
                                !text-gray-300 !text-sm transition-colors"
                   >
                     Cancelar
@@ -251,7 +252,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
                     <button
                       type="button"
                       onClick={handleRetry}
-                      className="w-full py-2 rounded-lg !bg-red-500/80 hover:!bg-red-500
+                      className="min-h-[44px] w-full py-2 rounded-lg !bg-red-500/80 hover:!bg-red-500
                                  !text-white !text-sm !font-semibold transition-colors"
                     >
                       Reintentar emisión
@@ -263,7 +264,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
               /* ─── Vista post-emisión: éxito + imprimir ─── */
               <div className="px-6 pb-6 space-y-4 !bg-gray-900">
                 <div className="flex flex-col items-center text-center py-4">
-                  <div className="w-14 h-14 rounded-full bg-green-500/15 flex items-center justify-center mb-3">
+                  <div className="w-14 h-14 rounded-full bg-slate-500 flex items-center justify-center mb-3">
                     <CheckCircle className="w-8 h-8 !text-green-400" />
                   </div>
                   <p className="!text-white !font-medium">Boleta emitida correctamente</p>
@@ -283,7 +284,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
                 <button
                   onClick={handlePrint}
                   disabled={printing || printed}
-                  className="w-full py-2.5 rounded-lg !bg-orange-500 hover:!bg-orange-600
+                  className="min-h-[44px] w-full py-2.5 rounded-lg !bg-orange-500 hover:!bg-orange-600
                              !text-white !text-sm !font-semibold transition-colors
                              disabled:opacity-60 flex items-center justify-center gap-2"
                 >
@@ -308,7 +309,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
                 {/* HOTFIX #100: PDF siempre disponible vía GET /dte/documents/:id/pdf */}
                 <button
                   onClick={handleDownloadPdf}
-                  className="w-full py-2 rounded-lg !bg-gray-700 hover:!bg-gray-600
+                  className="min-h-[44px] w-full py-2 rounded-lg !bg-gray-700 hover:!bg-gray-600
                              !text-gray-300 !text-sm transition-colors
                              flex items-center justify-center gap-2"
                 >
@@ -318,7 +319,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
 
                 <button
                   onClick={handleClose}
-                  className="w-full py-2 rounded-lg !bg-gray-700 hover:!bg-gray-600
+                  className="min-h-[44px] w-full py-2 rounded-lg !bg-gray-700 hover:!bg-gray-600
                              !text-gray-300 !text-sm transition-colors"
                 >
                   Cerrar
@@ -326,7 +327,7 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
               </div>
             )}
           </div>
-        </div>
+        </div>, document.body)
       )}
     </>
   );

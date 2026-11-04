@@ -35,8 +35,8 @@ export function MeserosTab() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { label: 'Ventas del equipo',   value: formatCurrency(teamSales),                  iconBg: 'bg-orange-100 text-orange-600',  Icon: DollarSign   },
-          { label: 'Órdenes totales',     value: (teamOrders ?? 0).toLocaleString('es-CL'),  iconBg: 'bg-indigo-100 text-indigo-600',  Icon: ShoppingCart },
-          { label: 'Ticket prom. equipo', value: formatCurrency(teamAvgTkt),                 iconBg: 'bg-emerald-100 text-emerald-600', Icon: ArrowUpRight },
+          { label: 'Órdenes totales',     value: (teamOrders ?? 0).toLocaleString('es-CL'),  iconBg: 'bg-slate-100 text-slate-700',  Icon: ShoppingCart },
+          { label: 'Ticket prom. equipo', value: formatCurrency(teamAvgTkt),                 iconBg: 'bg-slate-100 text-slate-700', Icon: ArrowUpRight },
         ].map(kpi => (
           <div key={kpi.label} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-3">

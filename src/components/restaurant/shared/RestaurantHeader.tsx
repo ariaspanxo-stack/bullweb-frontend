@@ -52,8 +52,8 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
             <p className="text-sm text-amber-900">Sin turno activo</p>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={onOpenShift} className="h-9 px-3 rounded-lg bg-[#F97316] hover:bg-orange-600 text-white text-sm font-semibold transition-colors">Abrir</button>
-            <button onClick={() => setDismissed(true)} className="text-amber-400 hover:text-amber-600 text-sm leading-none">✕</button>
+            <button onClick={onOpenShift} className="min-h-[44px] h-9 px-3 rounded-lg bg-[#F97316] hover:bg-orange-600 text-white text-sm font-semibold transition-colors">Abrir</button>
+            <button onClick={() => setDismissed(true)} className="min-h-[44px] text-amber-400 hover:text-amber-600 text-sm leading-none">✕</button>
           </div>
         </div>
       )}
@@ -64,7 +64,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
           {canTab('mesas') && (
             <button
               onClick={() => handleTabChange('mesas')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer ${
+              className={`min-h-[44px] flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer ${
                 activeTab === 'mesas'
                   ? 'bg-white shadow-sm text-gray-900'
                   : 'text-gray-500 hover:text-gray-900'
@@ -86,7 +86,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
           {canTab('mostrador') && (
             <button
               onClick={() => handleTabChange('mostrador')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer ${
+              className={`min-h-[44px] flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer ${
                 activeTab === 'mostrador'
                   ? 'bg-white shadow-sm text-gray-900'
                   : 'text-gray-500 hover:text-gray-900'
@@ -97,7 +97,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
               {mostradorOrders.length > 0 && (
                 <span className={`min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full text-xs font-black ${
                   activeTab === 'mostrador'
-                    ? 'bg-blue-100 text-blue-700'
+                    ? 'bg-slate-100 text-slate-700'
                     : 'bg-slate-200 text-slate-600'
                 } ${activeTab !== 'mostrador' ? 'animate-pulse' : ''}`}>
                   {mostradorOrders.length}
@@ -105,7 +105,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
               )}
               {mostradorOrders.filter(o => (o as any).source === 'QR_CARTA' && o.status === 'PENDING').length > 0 && (
                 <span className={`min-w-[22px] h-5 px-1 flex items-center justify-center rounded-full text-[10px] font-black ${
-                  activeTab === 'mostrador' ? 'bg-white/30 text-white' : 'bg-blue-500 text-white'
+                  activeTab === 'mostrador' ? 'bg-white/30 text-white' : 'bg-slate-500 text-white'
                 }`} title="Pedidos QR">QR</span>
               )}
             </button>
@@ -115,7 +115,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
           {canTab('delivery') && (
             <button
               onClick={() => handleTabChange('delivery')}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer ${
+              className={`min-h-[44px] flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all duration-200 cursor-pointer ${
                 activeTab === 'delivery'
                   ? 'bg-white shadow-sm text-gray-900'
                   : 'text-gray-500 hover:text-gray-900'
@@ -126,7 +126,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
               {deliveryOrders.length > 0 && (
                 <span className={`min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full text-xs font-black ${
                   activeTab === 'delivery'
-                    ? 'bg-purple-100 text-purple-700'
+                    ? 'bg-slate-100 text-slate-700'
                     : 'bg-slate-200 text-slate-600'
                 } ${activeTab !== 'delivery' ? 'animate-pulse' : ''}`}>
                   {deliveryOrders.length}
@@ -134,7 +134,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
               )}
               {deliveryOrders.filter(o => (o as any).source === 'QR_CARTA' && o.status === 'PENDING').length > 0 && (
                 <span className={`min-w-[22px] h-5 px-1 flex items-center justify-center rounded-full text-[10px] font-black ${
-                  activeTab === 'delivery' ? 'bg-white/30 text-white' : 'bg-blue-500 text-white'
+                  activeTab === 'delivery' ? 'bg-white/30 text-white' : 'bg-slate-500 text-white'
                 }`} title="Pedidos QR">QR</span>
               )}
             </button>
@@ -145,7 +145,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
         <div className="flex items-center gap-2">
           <button
             onClick={handleRefresh}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors border border-gray-200"
             title="Actualizar datos"
           >
             <RefreshCw size={15} className="text-gray-400" />
@@ -169,7 +169,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
               )}
               <button
                 onClick={() => setShowCloseModal(true)}
-                className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-medium px-3 py-1.5 rounded-full transition-colors"
+                className="min-h-[44px] flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-medium px-3 py-1.5 rounded-full transition-colors"
               >
                 <DollarSign className="w-3.5 h-3.5" />
                 Cerrar turno
@@ -187,10 +187,10 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
 
           <button
             onClick={() => setShowBillPanel(p => !p)}
-            className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+            className={`min-h-[44px] relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
               billRequests.length > 0
                 ? newBillAlert
-                  ? 'bg-orange-500 text-white scale-110 shadow-lg shadow-orange-500/40'
+                  ? 'bg-orange-500 text-white scale-110 shadow-lg '
                   : 'bg-orange-500/90 text-white'
                 : 'bg-gray-100 text-gray-500'
             }`}

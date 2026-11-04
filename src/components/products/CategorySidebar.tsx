@@ -101,7 +101,7 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
                 e.stopPropagation();
                 toggleCategory(category.id);
               }}
-              className="flex-shrink-0 p-0.5 hover:bg-gray-200 rounded transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center flex-shrink-0 p-0.5 hover:bg-gray-200 rounded transition-colors"
             >
               {isExpanded ? (
                 <ChevronDown className="w-4 h-4" />
@@ -147,19 +147,14 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
       {/* Overlay para mobile */}
       {isOpen && onClose && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-[100] lg:hidden"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`
-          fixed lg:sticky top-0 left-0 h-full lg:h-auto
-          w-72 bg-white border-r border-gray-200
-          z-50 lg:z-0
-          transition-transform duration-300 ease-in-out
-          ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        className={` fixed lg:sticky top-0 left-0 h-full lg:h-auto w-72 bg-white border-r border-gray-200 z-50 lg:z-0 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           overflow-y-auto
         `}
       >
@@ -173,7 +168,7 @@ export const CategorySidebar: React.FC<CategorySidebarProps> = ({
             {onClose && (
               <button
                 onClick={onClose}
-                className="lg:hidden p-1 hover:bg-gray-100 rounded transition-colors"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center lg:hidden p-1 hover:bg-gray-100 rounded transition-colors"
               >
                 <X className="w-5 h-5 text-gray-500" />
               </button>

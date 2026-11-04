@@ -48,7 +48,7 @@ export default function WaitersPerformance({ data }: WaitersPerformanceProps) {
                 <td className="px-4 py-3 font-bold text-gray-900">{formatCurrency(waiter.sales)}</td>
                 <td className="px-4 py-3 text-gray-600">{waiter.orders}</td>
                 <td className="px-4 py-3 text-gray-900">{formatCurrency(waiter.averageTicket)}</td>
-                <td className="px-4 py-3 text-green-600 font-medium">{formatCurrency(waiter.tips)}</td>
+                <td className="px-4 py-3 text-slate-700 font-medium">{formatCurrency(waiter.tips)}</td>
               </tr>
             ))}
           </tbody>

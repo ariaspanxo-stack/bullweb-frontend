@@ -36,7 +36,7 @@ export default function RecipesList({ onEdit, onDelete, onCreate }: RecipesListP
                   <button
                     key={product.id}
                     onClick={() => onCreate()}
-                    className="px-3 py-1 bg-white border border-yellow-300 rounded-lg text-sm hover:bg-yellow-100 transition-colors"
+                    className="min-h-[44px] px-3 py-1 bg-white border border-yellow-300 rounded-lg text-sm hover:bg-yellow-100 transition-colors"
                   >
                     {product.name}
                   </button>
@@ -92,10 +92,10 @@ export default function RecipesList({ onEdit, onDelete, onCreate }: RecipesListP
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => onEdit(recipe)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded">
+                      <button onClick={() => onEdit(recipe)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-slate-700 hover:bg-slate-100 rounded">
                         <Edit className="w-4 h-4" />
                       </button>
-                      <button onClick={() => onDelete(recipe)} className="p-1.5 text-red-600 hover:bg-red-50 rounded">
+                      <button onClick={() => onDelete(recipe)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-red-600 hover:bg-red-50 rounded">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>

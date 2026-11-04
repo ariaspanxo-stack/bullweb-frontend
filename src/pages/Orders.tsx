@@ -19,7 +19,7 @@ export default function Orders() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center">
             <Receipt className="w-7 h-7 text-white" />
           </div>
           <div>
@@ -30,7 +30,7 @@ export default function Orders() {
 
         {/* Badge activos */}
         <div className="flex items-center gap-2 text-sm text-gray-500">
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-slate-500 animate-pulse" />
           <span>
             {activeOrders} pedido{activeOrders !== 1 ? 's' : ''} activo{activeOrders !== 1 ? 's' : ''}
           </span>
@@ -47,7 +47,7 @@ export default function Orders() {
 
       {/* Indicador auto-refresh */}
       <div className="flex items-center gap-2 text-sm text-gray-500">
-        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+        <div className="w-2 h-2 bg-slate-500 rounded-full animate-pulse" />
         Actualización automática cada 5s
       </div>
 

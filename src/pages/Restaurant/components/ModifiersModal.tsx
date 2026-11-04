@@ -78,7 +78,7 @@ export const ModifiersModal = ({
     <>
       {/* Overlay */}
       <div 
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]"
         onClick={onClose}
       />
 
@@ -97,7 +97,7 @@ export const ModifiersModal = ({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 hover:bg-white/20 rounded-lg transition-colors"
             >
               <X size={24} />
             </button>
@@ -158,7 +158,7 @@ export const ModifiersModal = ({
                           <button
                             key={modifier.id}
                             onClick={() => handleToggleModifier(modifier)}
-                            className={`
+                            className={`min-h-[44px] 
                               w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all
                               ${isSelected 
                                 ? 'bg-orange-50 border-orange-500 shadow-md' 
@@ -219,13 +219,13 @@ export const ModifiersModal = ({
           <div className="p-6 bg-gray-50 rounded-b-2xl border-t border-gray-200 flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+              className="min-h-[44px] flex-1 px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleConfirm}
-              className="flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl"
+              className="min-h-[44px] flex-1 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg hover:shadow-xl"
             >
               Confirmar - ${finalPrice.toLocaleString('es-CL')}
             </button>

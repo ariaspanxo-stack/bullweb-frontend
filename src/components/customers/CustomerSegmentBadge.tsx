@@ -23,7 +23,7 @@ export function CustomerSegmentBadge({ segment, size = 'sm' }: Props) {
   const base    = size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-xs';
   const classes = isVip
     ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-    : 'bg-green-100 text-green-700 border border-green-200';
+    : 'bg-slate-100 text-slate-700 border border-slate-200';
 
   return (
     <span

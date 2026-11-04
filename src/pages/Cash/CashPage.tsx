@@ -53,23 +53,23 @@ export function CashPage() {
       ) : (
         <div className={`rounded-3xl p-6 border-2 ${
           active?.isOpen
-            ? 'bg-green-50 border-green-200'
+            ? 'bg-slate-50 border-slate-200'
             : 'bg-gray-50 border-gray-200'
         }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-2xl ${active?.isOpen ? 'bg-green-100' : 'bg-gray-200'}`}>
-                <DollarSign className={`w-6 h-6 ${active?.isOpen ? 'text-green-600' : 'text-gray-500'}`} />
+              <div className={`p-3 rounded-2xl ${active?.isOpen ? 'bg-slate-100' : 'bg-gray-200'}`}>
+                <DollarSign className={`w-6 h-6 ${active?.isOpen ? 'text-slate-700' : 'text-gray-500'}`} />
               </div>
               <div>
                 <p className="font-bold text-gray-800">
                   {active?.register?.name ?? 'Caja principal'}
                 </p>
                 <p className={`text-sm font-medium flex items-center gap-1.5 ${
-                  active?.isOpen ? 'text-green-600' : 'text-gray-400'
+                  active?.isOpen ? 'text-slate-700' : 'text-gray-400'
                 }`}>
                   <span className={`w-1.5 h-1.5 rounded-full ${
-                    active?.isOpen ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
+                    active?.isOpen ? 'bg-slate-500 animate-pulse' : 'bg-gray-400'
                   }`} />
                   {active?.isOpen ? 'Turno abierto' : 'Sin turno activo'}
                 </p>
@@ -132,7 +132,7 @@ export function CashPage() {
                     {/* Izquierda: estado + fecha */}
                     <div className="flex items-center gap-3">
                       {s.status === 'CLOSED'
-                        ? <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                        ? <CheckCircle className="w-5 h-5 text-slate-500 flex-shrink-0" />
                         : <div className="w-5 h-5 rounded-full border-2 border-orange-400 flex-shrink-0 animate-pulse" />
                       }
                       <div>
@@ -159,7 +159,7 @@ export function CashPage() {
                         <div>
                           {totalSales !== null ? (
                             <>
-                              <p className="text-sm font-bold text-indigo-700">{formatCLP(totalSales)}</p>
+                              <p className="text-sm font-bold text-slate-700">{formatCLP(totalSales)}</p>
                               <p className="text-xs text-gray-400">
                                 ventas{totalOrders !== null ? ` · ${totalOrders} pedidos` : ''}
                               </p>

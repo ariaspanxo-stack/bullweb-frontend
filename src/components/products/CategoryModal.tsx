@@ -179,7 +179,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-[100]"
         onClick={onClose}
       />
 
@@ -200,7 +200,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -218,7 +218,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                 value={formData.name}
                 onChange={handleNameChange}
                 placeholder="Ej: Bebidas Frías, Electrónica, Herramientas..."
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-colors ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
                 maxLength={50}
@@ -275,7 +275,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setFormData((prev) => ({ ...prev, image: '' }))}
-                      className="px-4 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                      className="min-h-[44px] px-4 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
                     >
                       Quitar imagen
                     </button>
@@ -285,7 +285,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
             </div>
 
             {/* Preview */}
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+            <div className=" rounded-lg p-4 border border-slate-200">
               <p className="text-sm font-semibold text-gray-800 mb-3">
                 👁️ Vista Previa
               </p>
@@ -315,13 +315,13 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="min-h-[44px] flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="min-h-[44px] flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
               >
                 {mode === 'create' ? 'Crear Categoría' : 'Guardar Cambios'}
               </button>

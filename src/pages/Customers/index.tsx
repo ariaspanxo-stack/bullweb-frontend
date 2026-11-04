@@ -1,3 +1,5 @@
+import { fmtMoney } from '../../utils/displayFormat';
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -265,21 +267,21 @@ export default function Customers() {
   // (Módulo Clientes/CRM liberado)
 
   return (
-    <div className="min-h-screen bg-zinc-950 p-8">
+    <div className="min-h-screen bg-white p-8">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-            <Users className="w-10 h-10 text-blue-400" />
+            <Users className="w-10 h-10 text-slate-500" />
             Clientes Recurrentes
           </h1>
-          <p className="text-zinc-400">Gestión completa de clientes y estadísticas</p>
+          <p className="text-slate-600">Gestión completa de clientes y estadísticas</p>
         </div>
         <div className="flex gap-3 flex-wrap">
           <button
             onClick={handleRecalculateSegments}
             disabled={recalculating}
-            className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="min-h-[44px] px-4 py-2.5 bg-slate-50 hover:bg-slate-100 disabled:opacity-50 text-slate-700 rounded-lg font-medium transition-colors flex items-center gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${recalculating ? 'animate-spin' : ''}`} />
             {recalculating ? 'Recalculando...' : 'Recalcular Segmentos'}
@@ -287,7 +289,7 @@ export default function Customers() {
           <button
             onClick={exportToExcel}
             disabled={exporting}
-            className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+            className="min-h-[44px] px-4 py-2.5 bg-slate-50 hover:bg-slate-100 disabled:opacity-50 text-slate-700 rounded-lg font-medium transition-colors flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
             {exporting ? 'Exportando...' : 'Exportar'}
@@ -296,7 +298,7 @@ export default function Customers() {
             <button
               onClick={() => setShowArchiveConfirm(true)}
               disabled={archiving}
-              className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+              className="min-h-[44px] px-4 py-2.5 bg-slate-50 hover:bg-slate-100 disabled:opacity-50 text-slate-700 rounded-lg font-medium transition-colors flex items-center gap-2"
               title="Archivar clientes con 0 pedidos"
             >
               <Archive className={`w-4 h-4 ${archiving ? 'animate-pulse' : ''}`} />
@@ -306,7 +308,7 @@ export default function Customers() {
           {canCreate && (
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-6 py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+              className="min-h-[44px] px-6 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
               Nuevo Cliente
@@ -318,43 +320,43 @@ export default function Customers() {
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         {/* Tarjeta de la vista activa (cambia según la pestaña) */}
-        <div className="bg-zinc-900 border-2 border-blue-500/50 rounded-lg p-4">
+        <div className="bg-white border-2 border-slate-200 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Users className="w-4 h-4 text-blue-400" />
-            <span className="text-sm text-zinc-500">{tabLabel[activeTab]} (vista actual)</span>
+            <Users className="w-4 h-4 text-slate-500" />
+            <span className="text-sm text-slate-500">{tabLabel[activeTab]} (vista actual)</span>
           </div>
           <div className="text-3xl font-bold text-white">{visibleCount}</div>
         </div>
 
         {/* Total global */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
-            <Users className="w-4 h-4 text-zinc-400" />
-            <span className="text-sm text-zinc-500">Total Clientes (global)</span>
+            <Users className="w-4 h-4 text-slate-600" />
+            <span className="text-sm text-slate-500">Total Clientes (global)</span>
           </div>
           <div className="text-3xl font-bold text-white">{totalCustomers}</div>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
             <Award className="w-4 h-4 text-yellow-400" />
-            <span className="text-sm text-zinc-500">Clientes VIP</span>
+            <span className="text-sm text-slate-500">Clientes VIP</span>
             <span
               title="VIP: Top 5% por gasto (mínimo $10.000 acumulado)"
               className="inline-flex items-center justify-center cursor-help"
             >
-              <Info className="w-3.5 h-3.5 text-zinc-500 hover:text-zinc-300" />
+              <Info className="w-3.5 h-3.5 text-slate-500 hover:text-zinc-300" />
             </span>
           </div>
           <div className="text-3xl font-bold text-white">{vipCustomers}</div>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+        <div className="bg-white border border-slate-200 rounded-lg p-4">
           <div className="flex items-center gap-2 mb-2">
-            <DollarSign className="w-4 h-4 text-emerald-400" />
-            <span className="text-sm text-zinc-500">Total Gastado</span>
+            <DollarSign className="w-4 h-4 text-slate-500" />
+            <span className="text-sm text-slate-500">Total Gastado</span>
           </div>
-          <div className="text-3xl font-bold text-white">${(totalSpent / 1000).toFixed(0)}k</div>
+          <div className="text-3xl font-bold text-slate-900">{fmtMoney(totalSpent)}</div>
         </div>
       </div>
 
@@ -371,10 +373,10 @@ export default function Customers() {
             key={t.key}
             onClick={() => setActiveTab(t.key)}
             title={t.title}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeTab === t.key
-                ? 'bg-blue-500 text-white'
-                : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
+                ? 'bg-orange-50 text-orange-700 border border-orange-300'
+                : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
             }`}
           >
             {t.label}
@@ -385,15 +387,13 @@ export default function Customers() {
       {/* Search + Filtros */}
       <div className="mb-6 flex flex-col md:flex-row gap-3 md:items-center">
         <div className="relative max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
           <input
             type="text"
             placeholder="Buscar por nombre, teléfono o email..."
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-lg pl-11 pr-4 py-3
-                     placeholder-zinc-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
-                     transition-all outline-none"
+            className="w-full bg-white border border-slate-200 text-slate-900 rounded-lg pl-11 pr-4 py-3 placeholder-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 transition-all outline-none"
           />
         </div>
 
@@ -401,37 +401,37 @@ export default function Customers() {
       </div>
 
       {/* Table */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-lg overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-zinc-800 border-b border-zinc-700">
+            <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="text-left px-6 py-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Cliente
                 </th>
-                <th className="text-left px-6 py-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Contacto
                 </th>
-                <th className="text-left px-6 py-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Segmento / Tags
                 </th>
                 {/* Columna Nivel DESACTIVADA */}
-                <th className="text-left px-6 py-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Puntos
                 </th>
-                <th className="text-left px-6 py-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Última Visita
                 </th>
-                <th className="text-left px-6 py-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Pedidos
                 </th>
-                <th className="text-left px-6 py-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Ticket Promedio
                 </th>
-                <th className="text-left px-6 py-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="text-left px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Total Gastado
                 </th>
-                <th className="text-right px-6 py-4 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <th className="text-right px-6 py-4 text-xs font-semibold text-slate-600 uppercase tracking-wider">
                   Acciones
                 </th>
               </tr>
@@ -441,9 +441,9 @@ export default function Customers() {
                 <tr>
                   <td colSpan={10} className="px-4 py-12 text-center">
                     <div className="flex justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
                     </div>
-                    <p className="text-zinc-400 mt-3">Cargando clientes...</p>
+                    <p className="text-slate-600 mt-3">Cargando clientes...</p>
                   </td>
                 </tr>
               ) : error ? (
@@ -457,12 +457,12 @@ export default function Customers() {
                   <td colSpan={10} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center max-w-sm mx-auto">
                       <div className="w-20 h-20 rounded-full bg-zinc-800/60 flex items-center justify-center mb-4">
-                        <Users className="w-10 h-10 text-zinc-500" />
+                        <Users className="w-10 h-10 text-slate-500" />
                       </div>
-                      <p className="text-lg font-semibold text-zinc-300 mb-1">
+                      <p className="text-lg font-semibold text-slate-700 mb-1">
                         {searchQuery ? 'No se encontraron clientes' : 'Aún no hay registros'}
                       </p>
-                      <p className="text-sm text-zinc-500 mb-6">
+                      <p className="text-sm text-slate-500 mb-6">
                         {searchQuery
                           ? 'Intenta con otro nombre, teléfono o email.'
                           : 'Crea tu primer cliente y comienza a construir tu base de fidelización.'}
@@ -470,7 +470,7 @@ export default function Customers() {
                       {!searchQuery && canCreate && (
                         <button
                           onClick={() => setShowAddModal(true)}
-                          className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
+                          className="min-h-[44px] px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors flex items-center gap-2"
                         >
                           <Plus className="w-5 h-5" />
                           Crear Primer Cliente
@@ -489,18 +489,18 @@ export default function Customers() {
                         <div>
                           <div className="font-semibold text-white">{customer.name}</div>
                           {customer.sector && (
-                            <div className="text-xs text-zinc-500">{customer.sector}</div>
+                            <div className="text-xs text-slate-500">{customer.sector}</div>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <div>
-                            <div className="text-sm text-zinc-300">
+                            <div className="text-sm text-slate-700">
                               {customer.phone ? formatPhone(customer.phone) : '-'}
                             </div>
                             {customer.email && (
-                              <div className="text-xs text-zinc-500">{customer.email}</div>
+                              <div className="text-xs text-slate-500">{customer.email}</div>
                             )}
                           </div>
                           {waUrl && (
@@ -537,7 +537,7 @@ export default function Customers() {
                             })}
                           {/* Tag "Sin compras" si totalOrders === 0 */}
                           {Number(customer.totalOrders ?? 0) === 0 && (
-                            <span className="px-2 py-0.5 rounded text-xs font-bold border bg-zinc-700/40 text-zinc-400 border-zinc-600/40">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold border bg-zinc-700/40 text-slate-600 border-zinc-600/40">
                               Sin compras
                             </span>
                           )}
@@ -552,11 +552,11 @@ export default function Customers() {
                       {/* Columna Nivel DESACTIVADA */}
                       <td className="px-6 py-4">
                         <span className="font-medium text-amber-500">
-                          {(customer.points ?? customer.loyaltyPoints ?? 0).toLocaleString()}
+                          {(customer.points ?? customer.loyaltyPoints ?? 0).toLocaleString('es-CL')}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm text-zinc-300">
+                        <div className="text-sm text-slate-700">
                           {formatDate(customer.lastVisit ?? customer.lastOrderAt)}
                         </div>
                       </td>
@@ -570,14 +570,14 @@ export default function Customers() {
                               ? Math.round(Number(customer.totalSpent) / Number(customer.totalOrders))
                               : 0;
                           return (
-                            <div className="text-sm font-semibold text-sky-400">
+                            <div className="text-sm font-semibold text-slate-500">
                               ${ticket.toLocaleString('es-CL')}
                             </div>
                           );
                         })()}
                       </td>
                       <td className="px-6 py-4">
-                        <div className="text-sm font-semibold text-green-400">
+                        <div className="text-sm font-semibold text-slate-500">
                           ${customer.totalSpent.toLocaleString('es-CL')}
                         </div>
                       </td>
@@ -588,7 +588,7 @@ export default function Customers() {
                               setSelectedCustomer(customer);
                               setShowDetailModal(true);
                             }}
-                            className="p-2 hover:bg-blue-500/10 text-blue-400 rounded-lg transition-colors"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 hover:bg-slate-50 text-slate-500 rounded-lg transition-colors border border-slate-300"
                             title="Ver detalle"
                           >
                             <Eye className="w-4 h-4" />
@@ -599,7 +599,7 @@ export default function Customers() {
                                 setSelectedCustomer(customer);
                                 setShowEditModal(true);
                               }}
-                              className="p-2 hover:bg-yellow-500/10 text-yellow-400 rounded-lg transition-colors"
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 hover:bg-slate-50 text-yellow-400 rounded-lg transition-colors border border-slate-300"
                               title="Editar"
                             >
                               <Edit2 className="w-4 h-4" />
@@ -611,7 +611,7 @@ export default function Customers() {
                                 setSelectedCustomer(customer);
                                 setShowDeleteConfirm(true);
                               }}
-                              className="p-2 hover:bg-red-500/10 text-red-400 rounded-lg transition-colors"
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 hover:bg-red-500/10 text-red-400 rounded-lg transition-colors"
                               title="Eliminar"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -670,50 +670,50 @@ export default function Customers() {
 
       {/* Archive Confirmation (masivo) */}
       {showArchiveConfirm && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl max-w-md w-full p-6">
+        createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
               <Archive className="w-5 h-5 text-amber-400" />
               ¿Archivar {customersWithoutActivity.length} cliente(s)?
             </h3>
-            <p className="text-zinc-400 mb-6">
+            <p className="text-slate-600 mb-6">
               Se archivarán (soft-delete) todos los clientes con <span className="font-semibold text-white">0 pedidos</span>.
               Podrás restaurarlos desde la base de datos si es necesario.
             </p>
-            <div className="mb-4 max-h-32 overflow-y-auto bg-zinc-950 rounded-lg p-2 border border-zinc-800">
+            <div className="mb-4 max-h-32 overflow-y-auto bg-white rounded-lg p-2 border border-slate-200">
               {customersWithoutActivity.slice(0, 20).map(c => (
-                <div key={c.id} className="text-xs text-zinc-400 py-0.5">• {c.name} {c.phone ? `(${c.phone})` : ''}</div>
+                <div key={c.id} className="text-xs text-slate-600 py-0.5">• {c.name} {c.phone ? `(${c.phone})` : ''}</div>
               ))}
               {customersWithoutActivity.length > 20 && (
-                <div className="text-xs text-zinc-500 pt-1">...y {customersWithoutActivity.length - 20} más</div>
+                <div className="text-xs text-slate-500 pt-1">...y {customersWithoutActivity.length - 20} más</div>
               )}
             </div>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowArchiveConfirm(false)}
                 disabled={archiving}
-                className="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-medium transition-colors"
+                className="min-h-[44px] flex-1 py-2.5 px-4 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleArchiveInactive}
                 disabled={archiving}
-                className="flex-1 py-2.5 px-4 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-semibold transition-colors disabled:opacity-50"
+                className="min-h-[44px] flex-1 py-2.5 px-4 rounded-lg bg-white hover:bg-slate-50 text-slate-700 font-semibold transition-colors disabled:opacity-50 border border-slate-300"
               >
                 {archiving ? 'Archivando...' : 'Archivar'}
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
 
       {/* Delete Confirmation */}
       {showDeleteConfirm && selectedCustomer && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl max-w-md w-full p-6">
+        createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-white mb-2">¿Eliminar Cliente?</h3>
-            <p className="text-zinc-400 mb-6">
+            <p className="text-slate-600 mb-6">
               ¿Estás seguro de eliminar a <span className="font-semibold text-white">{selectedCustomer.name}</span>?
               Esta acción no se puede deshacer.
             </p>
@@ -723,19 +723,19 @@ export default function Customers() {
                   setShowDeleteConfirm(false);
                   setSelectedCustomer(null);
                 }}
-                className="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-medium transition-colors"
+                className="min-h-[44px] flex-1 py-2.5 px-4 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium transition-colors"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleDelete}
-                className="flex-1 py-2.5 px-4 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
+                className="min-h-[44px] flex-1 py-2.5 px-4 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors"
               >
                 Eliminar
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
     </div>
   );

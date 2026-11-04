@@ -2,6 +2,7 @@
  * HOTFIX 305 (B6-04): aviso "Sin stock registrado" al agregar en el POS un producto con control de stock en 0 o
  * menos. No bloquea: pide confirmar (una vez por producto mientras el modal de venta siga abierto).
  */
+import { displayName } from '@/utils/displayFormat';
 import { useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { posService } from '@/services/posService';
@@ -45,7 +46,7 @@ export function useStockConfirm() {
               <>
                 <h3 className="text-lg font-bold text-gray-900">Faltan ingredientes</h3>
                 <p className="mt-2 text-sm text-gray-600">
-                  <span className="font-semibold">{pending.product.name}</span>: si vendes igual, el stock queda en negativo.
+                  <span className="font-semibold">{displayName(pending.product.name)}</span>: si vendes igual, el stock queda en negativo.
                 </p>
                 <ul className="mt-2 space-y-1 text-sm text-gray-700">
                   {pending.shortages.map(s => (
@@ -57,7 +58,7 @@ export function useStockConfirm() {
               <>
             <h3 className="text-lg font-bold text-gray-900">Sin stock registrado</h3>
             <p className="mt-2 text-sm text-gray-600">
-              <span className="font-semibold">{pending.product.name}</span> tiene stock{' '}
+              <span className="font-semibold">{displayName(pending.product.name)}</span> tiene stock{' '}
               <span className="font-bold">{Number(pending.product.stock ?? pending.product.currentStock ?? 0)}</span>. ¿Quieres venderlo igual?
             </p>
               </>

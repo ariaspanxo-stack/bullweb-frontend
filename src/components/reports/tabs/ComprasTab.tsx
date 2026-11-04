@@ -23,9 +23,9 @@ export function ComprasTab() {
     <div className="space-y-5">
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {[
-          { label: 'Nº Compras',        value: list.length.toString(), Icon: Truck,      color: 'bg-blue-100 text-blue-600'    },
+          { label: 'Nº Compras',        value: list.length.toString(), Icon: Truck,      color: 'bg-slate-100 text-slate-700'    },
           { label: 'Total Invertido',    value: formatCurrency(total),  Icon: DollarSign, color: 'bg-orange-100 text-orange-600' },
-          { label: 'Unidades Compradas', value: totalQ.toFixed(0),      Icon: Package,    color: 'bg-green-100 text-green-600'  },
+          { label: 'Unidades Compradas', value: totalQ.toFixed(0),      Icon: Package,    color: 'bg-slate-100 text-slate-700'  },
         ].map(kpi => (
           <div key={kpi.label} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-3">
@@ -72,11 +72,11 @@ export function ComprasTab() {
             Mostrando <span className="font-semibold text-gray-600">{(purchasesPage - 1) * PURCHASES_PAGE_SIZE + 1}–{Math.min(purchasesPage * PURCHASES_PAGE_SIZE, purchasesMeta.total)}</span> de <span className="font-semibold text-gray-600">{purchasesMeta.total}</span> compras
           </span>
           <div className="flex items-center gap-1">
-            <button onClick={() => setPurchasesPage(1)} disabled={purchasesPage === 1} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronsLeft className="w-4 h-4" /></button>
-            <button onClick={() => setPurchasesPage(p => p - 1)} disabled={purchasesPage === 1} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronLeft className="w-4 h-4" /></button>
+            <button onClick={() => setPurchasesPage(1)} disabled={purchasesPage === 1} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronsLeft className="w-4 h-4" /></button>
+            <button onClick={() => setPurchasesPage(p => p - 1)} disabled={purchasesPage === 1} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronLeft className="w-4 h-4" /></button>
             <span className="text-sm text-gray-600 px-2"><span className="font-bold">{purchasesPage}</span> / <span className="font-bold">{totalPages}</span></span>
-            <button onClick={() => setPurchasesPage(p => p + 1)} disabled={purchasesPage >= totalPages} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronRight className="w-4 h-4" /></button>
-            <button onClick={() => setPurchasesPage(totalPages)} disabled={purchasesPage >= totalPages} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronsRight className="w-4 h-4" /></button>
+            <button onClick={() => setPurchasesPage(p => p + 1)} disabled={purchasesPage >= totalPages} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronRight className="w-4 h-4" /></button>
+            <button onClick={() => setPurchasesPage(totalPages)} disabled={purchasesPage >= totalPages} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronsRight className="w-4 h-4" /></button>
           </div>
         </div>
       )}

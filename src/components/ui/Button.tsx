@@ -33,18 +33,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const baseStyles = 'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50';
     
     const variants = {
-      primary: 'bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-600',
+      primary: 'bg-orange-500 text-white hover:bg-orange-600 focus-visible:ring-orange-500', // LOTE 308b: unico relleno primario
       secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus-visible:ring-gray-500',
       outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus-visible:ring-gray-500',
       ghost: 'text-gray-700 hover:bg-gray-100 focus-visible:ring-gray-500',
       danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600',
-      success: 'bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600'
+      success: 'bg-orange-500 text-white hover:bg-orange-600 focus-visible:ring-orange-500' // LOTE 308b: verde solo WhatsApp y READY
     };
     
     const sizes = {
-      sm: 'h-8 px-3 text-sm',
-      md: 'h-10 px-4 text-base',
-      lg: 'h-12 px-6 text-lg'
+      sm: 'min-h-[44px] px-3 text-sm',
+      md: 'min-h-[44px] px-4 text-base',
+      lg: 'min-h-[48px] px-6 text-lg'
     };
     
     return (

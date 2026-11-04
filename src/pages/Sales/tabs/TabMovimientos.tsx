@@ -149,7 +149,7 @@ export const TabMovimientos = () => {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-500">
         <p>Error al cargar los movimientos.</p>
-        <button onClick={() => refetch()} className="flex items-center gap-1.5 px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg">
+        <button onClick={() => refetch()} className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg">
           <RefreshCw size={14} /> Reintentar
         </button>
       </div>
@@ -160,23 +160,23 @@ export const TabMovimientos = () => {
     <div className="space-y-6">
       {/* Resumen */}
       <div className="grid grid-cols-4 gap-4">
-        <div className="bg-blue-50 p-6 rounded-lg border-l-4 border-blue-500">
+        <div className="bg-slate-50 p-6 rounded-lg border-l-4 border-slate-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Fondo apertura</p>
-              <p className="text-2xl font-bold text-blue-700">{fmt(totalOpeningCash)}</p>
+              <p className="text-2xl font-bold text-slate-700">{fmt(totalOpeningCash)}</p>
             </div>
-            <DollarSign className="text-blue-500" size={32} />
+            <DollarSign className="text-slate-500" size={32} />
           </div>
         </div>
-        <div className="bg-green-50 p-6 rounded-lg border-l-4 border-green-500">
+        <div className="bg-slate-50 p-6 rounded-lg border-l-4 border-slate-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Ingresos manuales</p>
-              <p className="text-2xl font-bold text-green-700">{fmt(cashIn)}</p>
+              <p className="text-2xl font-bold text-slate-700">{fmt(cashIn)}</p>
               {allLoadedEntries.length === 0 && <p className="text-xs text-gray-400 mt-1">Expandir sesión para cargar</p>}
             </div>
-            <TrendingUp className="text-green-500" size={32} />
+            <TrendingUp className="text-slate-500" size={32} />
           </div>
         </div>
         <div className="bg-red-50 p-6 rounded-lg border-l-4 border-red-500">
@@ -188,13 +188,13 @@ export const TabMovimientos = () => {
             <TrendingDown className="text-red-500" size={32} />
           </div>
         </div>
-        <div className={`p-6 rounded-lg border-l-4 ${movBalance >= 0 ? 'bg-green-50 border-green-400' : 'bg-red-50 border-red-500'}`}>
+        <div className={`p-6 rounded-lg border-l-4 ${movBalance >= 0 ? 'bg-slate-50 border-slate-200' : 'bg-red-50 border-red-500'}`}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 mb-1">Balance movimientos</p>
-              <p className={`text-2xl font-bold ${movBalance >= 0 ? 'text-green-700' : 'text-red-700'}`}>{movBalance >= 0 ? '+' : ''}{fmt(movBalance)}</p>
+              <p className={`text-2xl font-bold ${movBalance >= 0 ? 'text-slate-700' : 'text-red-700'}`}>{movBalance >= 0 ? '+' : ''}{fmt(movBalance)}</p>
             </div>
-            <DollarSign className={movBalance >= 0 ? 'text-green-500' : 'text-red-500'} size={32} />
+            <DollarSign className={movBalance >= 0 ? 'text-slate-500' : 'text-red-500'} size={32} />
           </div>
         </div>
       </div>
@@ -207,7 +207,7 @@ export const TabMovimientos = () => {
         </p>
         <button
           onClick={handleExport}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+          className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
         >
           <FileDown size={15} /> Exportar Excel
         </button>
@@ -287,9 +287,9 @@ export const TabMovimientos = () => {
                                 {mvState.entries.map(entry => (
                                   <div key={entry.id} className="relative flex items-start gap-3">
                                     <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold -ml-1 ${
-                                      entry.type === 'CASH_IN'  ? 'bg-green-100 text-green-700' :
+                                      entry.type === 'CASH_IN'  ? 'bg-slate-100 text-slate-700' :
                                       entry.type === 'CASH_OUT' ? 'bg-red-100 text-red-700' :
-                                      entry.type === 'OPEN'     ? 'bg-blue-100 text-blue-700' :
+                                      entry.type === 'OPEN'     ? 'bg-slate-100 text-slate-700' :
                                                                    'bg-gray-100 text-gray-500'
                                     }`}>
                                       {entry.type === 'CASH_IN'  ? '↑' :
@@ -304,7 +304,7 @@ export const TabMovimientos = () => {
                                            entry.type === 'OPEN'     ? 'Apertura de caja' : 'Cierre de caja'}
                                         </span>
                                         <span className={`text-sm font-bold ml-4 ${
-                                          entry.type === 'CASH_IN'  ? 'text-green-600' :
+                                          entry.type === 'CASH_IN'  ? 'text-slate-700' :
                                           entry.type === 'CASH_OUT' ? 'text-red-600' : 'text-gray-700'
                                         }`}>
                                           {entry.type === 'CASH_IN' ? '+' : entry.type === 'CASH_OUT' ? '−' : ''}

@@ -122,7 +122,7 @@ export const ImportMenuModal: React.FC<Props> = ({ isOpen, onClose, onImported }
             <h2 className="text-xl font-bold text-[#0F172A]">Importar carta</h2>
             <p className="text-sm text-[#64748B]">Foto o PDF (lectura con IA) o Excel con columnas Categoría | Producto | Precio | Descripción</p>
           </div>
-          <button onClick={close} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-slate-100" aria-label="Cerrar"><X className="w-5 h-5" /></button>
+          <button onClick={close} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-slate-100" aria-label="Cerrar"><X className="w-5 h-5" /></button>
         </div>
 
         <div className="px-6 py-4 space-y-4 overflow-y-auto">
@@ -202,7 +202,7 @@ export const ImportMenuModal: React.FC<Props> = ({ isOpen, onClose, onImported }
                           </select>
                         </td>
                         <td className="px-2 py-1">
-                          <button onClick={() => setRows(prev => prev.filter(x => x.key !== r.key))} className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-red-50 text-[#B91C1C]" aria-label={`Quitar ${r.nombre}`}><Trash2 className="w-4 h-4" /></button>
+                          <button onClick={() => setRows(prev => prev.filter(x => x.key !== r.key))} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-red-50 text-[#B91C1C]" aria-label={`Quitar ${r.nombre}`}><Trash2 className="w-4 h-4" /></button>
                         </td>
                       </tr>
                     ))}

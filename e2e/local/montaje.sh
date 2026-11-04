@@ -11,7 +11,7 @@ q() { "$PGB/psql.exe" -h 127.0.0.1 -p 5433 -U postgres -d bullweb_test -X -A -t 
 HQ=$(sed -n '/^HQ="/,/subscriptions s))"$/p' "$D/_288b_bateria_local.sh" | sed -e '1s/^HQ="//' -e '$s/"$//' -e 's/[\]"/"/g')
 # netstat desde Git Bash no siempre lista 4299: se pregunta por PowerShell. Los procesos se detienen por linea de comando (ver memoria del montaje).
 listeners() { powershell.exe -NoProfile -Command "(Get-NetTCPConnection -State Listen -LocalPort $1 -ErrorAction SilentlyContinue).OwningProcess" | tr -d '\r' | sort -u | grep -v '^0$'; }
-detener() { powershell.exe -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { \$_.Name -in 'node.exe','cmd.exe','nohup.exe' -and \$_.CommandLine -match 'dist/server\.js|vite.*preview.*vite\.e2e\.config' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force -ErrorAction SilentlyContinue }" > /dev/null 2>&1; }
+detener() { powershell.exe -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { \$_.Name -in 'node.exe','cmd.exe','nohup.exe' -and \$_.CommandLine -match 'dist/server\.js|_mpa_mp_simulado|vite.*preview.*vite\.e2e\.config' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force -ErrorAction SilentlyContinue }" > /dev/null 2>&1; }
 if [ "$MODE" = "up" ]; then
   if [ -n "$(listeners 4299)" ] || [ -n "$(listeners 5175)" ]; then echo "== puertos 4299/5175 ocupados: ABORTADO"; exit 1; fi
   "$PGB/pg_ctl.exe" -D "$PGD" -l "$PGD/../pg.log" -o "-p 5433" start -w > /dev/null 2>&1 < /dev/null; echo "== postgres rc=$?"
@@ -30,6 +30,15 @@ if [ "$MODE" = "up" ]; then
   npm run build > "$RUN/backend_e2e_build.log" 2>&1; echo "build_rc=$?"
   S1=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"); S2=$(node -e "console.log(require('crypto').randomBytes(24).toString('hex'))")
   printf 'NODE_ENV=development\nPORT=4299\nDATABASE_URL=postgresql://postgres@127.0.0.1:5433/bullweb_test\nJWT_SECRET=%s\nJWT_EXPIRES_IN=1h\nSTOCK_ALERT_DRY_RUN=true\nATTENDANCE_SECRET=%s\nCORS_ORIGINS=http://127.0.0.1:5175,http://localhost:5175\nFLOW_API_URL=http://127.0.0.1:9\n' "$S1" "$S2" > .env.test
+  # LOTE MP-A: solo si la rama trae el modulo: migracion y variables del MP simulado (redirect por el proxy de la lista blanca)
+  if [ -d src/modules/mercadopago ]; then
+    q -f "$D/_mpa_migracion.sql" > /dev/null; echo "rc_migracion_mpa=$?"
+    q -c "SELECT COALESCE(\"cartaBusinessHours\"::text, 'NULL') FROM tenants WHERE id = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568'" > "$RUN/.e2e_horas"
+    q -c "UPDATE tenants SET \"cartaBusinessHours\" = (SELECT jsonb_object_agg(d, '{\"open\": \"00:00\", \"close\": \"23:59\", \"enabled\": true}'::jsonb) FROM unnest(ARRAY['monday','tuesday','wednesday','thursday','friday','saturday','sunday']) d) WHERE id = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568'"
+    SUPER=$(q -c "SELECT u.id FROM users u JOIN roles r ON r.id = u.\"roleId\" WHERE r.name ILIKE 'super%' AND u.\"tenantId\" IS NULL AND u.\"deletedAt\" IS NULL ORDER BY u.\"createdAt\" LIMIT 1")
+    rnd() { node -e "console.log(require('crypto').randomBytes($1).toString('hex'))"; }
+    printf 'ENCRYPTION_KEY=%s\nSUPERADMIN_USER_IDS=%s\nMP_CLIENT_ID=sim-client\nMP_CLIENT_SECRET=%s\nMP_WEBHOOK_SECRET=%s\nMP_REDIRECT_URI=http://127.0.0.1:5175/api/payments/mp/oauth/callback\nMP_API_URL=http://127.0.0.1:4399\nMP_AUTH_URL=http://127.0.0.1:4399\nMP_TEST_TOKEN=true\nMP_ENABLED_TENANTS=6c9d34d2-29d0-4094-93a8-9abd1f5c9568\nAPP_URL=http://127.0.0.1:5175\nMP_SIM_WEBHOOK_URL=http://127.0.0.1:4299/api/payments/mp/webhook\n' "$(rnd 32)" "$SUPER" "$(rnd 16)" "$(rnd 24)" >> .env.test
+  fi
   : > "$LOG"
   # El backend lo arranca run.mjs: lanzado desde este bash moria sin traza a mitad de la corrida.
   exit 0
@@ -37,6 +46,8 @@ fi
 if [ "$MODE" = "down" ]; then
   detener; sleep 3; detener; sleep 2
   echo "listeners_4299=$(listeners 4299 | wc -l) listeners_5175=$(listeners 5175 | wc -l)"
+  if [ -f "$RUN/.e2e_horas" ]; then H=$(cat "$RUN/.e2e_horas"); if [ "$H" = "NULL" ]; then q -c "UPDATE tenants SET \"cartaBusinessHours\" = NULL WHERE id = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568'"; else q -c "UPDATE tenants SET \"cartaBusinessHours\" = '$H'::jsonb WHERE id = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568'"; fi; rm -f "$RUN/.e2e_horas"; echo "horas devueltas"; fi
+  q -f "$D/_mpa_rollback.sql" > /dev/null; echo "rc_rollback_mpa=$?" # LOTE MP-A: idempotente si la rama no lo trae
   q -f "$D/_306_rollback.sql" > /dev/null; echo "rc_rollback_306=$?"
   q -f "$D/_304_rollback.sql"; echo "rc_rollback_304=$?"
   q -f "$D/_288b_rollback.sql"; echo "rc_rollback=$?"

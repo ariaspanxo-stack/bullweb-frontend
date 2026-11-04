@@ -102,7 +102,7 @@ export default function Subscription() {
     if (!billingStatus) return;
     const plan   = billingStatus.subscription?.plan ?? billingStatus.plan;
     const status = billingStatus.status;
-    if (plan === 'TODO' && (status === 'ACTIVE' || status === 'TRIAL')) {
+    if (plan === 'TODO' && (status === 'ACTIVE' || (status === 'TRIAL' && billingStatus.trialActive))) { // HOTFIX 402
       sessionStorage.removeItem(UPGRADE_FLAG);
       setUpgraded(true);
     }

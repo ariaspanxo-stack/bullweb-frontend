@@ -36,13 +36,13 @@ export default function SuspendedOverlay() {
 
   // ── Reactivación vía la query compartida ────────────────────────────────
   // Nota: /billing/status responde 200 con el estado real en el body.
-  // Solo consideramos reactivado si el campo status es ACTIVE o TRIAL.
+  // Solo consideramos reactivado si el campo status es ACTIVE o TRIAL vigente (HOTFIX 402).
   useEffect(() => {
-    if (suspended && (status === 'ACTIVE' || status === 'TRIAL')) {
+    if (suspended && (status === 'ACTIVE' || (status === 'TRIAL' && billingQ.data?.trialActive))) {
       setSuspended(false);
       window.location.reload();
     }
-  }, [suspended, status]);
+  }, [suspended, status, billingQ.data?.trialActive]);
 
   if (!suspended || isSuperAdmin) return null;
 

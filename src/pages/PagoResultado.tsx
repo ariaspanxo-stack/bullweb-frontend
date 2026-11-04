@@ -81,7 +81,7 @@ export default function PagoResultado() {
           const fresh = await billingQ.refetch();
           const s     = (fresh.data as any)?.status;
 
-          if (s === 'ACTIVE' || s === 'TRIAL') {
+          if (s === 'ACTIVE' || (s === 'TRIAL' && (fresh.data as any)?.trialActive)) { // HOTFIX 402
             fallosAuthRef.current = 0;
             sessionStorage.removeItem('pago_resultado_poll');
             parar();

@@ -81,7 +81,7 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess }: AddCust
 
   return (
     createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 text-slate-900">
-      <div className="force-light-inputs bg-white border border-slate-200 rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col">
+      <div className="bg-white border border-slate-200 rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0 flex-wrap gap-2">
           <h3 className="text-lg font-bold text-slate-900">Nuevo Cliente</h3>

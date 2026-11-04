@@ -59,7 +59,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
       )}
       <div className="px-4 py-2 flex items-center justify-between gap-3">
         {/* Tab bar */}
-        <div className="flex-wrap flex w-full sm:inline-flex sm:w-fit items-center gap-1 bg-gray-100 p-1 rounded-xl">
+        <div className="flex-wrap flex basis-full w-full sm:basis-auto sm:inline-flex sm:w-fit items-center gap-1 bg-gray-100 p-1 rounded-xl">
           {/* ── Mesas ── solo si tiene pos.mesas */}
           {canTab('mesas') && (
             <button
@@ -70,7 +70,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
                   : 'text-gray-500 hover:text-gray-900'
               }`}
             >
-              <LayoutGrid size={18} />
+              <LayoutGrid size={18} className="hidden sm:block" />
               Mesas
               {stats && stats.occupiedTables > 0 && (
                 <span className={`min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full text-xs font-black ${
@@ -92,7 +92,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
                   : 'text-gray-500 hover:text-gray-900'
               }`}
             >
-              <ShoppingBag size={18} />
+              <ShoppingBag size={18} className="hidden sm:block" />
               Mostrador
               {mostradorOrders.length > 0 && (
                 <span className={`min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full text-xs font-black ${
@@ -121,7 +121,7 @@ export function RestaurantHeader({ showShiftBanner, onOpenShift }: { showShiftBa
                   : 'text-gray-500 hover:text-gray-900'
               }`}
             >
-              <Truck size={18} />
+              <Truck size={18} className="hidden sm:block" />
               Delivery
               {deliveryOrders.length > 0 && (
                 <span className={`min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full text-xs font-black ${

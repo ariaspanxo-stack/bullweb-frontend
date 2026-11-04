@@ -7,6 +7,8 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 
 export const WAITER_PAYMENT_EVENT = 'waiter:payment_required';
 
@@ -15,7 +17,27 @@ export function notifyWaiterPaymentRequired(body: any) {
   window.dispatchEvent(new CustomEvent(WAITER_PAYMENT_EVENT, { detail: { expiredReason: body?.expiredReason ?? null } }));
 }
 
+/**
+ * Hotfix #116 y HOTFIX 306: cierra la sesion del mesero (invalida el token en el servidor y lo borra del equipo).
+ * Devuelve SU login, preservando el tenant del localStorage.
+ */
+export function closeWaiterSession(): string {
+  const tenant = localStorage.getItem('waiterTenant');
+  const token = localStorage.getItem('waiterToken');
+  if (token) {
+    const API = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
+    fetch(`${API}/waiter/logout`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, ...(tenant ? { 'x-tenant-slug': tenant } : {}) },
+    }).catch(() => {});
+  }
+  localStorage.removeItem('waiterToken');
+  localStorage.removeItem('waiterInfo');
+  return tenant ? `/mesero/login?tenant=${tenant}` : '/mesero/login';
+}
+
 export function WaiterPaymentBlocked() {
+  const navigate = useNavigate();
   const [reason, setReason] = useState<string | null | undefined>(undefined);
 
   useEffect(() => {
@@ -40,9 +62,17 @@ export function WaiterPaymentBlocked() {
         </p>
         <button
           onClick={() => window.location.reload()}
-          className="w-full min-h-[44px] border-2 border-[#F97316] text-[#F97316] font-bold rounded-xl hover:bg-orange-50 transition-colors"
+          className="w-full min-h-[44px] text-gray-400 hover:text-gray-600 text-sm underline underline-offset-2 transition-colors"
         >
-          Reintentar
+          Verificar ahora
+        </button>
+        {/* HOTFIX overlay: siempre se puede salir */}
+        <button
+          onClick={() => navigate(closeWaiterSession())}
+          className="w-full min-h-[44px] mt-2 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-colors inline-flex items-center justify-center gap-2"
+        >
+          <LogOut size={16} />
+          Cerrar sesión
         </button>
       </div>
     </div>,

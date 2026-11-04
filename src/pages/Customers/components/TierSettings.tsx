@@ -247,7 +247,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
               </div>
 
               {msg && (
-                <div className={`rounded-lg p-3 text-sm ${msg.type === 'ok' ? 'bg-slate-500 text-slate-500 border border-slate-200' : 'bg-red-500/10 text-red-400 border border-red-500/30'}`}>
+                <div className={`rounded-lg p-3 text-sm ${msg.type === 'ok' ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-red-500/10 text-red-400 border border-red-500/30'}`}>
                   {msg.text}
                 </div>
               )}

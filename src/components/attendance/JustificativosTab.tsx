@@ -362,7 +362,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
                   </td>
                   <td className="px-4 py-3">
                     {j.estado === 'pendiente' && (
-                      <div className="flex-wrap flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => approveMut.mutate({ id: j.id, estado: 'aprobado' })}
                           disabled={approveMut.isPending}

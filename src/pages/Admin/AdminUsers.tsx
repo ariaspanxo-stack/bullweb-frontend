@@ -1183,7 +1183,7 @@ export const AdminUsers = () => {
                   {new Date(user.createdAt).toLocaleDateString('es-CL')}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex-wrap flex items-center gap-1">
+                  <div className="flex items-center gap-1">
                     <button
                       onClick={() => setEditUser(user)}
                       className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 hover:bg-orange-50 rounded-lg text-gray-400 hover:text-orange-500 transition"

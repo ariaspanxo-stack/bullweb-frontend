@@ -129,7 +129,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({
                     )}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-center">
-                    <div className="flex-wrap flex items-center justify-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       {canManage && (
                         <button onClick={() => onEdit(product)} className={BTN_ICON} title="Editar" aria-label={`Editar ${product.name}`}>
                           <PencilIcon className="w-4 h-4" />

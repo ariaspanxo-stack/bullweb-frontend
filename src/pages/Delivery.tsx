@@ -412,7 +412,7 @@ export default function Delivery() {
                       </td>
 
                       <td className="px-4 py-3">
-                        <div className="flex-wrap flex items-center gap-1 justify-end">
+                        <div className="flex items-center gap-1 justify-end">
                           {/* Acciones de gestión — solo para usuarios con delivery.manage */}
                           {canManage && ['PENDING', 'ASSIGNED'].includes(d.status) && (
                             <button

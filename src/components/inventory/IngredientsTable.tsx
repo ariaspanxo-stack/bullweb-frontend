@@ -95,7 +95,7 @@ export default function IngredientsTable({
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex-wrap flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => onEdit(ingredient)}
                       className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-slate-700 hover:bg-slate-100 rounded"

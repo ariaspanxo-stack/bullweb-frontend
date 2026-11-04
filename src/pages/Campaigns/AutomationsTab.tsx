@@ -50,7 +50,7 @@ function AutomationCard({
           <button
             onClick={() => onToggle(!enabled)}
             className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-              enabled ? 'bg-orange-50 border border-orange-300' : 'bg-gray-200'
+              enabled ? 'bg-orange-500' : 'bg-gray-200'
             }`}
           >
             <span
@@ -453,7 +453,7 @@ export function AutomationsTab() {
                     ? 'bg-rose-500/10 text-rose-400 ring-rose-500/20'
                     : (settings as any).usage.sent >= (settings as any).usage.limit * 0.8
                     ? 'bg-amber-500/10 text-amber-400 ring-amber-500/20'
-                    : 'bg-slate-500 text-slate-500 ring-slate-300'
+                    : 'bg-slate-100 text-slate-700 ring-slate-300'
                 }`}
               >
                 {(settings as any).usage.sent}/{(settings as any).usage.limit} emails este mes

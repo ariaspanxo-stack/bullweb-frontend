@@ -513,7 +513,7 @@ export default function Inventory() {
                         <td className="px-4 py-3 text-sm text-gray-500">{s.taxId || '—'}</td>
                         <td className="px-4 py-3 text-sm text-gray-500">{s._count?.purchases ?? 0}</td>
                         <td className="px-4 py-3 text-right">
-                          <div className="flex-wrap flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => { setEditingSupplier(s); setIsSupplierModalOpen(true); }}
                               className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-gray-400 hover:text-slate-700 hover:bg-slate-100 rounded"

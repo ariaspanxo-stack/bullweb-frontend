@@ -211,7 +211,7 @@ export default function CashRegisters() {
                       <span className={`inline-block w-2 h-2 rounded-full ${r.active ? 'bg-slate-500' : 'bg-slate-300'}`} />
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex-wrap flex items-center justify-center gap-1">
+                      <div className="flex items-center justify-center gap-1">
                         {r.isOpen ? (
                           <button
                             title="Cerrar sesión"

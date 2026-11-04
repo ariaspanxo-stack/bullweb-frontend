@@ -582,7 +582,7 @@ export default function Customers() {
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex-wrap flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => {
                               setSelectedCustomer(customer);

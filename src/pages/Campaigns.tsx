@@ -117,7 +117,7 @@ export default function Campaigns() {
       ? 'bg-rose-500/10 text-rose-400 ring-rose-500/20'
       : u.sent >= u.limit * 0.8
       ? 'bg-amber-500/10 text-amber-400 ring-amber-500/20'
-      : 'bg-slate-500 text-slate-500 ring-slate-300';
+      : 'bg-slate-100 text-slate-700 ring-slate-300';
 
   return (
     <div className="min-h-screen bg-gray-50">

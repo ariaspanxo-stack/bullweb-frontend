@@ -356,7 +356,7 @@ export function CouponsPage() {
                     </td>
                     <td className="px-4 py-3">{statusBadge(c)}</td>
                     <td className="px-4 py-3">
-                      <div className="flex-wrap flex items-center gap-1">
+                      <div className="flex items-center gap-1">
                         {/* FUNCIONAL 8: toggle deshabilitado mientras procesa */}
                         <button
                           onClick={() => !isToggling && toggleMutation.mutate({ id: c.id, isActive: !c.isActive })}

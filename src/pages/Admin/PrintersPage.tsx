@@ -760,7 +760,7 @@ function AgentsSection() {
                     : 'Nunca'}
                 </td>
                 <td className="px-4 py-2.5">
-                  <div className="flex-wrap flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5">
                     <code className="text-xs font-mono text-gray-500 bg-gray-100 rounded px-1 py-0.5">
                       {revealedId === a.id ? a.api_key : `${a.api_key.slice(0, 8)}••••••••`}
                     </code>
@@ -1849,7 +1849,7 @@ export default function PrintersPage() {
                       : <span className="text-gray-300">Nunca</span>}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex-wrap flex items-center justify-end gap-1">
+                    <div className="flex items-center justify-end gap-1">
                       {/* Test */}
                       <button
                         onClick={() => handleTest(p)}

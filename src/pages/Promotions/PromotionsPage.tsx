@@ -375,7 +375,7 @@ export default function PromotionsPage() {
                       </button>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex-wrap flex items-center gap-1">
+                      <div className="flex items-center gap-1">
                         {canManage && (
                           <button
                             onClick={() => openEdit(p)}

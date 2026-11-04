@@ -277,7 +277,7 @@ const CustomersTab: React.FC<CustomersTabProps> = ({
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex-wrap flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleViewDetails(customer.id)}
                           className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 text-slate-700 hover:text-slate-700 hover:bg-slate-100 rounded transition-colors"

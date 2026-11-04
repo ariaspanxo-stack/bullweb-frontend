@@ -569,7 +569,7 @@ export function DteDocumentsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex-wrap flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                           {doc.status === 'ISSUED' && (
                             <button
                               onClick={() => setCancelModal({

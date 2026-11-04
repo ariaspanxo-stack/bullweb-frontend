@@ -681,7 +681,7 @@ export default function Employees() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex-wrap flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                           {canManage && (
                             <button onClick={() => openEditEmp(emp)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-slate-100 text-slate-700 transition-colors" title="Editar">
                               <Pencil className="h-3.5 w-3.5" />

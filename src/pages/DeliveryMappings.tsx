@@ -1067,7 +1067,7 @@ export default function DeliveryMappings() {
                               }`}
                             >
                               {isMapped && (
-                                <span className="absolute top-1.5 right-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-500 text-slate-500 border border-slate-200">
+                                <span className="absolute top-1.5 right-1.5 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
                                   mapeado
                                 </span>
                               )}

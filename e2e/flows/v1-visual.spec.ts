@@ -53,7 +53,8 @@ const MEDIR = () => {
     const el = n.parentElement;
     if (!txt || !el || !vis(el) || el.closest('nav, aside, script, style')) continue;
     const c = rgb(getComputedStyle(el).color);
-    if (lum(c) > 215 && lum(fondo(el)) > 215) invisibles.push(txt.slice(0, 30));
+    const f = fondo(el);
+    if (Math.abs(lum(c) - lum(f)) < 22 && /[a-zA-Z0-9]/.test(txt) && Number(getComputedStyle(el).opacity) > 0.3) invisibles.push(txt.slice(0, 30));
   }
   const main = document.querySelector('main') || document.body;
   const oscuras: string[] = [];

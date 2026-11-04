@@ -308,7 +308,7 @@ function RoleModal({ role, onClose, onSave }: RoleModalProps) {
         {step === 'form' && (
           <div className="p-6 space-y-4">
             {template && (
-              <div className="flex items-center gap-2 text-xs bg-slate-500 text-slate-500 border border-slate-200 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2 text-xs bg-slate-100 text-slate-700 border border-slate-200 rounded-lg px-3 py-2">
                 <Sparkles size={12} />
                 Basado en plantilla: <strong className="ml-1 capitalize">{template}</strong>
                 <button onClick={() => { setTemplate(''); setStep('template'); }} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center ml-auto text-gray-300 hover:text-white">
@@ -484,10 +484,10 @@ function DiffModal({ roles, onClose }: {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${inA ? 'bg-slate-500 text-slate-500' : 'bg-gray-800 text-gray-500'}`}>
+                        <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${inA ? 'bg-slate-100 text-slate-700' : 'bg-gray-800 text-gray-500'}`}>
                           {inA ? <Check size={10} /> : <X size={10} />} {roleA?.name?.slice(0, 9)}
                         </span>
-                        <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${inB ? 'bg-slate-500 text-slate-500' : 'bg-gray-800 text-gray-500'}`}>
+                        <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${inB ? 'bg-slate-100 text-slate-700' : 'bg-gray-800 text-gray-500'}`}>
                           {inB ? <Check size={10} /> : <X size={10} />} {roleB?.name?.slice(0, 9)}
                         </span>
                       </div>
@@ -949,7 +949,7 @@ export default function RBACPage() {
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles size={14} className="text-slate-500" />
                 <h2 className="text-sm font-semibold text-slate-700">Roles personalizados</h2>
-                <span className="text-[10px] bg-slate-500 text-slate-500 px-2 py-0.5 rounded-full ml-1">{customRoles.length} roles</span>
+                <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full ml-1">{customRoles.length} roles</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {customRoles.length === 0 && (

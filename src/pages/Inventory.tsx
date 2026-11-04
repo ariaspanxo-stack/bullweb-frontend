@@ -13,9 +13,13 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useConfirm } from '@/hooks/useConfirm';
 import { Plus, Search, AlertCircle, ShoppingCart, ArrowUpDown, Truck, Pencil, Trash2, FileDown } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { exportToExcel, clp, fmtDateTime } from '@/utils/exportExcel';
+import { exportToExcel, fmtDateTime } from '@/utils/exportExcel';
 import { usePermission } from '@/hooks/usePermission';
 import { usePlan } from '@/hooks/usePlan';
+
+const MOV_LABEL: Record<string, string> = { PURCHASE: 'Compra', SALE: 'Venta', WASTE: 'Merma', ADJUSTMENT: 'Ajuste' };
+// LOTE 309: sin decimales basura de la suma de flotantes (17.499999)
+const qty = (n: any) => Math.round(Number(n ?? 0) * 1000) / 1000;
 
 export default function Inventory() {
   const queryClient = useQueryClient();
@@ -51,8 +55,10 @@ export default function Inventory() {
     mutationFn: (ingredientId: string) => inventoryService.deleteIngredient(ingredientId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingredients'] });
+      queryClient.invalidateQueries({ queryKey: ['ingredients-all'] });
       toast.success('Ingrediente eliminado');
-    }
+    },
+    onError: (err: any) => toast.error(err.message || 'No se pudo eliminar el ingrediente'), // LOTE 309: antes no decia nada
   });
 
   const deleteRecipeMutation = useMutation({
@@ -60,7 +66,8 @@ export default function Inventory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recipes'] });
       toast.success('Receta eliminada');
-    }
+    },
+    onError: (err: any) => toast.error(err.message || 'No se pudo eliminar la receta'),
   });
 
   // Queries para compras/movimientos
@@ -97,6 +104,7 @@ export default function Inventory() {
     mutationFn: inventoryService.createPurchase,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['movements'] });
       queryClient.invalidateQueries({ queryKey: ['ingredients'] });
       queryClient.invalidateQueries({ queryKey: ['ingredients-all'] });
       setIsPurchaseModalOpen(false);
@@ -157,6 +165,73 @@ export default function Inventory() {
     onError: (err: any) => toast.error(err.message || 'Error al eliminar proveedor'),
   });
 
+  // LOTE 309: leia campos que no existen (costos y minimos en 0, movimientos sin ingrediente) y dejaba vacias las
+  // hojas de pestañas no visitadas. Pide todo al momento de exportar.
+  const handleExport = async () => {
+    try {
+      const [ings, purch, movs, sups]: any[] = await Promise.all([
+        inventoryService.getIngredients({ perPage: 500 }),
+        inventoryService.getPurchases({ perPage: 500 }),
+        inventoryService.getMovements({ perPage: 500 }),
+        inventoryService.getSuppliers({ perPage: 500 }),
+      ]);
+      const lista = (v: any, k: string): any[] => (Array.isArray(v) ? v : v?.[k] ?? []);
+      await exportToExcel([
+        {
+          sheetName: 'Ingredientes',
+          rows: lista(ings, 'ingredients').map((i: any) => ({
+            'Nombre': i.name,
+            'Stock': i.currentStock ?? 0,
+            'Unidad': i.unit ?? '—',
+            'Stock Mínimo': i.minStock ?? 0,
+            'Costo unit.': i.unitCost ?? 0,
+            'Stock Bajo': (i.currentStock ?? 0) <= (i.minStock ?? 0) ? 'SÍ' : 'NO',
+          })),
+        },
+        {
+          sheetName: 'Compras',
+          rows: lista(purch, 'purchases').map((p: any) => ({
+            'Fecha': fmtDateTime(p.createdAt),
+            'Proveedor': p.supplier ?? '—',
+            'Ingrediente': p.ingredients?.name ?? '—',
+            'Cantidad': p.quantity ?? 0,
+            'Unidad': p.ingredients?.unit ?? '—',
+            'Costo promedio actual': p.unitCost ?? 0,
+            'Total (CLP)': Math.round(p.total ?? 0),
+            'Notas': p.notes ?? '—',
+          })),
+        },
+        {
+          sheetName: 'Movimientos',
+          rows: lista(movs, 'movements').map((m: any) => ({
+            'Fecha': fmtDateTime(m.createdAt),
+            'Tipo': MOV_LABEL[m.type] ?? m.type,
+            'Ingrediente': m.ingredients?.name ?? m.products?.name ?? '—',
+            'Cantidad': m.quantity ?? 0,
+            'Unidad': m.ingredients?.unit ?? '—',
+            'Stock anterior': m.previousStock ?? 0,
+            'Stock nuevo': m.newStock ?? 0,
+            'Notas': m.notes ?? '—',
+          })),
+        },
+        {
+          sheetName: 'Proveedores',
+          rows: lista(sups, 'suppliers').map((p: any) => ({
+            'Nombre': p.name,
+            'Contacto': p.contactName ?? '—',
+            'Teléfono': p.phone ?? '—',
+            'Email': p.email ?? '—',
+            'Dirección': p.address ?? '—',
+            'RUT': p.taxId ?? '—',
+          })),
+        },
+      ], 'Inventario');
+      toast.success('Inventario exportado a Excel (4 hojas)');
+    } catch (err: any) {
+      toast.error(err.message || 'No se pudo exportar el inventario');
+    }
+  };
+
   const handleEditIngredient = (ingredient: any) => {
     setEditingIngredient(ingredient);
     setIsIngredientModalOpen(true);
@@ -209,59 +284,7 @@ export default function Inventory() {
           </Button>
         )}
         {!isBasico && <button
-          onClick={() => {
-            const purchases: any[] = (purchasesData as any)?.purchases ?? [];
-            const movements: any[] = (movementsData as any)?.movements ?? [];
-            const suppliers: any[] = suppliersList;
-            exportToExcel([
-              {
-                sheetName: 'Ingredientes',
-                rows: ingredientsList.map((i: any) => ({
-                  'Nombre': i.name,
-                  'Categoría': i.category ?? '—',
-                  'Stock': i.currentStock ?? 0,
-                  'Unidad': i.unit ?? '—',
-                  'Stock Mínimo': i.minimumStock ?? 0,
-                  'Costo unit.': i.costPerUnit ?? 0,
-                  'Stock Bajo': (i.currentStock ?? 0) <= (i.minimumStock ?? 0) ? 'SÍ' : 'NO',
-                })),
-              },
-              {
-                sheetName: 'Compras',
-                rows: purchases.map((p: any) => ({
-                  'Fecha': fmtDateTime(p.createdAt),
-                  'Proveedor': p.supplier ?? '—',
-                  'Ítems': Array.isArray(p.items) ? p.items.length : 0,
-                  'Total (CLP)': p.total ?? 0,
-                  'Total fmt': clp(p.total),
-                  'Estado': p.status ?? '—',
-                  'Notas': p.notes ?? '—',
-                })),
-              },
-              {
-                sheetName: 'Movimientos',
-                rows: movements.map((m: any) => ({
-                  'Fecha': fmtDateTime(m.createdAt),
-                  'Tipo': m.type,
-                  'Ingrediente': m.ingredient?.name ?? '—',
-                  'Cantidad': m.quantity ?? 0,
-                  'Unidad': m.unit ?? '—',
-                  'Notas': m.notes ?? '—',
-                })),
-              },
-              {
-                sheetName: 'Proveedores',
-                rows: suppliers.map((s: any) => ({
-                  'Nombre': s.name,
-                  'Contacto': s.contact ?? '—',
-                  'Teléfono': s.phone ?? '—',
-                  'Email': s.email ?? '—',
-                  'Dirección': s.address ?? '—',
-                })),
-              },
-            ], 'Inventario');
-            toast.success('Inventario exportado a Excel (4 hojas)');
-          }}
+          onClick={handleExport}
           className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
         >
           <FileDown className="w-4 h-4" />
@@ -347,16 +370,17 @@ export default function Inventory() {
                   <tr className="text-left text-xs font-medium text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
                     <th className="px-4 py-3">Fecha</th>
                     <th className="px-4 py-3">Proveedor</th>
-                    <th className="px-4 py-3">Ítems</th>
+                    <th className="px-4 py-3">Ingrediente</th>
+                    <th className="px-4 py-3">Cantidad</th>
+                    <th className="px-4 py-3">Costo prom. actual</th>
                     <th className="px-4 py-3">Total</th>
-                    <th className="px-4 py-3">Estado</th>
                     <th className="px-4 py-3">Notas</th>
                   </tr>
                 </thead>
                 <tbody>
                   {purchasesList.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
+                      <td colSpan={7} className="px-4 py-12 text-center text-gray-400">
                         No hay compras registradas
                       </td>
                     </tr>
@@ -367,20 +391,15 @@ export default function Inventory() {
                           {new Date(purchase.createdAt).toLocaleDateString('es-CL')}
                         </td>
                         <td className="px-4 py-3 font-medium">{purchase.supplier || '—'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          {Array.isArray(purchase.items) ? purchase.items.length : 0} ítem(s)
+                        <td className="px-4 py-3 text-sm">{purchase.ingredients?.name ?? '—'}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          {qty(purchase.quantity)} {purchase.ingredients?.unit ?? ''}
                         </td>
-                        <td className="px-4 py-3 font-semibold">
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                          ${Math.round(purchase.unitCost ?? 0).toLocaleString('es-CL')}
+                        </td>
+                        <td className="px-4 py-3 font-bold">
                           ${Math.round(purchase.total ?? 0).toLocaleString('es-CL')}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
-                            purchase.status === 'RECEIVED'
-                              ? 'bg-slate-100 text-slate-700'
-                              : 'bg-yellow-100 text-yellow-700'
-                          }`}>
-                            {purchase.status === 'RECEIVED' ? 'Recibido' : 'Pendiente'}
-                          </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-400 max-w-xs truncate">
                           {purchase.notes || '—'}
@@ -457,10 +476,10 @@ export default function Inventory() {
                             </span>
                           </td>
                           <td className={`px-4 py-3 font-semibold ${mov.quantity < 0 ? 'text-red-600' : 'text-slate-700'}`}>
-                            {mov.quantity > 0 ? '+' : ''}{mov.quantity}
+                            {mov.quantity > 0 ? '+' : ''}{qty(mov.quantity)}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-500">{mov.previousStock}</td>
-                          <td className="px-4 py-3 text-sm font-medium">{mov.newStock}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{qty(mov.previousStock)}</td>
+                          <td className="px-4 py-3 text-sm font-medium">{qty(mov.newStock)}</td>
                           <td className="px-4 py-3 text-sm text-gray-400">{mov.reference || mov.notes || '—'}</td>
                         </tr>
                       );
@@ -516,6 +535,7 @@ export default function Inventory() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => { setEditingSupplier(s); setIsSupplierModalOpen(true); }}
+                              aria-label={`Editar proveedor ${s.name}`}
                               className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-gray-400 hover:text-slate-700 hover:bg-slate-100 rounded"
                             >
                               <Pencil className="w-4 h-4" />
@@ -525,6 +545,7 @@ export default function Inventory() {
                                 const ok = await confirmDialog({ message: `¿Eliminar proveedor "${s.name}"?`, confirmLabel: 'Eliminar' });
                                 if (ok) deleteSupplierMutation.mutate(s.id);
                               }}
+                              aria-label={`Eliminar proveedor ${s.name}`}
                               className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -642,7 +663,7 @@ function PurchaseModal({
 
     // F-6: advertir sobre filas incompletas en lugar de descartar silenciosamente
     if (validItems.length === 0) {
-      alert('Agrega al menos un ítem completo (ingrediente + cantidad + costo)');
+      toast.error('Agrega al menos un ítem completo: ingrediente, cantidad y costo');
       return;
     }
     if (invalidCount > 0) {
@@ -696,11 +717,11 @@ function PurchaseModal({
               </button>
             </div>
             <div className="space-y-2">
-              <div className="grid grid-cols-[1fr,88px,88px,28px] gap-2 text-xs text-gray-500 px-1">
+              <div className="grid grid-cols-[1fr_88px_88px_44px] gap-2 text-xs text-gray-500 px-1">
                 <span>Ingrediente</span><span>Cantidad</span><span>Costo/u</span><span />
               </div>
               {items.map((item, i) => (
-                <div key={i} className="grid grid-cols-[1fr,88px,88px,28px] gap-2 items-center">
+                <div key={i} className="grid grid-cols-[1fr_88px_88px_44px] gap-2 items-center">
                   <select
                     value={item.ingredientId}
                     onChange={(e) => updateItem(i, 'ingredientId', e.target.value)}
@@ -771,8 +792,10 @@ function MovementModal({
   const [reason, setReason] = useState('');
 
   const handleSubmit = () => {
-    if (!ingredientId || !quantity) return;
-    onSubmit({ ingredientId, type, quantity: parseFloat(quantity), reason });
+    // LOTE 309: antes el boton no hacia nada si faltaba un dato
+    if (!ingredientId) { toast.error('Selecciona un ingrediente'); return; }
+    if (!quantity || parseFloat(quantity) === 0) { toast.error('Indica la cantidad'); return; }
+    onSubmit({ ingredientId, type, quantity: parseFloat(quantity), reason: reason.trim() });
   };
 
   return (
@@ -791,7 +814,7 @@ function MovementModal({
               <option value="">Seleccionar ingrediente...</option>
               {ingredients.map((ing: any) => (
                 <option key={ing.id} value={ing.id}>
-                  {ing.name} — stock actual: {ing.currentStock} {ing.unit}
+                  {ing.name} — stock actual: {qty(ing.currentStock)} {ing.unit}
                 </option>
               ))}
             </select>
@@ -810,7 +833,7 @@ function MovementModal({
             <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
             <input
               type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)}
-              placeholder="0" min="0.01" step="0.01"
+              placeholder="0" step="0.001"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>

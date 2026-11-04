@@ -11,8 +11,8 @@ import { inventoryService } from '@/services/inventoryService';
 // Schema
 // ─────────────────────────────────────────────────────────────
 const ingredientSchema = z.object({
-  name: z.string().min(2, 'Mínimo 2 caracteres'),
-  unit: z.string().min(1, 'Unidad requerida'),
+  name: z.string({ message: 'Escribe el nombre' }).trim().min(2, 'Mínimo 2 caracteres'),
+  unit: z.string({ message: 'Selecciona una unidad' }).min(1, 'Selecciona una unidad'),
   category: z.string().optional(),
   // Stock es opcional para el usuario: si viene vacío/NaN/null se convierte a 0
   currentStock: z.preprocess(
@@ -23,7 +23,11 @@ const ingredientSchema = z.object({
     (val) => (val === '' || val === null || Number.isNaN(val) ? 0 : val),
     z.number().min(0, 'Stock mínimo debe ser positivo'),
   ),
-  cost: z.number().min(0, 'Costo debe ser positivo'),
+  // LOTE 309: vacio = NaN mostraba "Expected number, received nan" y al editar bloqueaba el guardado
+  cost: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined || Number.isNaN(val) ? undefined : val),
+    z.number({ message: 'Indica el costo (puede ser 0)' }).min(0, 'El costo no puede ser negativo'),
+  ),
 });
 
 type IngredientForm = z.infer<typeof ingredientSchema>;
@@ -85,8 +89,13 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
   // C-2: resetear form cuando cambia el ingrediente (defaultValues solo aplica en el primer mount)
   useEffect(() => {
     if (ingredient) {
+      // LOTE 309: la API trae unitCost; sin cost el formulario de edicion nunca validaba y no guardaba
       reset({
-        ...ingredient,
+        name: ingredient.name,
+        unit: ingredient.unit,
+        minStock: ingredient.minStock,
+        currentStock: ingredient.currentStock,
+        cost: Number(ingredient.unitCost ?? ingredient.cost ?? 0),
         category: ingredient.category || '',
       });
     } else {
@@ -101,12 +110,17 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
         ...data,
         category: data.category?.trim() || 'General',
       };
-      return isEdit
-        ? inventoryService.updateIngredient(ingredient.id, payload)
-        : inventoryService.createIngredient(payload);
+      if (isEdit) {
+        // LOTE 309: el stock se ajusta en Movimientos; aqui se ve deshabilitado y no debe viajar con un valor viejo
+        const { currentStock: _stock, ...sinStock } = payload;
+        return inventoryService.updateIngredient(ingredient.id, sinStock);
+      }
+      return inventoryService.createIngredient(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingredients'] });
+      queryClient.invalidateQueries({ queryKey: ['ingredients-all'] }); // LOTE 309: Compras y Movimientos lo veian recien 60 s despues
+      queryClient.invalidateQueries({ queryKey: ['stock-alerts'] });
       toast.success(isEdit ? 'Ingrediente actualizado' : 'Ingrediente creado');
       reset();
       onClose();
@@ -118,10 +132,7 @@ export default function IngredientFormModal({ isOpen, onClose, ingredient }: Ing
 
   // Label dinámico del costo según la unidad seleccionada
   const selectedUnit = watch('unit');
-  const costLabel =
-    selectedUnit === 'g'
-      ? 'Precio por kg ($)'
-      : `Precio por ${selectedUnit || 'unidad'} ($$$)`;
+  const costLabel = `Costo por ${selectedUnit || 'unidad'} ($)`;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Editar Ingrediente' : 'Nuevo Ingrediente'}>

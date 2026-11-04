@@ -41,6 +41,8 @@ if [ "$MODE" = "up" ]; then
   fi
   # LOTE 308b: solo si la rama trae el lote: columnas del cupon en la carta, historial de marcas y opciones de impresion
   if [ -f src/modules/attendance/pin-lock.ts ]; then q -f "$D/_308b_migracion.sql" > /dev/null; echo "rc_migracion_308b=$?"; fi
+  # LOTE 309: solo si la rama trae el lote (el servicio de proveedores ya escribe contactname)
+  if grep -q contactname src/modules/suppliers/suppliers.service.ts; then q -f "$D/_309_migracion.sql" > /dev/null; echo "rc_migracion_309=$?"; fi
   : > "$LOG"
   # El backend lo arranca run.mjs: lanzado desde este bash moria sin traza a mitad de la corrida.
   exit 0
@@ -50,6 +52,7 @@ if [ "$MODE" = "down" ]; then
   echo "listeners_4299=$(listeners 4299 | wc -l) listeners_5175=$(listeners 5175 | wc -l)"
   if [ -f "$RUN/.e2e_horas" ]; then H=$(cat "$RUN/.e2e_horas"); if [ "$H" = "NULL" ]; then q -c "UPDATE tenants SET \"cartaBusinessHours\" = NULL WHERE id = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568'"; else q -c "UPDATE tenants SET \"cartaBusinessHours\" = '$H'::jsonb WHERE id = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568'"; fi; rm -f "$RUN/.e2e_horas"; echo "horas devueltas"; fi
   if [ "$(q -c "SELECT count(*) FROM information_schema.tables WHERE table_name = '_bk308b_print_settings'")" != "0" ]; then q -f "$D/_308b_rollback.sql" > /dev/null; echo "rc_rollback_308b=$?"; fi # LOTE 308b
+  if [ "$(q -c "SELECT count(*) FROM information_schema.tables WHERE table_name = '_bk309_suppliers_idx'")" != "0" ]; then q -f "$D/_309_rollback.sql" > /dev/null; echo "rc_rollback_309=$?"; fi # LOTE 309
   q -f "$D/_mpa_rollback.sql" > /dev/null; echo "rc_rollback_mpa=$?" # LOTE MP-A: idempotente si la rama no lo trae
   q -f "$D/_306_rollback.sql" > /dev/null; echo "rc_rollback_306=$?"
   q -f "$D/_304_rollback.sql"; echo "rc_rollback_304=$?"

@@ -19,13 +19,17 @@ export default function IngredientsTable({
   onDelete,
   onCreate
 }: IngredientsTableProps) {
-  const { data: ingredients, isLoading } = useQuery({
-    queryKey: ['ingredients', searchQuery, showLowStock],
+  // LOTE 309: perPage (antes solo 20 y sin paginar). El boton Stock Bajo no filtraba: el backend ignora lowStock.
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['ingredients', searchQuery],
     queryFn: () => inventoryService.getIngredients({
       search: searchQuery || undefined,
-      lowStock: showLowStock || undefined
+      perPage: 500
     })
   });
+  const ingredients: any[] | undefined = Array.isArray(data)
+    ? (showLowStock ? data.filter((i: any) => i.currentStock <= i.minStock) : data)
+    : undefined;
 
   if (isLoading) {
     return (
@@ -39,8 +43,18 @@ export default function IngredientsTable({
     );
   }
 
+  if (isError) {
+    return (
+      <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
+        <p className="font-semibold text-gray-800 mb-1">No pudimos cargar los ingredientes</p>
+        <p className="text-sm text-gray-500 mb-4">{(error as any)?.message}</p>
+        <button onClick={() => refetch()} className="min-h-[44px] px-6 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold">Reintentar</button>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden overflow-x-auto">
       <table className="w-full">
         <thead className="bg-gray-50 border-b">
           <tr>
@@ -58,8 +72,8 @@ export default function IngredientsTable({
             const isLowStock = ingredient.currentStock <= ingredient.minStock;
             // F-1: evitar división por cero cuando minStock = 0
             const stockPercentage = ingredient.minStock > 0
-              ? Math.min(100, (ingredient.currentStock / ingredient.minStock) * 100)
-              : ingredient.currentStock > 0 ? 100 : 0;
+              ? (ingredient.currentStock / ingredient.minStock) * 100
+              : 1000; // sin minimo definido: basta con que tenga stock (si no, ya cayo en isLowStock)
             
             return (
               <tr key={ingredient.id} className={cn(
@@ -78,10 +92,10 @@ export default function IngredientsTable({
                     'font-bold',
                     isLowStock ? 'text-red-600' : 'text-gray-900'
                   )}>
-                    {ingredient.currentStock}
+                    {Math.round(ingredient.currentStock * 1000) / 1000}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-600">{ingredient.minStock}</td>
+                <td className="px-4 py-3 text-sm text-gray-600">{Math.round(ingredient.minStock * 1000) / 1000}</td>
                 <td className="px-4 py-3 text-sm text-gray-900">
                   {formatCurrency(ingredient.unitCost ?? ingredient.cost ?? 0)}
                 </td>
@@ -98,12 +112,14 @@ export default function IngredientsTable({
                   <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => onEdit(ingredient)}
+                      aria-label={`Editar ${ingredient.name}`}
                       className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-slate-700 hover:bg-slate-100 rounded"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => onDelete(ingredient)}
+                      aria-label={`Eliminar ${ingredient.name}`}
                       className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-red-600 hover:bg-red-50 rounded"
                     >
                       <Trash2 className="w-4 h-4" />

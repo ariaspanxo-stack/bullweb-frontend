@@ -83,7 +83,7 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
         (i) =>
           i.name.toLowerCase().includes(search) ||
           i.description?.toLowerCase().includes(search) ||
-          i.sku.toLowerCase().includes(search) ||
+          i.sku?.toLowerCase().includes(search) ||
           i.supplier?.toLowerCase().includes(search)
       );
     }
@@ -91,7 +91,7 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
     // Filtros
     switch (filterType) {
       case 'active':
-        filtered = filtered.filter((i) => i.status === 'active');
+        filtered = filtered.filter((i) => (i as any).active !== false); // LOTE 309: la columna es active
         break;
       case 'lowStock':
         filtered = filtered.filter((i) => stockLevel(i.currentStock, i.minStock) === 'low');

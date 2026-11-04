@@ -15,6 +15,8 @@ mkdirSync(RUN, { recursive: true });
 const [, , env, ...flags] = process.argv;
 if (env !== 'local' && env !== 'sandbox') { console.error('uso: run.mjs <local|sandbox> [--sin-montaje] [--flujo F1]'); process.exit(2); }
 const sinMontaje = flags.includes('--sin-montaje');
+const mantener = flags.includes('--mantener'); // LOTE 309: deja el montaje arriba para iterar
+const bajar = flags.includes('--bajar'); // LOTE 309: solo limpia y baja un montaje dejado con --mantener
 const flujo = flags.includes('--flujo') ? flags[flags.indexOf('--flujo') + 1] : null;
 const ref = flags.includes('--ref') ? flags[flags.indexOf('--ref') + 1] : null;
 if (ref && env !== 'local') { console.error('--ref solo aplica a local'); process.exit(2); }
@@ -103,7 +105,7 @@ async function subirPreview() {
 }
 
 function correrPlaywright() {
-  const grep = flujo ?? (env === 'local' ? 'F1|F2|F5|F8' : 'F1|F5|F8');
+  const grep = flujo ?? (env === 'local' ? 'F1|F2|F5|F8|F9' : 'F1|F5|F8|F9');
   return npx(['playwright', 'test', '--config', 'e2e/playwright.config.ts', '--grep', `"${grep}"`], { E2E_ENV: env, E2E_FECHA: process.env.E2E_FECHA ?? fechaLocal() });
 }
 function fechaLocal() {

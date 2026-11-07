@@ -270,7 +270,7 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
     await det.getByRole('button', { name: 'Marcar pagada' }).click();
     await det.getByLabel('¿Cómo se pagó?').selectOption({ label: 'Efectivo' });
     await shot(page, F, '10f_marcar_pagada');
-    r = post('/mark-paid');
+    r = page.waitForResponse((x) => x.url().includes('/mark-paid') && x.request().method() === 'POST');
     await det.getByRole('button', { name: 'Confirmar pago' }).click();
     expect((await r).status(), 'POST mark-paid').toBe(200);
     await expect(det.getByRole('button', { name: 'Marcar pagada' })).toBeHidden();

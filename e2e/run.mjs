@@ -147,7 +147,7 @@ try {
     if (!sinMontaje || !existsSync(resolve(here, '.dist/index.html'))) await subirPreview();
   }
   antes = conteo();
-  if (antes.length !== 12) throw new Error(`conteo inicial incompleto (${antes.length} de 12)`);
+  if (antes.length !== 13) throw new Error(`conteo inicial incompleto (${antes.length} de 13)`); // LOTE 310: + compras
   console.log(`conteo antes:\n${antes.join('\n')}`);
   const t0 = Date.now();
   rc = correrPlaywright();

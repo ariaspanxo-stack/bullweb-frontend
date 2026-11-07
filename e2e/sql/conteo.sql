@@ -11,3 +11,4 @@ SELECT 'CONTEO productos_md5=' || (SELECT md5(string_agg(id || ':' || name || ':
 SELECT 'CONTEO stock_movements=' || (SELECT count(*) FROM stock_movements WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568');
 SELECT 'CONTEO carta_analytics=' || (SELECT count(*) FROM carta_analytics WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568');
 SELECT 'CONTEO ingredientes_md5=' || (SELECT md5(string_agg(id || ':' || "currentStock"::text, ',' ORDER BY id)) FROM ingredients WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568');
+SELECT 'CONTEO compras=' || (SELECT count(*) FROM purchases WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568');

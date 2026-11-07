@@ -1,4 +1,4 @@
-// F9 (LOTE 309): recorrido completo de Inventario como lo haria una administradora: proveedor, ingredientes, ficha con rendimiento, compra, merma, venta, movimientos, editar y borrar, Productos, Excel y plan Basico.
+// F9 (LOTE 309, extendido en el 310 con compras a credito, guias, factura, parcial y compra antigua): recorrido completo de Inventario como lo haria una administradora: proveedor, ingredientes, ficha con rendimiento, compra, merma, venta, movimientos, editar y borrar, Productos, Excel y plan Basico.
 // La venta y el plan Basico solo corren en local (el sandbox de produccion no abre turno ni cambia de plan). Todo error 4xx/5xx no esperado, error de pagina o toast "Error" pelado es hallazgo y hace fallar el flujo.
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -18,6 +18,7 @@ const N = {
   prov: `${MARK}F9-Proveedor-${R}`, contacto: `${MARK}Contacto`, rut: '76.123.456-7',
   harina: `${MARK}F9-Harina-${R}`, queso: `${MARK}F9-Queso-${R}`, sal: `${MARK}F9-Sal-${R}`, libre: `${MARK}F9-SinUso-${R}`,
   prod: `${MARK}F9-Pizza-${R}`, prodStock: `${MARK}F9-Bebida-${R}`, cliente: `${MARK}F9-${R}`,
+  compra: `${MARK}F9-Aceite-${R}`, // LOTE 310: ingrediente propio para las compras con pago (no mueve el stock que miden las otras secciones)
 };
 
 test('F9 Inventario completo en pantalla', async ({ page }) => {
@@ -65,6 +66,8 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
   const pr2 = await api(page, 'POST', '/menu/products', token, { name: N.prodStock, price: 1500, categoryId: base.categoryId, stationId: base.stationId ?? undefined, showInQr: false, trackStock: true, stock: 5, stockMin: 2 });
   expect(pr2.status, 'alta de producto con stock').toBeLessThan(300);
   const prodId = pr.data.id;
+  const ingCompra = await api(page, 'POST', '/inventory/ingredients', token, { name: N.compra, unit: 'lt', currentStock: 0, minStock: 0, cost: 1000 });
+  expect(ingCompra.status, 'alta de ingrediente para compras 310').toBeLessThan(300);
   const costoProducto = async () => Number((await api(page, 'GET', `/menu/products/${prodId}`, token)).data.cost);
 
   await seccion('proveedor crear y editar', async () => {
@@ -191,6 +194,114 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
     await expect(fila(N.harina)).toContainText(fmt(1500)); // (10 x 1000 + 10 x 2000) / 20
     expect(await costoProducto(), 'costo tras compra').toBeCloseTo(1255, 1);
   });
+
+  // LOTE 310: credito con guia, segunda guia, factura que cierra ambas y el resumen vuelve a lo de antes; parcial marcada pagada; compra antigua Pagada / —
+  const porPagar = async () => Number((await api(page, 'GET', '/inventory/purchases/payables', token)).data?.totalPending ?? 0);
+  let base310 = 0;
+  const nuevaCompra = async (o: { qty: string; cost: string; medio: string; estado?: string; pagado?: string; doc?: string; num?: string }) => {
+    await nuevo();
+    const dlg = page.getByRole('dialog', { name: 'Nueva Compra' });
+    await dlg.getByLabel('Proveedor').selectOption({ label: N.prov });
+    await dlg.locator('select').filter({ hasText: 'Seleccionar...' }).selectOption({ label: `${N.compra} (lt)` });
+    await dlg.locator('input[type=number]').nth(0).fill(o.qty);
+    await dlg.locator('input[type=number]').nth(1).fill(o.cost);
+    await dlg.getByLabel('Medio de pago').selectOption({ label: o.medio });
+    if (o.estado) await dlg.getByLabel('Estado').selectOption({ label: o.estado });
+    if (o.pagado) await dlg.getByLabel('Monto pagado').fill(o.pagado);
+    if (o.doc) await dlg.getByLabel('Tipo de documento').selectOption({ label: o.doc });
+    if (o.num) await dlg.getByLabel('N° documento').fill(o.num);
+    await expect(dlg.getByTestId('total-compra')).toHaveText(fmt(Number(o.qty) * Number(o.cost)));
+    return dlg;
+  };
+  await seccion('compras 310: credito con dos guias y factura que las cierra', async () => {
+    base310 = await porPagar();
+    await inventario('Compras');
+    let dlg = await nuevaCompra({ qty: '2', cost: '1000', medio: 'Crédito proveedor', doc: 'Guía de despacho', num: 'G1-' + R });
+    await expect(dlg.getByLabel('Estado'), 'credito fuerza Por pagar').toHaveValue('PENDING');
+    await expect(dlg.getByLabel('Estado')).toBeDisabled();
+    await expect(dlg.getByLabel('Vencimiento')).toBeVisible();
+    await shot(page, F, '10b_compra_credito_guia');
+    let r = post('/inventory/purchases');
+    await dlg.getByRole('button', { name: 'Registrar Compra' }).click();
+    expect((await r).status(), 'POST compra credito').toBe(201);
+    const g1 = fila('G1-' + R);
+    await expect(g1).toContainText('Por pagar');
+    await expect(g1).toContainText('Crédito proveedor');
+    await expect(g1).toContainText(fmt(2000));
+    dlg = await nuevaCompra({ qty: '3', cost: '1000', medio: 'Crédito proveedor', doc: 'Guía de despacho', num: 'G2-' + R });
+    r = post('/inventory/purchases');
+    await dlg.getByRole('button', { name: 'Registrar Compra' }).click();
+    expect((await r).status(), 'POST segunda guia').toBe(201);
+    await expect(fila('G2-' + R)).toContainText('Por pagar');
+    await expect(page.getByTestId('por-pagar')).toHaveText(fmt(base310 + 5000));
+    await shot(page, F, '10c_dos_guias_por_pagar');
+    await page.getByRole('button', { name: 'Registrar factura' }).click();
+    const fx = page.getByRole('dialog', { name: 'Registrar factura' });
+    await fx.getByLabel('Proveedor').selectOption({ label: N.prov + ' (2)' });
+    for (const cb of await fx.locator('input[type=checkbox]').all()) await cb.check();
+    await expect(fx.getByTestId('total-factura')).toHaveText(fmt(5000));
+    await fx.getByLabel('N° factura').fill('F-' + R);
+    await fx.getByLabel('¿Cómo se pagó?').selectOption({ label: 'Transferencia' });
+    await shot(page, F, '10d_registrar_factura');
+    r = post('/inventory/purchases/close-invoice');
+    await fx.getByRole('button', { name: 'Registrar factura' }).click();
+    expect((await r).status(), 'POST close-invoice').toBe(200);
+    await expect(fx).toBeHidden();
+    await expect(page.getByTestId('por-pagar'), 'resumen vuelve a lo de antes').toHaveText(fmt(base310));
+    await expect(fila('G1-' + R)).toContainText('Pagada');
+    await expect(fila('G2-' + R)).toContainText('Pagada');
+    await expect(fila('G1-' + R)).toContainText('Transferencia');
+    await shot(page, F, '10e_guias_pagadas');
+    expect(await porPagar(), 'API: por pagar').toBeCloseTo(base310, 0);
+  });
+
+  await seccion('compras 310: parcial y marcar pagada', async () => {
+    await inventario('Compras');
+    const dlg = await nuevaCompra({ qty: '1', cost: '4000', medio: 'Transferencia', estado: 'Parcial', pagado: '1500', doc: 'Factura', num: 'FP-' + R });
+    let r = post('/inventory/purchases');
+    await dlg.getByRole('button', { name: 'Registrar Compra' }).click();
+    expect((await r).status(), 'POST compra parcial').toBe(201);
+    const fp = fila('FP-' + R);
+    await expect(fp).toContainText('Parcial');
+    await expect(page.getByTestId('por-pagar')).toHaveText(fmt(base310 + 2500));
+    await fp.click();
+    const det = page.getByRole('dialog', { name: 'Detalle de compra' });
+    await expect(det).toContainText(fmt(2500));
+    await det.getByRole('button', { name: 'Marcar pagada' }).click();
+    await det.getByLabel('¿Cómo se pagó?').selectOption({ label: 'Efectivo' });
+    await shot(page, F, '10f_marcar_pagada');
+    r = post('/mark-paid');
+    await det.getByRole('button', { name: 'Confirmar pago' }).click();
+    expect((await r).status(), 'POST mark-paid').toBe(200);
+    await expect(det.getByRole('button', { name: 'Marcar pagada' })).toBeHidden();
+    await det.getByRole('button', { name: 'Cerrar' }).last().click();
+    await expect(det).toBeHidden();
+    await expect(fp).toContainText('Pagada');
+    await expect(page.getByTestId('por-pagar'), 'resumen baja a lo de antes').toHaveText(fmt(base310));
+  });
+
+  if (currentEnv() === 'local') {
+    await seccion('compras 310: compra antigua se ve Pagada sin medio ni documento', async () => {
+      const env = loadEnvFile();
+      const psql = (q: string) => {
+        const x = spawnSync((env.E2E_PG_BIN ?? 'C:/Users/Francisco/bullweb_pgtest/pgsql/bin') + '/psql.exe', ['-h', '127.0.0.1', '-p', '5433', '-U', 'postgres', '-d', 'bullweb_test', '-X', '-A', '-t', '-q', '-v', 'ON_ERROR_STOP=1', '-c', q], { encoding: 'utf8' });
+        expect(x.status, 'psql: ' + x.stderr).toBe(0);
+        return x.stdout.trim();
+      };
+      psql(`INSERT INTO stock_movements (id, "ingredientId", type, quantity, "previousStock", "newStock", reference, notes, "tenantId") SELECT gen_random_uuid()::text, id, 'PURCHASE', 1, "currentStock", "currentStock", '${N.prov}-Antigua', 'compra anterior al 310', "tenantId" FROM ingredients WHERE name = '${N.compra}'`);
+      await inventario('Compras');
+      const ant = fila(N.prov + '-Antigua');
+      await expect(ant).toContainText('Pagada');
+      const celdas = await ant.locator('td').allInnerTexts();
+      expect(celdas[6], 'medio de compra antigua').toBe('—');
+      expect(celdas[8], 'documento de compra antigua').toBe('—');
+      await ant.click();
+      const det = page.getByRole('dialog', { name: 'Detalle de compra' });
+      await expect(det).toContainText('antes de los medios de pago');
+      await shot(page, F, '10g_compra_antigua');
+      await det.getByRole('button', { name: 'Cerrar' }).last().click();
+    });
+  }
 
   await seccion('merma con motivo corto avisa y merma valida resta', async () => {
     esperados.push(/^400 POST \/api\/inventory\/movements$/);

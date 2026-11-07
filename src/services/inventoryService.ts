@@ -75,6 +75,32 @@ export const inventoryService = {
     return unwrap(data);
   },
 
+  // LOTE 310: cuentas por pagar, compras abiertas, detalle, cerrar con factura y marcar pagada
+  async getPayables() {
+    const { data } = await api.get<ApiResponse>('/inventory/purchases/payables');
+    return unwrap(data) as any;
+  },
+
+  async getOpenPurchases() {
+    const { data } = await api.get<ApiResponse>('/inventory/purchases/open');
+    return unwrap(data) as any;
+  },
+
+  async getPurchaseDetail(purchaseId: string) {
+    const { data } = await api.get<ApiResponse>(`/inventory/purchases/${purchaseId}`);
+    return unwrap(data) as any;
+  },
+
+  async closeWithInvoice(body: { purchaseIds: string[]; invoiceNumber: string; paymentMethod: string; paidAt?: string }) {
+    const { data } = await api.post<ApiResponse>('/inventory/purchases/close-invoice', body);
+    return unwrap(data) as any;
+  },
+
+  async markPurchasePaid(purchaseId: string, body: { paymentMethod: string; paidAt?: string; invoiceNumber?: string }) {
+    const { data } = await api.post<ApiResponse>(`/inventory/purchases/${purchaseId}/mark-paid`, body);
+    return unwrap(data) as any;
+  },
+
   // Movimientos
   async getMovements(params?: any) {
     const queryParams = new URLSearchParams();

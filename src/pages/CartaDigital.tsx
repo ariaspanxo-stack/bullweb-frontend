@@ -1619,9 +1619,20 @@ function CartSheet({
           >
             Ir a pagar →
           </button>
-          <p className="text-center text-gray-500 text-xs mt-2">
-            {isDelivery ? '🛵 Delivery a tu dirección' : '🏪 Retiro en mostrador'}
-          </p>
+          {/* LOTE 314: el resumen del envio por tramos queda junto al boton (el detalle esta en el formulario) */}
+          {isDelivery && envioTramos ? (
+            <p className={`text-center text-xs mt-2 ${envioBloquea ? 'text-white font-semibold' : 'text-gray-400'}`} data-testid="carta-envio-pie">
+              {envioTramos.fuera_de_zona
+                ? 'No llegamos a tu dirección: puedes elegir retiro en el local'
+                : envioTramos.bajo_minimo
+                  ? `Pedido mínimo ${fmtCLP(Number(envioTramos.pedido_minimo ?? 0))}, te faltan ${fmtCLP(Number(envioTramos.falta_minimo ?? 0))}`
+                  : `🛵 ${envioTramos.envio_gratis ? 'Envío gratis' : `Envío ${fmtCLP(envioCosto)}`}${envioTramos.km != null ? ` · ${envioTramos.estimado ? 'aprox. ' : ''}${fmtKmCarta(envioTramos.km)}` : ''}`}
+            </p>
+          ) : (
+            <p className="text-center text-gray-500 text-xs mt-2">
+              {isDelivery ? '🛵 Delivery a tu dirección' : '🏪 Retiro en mostrador'}
+            </p>
+          )}
         </div>
       </SheetWrap>
     );

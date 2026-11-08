@@ -58,6 +58,8 @@ test('F5 envio por tramos: carta 360 px con direccion fuera y dentro de zona, ac
       await cli.getByPlaceholder('+56 9 1234 5678').fill(telefono);
       await cli.getByPlaceholder('Calle, número, piso, referencias...').fill('Calle T314-D 100');
       await cli.getByPlaceholder('Chillán, Santiago, Concepción...').fill('Chillan');
+      await expect(cli.getByTestId('carta-envio-pie')).toContainText('No llegamos');
+      await cli.getByTestId('carta-envio-fuera').scrollIntoViewIfNeeded();
       await expect(cli.getByTestId('carta-envio-fuera')).toBeVisible();
       await expect(cli.getByTestId('carta-envio-retiro')).toBeVisible();
       await expect(cli.getByRole('button', { name: /Ir a pagar/ })).toBeDisabled();
@@ -70,6 +72,8 @@ test('F5 envio por tramos: carta 360 px con direccion fuera y dentro de zona, ac
       await cli.getByPlaceholder('Calle, número, piso, referencias...').fill('Calle T314-A 100');
       await expect(cli.getByTestId('carta-envio-costo')).toContainText('$1.500');
       await expect(cli.getByTestId('carta-envio-costo')).toContainText('2,0 km');
+      await expect(cli.getByTestId('carta-envio-pie')).toContainText('Envío $1.500 · 2,0 km');
+      await cli.getByTestId('carta-envio-costo').scrollIntoViewIfNeeded();
       await shot(cli, F, 't03_envio_dentro');
       await cli.getByRole('button', { name: /Ir a pagar/ }).click();
       await expect(cli.getByTestId('carta-pago-envio')).toContainText('$1.500');

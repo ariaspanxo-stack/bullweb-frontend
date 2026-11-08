@@ -45,11 +45,12 @@ import { useStockConfirm } from '../../../components/restaurant/shared/StockConf
 import { ModifierGroupsModal, hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 import { useActivePromotions } from '../../../hooks/useActivePromotions'; // HOTFIX 299
 import { priceCartWithPromotions, restaurantCartToPromoLines, type PromoLineResult } from '../../../utils/promoPricing'; // HOTFIX 299
+import { deliveryZonesService, fmtKm, MOTIVOS_CAMBIO_ENVIO, type CotizacionEnvio } from '../../../services/deliveryZonesService'; // LOTE 314
 
 interface NewDeliveryModalProps {
   products: Product[];
   categories: ProductCategory[];
-  onConfirm: (cart: CartItem[], customerName: string, customerPhone: string, customerAddress: string, deliveryCity: string, deliveryNotes: string, deliveryCost: number, paymentMethod?: string, customerId?: string, cashAmount?: number) => Promise<void>;
+  onConfirm: (cart: CartItem[], customerName: string, customerPhone: string, customerAddress: string, deliveryCity: string, deliveryNotes: string, deliveryCost: number, paymentMethod?: string, customerId?: string, cashAmount?: number, deliveryFeeReason?: string) => Promise<void>;
   onClose: () => void;
 }
 
@@ -298,6 +299,32 @@ export const NewDeliveryModal = ({
   const cashNum = parseInt(cashAmount) || 0;
   const cashToSend = isCash && cashNum > 0 ? cashNum : undefined;
 
+  // ========== LOTE 314: ENVIO POR TRAMOS ==========
+  // Local con tramos: el servidor sugiere el costo con km; cambiarlo exige motivo (auditoria). FIJO: todo como antes.
+  const [envioPos, setEnvioPos] = useState<CotizacionEnvio | null>(null);
+  const [envioMotivo, setEnvioMotivo] = useState('');
+  useEffect(() => {
+    const dir = [customerAddress, deliveryCity].filter(s => s?.trim()).join(', ');
+    if (customerAddress.trim().length < 4) { setEnvioPos(null); return; }
+    let vivo = true;
+    const t = setTimeout(() => {
+      deliveryZonesService.cotizar(dir)
+        .then(r => { if (vivo) setEnvioPos(r?.modo === 'TRAMOS' ? r : null); })
+        .catch(() => { if (vivo) setEnvioPos(null); });
+    }, 700);
+    return () => { vivo = false; clearTimeout(t); };
+  }, [customerAddress, deliveryCity]);
+  const envioCotizado = !!envioPos && !envioPos.sin_cotizacion && !envioPos.fuera_de_zona && envioPos.costo_tramo != null;
+  const envioSugerido: number | null = envioCotizado
+    ? (envioPos!.envio_gratis_desde != null && (subtotal - promoDiscount) >= envioPos!.envio_gratis_desde ? 0 : Number(envioPos!.costo_tramo))
+    : null;
+  useEffect(() => {
+    if (envioSugerido != null) { setDeliveryCost(String(envioSugerido)); setEnvioMotivo(''); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [envioSugerido]);
+  const envioCambiado = envioSugerido != null && deliveryFeeValue !== envioSugerido;
+  const envioMotivoFalta = envioCambiado && !envioMotivo;
+
   // ========== VALIDACIÓN PASO 1 (solo cliente) ==========
   const validateClient = (): boolean => {
     const newErrors: string[] = [];
@@ -331,6 +358,10 @@ export const NewDeliveryModal = ({
 
     if (!deliveryCity.trim()) {
       newErrors.push('La ciudad/comuna es requerida');
+    }
+
+    if (envioMotivoFalta) {
+      newErrors.push('Elige el motivo del cambio del costo de envío'); // LOTE 314
     }
 
     setErrors(newErrors);
@@ -370,7 +401,8 @@ export const NewDeliveryModal = ({
         deliveryFeeValue,
         paymentMethodId,
         customerId,
-        cashToSend
+        cashToSend,
+        envioCambiado ? envioMotivo : undefined // LOTE 314
       );
     } catch (error: any) {
       setErrors([error?.message || 'Error al crear orden. Intenta nuevamente.']);
@@ -405,7 +437,8 @@ export const NewDeliveryModal = ({
         deliveryFeeValue,
         paymentMethodId,
         customerId,
-        cashToSend
+        cashToSend,
+        envioCambiado ? envioMotivo : undefined // LOTE 314
       );
     } catch (error: any) {
       setErrors([error?.message || 'Error al guardar orden.']);
@@ -607,11 +640,44 @@ export const NewDeliveryModal = ({
                       placeholder="2000"
                       value={deliveryCost}
                       onChange={(e) => setDeliveryCost(e.target.value)}
-                      className="w-full pl-7 pr-3 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
+                      data-testid="pos-envio-costo"
+                      className="w-full pl-7 pr-3 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
                     />
                   </div>
                 </div>
               </div>
+              {/* LOTE 314: sugerencia por tramos y motivo si el cajero cambia el costo */}
+              {envioPos && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm space-y-2" data-testid="pos-envio-sugerido">
+                  {envioPos.fuera_de_zona ? (
+                    <p className="text-amber-700">Fuera de zona{envioPos.km != null ? ` (${fmtKm(envioPos.km)})` : ''}: ingresa el costo a mano.</p>
+                  ) : envioPos.sin_cotizacion ? (
+                    <p className="text-slate-600">No se pudo ubicar la dirección: costo manual.</p>
+                  ) : (
+                    <p className="text-slate-700">
+                      Sugerido <span className="font-bold">{envioSugerido === 0 ? 'Envío gratis' : `$${fmt(envioSugerido ?? 0)}`}</span>
+                      {' · '}{envioPos.estimado ? 'aprox. ' : ''}{fmtKm(envioPos.km)} · tramo {envioPos.tramo}
+                    </p>
+                  )}
+                  {envioCotizado && envioPos.pedido_minimo != null && (subtotal - promoDiscount) < envioPos.pedido_minimo && (
+                    <p className="text-amber-700">Bajo el pedido mínimo del tramo (<span className="font-bold">${fmt(envioPos.pedido_minimo)}</span>). Puedes continuar.</p>
+                  )}
+                  {envioCambiado && (
+                    <label className="block">
+                      <span className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">Motivo del cambio *</span>
+                      <select
+                        value={envioMotivo}
+                        onChange={(e) => { setEnvioMotivo(e.target.value); setErrors([]); }}
+                        data-testid="pos-envio-motivo"
+                        className="w-full min-h-[44px] px-3 bg-white border-2 border-slate-200 rounded-xl text-sm text-gray-900 focus:outline-none focus:border-orange-500"
+                      >
+                        <option value="">Elige un motivo</option>
+                        {MOTIVOS_CAMBIO_ENVIO.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                      </select>
+                    </label>
+                  )}
+                </div>
+              )}
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                   <AlertCircle size={12} />Indicaciones

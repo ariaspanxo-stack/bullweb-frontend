@@ -26,6 +26,11 @@ export interface QROrder {
    *  (viaja en el mismo payload del WS para prellenar el campo del modal). */
   deliveryFee?:         number;
   deliveryFeeDefault?:  number;
+  /** LOTE 314: cotizacion de tramos (solo locales en modo TRAMOS) */
+  deliveryQuoteFee?:    number | null;
+  deliveryKm?:          number | null;
+  deliveryTier?:        number | null;
+  deliveryEstimated?:   boolean | null;
   /** Hotfix #200 (B1) — segmento CRM del cliente (VIP/FREQUENT/...) por teléfono;
    *  lookup backend en public/orders → badge ⭐ VIP del modal. Sin match → undefined. */
   customerSegment?:     string;
@@ -174,7 +179,7 @@ export function useQROrderAlerts() {
   // respuesta real del endpoint (aceptar/rechazar). Si el fetch falla (red
   // caída), el pedido PERMANECE en pantalla — jamás optimista-sin-restore.
   // Misma filosofía del guard del #158: si algo no viajó, el usuario lo ve.
-  const acceptOrder = useCallback(async (orderId: string, deliveryFee?: number, estimatedMinutes?: number) => {
+  const acceptOrder = useCallback(async (orderId: string, deliveryFee?: number, estimatedMinutes?: number, deliveryFeeReason?: string) => {
     try {
       const order = pendingOrdersRef.current.find(o => o.orderId === orderId);
       // HOTFIX 272 — pedidos QR nativos: POST /accept con minutos de demora; integraciones siguen con PATCH
@@ -197,6 +202,7 @@ export function useQROrderAlerts() {
               ? { deliveryFee: Math.max(0, Math.round(Number(deliveryFee) || 0)) }
               : {}),
             ...(isQrNative && estimatedMinutes != null ? { estimatedMinutes } : {}),
+            ...(isQrNative && deliveryFeeReason ? { deliveryFeeReason } : {}), // LOTE 314
           }
         : {};
 
@@ -208,6 +214,7 @@ export function useQROrderAlerts() {
         },
         body: JSON.stringify(payload),
       });
+      if (res.status === 422) { const j = await res.json().catch(() => null); toast.error(j?.error ?? 'Revisa el costo de envío'); return; } // LOTE 314
       // HOTFIX 304 (B5-01/02): 409 = otro equipo ya lo aceptó o rechazó; se quita de la alerta y se avisa el estado real
       if (res.status === 409) { const j = await res.json().catch(() => null); toast.error(j?.error ?? 'Este pedido ya fue procesado desde otro equipo'); removeOrder(orderId); return; }
       if (res.ok) removeOrder(orderId);

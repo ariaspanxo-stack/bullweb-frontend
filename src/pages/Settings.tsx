@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   Settings, Bell, Monitor, Globe, RefreshCw, ShieldCheck,
-  ChevronRight, Check, Info, CreditCard
+  ChevronRight, Check, Info, CreditCard, Truck
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
@@ -206,6 +206,23 @@ export default function AppSettings() {
           }
         />
       </Section>
+
+      {/* LOTE 314: Configuracion -> Delivery */}
+      {canManagePayments && (
+        <Section title="Delivery" icon={Truck}>
+          <button
+            onClick={() => navigate('/settings/delivery')}
+            data-testid="settings-delivery"
+            className="w-full min-h-[44px] flex items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left"
+          >
+            <div>
+              <p className="text-sm font-medium text-gray-800">Costo de envío</p>
+              <p className="text-xs text-gray-400 mt-0.5">Fijo o por tramos de distancia, pedido mínimo y envío gratis</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          </button>
+        </Section>
+      )}
 
       {/* LOTE MP-A: Configuracion -> Pagos */}
       {canManagePayments && paymentsEnabled && (

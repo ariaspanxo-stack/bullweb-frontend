@@ -489,6 +489,22 @@ function TypeBtn({
 type OrderStep = 'cart' | 'type' | 'form' | 'payment' | 'success';
 type OrderType = 'mostrador' | 'delivery';
 
+// LOTE 314: respuesta de /api/public/delivery-quote (la carta no importa el cliente api del panel)
+interface CotizacionEnvioCarta {
+  modo: 'TRAMOS' | 'FIJO';
+  km?: number | null;
+  costo?: number | null;
+  pedido_minimo?: number | null;
+  fuera_de_zona?: boolean;
+  estimado?: boolean;
+  sin_cotizacion?: boolean;
+  envio_gratis?: boolean;
+  bajo_minimo?: boolean;
+  falta_minimo?: number | null;
+}
+const fmtKmCarta = (km: number | null | undefined) =>
+  km == null ? '' : `${(Math.round(km * 10) / 10).toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`;
+
 type PaymentMethod = string;   // dinámico desde Backend
 
 const FALLBACK_PAYMENT_METHODS: Array<{ id: string; name: string }> = [
@@ -937,6 +953,38 @@ function CartSheet({
   const cartKey = cart.map(i => `${i.product.id}:${i.quantity}:${(i.modifiers ?? []).map(m => m.optionId).join(',')}`).join('|');
   useEffect(() => { setCouponApplied(null); }, [cartKey]);
 
+  // LOTE 314: cotizacion de envio por tramos (solo informativa: el servidor recalcula al crear el pedido).
+  // Local en modo FIJO -> { modo: 'FIJO' } y la carta sigue como hoy.
+  const [envio, setEnvio] = useState<CotizacionEnvioCarta | null>(null);
+  const [envioLoading, setEnvioLoading] = useState(false);
+  const [envioEsTramos, setEnvioEsTramos] = useState(false);
+  const subtotalEnvio = couponApplied ? couponApplied.total : total;
+  useEffect(() => {
+    if (orderType !== 'delivery' || form.address.trim().length < 6) { setEnvio(null); setEnvioLoading(false); return; }
+    let vivo = true;
+    setEnvioLoading(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/public/delivery-quote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tenantSlug, address: form.address.trim(), city: form.city.trim() || null, subtotal: Math.round(subtotalEnvio) }),
+        });
+        const json = await res.json();
+        if (vivo) setEnvio(res.ok && json.success ? (json.data as CotizacionEnvioCarta) : null);
+        if (vivo && res.ok && json?.data?.modo === 'TRAMOS') setEnvioEsTramos(true);
+      } catch {
+        if (vivo) setEnvio(null);
+      } finally {
+        if (vivo) setEnvioLoading(false);
+      }
+    }, 700);
+    return () => { vivo = false; clearTimeout(t); };
+  }, [orderType, form.address, form.city, subtotalEnvio, tenantSlug]);
+  const envioTramos = orderType === 'delivery' && envio?.modo === 'TRAMOS' && !envio.sin_cotizacion ? envio : null;
+  const envioBloquea = !!envioTramos && (envioTramos.fuera_de_zona === true || envioTramos.bajo_minimo === true);
+  const envioCosto = envioTramos && !envioBloquea ? Number(envioTramos.costo ?? 0) : 0;
+
   const applyCoupon = async () => {
     const code = couponInput.trim();
     if (!code) return;
@@ -1064,6 +1112,7 @@ function CartSheet({
         onOrderSuccess();
       } else {
         setSubmitError(json.error ?? 'No se pudo enviar el pedido. Intenta nuevamente.');
+        if (json.envio && (json.code === 'DELIVERY_OUT_OF_ZONE' || json.code === 'DELIVERY_MIN_ORDER')) setEnvio(json.envio); // LOTE 314
       }
     } catch {
       setSubmitError('No se pudo enviar el pedido. Verifica tu conexión e intenta nuevamente.');
@@ -1118,8 +1167,9 @@ function CartSheet({
   // ── PASO 4: MÉTODO DE PAGO ───────────────────────────────────
   if (step === 'payment') {
     const cashNum    = parseInt(cashAmount) || 0;
-    const change     = cashNum - total;
-    const canConfirm = paymentMethod !== null && !orderingBlocked &&
+    const payTotal   = total + envioCosto; // LOTE 314: con tramos el envio cotizado ya se suma (FIJO: envioCosto = 0)
+    const change     = cashNum - payTotal;
+    const canConfirm = paymentMethod !== null && !orderingBlocked && !envioBloquea &&
                        (!isCashSelected || cashAmount.trim() !== '');
 
     const colorActiveMap: Record<PaymentMethod, string> = {
@@ -1131,10 +1181,10 @@ function CartSheet({
 
     // Montos sugeridos para efectivo (únicos, hasta 4)
     const suggestedAmounts = [
-      total,
-      Math.ceil(total / 1000)  * 1000,
-      Math.ceil(total / 5000)  * 5000,
-      Math.ceil(total / 10000) * 10000,
+      payTotal,
+      Math.ceil(payTotal / 1000)  * 1000,
+      Math.ceil(payTotal / 5000)  * 5000,
+      Math.ceil(payTotal / 10000) * 10000,
     ].filter((v, i, a) => a.indexOf(v) === i).slice(0, 4);
 
     const isEfectivo = isCashSelected; // HOTFIX 304 (B5-04)
@@ -1169,12 +1219,19 @@ function CartSheet({
 
         <div className="flex-1 overflow-y-auto p-5 space-y-4">
           {/* Total */}
+          {/* LOTE 314: envio cotizado por tramos, ya incluido en el total */}
+          {envioTramos && !envioBloquea && (
+            <div className="bg-gray-800/60 rounded-xl p-3 flex justify-between text-sm" data-testid="carta-pago-envio">
+              <span className="text-gray-400">Envío{envioTramos.km != null ? ` · ${envioTramos.estimado ? 'aprox. ' : ''}${fmtKmCarta(envioTramos.km)}` : ''}</span>
+              <span className="text-white font-bold">{envioTramos.envio_gratis ? 'Envío gratis' : fmtCLP(envioCosto)}</span>
+            </div>
+          )}
           <div className="bg-gray-800/60 rounded-xl p-3 flex justify-between">
             <span className="text-gray-400 text-sm">Total a pagar</span>
-            <span className="text-orange-400 font-bold text-lg">{fmtCLP(total)}</span>
+            <span className="text-orange-400 font-bold text-lg">{fmtCLP(payTotal)}</span>
           </div>
           {/* HOTFIX 307 (B5-14): el cliente sabe que el envio se suma antes de confirmar */}
-          {orderType === 'delivery' && (
+          {orderType === 'delivery' && !(envioTramos && !envioBloquea) && (
             <p className="text-gray-400 text-xs -mt-2">No incluye el costo de envío: el local lo confirma al aceptar tu pedido.</p>
           )}
 
@@ -1228,13 +1285,13 @@ function CartSheet({
               </div>
 
               {/* Vuelto */}
-              {cashAmount && cashNum >= total && (
+              {cashAmount && cashNum >= payTotal && (
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-400">Vuelto estimado:</span>
                   <span className="text-green-400 font-semibold">{fmtCLP(change)}</span>
                 </div>
               )}
-              {cashAmount && cashNum < total && (
+              {cashAmount && cashNum < payTotal && (
                 <p className="text-red-400 text-xs">⚠️ El monto es menor al total</p>
               )}
 
@@ -1466,6 +1523,39 @@ function CartSheet({
             </div>
           )}
 
+          {/* LOTE 314: envio por tramos, antes del pago */}
+          {isDelivery && ((envioLoading && envioEsTramos) || envio?.modo === 'TRAMOS') && (
+            <div className="rounded-xl p-3 text-sm" style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} data-testid="carta-envio">
+              {envioLoading ? (
+                <p className="text-gray-400">Calculando envío...</p>
+              ) : envio?.sin_cotizacion ? (
+                <p className="text-gray-300">No pudimos ubicar tu dirección. El local confirmará el costo de envío al aceptar tu pedido.</p>
+              ) : envio?.fuera_de_zona ? (
+                <div className="space-y-2">
+                  <p className="text-white font-semibold" data-testid="carta-envio-fuera">No llegamos a tu dirección{envio.km != null ? ` (${fmtKmCarta(envio.km)})` : ''}.</p>
+                  <button
+                    type="button"
+                    onClick={() => { setOrderType('mostrador'); setServeAtTable(false); }}
+                    className="w-full min-h-[44px] rounded-xl font-semibold text-white"
+                    style={{ background: themeColor }}
+                    data-testid="carta-envio-retiro"
+                  >
+                    Cambiar a retiro en el local
+                  </button>
+                </div>
+              ) : envio?.bajo_minimo ? (
+                <p className="text-white" data-testid="carta-envio-minimo">
+                  Pedido mínimo <span className="font-bold">{fmtCLP(Number(envio.pedido_minimo ?? 0))}</span>, te faltan <span className="font-bold">{fmtCLP(Number(envio.falta_minimo ?? 0))}</span>
+                </p>
+              ) : envio ? (
+                <p className="text-white" data-testid="carta-envio-costo">
+                  {envio.envio_gratis ? <span className="font-bold">Envío gratis</span> : <>Envío <span className="font-bold">{fmtCLP(Number(envio.costo ?? 0))}</span></>}
+                  {envio.km != null && <span className="text-gray-400"> · {envio.estimado ? 'aprox. ' : ''}{fmtKmCarta(envio.km)}</span>}
+                </p>
+              ) : null}
+            </div>
+          )}
+
           {/* EMAIL — Hotfix #88: opcional */}
           <div>
             <label className="block text-sm font-medium text-gray-200 mb-1.5">
@@ -1524,7 +1614,7 @@ function CartSheet({
         <div className="p-4 border-t border-gray-700/50 shrink-0">
           <button
             onClick={() => { if (validate()) setStep('payment'); }}
-            disabled={submitting}
+            disabled={submitting || (isDelivery && envioBloquea)}
             className="w-full py-4 disabled:opacity-60 text-white font-extrabold text-lg tracking-wide rounded-2xl bg-gradient-to-r from-orange-500 to-red-500 shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:scale-[1.02] transition-all duration-200"
           >
             Ir a pagar →

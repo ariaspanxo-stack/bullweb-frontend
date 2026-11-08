@@ -48,6 +48,10 @@ interface QROnlineOrder {
   createdDateCl: string | null; // HOTFIX 272 lote — día en hora Chile (BD)
   minutesAgo:    number;
   deliveryFee:   number;        // HOTFIX 272 — envío informado (prellena el formulario de aceptar)
+  deliveryQuoteFee: number | null; // LOTE 314: cotizacion de tramos
+  deliveryKm:    number | null;
+  deliveryTier:  number | null;
+  deliveryEstimated: boolean | null;
   estimatedMinutes: number | null;
 }
 
@@ -90,7 +94,7 @@ function StatusBadge({ status }: { status: string }) {
 interface OrderCardProps {
   order:        QROnlineOrder;
   defaults:     QrAcceptDefaults;
-  onAccept:     (id: string, estimatedMinutes: number, deliveryFee?: number) => Promise<void>;
+  onAccept:     (id: string, estimatedMinutes: number, deliveryFee?: number, deliveryFeeReason?: string) => Promise<void>;
   onDone:       (id: string) => Promise<void>;
   onReject:     (id: string, reason?: string) => Promise<void>;
   processing:   string | null;
@@ -215,9 +219,13 @@ function OrderCard({ order, defaults, onAccept, onDone, onReject, processing }: 
             subtotal={order.total}
             defaults={defaults}
             initialFee={order.deliveryFee}
+            quoteFee={order.deliveryQuoteFee}
+            quoteKm={order.deliveryKm}
+            quoteTier={order.deliveryTier}
+            quoteEstimated={order.deliveryEstimated}
             busy={isLoading}
             onBack={() => setMode('idle')}
-            onConfirm={(minutes, fee) => onAccept(order.id, minutes, fee)}
+            onConfirm={(minutes, fee, reason) => onAccept(order.id, minutes, fee, reason)}
           />
         </div>
       )}
@@ -324,6 +332,10 @@ export default function OnlineOrders() {
         // HOTFIX 272: minutos calculados en la BD (created_at sin zona); el cálculo local queda de respaldo
         minutesAgo:    r.minutesAgo != null ? Number(r.minutesAgo) : (now - new Date(r.createdAt).getTime()) / 60000,
         deliveryFee:   Number(r.deliveryFee ?? 0) || 0,
+        deliveryQuoteFee: r.deliveryQuoteFee != null ? Number(r.deliveryQuoteFee) : null, // LOTE 314
+        deliveryKm:    r.deliveryKm != null ? Number(r.deliveryKm) : null,
+        deliveryTier:  r.deliveryTier != null ? Number(r.deliveryTier) : null,
+        deliveryEstimated: r.deliveryEstimated ?? null,
         estimatedMinutes: r.estimatedMinutes != null ? Number(r.estimatedMinutes) : null,
       }));
       // Filtro 'preparing' no existe en backend → mostrar vacío
@@ -385,10 +397,10 @@ export default function OnlineOrders() {
 
   // HOTFIX 272 — aceptar con minutos (+ envío si delivery) y rechazar con motivo opcional; sin optimismo:
   // la tarjeta cambia solo con la respuesta del backend, y un error se avisa.
-  const handleAccept = async (orderId: string, estimatedMinutes: number, deliveryFee?: number) => {
+  const handleAccept = async (orderId: string, estimatedMinutes: number, deliveryFee?: number, deliveryFeeReason?: string) => {
     setProcessing(orderId);
     try {
-      await api.post(`/qr-orders/${orderId}/accept`, { estimatedMinutes, ...(deliveryFee != null ? { deliveryFee } : {}) });
+      await api.post(`/qr-orders/${orderId}/accept`, { estimatedMinutes, ...(deliveryFee != null ? { deliveryFee } : {}), ...(deliveryFeeReason ? { deliveryFeeReason } : {}) });
       toast.success(`Pedido aceptado: ${estimatedMinutes} min`);
     } catch (e: any) {
       toast.error(e?.data?.error ?? e?.message ?? 'No se pudo aceptar el pedido');

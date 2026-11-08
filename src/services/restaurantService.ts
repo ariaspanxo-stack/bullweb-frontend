@@ -262,6 +262,7 @@ class RestaurantService {
         payload.customerPhone   = d.customerPhone;
         payload.deliveryAddress = d.customerAddress;       // backend field name
         payload.deliveryFee     = d.deliveryFee ?? 0;      // siempre enviar, aunque sea 0
+        if ((d as any).deliveryFeeReason) payload.deliveryFeeReason = (d as any).deliveryFeeReason; // LOTE 314
         if (d.customerId)       payload.customerId = d.customerId;
         if (d.paymentMethodId)  payload.paymentMethodId = d.paymentMethodId;
         if (d.cashAmount && d.cashAmount > 0) payload.cashAmount = Math.round(d.cashAmount); // HOTFIX 269

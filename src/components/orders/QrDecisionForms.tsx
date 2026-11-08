@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react';
 import api from '@/services/api';
 import { formatCurrency } from '@/lib/utils';
+import { MOTIVOS_CAMBIO_ENVIO, fmtKm } from '@/services/deliveryZonesService'; // LOTE 314
 
 export const QR_REJECT_REASONS = ['Sin stock', 'Local cerrado', 'Zona sin cobertura', 'Pedido duplicado', 'Otro'];
 
@@ -55,13 +56,20 @@ interface AcceptProps {
   initialFee?:  number;
   dark?:        boolean;
   busy?:        boolean;
-  onConfirm:    (estimatedMinutes: number, deliveryFee?: number) => void;
+  onConfirm:    (estimatedMinutes: number, deliveryFee?: number, deliveryFeeReason?: string) => void;
   onBack:       () => void;
+  /** LOTE 314: cotizacion de tramos del pedido (costo sugerido, km, tramo). Cambiar el costo exige motivo. */
+  quoteFee?:       number | null;
+  quoteKm?:        number | null;
+  quoteTier?:      number | null;
+  quoteEstimated?: boolean | null;
 }
 
-export function QrAcceptForm({ isDelivery, subtotal, defaults, initialFee, dark = false, busy = false, onConfirm, onBack }: AcceptProps) {
+export function QrAcceptForm({ isDelivery, subtotal, defaults, initialFee, dark = false, busy = false, onConfirm, onBack, quoteFee, quoteKm, quoteTier, quoteEstimated }: AcceptProps) {
   const defMinutes = isDelivery ? defaults.deliveryMinutes : defaults.pickupMinutes;
-  const defFee     = initialFee && initialFee > 0 ? initialFee : defaults.deliveryFee;
+  const hasQuote   = isDelivery && quoteFee != null; // LOTE 314
+  const defFee     = hasQuote ? Number(quoteFee) : initialFee && initialFee > 0 ? initialFee : defaults.deliveryFee;
+  const [reason,  setReason]  = useState(''); // LOTE 314
   const [minutes, setMinutes] = useState(String(defMinutes));
   const [fee,     setFee]     = useState(String(defFee));
   // el default llega async: prellenar mientras el usuario no haya escrito
@@ -72,6 +80,8 @@ export function QrAcceptForm({ isDelivery, subtotal, defaults, initialFee, dark 
   const minutesOk  = minutes !== '' && minutesNum >= 1 && minutesNum <= 999;
   const feeNum     = Math.max(0, Math.round(Number(fee) || 0));
   const total      = subtotal + (isDelivery ? feeNum : 0);
+  const feeChanged = hasQuote && feeNum !== Number(quoteFee); // LOTE 314
+  const reasonOk   = !feeChanged || reason !== '';
 
   const box   = dark ? 'bg-gray-800 border border-gray-700' : 'bg-orange-50 border border-orange-200';
   const label = dark ? 'text-gray-300' : 'text-gray-700';
@@ -99,6 +109,25 @@ export function QrAcceptForm({ isDelivery, subtotal, defaults, initialFee, dark 
           />
         </label>
       )}
+      {hasQuote && (
+        <p className={`text-xs ${label}`} data-testid="qr-envio-cotizado">
+          Sugerido por tramos: <span className="font-bold">{formatCurrency(Number(quoteFee))}</span>{quoteTier != null ? ` · tramo ${quoteTier}` : ''}{quoteKm != null ? ` · ${quoteEstimated ? 'aprox. ' : ''}${fmtKm(quoteKm)}` : ''}
+        </p>
+      )}
+      {feeChanged && (
+        <label className="flex items-center justify-between gap-3">
+          <span className={`text-sm font-semibold ${label}`}>Motivo del cambio</span>
+          <select
+            aria-label="Motivo del cambio de envío" disabled={busy} value={reason}
+            onChange={e => setReason(e.target.value)}
+            data-testid="qr-envio-motivo"
+            className="min-h-[44px] rounded-lg bg-white text-gray-900 text-sm px-2 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400"
+          >
+            <option value="">Elige</option>
+            {MOTIVOS_CAMBIO_ENVIO.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+          </select>
+        </label>
+      )}
       <div className="flex items-center justify-between pt-1">
         <span className={`text-sm ${label}`}>Total{isDelivery ? ' con envío' : ''}</span>
         <span className={`text-lg font-black ${dark ? 'text-slate-900' : 'text-gray-900'}`}>{formatCurrency(total)}</span>
@@ -112,8 +141,8 @@ export function QrAcceptForm({ isDelivery, subtotal, defaults, initialFee, dark 
           Volver
         </button>
         <button
-          type="button" disabled={busy || !minutesOk}
-          onClick={() => onConfirm(Math.round(minutesNum), isDelivery ? feeNum : undefined)}
+          type="button" disabled={busy || !minutesOk || !reasonOk}
+          onClick={() => onConfirm(Math.round(minutesNum), isDelivery ? feeNum : undefined, feeChanged ? reason : undefined)}
           className="min-h-[44px] rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold text-sm transition-colors disabled:opacity-50"
         >
           {busy ? 'Procesando...' : 'Confirmar'}

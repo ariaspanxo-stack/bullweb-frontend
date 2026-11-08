@@ -80,6 +80,7 @@ const Profile         = lazy(() => import('@/pages/Profile'));
 const AppSettings     = lazy(() => import('@/pages/Settings'));
 const PrintSettingsPage = lazy(() => import('@/pages/Settings/PrintSettingsPage'));
 const PaymentsSettingsPage = lazy(() => import('@/pages/Settings/PaymentsSettingsPage')); // LOTE MP-A
+const DeliverySettingsPage = lazy(() => import('@/pages/Settings/DeliverySettingsPage')); // LOTE 314
 const AttendanceKiosk = lazy(() => import('@/pages/AttendanceKiosk'));
 const AttendanceCheckin = lazy(() => import('@/pages/AttendanceCheckin'));
 const KioskPage       = lazy(() => import('@/pages/KioskPage'));
@@ -288,6 +289,7 @@ function AppContent() {
               <Route path="settings" element={<AppSettings />} />
               <Route path="settings/print" element={<PrintSettingsPage />} />
               <Route path="settings/pagos" element={<PermissionGuard permission="settings.manage"><PaymentsSettingsPage /></PermissionGuard>} /> {/* LOTE MP-A */}
+              <Route path="settings/delivery" element={<PermissionGuard permission="settings.manage"><DeliverySettingsPage /></PermissionGuard>} /> {/* LOTE 314 */}
               <Route path="profile"  element={<Profile />} />
               <Route path="profile/password" element={<ChangePasswordPage />} />{/* HOTFIX 307 */}
               <Route path="profile/restaurant" element={<PermissionGuard permission="settings.manage"><RestaurantProfilePage /></PermissionGuard>} />{/* HOTFIX 306 (B7-02) */}

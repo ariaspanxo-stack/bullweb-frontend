@@ -20,7 +20,7 @@ const fmtCLP = (n: number) => formatCurrency(n);
 
 interface Props {
   order:    QROrder;
-  onAccept: (orderId: string, deliveryFee?: number, estimatedMinutes?: number) => void;
+  onAccept: (orderId: string, deliveryFee?: number, estimatedMinutes?: number, deliveryFeeReason?: string) => void;
   onCancel: (orderId: string, reason?: string) => void;
 }
 
@@ -56,10 +56,10 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
   // Se cuenta desde la llegada del aviso (receivedAt): created_at viaja sin zona horaria.
   const unanswered = order.receivedAt != null && Date.now() - order.receivedAt > QR_UNANSWERED_MINUTES * 60_000;
 
-  const handleAccept = async (estimatedMinutes?: number, deliveryFee?: number) => {
+  const handleAccept = async (estimatedMinutes?: number, deliveryFee?: number, deliveryFeeReason?: string) => {
     setIsProcessing(true);
     try {
-      await onAccept(order.orderId, isDelivery && isQrNative ? deliveryFee : undefined, isQrNative ? estimatedMinutes : undefined);
+      await onAccept(order.orderId, isDelivery && isQrNative ? deliveryFee : undefined, isQrNative ? estimatedMinutes : undefined, isQrNative ? deliveryFeeReason : undefined);
       // Navegar al tab correcto en /restaurant
       const tabValue = order.orderType === 'delivery' ? 'delivery' : 'mostrador';
       navigate('/restaurant', { state: { openTab: tabValue } });
@@ -249,9 +249,13 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
               subtotal={order.total}
               defaults={{ ...acceptDefaults, deliveryFee: Math.max(0, Math.round(Number(order.deliveryFeeDefault ?? acceptDefaults.deliveryFee) || 0)) }}
               initialFee={order.deliveryFee}
+              quoteFee={order.deliveryQuoteFee != null ? Number(order.deliveryQuoteFee) : null}
+              quoteKm={order.deliveryKm != null ? Number(order.deliveryKm) : null}
+              quoteTier={order.deliveryTier ?? null}
+              quoteEstimated={order.deliveryEstimated ?? null}
               busy={isProcessing}
               onBack={() => setMode('idle')}
-              onConfirm={(minutes, fee) => handleAccept(minutes, fee)}
+              onConfirm={(minutes, fee, reason) => handleAccept(minutes, fee, reason)}
             />
           )}
           {mode === 'reject' && (

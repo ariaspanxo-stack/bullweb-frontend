@@ -66,6 +66,12 @@ async function subirBackend() {
   const work = resolve(pgData(), '..', 'run', '_e2e_backend');
   const log = openSync(resolve(pgData(), '..', 'run', 'backend_e2e.log'), 'a');
   const vars = Object.fromEntries(readFileSync(resolve(work, '.env.test'), 'utf8').split(/\r?\n/).map((l) => l.match(/^([A-Z_]+)=(.*)$/)).filter(Boolean).map((m) => [m[1], m[2]]));
+  // LOTE 314: rama con envio por tramos -> Google simulado local (nada sale a internet); el montaje lo detiene al bajar
+  if (vars.GOOGLE_MAPS_API_BASE && existsSync(resolve(WS, '_deploy', '_314_google_simulado.js'))) {
+    const g = spawn(process.execPath, [resolve(WS, '_deploy', '_314_google_simulado.js')], { detached: true, windowsHide: true, stdio: ['ignore', log, log] });
+    g.unref();
+    console.log('google simulado 4397 arriba');
+  }
   const child = spawn(process.execPath, ['dist/server.js'], { cwd: work, env: { ...process.env, ...vars }, detached: true, windowsHide: true, stdio: ['ignore', log, log] });
   backendVivo = true;
   child.on('exit', (code, signal) => { backendVivo = false; console.log(`BACKEND LOCAL TERMINO code=${code} signal=${signal}`); });

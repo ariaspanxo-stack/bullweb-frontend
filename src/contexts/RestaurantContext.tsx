@@ -1056,6 +1056,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
     paymentMethodId?: string,
     customerId?:     string,
     cashAmount?:     number, // HOTFIX 269: "paga con"
+    deliveryFeeReason?: string, // LOTE 314: motivo si el costo difiere del sugerido por tramos
   ) => {
     try {
       if (!customerName || !customerPhone || !customerAddress) {
@@ -1075,6 +1076,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
         customerAddress: [customerAddress, deliveryCity].filter(s => s?.trim()).join(', '),
         customerId:      customerId || undefined,
         deliveryFee:     deliveryCost,
+        ...(deliveryFeeReason ? { deliveryFeeReason } : {}), // LOTE 314
         paymentMethodId: paymentMethodId || undefined,
         cashAmount:      cashAmount && cashAmount > 0 ? cashAmount : undefined,
         items:           cartItems.map(item => ({

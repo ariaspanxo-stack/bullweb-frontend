@@ -54,11 +54,11 @@ export default function SectionSelector({
       <button
         onClick={() => onSectionChange(null)}
         className={cn(
-          'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all',
+          'min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all',
           'border-2',
           !selectedSection
-            ? 'bg-blue-600 text-white border-blue-700 shadow-md'
-            : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:bg-blue-50'
+            ? 'bg-orange-50 text-orange-700 border-slate-200 shadow-md border border-orange-300'
+            : 'bg-white text-gray-700 border-gray-200 hover:border-slate-300 hover:bg-slate-100'
         )}
       >
         Todas las Secciones
@@ -78,11 +78,11 @@ export default function SectionSelector({
             key={section.id}
             onClick={() => onSectionChange(section.id)}
             className={cn(
-              'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all',
+              'min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all',
               'border-2 flex items-center gap-2',
               isSelected
-                ? 'bg-blue-600 text-white border-blue-700 shadow-md'
-                : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:bg-blue-50'
+                ? 'bg-orange-50 text-orange-700 border-slate-200 shadow-md border border-orange-300'
+                : 'bg-white text-gray-700 border-gray-200 hover:border-slate-300 hover:bg-slate-100'
             )}
           >
             {section.name}

@@ -38,7 +38,7 @@ export function EmployeeAttendanceTab({ employeeId }: Props) {
 
   if (isLoading) return (
     <div className="flex items-center justify-center py-12">
-      <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
+      <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
     </div>
   );
 
@@ -63,12 +63,12 @@ export function EmployeeAttendanceTab({ employeeId }: Props) {
     <div className="space-y-3">
       {/* Resumen rápido */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-green-50 rounded-2xl p-3 text-center">
-          <p className="text-2xl font-black text-green-600">{entries}</p>
+        <div className="bg-slate-50 rounded-2xl p-3 text-center">
+          <p className="text-2xl font-black text-slate-700">{entries}</p>
           <p className="text-xs text-gray-400 mt-0.5">Entradas (30d)</p>
         </div>
-        <div className="bg-blue-50 rounded-2xl p-3 text-center">
-          <p className="text-2xl font-black text-blue-600">{exits}</p>
+        <div className="bg-slate-50 rounded-2xl p-3 text-center">
+          <p className="text-2xl font-black text-slate-700">{exits}</p>
           <p className="text-xs text-gray-400 mt-0.5">Salidas (30d)</p>
         </div>
       </div>
@@ -80,8 +80,8 @@ export function EmployeeAttendanceTab({ employeeId }: Props) {
             className="flex items-center gap-3 bg-gray-50 rounded-xl px-3 py-2.5">
             <span className={`flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg flex-shrink-0 ${
               record.type === 'ENTRY'
-                ? 'bg-green-100 text-green-700'
-                : 'bg-blue-100 text-blue-700'
+                ? 'bg-slate-100 text-slate-700'
+                : 'bg-slate-100 text-slate-700'
             }`}>
               {record.type === 'ENTRY'
                 ? <LogIn className="w-3 h-3" />

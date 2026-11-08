@@ -160,7 +160,12 @@ const { slug } = useParams<{ slug: string }>();
       setTenant(res.data.data.tenant);
       setEmployees(res.data.data.employees);
     } catch (e: any) {
-      setError(e?.response?.status === 404 ? 'Restaurante no encontrado' : 'Error al conectar con el servidor');
+      // LOTE 308b (ASI-03): al empleado no se le habla de planes
+      setError(
+        e?.response?.data?.code === 'plan_upgrade_required' ? 'La asistencia no está activa en este local. Avísale al administrador.'
+        : e?.response?.status === 404 ? 'Restaurante no encontrado'
+        : 'Error al conectar con el servidor',
+      );
     } finally {
       setLoading(false);
     }
@@ -210,6 +215,7 @@ const { slug } = useParams<{ slug: string }>();
     } catch (e: any) {
       const code = e?.response?.data?.error;
       setPinError(
+        e?.response?.data?.code === 'PIN_LOCKED' ? String(code) : // LOTE 308b (ASI-01)
         code === 'PIN_NOT_SET'   ? 'PIN no configurado. Contacta al admin.' :
         code === 'PIN_INCORRECT' ? 'PIN incorrecto. Intentalo de nuevo.'    :
         'Error al verificar PIN.'

@@ -19,23 +19,23 @@ interface PaymentMethodData {
 function resolveConfig(name: string): { color: string; bgColor: string; icon: any } {
   const n = name.toLowerCase();
   if (n.includes('efectivo') || n.includes('cash'))
-    return { color: 'text-green-700',  bgColor: 'bg-green-500',  icon: Banknote };
+    return { color: 'text-slate-700',  bgColor: 'bg-slate-500',  icon: Banknote };
   if (n.includes('débito') || n.includes('debito') || n.includes('debit'))
-    return { color: 'text-cyan-700',   bgColor: 'bg-cyan-500',   icon: CreditCard };
+    return { color: 'text-slate-700',   bgColor: 'bg-slate-500',   icon: CreditCard };
   if (n.includes('crédito') || n.includes('credito') || n.includes('credit'))
-    return { color: 'text-blue-700',   bgColor: 'bg-blue-500',   icon: CreditCard };
+    return { color: 'text-slate-700',   bgColor: 'bg-slate-500',   icon: CreditCard };
   if (n.includes('tarjeta') || n.includes('card'))
-    return { color: 'text-blue-700',   bgColor: 'bg-blue-500',   icon: CreditCard };
+    return { color: 'text-slate-700',   bgColor: 'bg-slate-500',   icon: CreditCard };
   if (n.includes('transfer'))
-    return { color: 'text-purple-700', bgColor: 'bg-purple-500', icon: Building2  };
+    return { color: 'text-slate-700', bgColor: 'bg-slate-500', icon: Building2  };
   if (n.includes('cheque') || n.includes('check'))
-    return { color: 'text-violet-700', bgColor: 'bg-violet-500', icon: Building2  };
+    return { color: 'text-slate-700', bgColor: 'bg-slate-500', icon: Building2  };
   if (n.includes('cta') || n.includes('cuenta') || n.includes('corriente'))
-    return { color: 'text-indigo-700', bgColor: 'bg-indigo-500', icon: Building2  };
+    return { color: 'text-slate-700', bgColor: 'bg-slate-500', icon: Building2  };
   if (n.includes('voucher') || n.includes('vale'))
     return { color: 'text-orange-700', bgColor: 'bg-orange-500', icon: CreditCard };
   if (n.includes('fudo') || n.includes('yape') || n.includes('plin') || n.includes('digital'))
-    return { color: 'text-pink-700',   bgColor: 'bg-pink-500',   icon: Smartphone };
+    return { color: 'text-slate-700',   bgColor: 'bg-slate-500',   icon: Smartphone };
   // método desconocido / personalizado
   return { color: 'text-gray-700',   bgColor: 'bg-gray-500',   icon: CreditCard };
 }

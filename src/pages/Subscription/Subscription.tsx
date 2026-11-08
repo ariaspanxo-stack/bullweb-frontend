@@ -203,9 +203,9 @@ export default function Subscription() {
 
         {/* ══ LA VENTA CERRADA — "¡Ya eres Full!" (polling confirmó el upgrade) ══ */}
         {upgraded && (
-          <div className="mb-8 p-8 bg-white border border-emerald-200 rounded-2xl shadow-sm text-center">
-            <div className="mx-auto mb-5 w-16 h-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center">
-              <PartyPopper className="w-8 h-8 text-emerald-600" />
+          <div className="mb-8 p-8 bg-white border border-slate-200 rounded-2xl shadow-sm text-center">
+            <div className="mx-auto mb-5 w-16 h-16 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
+              <PartyPopper className="w-8 h-8 text-slate-700" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               ¡Ya eres Full!
@@ -217,7 +217,7 @@ export default function Subscription() {
             </p>
             <Link
               to="/restaurant"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-orange-500 text-white text-sm font-bold hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/25"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-white text-slate-700 text-sm font-bold hover:bg-slate-50 transition-colors shadow-lg  border border-slate-300"
             >
               <Rocket className="w-4 h-4" />
               Ir al POS
@@ -244,7 +244,7 @@ export default function Subscription() {
               <button
                 onClick={() => billingQ.refetch()}
                 disabled={billingQ.isFetching}
-                className="px-5 py-2.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-60 flex items-center gap-2 transition-colors"
+                className="min-h-[44px] px-5 py-2.5 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-60 flex items-center gap-2 transition-colors"
               >
                 <RefreshCw size={16} className={billingQ.isFetching ? 'animate-spin' : ''} />
                 Reintentar
@@ -260,10 +260,10 @@ export default function Subscription() {
               <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-xl border ${isBasico
                   ? 'bg-slate-50 border-slate-200'
-                  : 'bg-emerald-50 border-emerald-200'}`}>
+                  : 'bg-slate-50 border-slate-200'}`}>
                   {isBasico
                     ? <Sparkles className="w-6 h-6 text-slate-500" />
-                    : <CheckCircle className="w-6 h-6 text-emerald-500" />}
+                    : <CheckCircle className="w-6 h-6 text-slate-500" />}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-0.5">
@@ -272,7 +272,7 @@ export default function Subscription() {
                     </h3>
                     {/* Estado del período */}
                     {billingStatus.status === 'ACTIVE' && (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-100 border border-emerald-200 text-[11px] font-bold text-emerald-700 uppercase tracking-wide">
+                      <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-bold text-slate-700 uppercase tracking-wide">
                         Activo
                       </span>
                     )}
@@ -308,7 +308,7 @@ export default function Subscription() {
               {canBill && billingStatus.status === 'ACTIVE' && billingStatus.subscription && (
                 <button
                   onClick={() => setCancelConfirmOpen(true)}
-                  className="text-sm text-red-600 hover:text-red-800 underline"
+                  className="min-h-[44px] text-sm text-red-600 hover:text-red-800 underline"
                 >
                   Cancelar suscripción
                 </button>
@@ -351,7 +351,7 @@ export default function Subscription() {
               <button
                 onClick={handlePayRenewal}
                 disabled={paying !== null || !canBill}
-                className="px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-60 flex items-center gap-2 transition-colors"
+                className="min-h-[44px] px-6 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 disabled:opacity-60 flex items-center gap-2 transition-colors"
               >
                 {paying === 'renewal' ? (
                   <>
@@ -371,7 +371,7 @@ export default function Subscription() {
 
         {/* ══ BÁSICO — LA TARJETA DE UPGRADE (el candado es una oferta) ══ */}
         {!loading && isBasico && !upgraded && (
-          <div className="mb-8 p-6 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg text-white">
+          <div className="mb-8 p-6 rounded-2xl shadow-lg text-slate-900">
             <div className="flex items-start justify-between flex-wrap gap-4 mb-1">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-white/20 rounded-xl">
@@ -379,7 +379,7 @@ export default function Subscription() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold">Desbloquea el plan Full</h3>
-                  <p className="text-indigo-100 text-sm">
+                  <p className="text-slate-500 text-sm">
                     Tu Básico funciona. El Full lo multiplica — todo BullWeb por $34.000/mes.
                   </p>
                 </div>
@@ -399,7 +399,7 @@ export default function Subscription() {
               <button
                 onClick={handleUpgrade}
                 disabled={paying !== null || !canBill}
-                className="px-6 py-3 bg-white text-indigo-600 rounded-xl font-bold hover:bg-indigo-50 disabled:opacity-60 flex items-center gap-2 transition-colors"
+                className="min-h-[44px] px-6 py-3 bg-white text-slate-700 rounded-xl font-bold hover:bg-slate-100 disabled:opacity-60 flex items-center gap-2 transition-colors"
               >
                 {paying === 'upgrade' ? (
                   <>
@@ -413,12 +413,12 @@ export default function Subscription() {
                   </>
                 )}
               </button>
-              <p className="text-indigo-100 text-xs">
+              <p className="text-slate-500 text-xs">
                 Todo lo del Básico sigue incluido. Sin permanencia — cancela cuando quieras.
               </p>
             </div>
             {awaitingUpgrade && (
-              <p className="mt-3 text-indigo-100 text-xs italic">
+              <p className="mt-3 text-slate-500 text-xs italic">
                 Verificando tu pago cada 30 segundos… al confirmarse, esta pantalla se convertirá en tu bienvenida al plan Full.
               </p>
             )}
@@ -427,9 +427,9 @@ export default function Subscription() {
 
         {/* ══ TODO / grandfathered — su plan y fecha, SIN CTA de upgrade ══ */}
         {!loading && !isBasico && billingStatus?.status !== 'PAST_DUE' && !trialVencido && !upgraded && (
-          <div className="mb-8 p-5 bg-green-50 border border-green-200 rounded-2xl flex items-center gap-3">
-            <CheckCircle className="text-green-500 flex-shrink-0" size={20} />
-            <p className="text-sm text-green-800">
+          <div className="mb-8 p-5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center gap-3">
+            <CheckCircle className="text-slate-500 flex-shrink-0" size={20} />
+            <p className="text-sm text-slate-700">
               Tienes acceso completo a BullWeb{periodEnd
                 ? ` — próximo cobro el ${new Date(periodEnd).toLocaleDateString('es-CL')}`
                 : ''}.
@@ -446,7 +446,7 @@ export default function Subscription() {
             <button
               onClick={handlePayRenewal}
               disabled={paying !== null || !canBill}
-              className="text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2 disabled:opacity-60"
+              className="min-h-[44px] text-sm text-gray-500 hover:text-gray-700 underline underline-offset-2 disabled:opacity-60"
             >
               {paying === 'renewal' ? 'Generando link...' : 'Pagar suscripción ahora'}
             </button>
@@ -455,7 +455,7 @@ export default function Subscription() {
 
         {/* HOTFIX 306 (B7-01): cancelar exige escribir CANCELAR (modal por portal, z-100) */}
         {cancelConfirmOpen && createPortal(
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 text-slate-900">
             <div className="absolute inset-0 bg-black/50" onClick={() => { setCancelConfirmOpen(false); setCancelText(''); }} />
             <div className="relative bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6">
               <h3 className="text-lg font-bold text-gray-900 mb-2">Cancelar suscripción</h3>
@@ -469,7 +469,7 @@ export default function Subscription() {
                 aria-label="Escribe CANCELAR para confirmar"
                 className="w-full min-h-[44px] px-3 border border-gray-300 rounded-xl mb-4 focus:outline-none focus:ring-2 focus:ring-[#F97316]"
               />
-              <div className="flex gap-3">
+              <div className="flex-wrap flex gap-3">
                 <button
                   onClick={() => { setCancelConfirmOpen(false); setCancelText(''); }}
                   className="flex-1 min-h-[44px] rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50"
@@ -479,7 +479,7 @@ export default function Subscription() {
                 <button
                   disabled={cancelText.trim().toUpperCase() !== 'CANCELAR'}
                   onClick={() => { setCancelConfirmOpen(false); handleCancel(); }}
-                  className="flex-1 min-h-[44px] rounded-xl bg-[#F97316] text-white font-semibold hover:opacity-90 disabled:opacity-40"
+                  className="flex-1 min-h-[44px] rounded-xl bg-white text-slate-700 font-semibold hover:opacity-90 disabled:opacity-40 border border-slate-300"
                 >
                   Cancelar suscripción
                 </button>

@@ -22,7 +22,8 @@ import { useAuthStore } from '@/store/authStore';
 // ============================================================================
 
 export default function Layout() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // LOTE 308b: en celular el menu parte cerrado; abierto tapaba la pantalla en cada carga
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const { pendingOrders, acceptOrder, cancelOrder } = useQROrderAlerts();
   const { pendingRequests, dismissRequest } = useTableRequestAlerts();
   const navigate = useNavigate();
@@ -156,7 +157,7 @@ export default function Layout() {
           <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
 
           {/* Page content */}
-          <main className="flex-1 overflow-y-auto p-4 lg:p-6">
+          <main className="flex-1 overflow-y-auto p-4 lg:p-6 text-slate-900">
             <Outlet />
           </main>
         </div>

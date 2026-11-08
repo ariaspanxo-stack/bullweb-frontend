@@ -3,6 +3,7 @@
 // (customerName, customerPhone, deliveryAddress) en tarjetas de pedido
 // ═══════════════════════════════════════════════════════════════
 
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { X, User, Phone, MapPin, Save, Loader2 } from 'lucide-react';
 import { restaurantService } from '../../../services/restaurantService';
@@ -68,8 +69,8 @@ export function EditCustomerModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+    createPortal(<div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-slate-900"
       onClick={onClose}
       onKeyDown={handleKeyDown}
     >
@@ -78,12 +79,12 @@ export function EditCustomerModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── Header ── */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 sticky top-0 bg-white rounded-t-2xl flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-              variant === 'delivery' ? 'bg-purple-100' : 'bg-blue-100'
+              variant === 'delivery' ? 'bg-slate-100' : 'bg-slate-100'
             }`}>
-              <User size={16} className={variant === 'delivery' ? 'text-purple-600' : 'text-blue-600'} />
+              <User size={16} className={variant === 'delivery' ? 'text-slate-700' : 'text-slate-700'} />
             </div>
             <div>
               <h3 className="font-bold text-gray-800 text-sm">Editar Cliente</h3>
@@ -94,7 +95,7 @@ export function EditCustomerModal({
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             aria-label="Cerrar"
           >
             <X size={18} />
@@ -115,7 +116,7 @@ export function EditCustomerModal({
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 placeholder="Ej: Juan Pérez"
-                className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
                 autoFocus
               />
             </div>
@@ -133,7 +134,7 @@ export function EditCustomerModal({
                 value={customerPhone}
                 onChange={(e) => setCustomerPhone(e.target.value)}
                 placeholder="Ej: +569 1234 5678"
-                className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-gray-200 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+                className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 outline-none transition-all"
               />
             </div>
           </div>
@@ -151,7 +152,7 @@ export function EditCustomerModal({
                   onChange={(e) => setDeliveryAddress(e.target.value)}
                   placeholder="Ej: Av. Providencia 1234, Depto 5B"
                   rows={2}
-                  className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-gray-200 focus:border-purple-400 focus:ring-2 focus:ring-purple-100 outline-none transition-all resize-none"
+                  className="w-full pl-9 pr-3 py-2.5 text-sm rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-500 outline-none transition-all resize-none"
                 />
               </div>
             </div>
@@ -166,21 +167,21 @@ export function EditCustomerModal({
         </div>
 
         {/* ── Footer con acciones ── */}
-        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 sticky bottom-0 bg-white rounded-b-2xl">
+        <div className="flex-wrap flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100 sticky bottom-0 bg-white rounded-b-2xl">
           <button
             onClick={onClose}
             disabled={saving}
-            className="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors disabled:opacity-50"
+            className="min-h-[44px] px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 rounded-xl transition-colors disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={saving}
-            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white rounded-xl transition-all shadow-sm disabled:opacity-50 ${
+            className={`min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white rounded-xl transition-all shadow-sm disabled:opacity-50 ${
               variant === 'delivery'
-                ? 'bg-purple-500 hover:bg-purple-600 shadow-purple-200'
-                : 'bg-blue-500 hover:bg-blue-600 shadow-blue-200'
+                ? 'bg-orange-500 hover:bg-orange-600 '
+                : 'bg-orange-500 hover:bg-orange-600 '
             }`}
           >
             {saving ? (
@@ -197,6 +198,6 @@ export function EditCustomerModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

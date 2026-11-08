@@ -3,6 +3,7 @@
  * - Si hay orderId activo: muestra selector de impresora y usa la API (reprintOrder)
  * - Siempre disponible: botón "Pantalla" que abre ventana del navegador con ticket formateado
  */
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { Printer, X, Receipt, Loader2 } from 'lucide-react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -134,8 +135,8 @@ export function PrintControlModal({
   if (!open) return null;
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"
+    createPortal(<div
+      className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900"
       onClick={onClose}
     >
       <div
@@ -143,10 +144,10 @@ export function PrintControlModal({
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-wrap gap-2">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center">
-              <Printer className="w-5 h-5 text-indigo-600" />
+            <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center">
+              <Printer className="w-5 h-5 text-slate-700" />
             </div>
             <div>
               <h3 className="font-semibold text-gray-900 text-sm">Imprimir Control de Mesa</h3>
@@ -155,7 +156,7 @@ export function PrintControlModal({
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -209,7 +210,7 @@ export function PrintControlModal({
                 <select
                   value={selectedPrinter}
                   onChange={e => setSelectedPrinter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-indigo-400"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-orange-500"
                 >
                   <option value="">— Seleccionar impresora —</option>
                   {activePrinters.map(p => (
@@ -222,10 +223,10 @@ export function PrintControlModal({
         </div>
 
         {/* Botones */}
-        <div className="px-5 pb-5 flex gap-2">
+        <div className="flex-wrap px-5 pb-5 flex gap-2">
           <button
             onClick={handleBrowserPrint}
-            className="flex-1 py-2.5 border-2 border-gray-300 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
+            className="min-h-[44px] flex-1 py-2.5 border-2 border-gray-300 text-gray-600 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
           >
             <Receipt className="w-4 h-4" />
             Pantalla
@@ -237,7 +238,7 @@ export function PrintControlModal({
                 printMut.mutate();
               }}
               disabled={printState === 'printing' || printState === 'done'}
-              className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-1.5 transition-colors"
+              className="min-h-[44px] flex-1 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-1.5 transition-colors border border-slate-300"
             >
               {printState === 'printing' ? (
                 <><Loader2 className="w-4 h-4 animate-spin" />Imprimiendo...</>
@@ -250,6 +251,6 @@ export function PrintControlModal({
           )}
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

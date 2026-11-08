@@ -431,7 +431,7 @@ export const OrderModal = ({
 
           {/* ── HEADER (CA): círculo de mesa como elemento más grande,
               garzón, "Cambiar mesa" secundario (mismo onClick) y X ── */}
-          <div className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-3 flex items-center justify-between gap-3">
+          <div className="flex-shrink-0 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3 min-w-0">
               <div className="w-14 h-14 bg-white text-orange-600 rounded-full flex items-center justify-center font-bold text-2xl flex-shrink-0 shadow-md">
                 {table.number}
@@ -475,18 +475,18 @@ export const OrderModal = ({
                 </select>
               </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex-wrap flex items-center gap-2 flex-shrink-0">
               {existingOrderId && canTransfer && (
                 <button
                   onClick={() => setShowTransferModal(true)}
-                  className="px-3 py-2 bg-white/15 hover:bg-white/30 border border-white/30 rounded-xl text-xs font-semibold transition-colors"
+                  className="min-h-[44px] px-3 py-2 bg-white/15 hover:bg-white/30 border border-white/30 rounded-xl text-xs font-semibold transition-colors"
                 >
                   Cambiar mesa
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors flex-shrink-0"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-colors flex-shrink-0"
               >
                 <X size={18} />
               </button>
@@ -495,10 +495,10 @@ export const OrderModal = ({
 
           {/* ── TABS MOVIL (conservados) ── */}
           <div className="lg:hidden flex-shrink-0 bg-orange-500 border-t border-white/20">
-            <div className="flex">
+            <div className="flex-wrap flex">
               <button
                 onClick={() => setMobileTab('menu')}
-                className={`flex-1 py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-2 transition-colors ${
+                className={`min-h-[44px] flex-1 py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-2 transition-colors ${
                   mobileTab === 'menu' ? 'bg-white/20 border-b-2 border-white' : 'hover:bg-white/10'
                 }`}
               >
@@ -506,7 +506,7 @@ export const OrderModal = ({
               </button>
               <button
                 onClick={() => setMobileTab('order')}
-                className={`flex-1 py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-2 transition-colors ${
+                className={`min-h-[44px] flex-1 py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-2 transition-colors ${
                   mobileTab === 'order' ? 'bg-white/20 border-b-2 border-white' : 'hover:bg-white/10'
                 }`}
               >
@@ -543,7 +543,7 @@ export const OrderModal = ({
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-[76px] top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center absolute right-[76px] top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     >
                       <X size={13} />
                     </button>
@@ -553,7 +553,7 @@ export const OrderModal = ({
                     <button
                       onClick={() => toggleViewMode('search')}
                       title="Búsqueda"
-                      className={`p-1.5 rounded-lg transition-colors ${
+                      className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg transition-colors ${
                         viewMode === 'search' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
                       }`}
                     >
@@ -562,7 +562,7 @@ export const OrderModal = ({
                     <button
                       onClick={() => toggleViewMode('grid')}
                       title="Categorías"
-                      className={`p-1.5 rounded-lg transition-colors ${
+                      className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg transition-colors ${
                         viewMode === 'grid' ? 'bg-orange-500 text-white' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
                       }`}
                     >
@@ -612,7 +612,7 @@ export const OrderModal = ({
                   <div className="px-3 pt-3 flex items-center gap-2.5">
                     <button
                       onClick={() => setSelectedCategory(null)}
-                      className="h-11 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
+                      className="min-h-[44px] h-11 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold text-sm flex items-center gap-1.5 transition-colors flex-shrink-0"
                     >
                       <ArrowLeft size={16} />
                       Categorías
@@ -630,7 +630,7 @@ export const OrderModal = ({
                       <button
                         key={cat.id}
                         onClick={() => setSelectedCategory(cat.id)}
-                        className={`px-3 py-1 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
+                        className={`min-h-[44px] px-3 py-1 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 ${
                           selectedCategory === cat.id
                             ? 'bg-[#F97316] text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -658,7 +658,7 @@ export const OrderModal = ({
                               setTimeout(() => setTappedProductId(null), 120);
                               handleProductClick(product);
                             }}
-                            className={`relative text-left p-2.5 bg-white hover:bg-orange-50 border border-gray-200 hover:border-orange-300 rounded-xl transition-all duration-100 ${tappedProductId === product.id ? 'scale-95' : 'scale-100'}`}
+                            className={`min-h-[44px] relative text-left p-2.5 bg-white hover:bg-orange-50 border border-gray-200 hover:border-orange-300 rounded-xl transition-all duration-100 ${tappedProductId === product.id ? 'scale-95' : 'scale-100'}`}
                           >
                             {qtyInCart > 0 && (
                               <span className="absolute -top-1.5 -right-1.5 min-w-[22px] h-[22px] px-1 rounded-full bg-orange-500 text-white text-xs font-bold flex items-center justify-center z-10">{qtyInCart}</span>
@@ -694,7 +694,7 @@ export const OrderModal = ({
                   <div className="flex flex-wrap gap-1.5 px-3 pt-3 pb-1">
                     <button
                       onClick={() => setSelectedCategory(null)}
-                      className={`px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                      className={`min-h-[44px] px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
                         !selectedCategory ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
@@ -708,7 +708,7 @@ export const OrderModal = ({
                           if (searchQuery) setSearchQuery('');
                           setSelectedCategory(cat.id);
                         }}
-                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                        className={`min-h-[44px] px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
                           selectedCategory === cat.id ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                         }`}
                       >
@@ -732,7 +732,7 @@ export const OrderModal = ({
                         <button
                           key={product.id}
                           onClick={() => handleProductClick(product)}
-                          className="w-full flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:border-orange-300 hover:bg-orange-50 active:scale-[0.98] transition-all text-left shadow-sm"
+                          className="min-h-[44px] w-full flex items-center gap-3 p-3 bg-white border border-gray-100 rounded-xl hover:border-orange-300 hover:bg-orange-50 active:scale-[0.98] transition-all text-left shadow-sm"
                         >
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5">
@@ -812,7 +812,7 @@ export const OrderModal = ({
                     ) : (
                       <button
                         onClick={() => setExpandedItemId(item.id)}
-                        className="ml-11 flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mt-0.5 max-w-[240px] hover:bg-amber-100 transition-colors"
+                        className="min-h-[44px] ml-11 flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 mt-0.5 max-w-[240px] hover:bg-amber-100 transition-colors"
                       >
                         <MessageSquare size={9} />
                         <span className="truncate">{item.notes || '+ nota'}</span>
@@ -903,7 +903,7 @@ export const OrderModal = ({
                               await onRemoveExistingItem(item.id, reason);
                               if (voidsOrder) onClose(); // pedido anulado: no se le puede agregar (409)
                             }}
-                            className="text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-300 hover:text-red-400 transition-colors flex-shrink-0"
                           >
                             <X size={14} />
                           </button>
@@ -925,10 +925,10 @@ export const OrderModal = ({
                         <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
                           <Users size={9} /> Personas
                         </p>
-                        <div className="flex items-center gap-1">
+                        <div className="flex-wrap flex items-center gap-1">
                           <button
                             onClick={() => setNumberOfPeople(Math.max(1, numberOfPeople - 1))}
-                            className="w-11 h-11 bg-white border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:border-orange-400 transition-colors"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-11 h-11 bg-white border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:border-orange-400 transition-colors"
                           >
                             <Minus size={14} />
                           </button>
@@ -939,7 +939,7 @@ export const OrderModal = ({
                           />
                           <button
                             onClick={() => setNumberOfPeople(Math.min(table.capacity || 20, numberOfPeople + 1))}
-                            className="w-11 h-11 bg-white border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:border-orange-400 transition-colors"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-11 h-11 bg-white border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:border-orange-400 transition-colors"
                           >
                             <Plus size={14} />
                           </button>
@@ -965,7 +965,7 @@ export const OrderModal = ({
                                   }).catch(() => {});
                                 }
                               }}
-                              className="text-gray-400 hover:text-red-500 flex-shrink-0"
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-red-500 flex-shrink-0"
                             >
                               <X size={12} />
                             </button>
@@ -1000,7 +1000,7 @@ export const OrderModal = ({
                       <button
                         type="button"
                         onClick={() => setSaveToCustomers(v => !v)}
-                        className={`mt-2 flex items-center gap-2 w-full px-3 py-1.5 rounded-xl border-2 transition-all text-xs ${
+                        className={`min-h-[44px] mt-2 flex items-center gap-2 w-full px-3 py-1.5 rounded-xl border-2 transition-all text-xs ${
                           saveToCustomers ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-dashed border-gray-300 bg-white text-gray-500'
                         }`}
                       >
@@ -1031,7 +1031,7 @@ export const OrderModal = ({
                         <button
                           type="button"
                           onClick={() => setMarketingOptIn(v => !v)}
-                          className={`flex items-center gap-2 w-full px-3 py-1.5 rounded-xl border-2 transition-all text-xs ${
+                          className={`min-h-[44px] flex items-center gap-2 w-full px-3 py-1.5 rounded-xl border-2 transition-all text-xs ${
                             marketingOptIn
                               ? 'border-orange-400 bg-orange-50 text-orange-700'
                               : 'border-dashed border-gray-300 bg-white text-gray-500'
@@ -1076,7 +1076,7 @@ export const OrderModal = ({
                     {showDiscountPopover && (
                       <div className="bg-white border border-slate-200 rounded-xl p-3 space-y-2">
                         <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">Descuento de la orden</p>
-                        <div className="flex gap-2">
+                        <div className="flex-wrap flex gap-2">
                           {(['%', '$'] as const).map(t => (
                             <button
                               key={t}
@@ -1092,7 +1092,7 @@ export const OrderModal = ({
                           max={draftType === '%' ? 100 : Math.round(existingSubtotal)}
                           value={draftInput}
                           onChange={e => { if (discountInputAllowed(discountKind, e.target.value, existingSubtotal)) setDraftInput(e.target.value); }}
-                          className="w-full min-h-[44px] px-3 border border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:outline-none focus:border-slate-500"
+                          className="w-full min-h-[44px] px-3 border border-slate-300 rounded-xl text-base font-bold text-slate-900 focus:outline-none focus:border-orange-500"
                           placeholder={draftType === '%' ? 'Porcentaje' : 'Monto'}
                         />
                         <p className="text-xs text-slate-400">{discountLimitHint(discountKind, existingSubtotal)}</p>
@@ -1100,7 +1100,7 @@ export const OrderModal = ({
                           type="text" maxLength={200}
                           value={discountReason}
                           onChange={e => setDiscountReason(e.target.value)}
-                          className="w-full min-h-[44px] px-3 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-slate-500"
+                          className="w-full min-h-[44px] px-3 border border-slate-300 rounded-xl text-sm text-slate-900 focus:outline-none focus:border-orange-500"
                           placeholder="Motivo (opcional)"
                         />
                         <div className="grid grid-cols-2 gap-2">
@@ -1123,7 +1123,7 @@ export const OrderModal = ({
                       <button
                         onClick={handlePrintPreBill}
                         disabled={!existingOrderId || (existingItems.length === 0 && cart.length === 0)}
-                        className="py-2 bg-white border-2 border-gray-300 text-gray-600 rounded-xl font-bold text-xs hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="min-h-[44px] py-2 bg-white border-2 border-gray-300 text-gray-600 rounded-xl font-bold text-xs hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <Printer size={14} /> Pre-cuenta
                       </button>
@@ -1131,7 +1131,7 @@ export const OrderModal = ({
                         onClick={toggleDiscountPopover}
                         disabled={!canDiscount || !existingOrderId}
                         title={!existingOrderId ? 'Envía el pedido a cocina para aplicar descuento' : undefined}
-                        className={`py-2 bg-white border-2 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed ${
+                        className={`min-h-[44px] py-2 bg-white border-2 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed ${
                           discountApplied && discountAmount > 0
                             ? 'border-orange-400 text-orange-700'
                             : 'border-gray-300 text-gray-600 hover:border-orange-300 hover:text-orange-600'
@@ -1173,7 +1173,7 @@ export const OrderModal = ({
                           );
                         }}
                         disabled={isSubmitting || !canCobrar}
-                        className="py-2 bg-white border-2 border-gray-300 text-gray-600 rounded-xl font-bold text-xs hover:bg-gray-50 hover:border-orange-300 hover:text-orange-600 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="min-h-[44px] py-2 bg-white border-2 border-gray-300 text-gray-600 rounded-xl font-bold text-xs hover:bg-gray-50 hover:border-orange-300 hover:text-orange-600 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         {isSubmitting ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
                         {existingOrderId ? `Cobrar ${fmt(total)}` : 'Cobrar mesa'}
@@ -1202,7 +1202,7 @@ export const OrderModal = ({
                       <button
                         onClick={() => handleUpdateStatus('PREPARING')}
                         disabled={updatingStatus}
-                        className="w-full min-h-[44px] py-2 bg-white border-2 border-blue-500 text-blue-600 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full min-h-[44px] py-2 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {updatingStatus ? <Loader2 size={16} className="animate-spin" /> : <ChefHat size={16} />}
                         En Preparación
@@ -1223,7 +1223,7 @@ export const OrderModal = ({
                     {existingOrderId && onEditOrder && canEdit && (
                       <button
                         onClick={onEditOrder}
-                        className="w-full py-2 bg-white border-2 border-purple-300 text-purple-600 rounded-xl font-bold text-sm hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
+                        className="min-h-[44px] w-full py-2 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-100 transition-colors flex items-center justify-center gap-2"
                       >
                         <Pencil size={15} /> Editar venta
                       </button>
@@ -1271,7 +1271,7 @@ export const OrderModal = ({
                   key={w.id}
                   onClick={() => assignWaiterMutation.mutate({ tableId: table.id, waiterId: w.id })}
                   disabled={assignWaiterMutation.isPending}
-                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors text-left disabled:opacity-50 border-b border-gray-50 last:border-0"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-full flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition-colors text-left disabled:opacity-50 border-b border-gray-50 last:border-0"
                 >
                   <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-base font-bold shadow-sm"
                     style={{ backgroundColor: w.avatarColor ?? '#FF6B35' }}>
@@ -1287,7 +1287,7 @@ export const OrderModal = ({
 
       {/* Modal transferir mesa */}
       {showTransferModal && (
-        <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
             <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
             <h3 className="font-bold text-lg mb-1">Transferir a mesa</h3>
             <p className="text-xs text-gray-400 mb-4">Selecciona la mesa destino (disponible)</p>
@@ -1313,7 +1313,7 @@ export const OrderModal = ({
                             key={t.id}
                             onClick={() => handleTransfer(t.id)}
                             disabled={isTransferring}
-                            className="aspect-square rounded-xl bg-emerald-600 text-white font-bold text-lg hover:bg-emerald-700 active:bg-emerald-800 transition-colors disabled:opacity-50 shadow-sm"
+                            className="min-h-[44px] aspect-square rounded-xl bg-white text-slate-700 font-bold text-lg hover:bg-slate-50 active:bg-slate-50 transition-colors disabled:opacity-50 shadow-sm border border-slate-300"
                           >
                             {isTransferring ? '...' : t.number}
                           </button>
@@ -1326,7 +1326,7 @@ export const OrderModal = ({
             )}
             <button
               onClick={() => setShowTransferModal(false)}
-              className="w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+              className="min-h-[44px] w-full py-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
             >
               Cancelar
             </button>

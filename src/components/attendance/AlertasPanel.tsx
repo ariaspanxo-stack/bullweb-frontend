@@ -5,9 +5,9 @@ import toast from 'react-hot-toast';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 const TIPO_META: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  ausencia:    { label: 'Ausencia',    color: 'bg-red-50    border-red-100   text-red-700',    icon: AlertTriangle },
-  tardanza:    { label: 'Tardanza',    color: 'bg-amber-50  border-amber-100 text-amber-700',  icon: Clock         },
-  sin_salida:  { label: 'Sin salida',  color: 'bg-blue-50   border-blue-100  text-blue-700',   icon: Clock         },
+  ausencia:    { label: 'Ausencia',    color: 'bg-red-50 border-red-100 text-red-700',    icon: AlertTriangle },
+  tardanza:    { label: 'Tardanza',    color: 'bg-amber-50 border-amber-100 text-amber-700',  icon: Clock         },
+  sin_salida:  { label: 'Sin salida',  color: 'bg-slate-50 border-slate-200 text-slate-700',   icon: Clock         },
 };
 
 function alertColor(tipo: string) {
@@ -74,8 +74,8 @@ export function AlertasPanel() {
   if (alertas.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3 text-gray-400">
-        <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center">
-          <BellOff className="w-6 h-6 text-green-400" />
+        <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center">
+          <BellOff className="w-6 h-6 text-slate-500" />
         </div>
         <p className="text-sm font-medium text-gray-500">Sin alertas pendientes</p>
         <p className="text-xs text-gray-400">El equipo está al día con la asistencia</p>
@@ -86,7 +86,7 @@ export function AlertasPanel() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-gray-800">Alertas de Asistencia</h3>
           <span className="bg-red-100 text-red-700 text-xs font-semibold px-2 py-0.5 rounded-full">
@@ -96,7 +96,7 @@ export function AlertasPanel() {
         <button
           onClick={marcarTodas}
           disabled={marcarMut.isPending}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
+          className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-medium rounded-lg transition-colors disabled:opacity-50"
         >
           <CheckCheck className="w-3.5 h-3.5" />
           Marcar todas como leídas
@@ -134,7 +134,7 @@ export function AlertasPanel() {
             <button
               onClick={() => marcarMut.mutate(alerta.id)}
               disabled={marcarMut.isPending}
-              className="flex-shrink-0 p-1.5 rounded-lg bg-white/60 hover:bg-white transition-colors disabled:opacity-40"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center flex-shrink-0 p-1.5 rounded-lg bg-white/60 hover:bg-white transition-colors disabled:opacity-40"
               title="Marcar como leída"
             >
               {marcarMut.isPending ? (

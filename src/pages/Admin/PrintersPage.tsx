@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -63,10 +64,10 @@ const TYPE_LABEL: Record<string, string> = {
   label:   'Etiquetas',
 };
 const TYPE_COLOR: Record<string, string> = {
-  receipt: 'bg-blue-100 text-blue-700',
+  receipt: 'bg-slate-100 text-slate-700',
   kitchen: 'bg-orange-100 text-orange-700',
-  kds:     'bg-purple-100 text-purple-700',
-  label:   'bg-green-100 text-green-700',
+  kds:     'bg-slate-100 text-slate-700',
+  label:   'bg-slate-100 text-slate-700',
 };
 
 const CONN_LABEL: Record<string, string> = {
@@ -77,11 +78,11 @@ const CONN_LABEL: Record<string, string> = {
   bluetooth: '📶 Bluetooth',
 };
 const CONN_COLOR: Record<string, string> = {
-  ethernet:  'bg-blue-100 text-blue-700',
-  usb:       'bg-purple-100 text-purple-700',
+  ethernet:  'bg-slate-100 text-slate-700',
+  usb:       'bg-slate-100 text-slate-700',
   serial:    'bg-yellow-100 text-yellow-700',
-  os_driver: 'bg-emerald-100 text-emerald-700',
-  bluetooth: 'bg-cyan-100 text-cyan-700',
+  os_driver: 'bg-slate-100 text-slate-700',
+  bluetooth: 'bg-slate-100 text-slate-700',
 };
 
 // ─── Modal: Nuevo Agente ──────────────────────────────────────────────────────
@@ -93,13 +94,13 @@ function NewAgentModal({ onClose, onSave, saving }: {
   const [name, setName] = useState('');
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 flex-wrap gap-2">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <Bot className="w-5 h-5 text-blue-600" /> Registrar agente
+            <Bot className="w-5 h-5 text-slate-700" /> Registrar agente
           </h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-gray-100">
             <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
@@ -112,20 +113,20 @@ function NewAgentModal({ onClose, onSave, saving }: {
           </div>
           <p className="text-xs text-gray-500">Se generará una clave API automáticamente. Ingresala en el Agente BullWeb al configurarlo.</p>
         </div>
-        <div className="flex justify-end gap-2 p-5 border-t border-gray-100">
-          <button onClick={onClose} className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+        <div className="flex-wrap flex justify-end gap-2 p-5 border-t border-gray-100">
+          <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
             Cancelar
           </button>
           <button
             onClick={() => onSave({ name: name.trim() })}
             disabled={!name.trim() || saving}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+            className="min-h-[44px] px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2">
             {saving ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
             {saving ? 'Creando...' : 'Crear agente'}
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -181,8 +182,8 @@ function ExtensionSection() {
   // ── Extensión detectada — Método 2 (Hotfix #174: restaurada como método alternativo visible y usable, pasos originales pre-#172) ──
   if (detected) {
     return (
-      <div className="bg-white rounded-xl border border-emerald-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-5 text-white">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className=" p-5 text-slate-900">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="bg-white/20 p-2 rounded-xl">
@@ -191,14 +192,14 @@ function ExtensionSection() {
               <div>
                 <h3 className="text-base font-bold flex items-center gap-2">
                   BullWeb Extension
-                  <span className="bg-white/90 text-emerald-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+                  <span className="bg-white/90 text-slate-700 text-xs font-semibold px-2 py-0.5 rounded-full">
                     Método 2
                   </span>
                   <span className="bg-white/25 text-xs font-semibold px-2 py-0.5 rounded-full">
                     {extVersion ? `v${extVersion}` : 'Instalada'}
                   </span>
                 </h3>
-                <p className="text-sm text-emerald-100 mt-0.5">
+                <p className="text-sm text-slate-500 mt-0.5">
                   Impresión local vía Native Messaging — sin WebSocket, sin reinicios
                 </p>
               </div>
@@ -230,9 +231,9 @@ function ExtensionSection() {
               </code>
               <button
                 onClick={handleCopyApiKey}
-                className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                className={`min-h-[44px] shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
                   copied
-                    ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                    ? 'bg-slate-50 border-slate-200 text-slate-700'
                     : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
                 }`}
               >
@@ -247,7 +248,7 @@ function ExtensionSection() {
           </div>
         )}
 
-        <div className="px-5 py-3 bg-emerald-50 border-t border-emerald-100 flex items-center gap-2 text-sm text-emerald-700">
+        <div className="px-5 py-3 bg-slate-50 border-t border-slate-200 flex items-center gap-2 text-sm text-slate-700">
           <CheckCircle className="w-4 h-4 shrink-0" />
           La extensión procesa trabajos de impresión localmente — funciona aunque el backend reinicie
         </div>
@@ -265,9 +266,9 @@ function ExtensionSection() {
 
   return (
     /* Hotfix #174: extensión restaurada como Método 2 — pasos originales pre-#172 (git 08326ee), visibles y usables */
-    <div className="bg-white rounded-xl border border-indigo-200 overflow-hidden">
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-br from-violet-600 to-indigo-700 p-5 text-white">
+      <div className=" p-5 text-slate-900">
         <div className="flex items-start gap-3">
           <div className="bg-white/20 p-2 rounded-xl shrink-0">
             <Puzzle className="w-7 h-7" />
@@ -275,32 +276,32 @@ function ExtensionSection() {
           <div className="flex-1">
             <h3 className="text-base font-bold flex items-center gap-2 flex-wrap">
               BullWeb Extension
-              <span className="bg-white/90 text-indigo-700 text-xs font-semibold px-2 py-0.5 rounded-full">Método 2</span>
+              <span className="bg-white/90 text-slate-700 text-xs font-semibold px-2 py-0.5 rounded-full">Método 2</span>
             </h3>
-            <p className="text-sm text-indigo-100 mt-0.5">
+            <p className="text-sm text-slate-500 mt-0.5">
               Sin agente .exe, sin WebSocket. Arranca con el navegador y nunca falla por reinicios del servidor.
             </p>
           </div>
         </div>
 
         {/* Stepper */}
-        <div className="mt-4 flex items-center gap-1.5">
+        <div className="flex-wrap mt-4 flex items-center gap-1.5">
           {steps.map((s, i) => (
             <div key={s.num} className="flex items-center gap-1.5 flex-1">
               <button
                 onClick={() => setStep(s.num)}
-                className={`flex items-center gap-2 text-left w-full rounded-xl px-2.5 py-2 transition-colors ${
+                className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center flex items-center gap-2 text-left w-full rounded-xl px-2.5 py-2 transition-colors ${
                   step === s.num ? 'bg-white/25' : 'bg-white/10 hover:bg-white/15'
                 }`}
               >
                 <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                  step > s.num ? 'bg-green-400 text-white' : step === s.num ? 'bg-white text-indigo-700' : 'bg-white/30 text-white'
+                  step > s.num ? 'bg-slate-500 text-white' : step === s.num ? 'bg-white text-slate-700' : 'bg-slate-200 text-slate-700'
                 }`}>
                   {step > s.num ? <Check className="w-3 h-3" /> : s.num}
                 </span>
                 <span className="text-xs font-medium leading-tight hidden sm:block">{s.title}</span>
               </button>
-              {i < steps.length - 1 && <ChevronRight className="w-3 h-3 text-white/40 shrink-0" />}
+              {i < steps.length - 1 && <ChevronRight className="w-3 h-3 text-slate-400 shrink-0" />}
             </div>
           ))}
         </div>
@@ -341,7 +342,7 @@ function ExtensionSection() {
               <a
                 href={EXTENSION_ZIP_URL}
                 download
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-white text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors border border-slate-300"
               >
                 <Download className="w-4 h-4" />
                 Descargar extensión (.zip)
@@ -357,7 +358,7 @@ function ExtensionSection() {
             </div>
             <button
               onClick={() => setStep(2)}
-              className="text-sm text-indigo-600 hover:underline font-medium"
+              className="min-h-[44px] text-sm text-slate-700 hover:underline font-medium"
             >
               Extensión instalada → Continuar al paso 2
             </button>
@@ -375,7 +376,7 @@ function ExtensionSection() {
             </div>
             <div className="bg-gray-900 rounded-xl p-4">
               <p className="text-xs text-gray-400 mb-2 font-mono">PowerShell (Ejecutar como Administrador)</p>
-              <code className="text-green-400 text-sm font-mono break-all">
+              <code className="text-slate-500 text-sm font-mono break-all">
                 {`irm ${INSTALLER_URL} | iex`}
               </code>
             </div>
@@ -386,14 +387,14 @@ function ExtensionSection() {
             <a
               href={INSTALLER_URL}
               download="install-host.ps1"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors border border-slate-300"
             >
               <Download className="w-4 h-4" />
               Descargar install-host.ps1
             </a>
-            <div className="flex gap-3">
-              <button onClick={() => setStep(1)} className="text-sm text-gray-500 hover:underline">← Volver</button>
-              <button onClick={() => setStep(3)} className="text-sm text-indigo-600 hover:underline font-medium">
+            <div className="flex-wrap flex gap-3">
+              <button onClick={() => setStep(1)} className="min-h-[44px] text-sm text-gray-500 hover:underline">← Volver</button>
+              <button onClick={() => setStep(3)} className="min-h-[44px] text-sm text-slate-700 hover:underline font-medium">
                 Native Host instalado → Continuar al paso 3
               </button>
             </div>
@@ -412,18 +413,18 @@ function ExtensionSection() {
 
             {/* API Key del agente */}
             {firstAgent ? (
-              <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-2">
-                <p className="text-sm font-medium text-indigo-900">Tu API Key ({firstAgent.name}):</p>
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                <p className="text-sm font-medium text-slate-700">Tu API Key ({firstAgent.name}):</p>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-white border border-indigo-200 rounded-lg px-3 py-2 text-sm font-mono text-gray-800 truncate select-all">
+                  <code className="flex-1 bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm font-mono text-gray-800 truncate select-all">
                     {firstAgent.api_key}
                   </code>
                   <button
                     onClick={handleCopyApiKey}
-                    className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                    className={`min-h-[44px] shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
                       copied
-                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                        : 'bg-white border-indigo-200 text-indigo-700 hover:bg-indigo-50'
+                        ? 'bg-slate-50 border-slate-200 text-slate-700'
+                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
                     }`}
                   >
                     {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -445,7 +446,7 @@ function ExtensionSection() {
                 <li>Haz clic en el <strong>ícono de la extensión</strong> en la barra de Chrome/Edge</li>
                 <li>Pega la API Key en el campo <strong>"API Key"</strong></li>
                 <li>Clic en <strong>Guardar</strong></li>
-                <li>El estado debe cambiar a <strong className="text-emerald-700">✅ Conectado</strong></li>
+                <li>El estado debe cambiar a <strong className="text-slate-700">✅ Conectado</strong></li>
               </ol>
             </div>
 
@@ -457,9 +458,9 @@ function ExtensionSection() {
               </div>
             </div>
 
-            <div className="flex gap-3">
-              <button onClick={() => setStep(2)} className="text-sm text-gray-500 hover:underline">← Volver</button>
-              <button onClick={() => setStep(4)} className="text-sm text-indigo-600 hover:underline font-medium">
+            <div className="flex-wrap flex gap-3">
+              <button onClick={() => setStep(2)} className="min-h-[44px] text-sm text-gray-500 hover:underline">← Volver</button>
+              <button onClick={() => setStep(4)} className="min-h-[44px] text-sm text-slate-700 hover:underline font-medium">
                 API Key guardada → Continuar al paso 4
               </button>
             </div>
@@ -493,11 +494,11 @@ function ExtensionSection() {
               ))}
             </div>
 
-            <div className="flex gap-3">
-              <button onClick={() => setStep(3)} className="text-sm text-gray-500 hover:underline">← Volver</button>
+            <div className="flex-wrap flex gap-3">
+              <button onClick={() => setStep(3)} className="min-h-[44px] text-sm text-gray-500 hover:underline">← Volver</button>
               <button
                 onClick={() => window.location.reload()}
-                className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-white text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors border border-slate-300"
               >
                 <RefreshCw className="w-4 h-4" />
                 Recargar página para detectar
@@ -558,7 +559,7 @@ function AgentsSection() {
   return (
     <div id="agent-section" className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       {/* Banner de descarga */}
-      <div className="bg-gradient-to-br from-indigo-600 to-blue-700 p-5 text-white">
+      <div className=" p-5 text-slate-900">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 flex-1 min-w-0">
             <div className="bg-white/20 p-2 rounded-xl shrink-0">
@@ -567,29 +568,29 @@ function AgentsSection() {
             <div className="flex-1 min-w-0">
               <h3 className="text-base font-bold flex items-center gap-2 flex-wrap">
                 Agente de Impresión BullWeb
-                <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-bold leading-tight">Recomendado</span>
-                <span className="bg-white/90 text-indigo-700 text-xs font-semibold px-2 py-0.5 rounded-full">Método 1</span>
+                <span className="bg-slate-500 text-white text-xs px-2 py-0.5 rounded-full font-bold leading-tight">Recomendado</span>
+                <span className="bg-white/90 text-slate-700 text-xs font-semibold px-2 py-0.5 rounded-full">Método 1</span>
                 {(release?.version ?? downloadInfo?.version) && (
                   <span className="bg-white/20 text-xs font-semibold px-2 py-0.5 rounded-full">v{release?.version ?? downloadInfo?.version}</span>
                 )}
               </h3>
-              <p className="text-sm text-blue-100 mt-0.5">
+              <p className="text-sm text-slate-500 mt-0.5">
                 Instalá el agente en las PCs con impresoras USB, Serial o de driver SO. Se conecta al servidor usando una clave API y procesa trabajos automáticamente.
               </p>
 
               {/* ── Instalación automática recomendada ── */}
-              <div className="mt-3 bg-white/10 border border-white/20 rounded-xl p-3">
+              <div className="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <span className="bg-green-500 text-white text-xs px-2 py-0.5 rounded-full font-bold leading-tight">
+                  <span className="bg-slate-500 text-white text-xs px-2 py-0.5 rounded-full font-bold leading-tight">
                     RECOMENDADO
                   </span>
                   <span className="text-sm font-semibold">Instalación automática</span>
                 </div>
-                <p className="text-blue-100 text-xs mb-2">
+                <p className="text-slate-500 text-xs mb-2">
                   Abre <strong>PowerShell como Administrador</strong> y ejecuta:
                 </p>
-                <div className="bg-gray-900/80 rounded-lg px-3 py-2 flex items-center justify-between gap-2">
-                  <code className="text-green-400 text-xs font-mono break-all leading-relaxed">
+                <div className="bg-gray-900/80 rounded-lg px-3 py-2 flex items-center justify-between gap-2 flex-wrap">
+                  <code className="text-slate-500 text-xs font-mono break-all leading-relaxed">
                     iwr -useb https://app.bullwebchile.com/install-agent.ps1 | iex
                   </code>
                   <button
@@ -598,7 +599,7 @@ function AgentsSection() {
                       toast.success('Comando copiado');
                     }}
                     title="Copiar comando"
-                    className="text-gray-400 hover:text-white transition-colors shrink-0 p-1"
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0 p-1"
                   >
                     <Copy className="w-3.5 h-3.5" />
                   </button>
@@ -607,28 +608,28 @@ function AgentsSection() {
 
               {/* ── Pasos 1-4: flujo real del agente (Hotfix #172) ── */}
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="bg-white/10 border border-white/20 rounded-xl p-3 flex gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-white text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">1</span>
-                  <p className="text-xs text-blue-100 leading-relaxed">
-                    <strong className="text-white">Creá un agente</strong> con el botón <strong className="text-white">"Nuevo agente"</strong> (más abajo) y copiá su <strong className="text-white">API Key</strong>.
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-slate-600 text-white text-xs font-bold flex items-center justify-center shrink-0">1</span>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    <strong className="text-slate-900">Creá un agente</strong> con el botón <strong className="text-slate-900">"Nuevo agente"</strong> (más abajo) y copiá su <strong className="text-slate-900">API Key</strong>.
                   </p>
                 </div>
-                <div className="bg-white/10 border border-white/20 rounded-xl p-3 flex gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-white text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">2</span>
-                  <p className="text-xs text-blue-100 leading-relaxed">
-                    Abrí <strong className="text-white">PowerShell como Administrador</strong> y ejecutá el comando de arriba (<code className="text-green-300 font-mono">iwr -useb https://app.bullwebchile.com/install-agent.ps1 | iex</code>).
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-slate-600 text-white text-xs font-bold flex items-center justify-center shrink-0">2</span>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Abrí <strong className="text-slate-900">PowerShell como Administrador</strong> y ejecutá el comando de arriba (<code className="text-slate-500 font-mono">iwr -useb https://app.bullwebchile.com/install-agent.ps1 | iex</code>).
                   </p>
                 </div>
-                <div className="bg-white/10 border border-white/20 rounded-xl p-3 flex gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-white text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">3</span>
-                  <p className="text-xs text-blue-100 leading-relaxed">
-                    Cuando el instalador la pida, <strong className="text-white">pegá la API Key</strong>. Si descargás el .exe y hacés doble clic, corre en segundo plano <strong className="text-white">sin ventana visible</strong> — la vía recomendada es el instalador de PowerShell.
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-slate-600 text-white text-xs font-bold flex items-center justify-center shrink-0">3</span>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Cuando el instalador la pida, <strong className="text-slate-900">pegá la API Key</strong>. Si descargás el .exe y hacés doble clic, corre en segundo plano <strong className="text-slate-900">sin ventana visible</strong> — la vía recomendada es el instalador de PowerShell.
                   </p>
                 </div>
-                <div className="bg-white/10 border border-white/20 rounded-xl p-3 flex gap-2.5">
-                  <span className="w-6 h-6 rounded-full bg-white text-indigo-700 text-xs font-bold flex items-center justify-center shrink-0">4</span>
-                  <p className="text-xs text-blue-100 leading-relaxed">
-                    Verificá en la tabla de abajo: estado <strong className="text-white">En línea</strong> y versión <strong className="text-white">v{release?.version ?? downloadInfo?.version ?? '—'}</strong>.
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-slate-600 text-white text-xs font-bold flex items-center justify-center shrink-0">4</span>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    Verificá en la tabla de abajo: estado <strong className="text-slate-900">En línea</strong> y versión <strong className="text-slate-900">v{release?.version ?? downloadInfo?.version ?? '—'}</strong>.
                   </p>
                 </div>
               </div>
@@ -646,7 +647,7 @@ function AgentsSection() {
                   </a>
                 ))}
                 {(release?.version ?? downloadInfo?.version) && (
-                  <span className="flex items-center text-blue-200 text-xs px-2 opacity-70">
+                  <span className="flex items-center text-slate-500 text-xs px-2 opacity-70">
                     v{release?.version ?? downloadInfo?.version}
                   </span>
                 )}
@@ -654,21 +655,21 @@ function AgentsSection() {
 
               {/* ── Aviso SmartScreen (colapsable) ── */}
               <details className="mt-3 group">
-                <summary className="text-xs text-yellow-200 cursor-pointer hover:text-white select-none flex items-center gap-1">
+                <summary className="text-xs text-amber-800 cursor-pointer hover:text-white select-none flex items-center gap-1">
                   <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
                   ¿Aparece aviso de Windows? — Haz clic aquí
                 </summary>
-                <div className="mt-2 bg-yellow-500/20 border border-yellow-400/30 rounded-xl p-3 text-xs text-yellow-100">
-                  <p className="font-semibold text-yellow-200 mb-1.5">Aviso de Windows SmartScreen</p>
-                  <p className="mb-2 text-yellow-100/90">
+                <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800">
+                  <p className="font-semibold text-amber-800 mb-1.5">Aviso de Windows SmartScreen</p>
+                  <p className="mb-2 text-amber-900">
                     Es normal — aparece porque el agente es software nuevo y aún no tiene suficientes
                     descargas para ser reconocido automáticamente. No indica ningún peligro.
                   </p>
-                  <ol className="space-y-1 list-decimal list-inside text-yellow-200">
-                    <li>Haz clic en <strong className="text-white">"Más información"</strong></li>
-                    <li>Haz clic en <strong className="text-white">"Ejecutar de todas formas"</strong></li>
+                  <ol className="space-y-1 list-decimal list-inside text-amber-800">
+                    <li>Haz clic en <strong className="text-slate-900">"Más información"</strong></li>
+                    <li>Haz clic en <strong className="text-slate-900">"Ejecutar de todas formas"</strong></li>
                   </ol>
-                  <p className="mt-2 text-yellow-300/70">
+                  <p className="mt-2 text-amber-800">
                     El código fuente es público en GitHub y auditable por cualquier persona.
                   </p>
                 </div>
@@ -679,23 +680,23 @@ function AgentsSection() {
           </div>
           <div className="text-right shrink-0">
             <div className="text-2xl font-bold">{onlineCount}</div>
-            <div className="text-xs text-blue-200">{onlineCount === 1 ? 'agente' : 'agentes'} online</div>
+            <div className="text-xs text-slate-500">{onlineCount === 1 ? 'agente' : 'agentes'} online</div>
           </div>
         </div>
       </div>
 
       {/* Encabezado tabla */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 flex-wrap gap-2">
         <h4 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
           <Bot className="w-4 h-4 text-gray-500" /> Agentes registrados
           {isLoading && <RefreshCw className="w-3 h-3 animate-spin text-gray-400" />}
         </h4>
-        <div className="flex gap-2">
-          <button onClick={() => refetch()} className="p-1.5 rounded hover:bg-gray-100">
+        <div className="flex-wrap flex gap-2">
+          <button onClick={() => refetch()} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-gray-100">
             <RefreshCw className="w-3.5 h-3.5 text-gray-400" />
           </button>
           <button onClick={() => setShowModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700">
+            className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-medium hover:bg-orange-600">
             <Plus className="w-3.5 h-3.5" /> Nuevo agente
           </button>
         </div>
@@ -731,7 +732,7 @@ function AgentsSection() {
               <tr key={a.id} className="hover:bg-gray-50">
                 <td className="px-4 py-2.5">
                   {a.is_online
-                    ? <span className="flex items-center gap-1 text-green-600 text-xs font-medium"><Circle className="w-2 h-2 fill-green-500" /> Online</span>
+                    ? <span className="flex items-center gap-1 text-slate-700 text-xs font-medium"><Circle className="w-2 h-2 fill-green-500" /> Online</span>
                     : <span className="flex items-center gap-1 text-gray-400 text-xs"><Circle className="w-2 h-2 fill-gray-300" /> Offline</span>
                   }
                 </td>
@@ -741,7 +742,7 @@ function AgentsSection() {
                   {!agentVer ? (
                     <span className="text-xs text-gray-300">—</span>
                   ) : vUpToDate ? (
-                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-medium">
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
                       <CheckCircle2 className="w-3 h-3" /> v{agentVer}
                     </span>
                   ) : vOutdated ? (
@@ -764,11 +765,11 @@ function AgentsSection() {
                       {revealedId === a.id ? a.api_key : `${a.api_key.slice(0, 8)}••••••••`}
                     </code>
                     <button onClick={() => setRevealedId(revealedId === a.id ? null : a.id)}
-                      className="p-1 hover:bg-gray-100 rounded text-gray-400">
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded text-gray-400">
                       {revealedId === a.id ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
                     </button>
                     <button onClick={() => { navigator.clipboard.writeText(a.api_key); toast.success('Clave copiada'); }}
-                      className="p-1 hover:bg-gray-100 rounded text-gray-400">
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded text-gray-400">
                       <Copy className="w-3 h-3" />
                     </button>
                   </div>
@@ -777,12 +778,12 @@ function AgentsSection() {
                   <button
                     onClick={() => setLogsAgent(a)}
                     title="Ver logs del agente"
-                    className="p-1.5 rounded hover:bg-indigo-50 text-indigo-400 mr-1">
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-slate-100 text-slate-500 mr-1">
                     <ScrollText className="w-3.5 h-3.5" />
                   </button>
                   <button
                     onClick={() => setAgentToDelete({ id: a.id, name: a.name })}
-                    className="p-1.5 rounded hover:bg-red-50 text-red-400">
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-red-50 text-red-400">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </td>
@@ -837,37 +838,37 @@ function AgentLogsModal({ agent, onClose }: { agent: PrintAgent; onClose: () => 
   const levelBadge = (level: string) => {
     if (level === 'error') return 'bg-red-100 text-red-600';
     if (level === 'warn')  return 'bg-amber-100 text-amber-600';
-    if (level === 'info')  return 'bg-blue-100 text-blue-600';
+    if (level === 'info')  return 'bg-slate-100 text-slate-700';
     return 'bg-gray-100 text-gray-500';
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+    createPortal(<div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0 flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <ScrollText className="w-5 h-5 text-indigo-500" />
+            <ScrollText className="w-5 h-5 text-slate-500" />
             <h3 className="font-semibold text-gray-900">Logs — {agent.name}</h3>
             {isLoading && <RefreshCw className="w-3 h-3 animate-spin text-gray-400" />}
-            <span className={`w-2 h-2 rounded-full ml-1 ${agent.is_online ? 'bg-green-500' : 'bg-gray-300'}`} />
+            <span className={`w-2 h-2 rounded-full ml-1 ${agent.is_online ? 'bg-slate-500' : 'bg-gray-300'}`} />
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded">
             <X className="w-5 h-5 text-gray-400" />
           </button>
         </div>
 
         {/* Filtros */}
-        <div className="flex items-center gap-2 px-5 py-2 border-b border-gray-100 shrink-0">
+        <div className="flex-wrap flex items-center gap-2 px-5 py-2 border-b border-gray-100 shrink-0">
           {(['all', 'error', 'warn'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                filter === f ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              className={`min-h-[44px] px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                filter === f ? 'bg-orange-50 text-orange-700 border border-orange-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}>
               {f === 'all' ? 'Todos' : f === 'error' ? 'Errores' : 'Warnings'}
             </button>
           ))}
-          <button onClick={() => refetch()} className="ml-auto p-1 hover:bg-gray-100 rounded" title="Actualizar">
+          <button onClick={() => refetch()} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center ml-auto p-1 hover:bg-gray-100 rounded" title="Actualizar">
             <RefreshCw className="w-3.5 h-3.5 text-gray-400" />
           </button>
           <span className="text-xs text-gray-400">Auto-refresh 5s</span>
@@ -913,7 +914,7 @@ function AgentLogsModal({ agent, onClose }: { agent: PrintAgent; onClose: () => 
           {logs.length} evento{logs.length !== 1 ? 's' : ''} · actualización automática cada 5s
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -924,26 +925,26 @@ function PrintersEmptyState({ onCreatePrinter }: { onCreatePrinter: () => void }
       n: '1',
       title: 'Instala el Agente BullWeb',
       desc: 'Descarga el instalador para Windows desde la sección «Agentes» de arriba y ejecútalo en la PC con la impresora conectada.',
-      icon: <Download className="w-5 h-5 text-blue-500" />,
+      icon: <Download className="w-5 h-5 text-slate-500" />,
     },
     {
       n: '2',
       title: 'Agrega una impresora',
       desc: 'Haz clic en «Nueva impresora», completa los datos de conexión (IP, USB, Serial o Driver SO) y asígnale el agente que acabas de instalar.',
-      icon: <Printer className="w-5 h-5 text-indigo-500" />,
+      icon: <Printer className="w-5 h-5 text-slate-500" />,
     },
     {
       n: '3',
       title: 'Envía un test de impresión',
       desc: 'Con el agente online y la impresora configurada, haz clic en el botón «Test» para verificar que todo funciona correctamente.',
-      icon: <PlayCircle className="w-5 h-5 text-emerald-500" />,
+      icon: <PlayCircle className="w-5 h-5 text-slate-500" />,
     },
   ];
 
   return (
     <div className="bg-white rounded-xl border border-dashed border-gray-200 p-8 text-center space-y-6">
-      <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto">
-        <Printer className="w-7 h-7 text-blue-500" />
+      <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto">
+        <Printer className="w-7 h-7 text-slate-500" />
       </div>
       <div>
         <h3 className="text-lg font-semibold text-gray-900">Configura tu primera impresora</h3>
@@ -971,12 +972,12 @@ function PrintersEmptyState({ onCreatePrinter }: { onCreatePrinter: () => void }
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
         <button
           onClick={onCreatePrinter}
-          className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">
+          className="min-h-[44px] flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600 transition-colors shadow-sm">
           <Plus className="w-4 h-4" /> Nueva impresora
         </button>
         <button
           onClick={() => document.getElementById('agent-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          className="flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
+          className="min-h-[44px] flex items-center gap-2 px-5 py-2.5 border border-gray-200 text-gray-700 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors">
           <Download className="w-4 h-4" /> ↑ Ver instalador del agente
         </button>
       </div>
@@ -1015,14 +1016,14 @@ function AssignAgentModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 flex-wrap gap-2">
           <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <UserPlus className="w-5 h-5 text-blue-600" />
+            <UserPlus className="w-5 h-5 text-slate-700" />
             Asignar agente a {printer.name}
           </h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-gray-100">
             <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
@@ -1042,13 +1043,13 @@ function AssignAgentModal({
                 <button
                   key={a.id}
                   onClick={() => setSelectedId(a.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors ${
+                  className={`min-h-[44px] w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors ${
                     selectedId === a.id
-                      ? 'border-blue-500 bg-blue-50'
+                      ? 'border-slate-200 bg-slate-50'
                       : 'border-gray-200 hover:bg-gray-50'
                   }`}
                 >
-                  <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${a.is_online ? 'bg-emerald-500' : 'bg-gray-300'}`} />
+                  <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${a.is_online ? 'bg-slate-500' : 'bg-gray-300'}`} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900 truncate">{a.name}</p>
                     <p className="text-xs text-gray-400">
@@ -1057,27 +1058,27 @@ function AssignAgentModal({
                       {a.platform ? ` · ${a.platform}` : ''}
                     </p>
                   </div>
-                  {selectedId === a.id && <Check className="w-4 h-4 text-blue-600 shrink-0" />}
+                  {selectedId === a.id && <Check className="w-4 h-4 text-slate-700 shrink-0" />}
                 </button>
               ))}
             </div>
           )}
         </div>
-        <div className="flex justify-end gap-2 p-5 border-t border-gray-100">
-          <button onClick={onClose} className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+        <div className="flex-wrap flex justify-end gap-2 p-5 border-t border-gray-100">
+          <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={!selectedId || saving || agents.length === 0}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            className="min-h-[44px] px-4 py-2 text-sm bg-white text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 flex items-center gap-2 border border-slate-300"
           >
             {saving ? <RefreshCw className="w-3 h-3 animate-spin" /> : <UserPlus className="w-3 h-3" />}
             {saving ? 'Asignando...' : 'Asignar agente'}
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -1130,33 +1131,33 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
   const cancelledCount = jobs.filter(j => j.status === 'cancelled').length;
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex justify-end" onClick={onClose}>
+    createPortal(<div className="fixed inset-0 bg-black/40 z-[100] flex justify-end text-slate-900" onClick={onClose}>
       <div
         className="w-full max-w-lg bg-white h-full overflow-y-auto shadow-xl flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200 sticky top-0 bg-white z-10 flex-wrap gap-2">
           <div>
             <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-              <History className="w-4 h-4 text-purple-500" />
+              <History className="w-4 h-4 text-slate-500" />
               Cola — {printer.name}
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">Últimos 50 trabajos · Auto-refresco cada 5s</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex-wrap flex items-center gap-2">
             <button
               onClick={() => setAutoRefresh(a => !a)}
-              className={`text-xs px-2 py-1 rounded-lg border transition-colors ${
-                autoRefresh ? 'border-green-300 bg-green-50 text-green-700' : 'border-gray-200 text-gray-400'
+              className={`min-h-[44px] text-xs px-2 py-1 rounded-lg border transition-colors ${
+                autoRefresh ? 'border-slate-200 bg-slate-50 text-slate-700' : 'border-gray-200 text-gray-400'
               }`}
             >
               {autoRefresh ? '�?� Pausar' : '▶ Reanudar'}
             </button>
-            <button onClick={() => refetch()} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+            <button onClick={() => refetch()} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+            <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -1183,7 +1184,7 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
             <button
               onClick={() => cleanupMut.mutate()}
               disabled={cleanupMut.isPending}
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 border border-red-100 disabled:opacity-50">
+              className="min-h-[44px] flex items-center gap-1.5 text-xs px-3 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 border border-red-100 disabled:opacity-50">
               <Trash2 className="w-3 h-3" />
               Limpiar fallidos/cancelados (&gt;7d)
             </button>
@@ -1205,14 +1206,14 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
           )}
           {jobs.map(job => (
             <div key={job.id} className="border border-gray-100 rounded-xl p-3 bg-white hover:bg-gray-50 transition-colors">
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                     job.status === 'pending'   ? 'bg-yellow-100 text-yellow-700' :
-                    job.status === 'printed'   ? 'bg-green-100  text-green-700'  :
-                    job.status === 'sent'      ? 'bg-blue-100   text-blue-700'   :
-                    job.status === 'failed'    ? 'bg-red-100    text-red-700'    :
-                    job.status === 'cancelled' ? 'bg-gray-100   text-gray-500'   :
+                    job.status === 'printed'   ? 'bg-slate-100 text-slate-700'  :
+                    job.status === 'sent'      ? 'bg-slate-100 text-slate-700'   :
+                    job.status === 'failed'    ? 'bg-red-100 text-red-700'    :
+                    job.status === 'cancelled' ? 'bg-gray-100 text-gray-500'   :
                     'bg-gray-100 text-gray-600'
                   }`}>
                     {job.status === 'pending'   ? '�?� Pendiente' :
@@ -1223,7 +1224,7 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
                      job.status}
                   </span>
                   {job.order_number && (
-                    <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-mono">
+                    <span className="text-xs bg-slate-50 text-slate-700 px-1.5 py-0.5 rounded font-mono">
                       #{job.order_number}
                     </span>
                   )}
@@ -1237,13 +1238,13 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex-wrap flex items-center gap-1 shrink-0">
                   {job.status === 'failed' && (
                     <button
                       onClick={() => retryMut.mutate(job.id)}
                       disabled={retryMut.isPending}
                       title="Reintentar"
-                      className="p-1 rounded hover:bg-blue-50 text-blue-500 disabled:opacity-40">
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 rounded hover:bg-slate-100 text-slate-500 disabled:opacity-40">
                       <RotateCcw className="w-3.5 h-3.5" />
                     </button>
                   )}
@@ -1252,7 +1253,7 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
                       onClick={() => reprintMut.mutate(job.id)}
                       disabled={reprintMut.isPending}
                       title="Reimprimir"
-                      className="p-1 rounded hover:bg-indigo-50 text-indigo-500 disabled:opacity-40">
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 rounded hover:bg-slate-100 text-slate-500 disabled:opacity-40">
                       <RotateCcw className="w-3.5 h-3.5" />
                     </button>
                   )}
@@ -1261,7 +1262,7 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
                       onClick={() => cancelMut.mutate(job.id)}
                       disabled={cancelMut.isPending}
                       title="Cancelar"
-                      className="p-1 rounded hover:bg-red-50 text-red-400 disabled:opacity-40">
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 rounded hover:bg-red-50 text-red-400 disabled:opacity-40">
                       <Ban className="w-3.5 h-3.5" />
                     </button>
                   )}
@@ -1277,7 +1278,7 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
                 </span>
                 {job.attempts > 0 && <span>· {job.attempts} intento(s)</span>}
                 {job.printed_at && (
-                  <span className="text-green-600">
+                  <span className="text-slate-700">
                     · Impreso {new Date(job.printed_at).toLocaleString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                   </span>
                 )}
@@ -1291,7 +1292,7 @@ function JobHistoryPanel({ printer, onClose }: { printer: PrinterType; onClose: 
           ))}
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -1319,7 +1320,7 @@ function SortablePrinterRow({
         <button
           {...attributes}
           {...listeners}
-          className="cursor-grab active:cursor-grabbing p-1 text-gray-300 hover:text-gray-500"
+          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center cursor-grab active:cursor-grabbing p-1 text-gray-300 hover:text-gray-500"
           title="Arrastrar para reordenar"
         >
           <GripVertical className="w-4 h-4" />
@@ -1614,37 +1615,33 @@ export default function PrintersPage() {
           </h1>
           <p className="text-sm text-gray-500 mt-1">Gestión de impresoras térmicas y de etiquetas por sucursal</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex-wrap flex gap-2">
           <button onClick={() => { refetch(); qc.invalidateQueries({ queryKey: ['admin','printers','health'] }); }} disabled={isLoading}
-            className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50">
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded-lg border border-gray-200 hover:bg-gray-50">
             <RefreshCw className={`w-4 h-4 text-gray-500 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={handleExportJSON}
             title="Exportar configuración de impresoras"
-            className="flex items-center gap-2 px-3 py-2 border border-gray-200 text-gray-600
-                       hover:border-gray-300 hover:bg-gray-50 rounded-xl text-sm font-medium transition-colors"
+            className="min-h-[44px] flex items-center gap-2 px-3 py-2 border border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 rounded-xl text-sm font-medium transition-colors"
           >
             <Download className="w-4 h-4" />
             Exportar JSON
           </button>
           <button
             onClick={() => { setFailedJobsPrinterId(undefined); setShowFailedJobs(true); }}
-            className="relative flex items-center gap-2 px-3 py-2 border border-gray-200 text-gray-600
-                       hover:border-red-300 hover:text-red-500 hover:bg-red-50 rounded-xl text-sm
-                       font-medium transition-colors"
+            className="min-h-[44px] relative flex items-center gap-2 px-3 py-2 border border-gray-200 text-gray-600 hover:border-red-300 hover:text-red-500 hover:bg-red-50 rounded-xl text-sm font-medium transition-colors"
           >
             <AlertCircle className="w-4 h-4" />
             Cola fallida
             {failedJobs.length > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs font-bold
-                               w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
+              <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
                 {failedJobs.length > 99 ? '99+' : failedJobs.length}
               </span>
             )}
           </button>
           <button onClick={() => { setSelected(null); setModal('create'); }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+            className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium hover:bg-orange-600">
             <Plus className="w-4 h-4" /> Nueva impresora
           </button>
         </div>
@@ -1673,7 +1670,7 @@ export default function PrintersPage() {
                 {alertPrinter && (
                   <button
                     onClick={() => setAssignPrinter(alertPrinter)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 shrink-0 font-medium"
+                    className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 shrink-0 font-medium"
                   >
                     <UserPlus className="w-3 h-3" /> Asignar agente →
                   </button>
@@ -1689,10 +1686,10 @@ export default function PrintersPage() {
         <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
           {[
             { label: 'Impresoras',     val: health.total_printers,         color: 'text-gray-900' },
-            { label: 'Activas',        val: health.active_printers,        color: 'text-green-600' },
-            { label: 'Con agente',     val: health.printers_with_agent,    color: 'text-blue-600' },
+            { label: 'Activas',        val: health.active_printers,        color: 'text-slate-700' },
+            { label: 'Con agente',     val: health.printers_with_agent,    color: 'text-slate-700' },
             { label: 'Sin agente',     val: health.printers_without_agent, color: health.printers_without_agent > 0 ? 'text-red-600' : 'text-gray-400' },
-            { label: 'Agentes online', val: health.agents_online,          color: 'text-green-600' },
+            { label: 'Agentes online', val: health.agents_online,          color: 'text-slate-700' },
             { label: 'Offline',        val: health.agents_offline,         color: health.agents_offline > 0 ? 'text-amber-600' : 'text-gray-400' },
             { label: 'Jobs pendientes',val: health.pending_jobs,           color: health.pending_jobs > 0 ? 'text-yellow-600' : 'text-gray-400' },
             { label: 'Jobs fallidos',  val: health.failed_jobs,            color: health.failed_jobs > 0 ? 'text-red-600' : 'text-gray-400' },
@@ -1722,7 +1719,7 @@ export default function PrintersPage() {
             <p className="text-xs text-gray-500 mt-0.5">Total impresoras</p>
           </div>
           <div className="bg-white rounded-xl border border-gray-200 p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{stats.active}</p>
+            <p className="text-2xl font-bold text-slate-700">{stats.active}</p>
             <p className="text-xs text-gray-500 mt-0.5">Activas</p>
           </div>
           {(stats.by_type ?? []).slice(0, 2).map(t => (
@@ -1803,8 +1800,7 @@ export default function PrintersPage() {
                     <div className="flex flex-col gap-0.5">
                       <span>{p.name}</span>
                       {p.maintenance_mode && (
-                        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700
-                                         text-xs font-semibold px-2 py-0.5 rounded-full w-fit">
+                        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-xs font-semibold px-2 py-0.5 rounded-full w-fit">
                           <Wrench className="w-2.5 h-2.5" /> Mantenimiento
                         </span>
                       )}
@@ -1825,13 +1821,13 @@ export default function PrintersPage() {
                   <td className="px-4 py-3">
                     <div className="flex flex-col gap-1">
                       {p.is_active
-                        ? <span className="flex items-center gap-1 text-green-600 text-xs font-medium"><Wifi   className="w-3.5 h-3.5" /> Activa</span>
+                        ? <span className="flex items-center gap-1 text-slate-700 text-xs font-medium"><Wifi   className="w-3.5 h-3.5" /> Activa</span>
                         : <span className="flex items-center gap-1 text-gray-400 text-xs">      <WifiOff className="w-3.5 h-3.5" /> Inactiva</span>
                       }
                       {noAgent ? (
                         <button
                           onClick={() => setAssignPrinter(p)}
-                          className="flex items-center gap-1 text-amber-600 text-xs hover:text-amber-700 hover:underline text-left"
+                          className="min-h-[44px] flex items-center gap-1 text-amber-600 text-xs hover:text-amber-700 hover:underline text-left"
                           title="Asignar agente ahora"
                         >
                           <AlertTriangle className="w-3 h-3" /> Sin agente — asignar →
@@ -1839,7 +1835,7 @@ export default function PrintersPage() {
                       ) : (
                         <span className={`flex items-center gap-1 text-xs ${
                           agents.find(a => a.id === p.agent_id)?.is_online
-                            ? 'text-emerald-500' : 'text-gray-400'
+                            ? 'text-slate-500' : 'text-gray-400'
                         }`}>
                           <Zap className="w-3 h-3" />
                           {agents.find(a => a.id === p.agent_id)?.is_online ? 'Agente online' : 'Agente offline'}
@@ -1865,10 +1861,10 @@ export default function PrintersPage() {
                           ts === 'error'   ? (testMsg[p.id] ?? 'Error') :
                           'Test de impresión'
                         }
-                        className={`p-1.5 rounded-lg transition-colors ${
-                          ts === 'success' ? 'text-green-600 bg-green-50' :
+                        className={`min-h-[44px] p-1.5 rounded-lg transition-colors ${
+                          ts === 'success' ? 'text-slate-700 bg-slate-50' :
                           ts === 'error'   ? 'text-red-500 bg-red-50'    :
-                          'hover:bg-blue-50 text-blue-500'
+                          'hover:bg-slate-100 text-slate-500'
                         } disabled:opacity-30`}
                       >
                         {(ts === 'sending' || ts === 'waiting')
@@ -1884,11 +1880,10 @@ export default function PrintersPage() {
                         <button
                           onClick={() => { setFailedJobsPrinterId(p.id); setShowFailedJobs(true); }}
                           title={`${failedCount} tickets fallidos`}
-                          className="relative p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center relative p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                         >
                           <AlertCircle className="w-4 h-4" />
-                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold
-                                           w-3.5 h-3.5 rounded-full flex items-center justify-center leading-none">
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center leading-none">
                             {failedCount}
                           </span>
                         </button>
@@ -1897,28 +1892,28 @@ export default function PrintersPage() {
                       <button
                         onClick={() => setHistoryPrinter(p)}
                         title="Ver historial de trabajos"
-                        className="p-1.5 rounded-lg hover:bg-purple-50 text-purple-500">
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-slate-100 text-slate-500">
                         <History className="w-4 h-4" />
                       </button>
                       {/* Historial 30 días */}
                       <button
                         onClick={() => setStatsModalPrinter(p)}
                         title="Ver estadísticas (30 días)"
-                        className="p-1.5 rounded-lg hover:bg-indigo-50 text-indigo-400 hover:text-indigo-600">
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-slate-100 text-slate-500 hover:text-slate-700">
                         <BarChart2 className="w-4 h-4" />
                       </button>
                       {/* Duplicar */}
                       <button
                         onClick={() => handleDuplicatePrinter(p)}
                         title="Duplicar configuración"
-                        className="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50 transition-colors">
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-slate-500 hover:bg-slate-100 transition-colors">
                         <Copy className="w-4 h-4" />
                       </button>
                       {/* Mantenimiento */}
                       <button
                         onClick={() => handleToggleMaintenance(p, !p.maintenance_mode)}
                         title={p.maintenance_mode ? 'Quitar modo mantenimiento' : 'Poner en mantenimiento'}
-                        className={`p-1.5 rounded-lg transition-colors ${
+                        className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg transition-colors ${
                           p.maintenance_mode
                             ? 'text-amber-500 bg-amber-50 hover:bg-amber-100'
                             : 'text-gray-400 hover:text-amber-500 hover:bg-amber-50'
@@ -1928,21 +1923,21 @@ export default function PrintersPage() {
                       <button
                         onClick={() => toggleMut.mutate(p.id)}
                         title={p.is_active ? 'Desactivar' : 'Activar'}
-                        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500">
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-gray-100 text-gray-500">
                         {p.is_active
-                          ? <ToggleRight className="w-4 h-4 text-green-500" />
+                          ? <ToggleRight className="w-4 h-4 text-slate-500" />
                           : <ToggleLeft  className="w-4 h-4" />}
                       </button>
                       <button
                         onClick={() => { setSelected(p); setModal('edit'); }}
                         title="Editar"
-                        className="p-1.5 rounded-lg hover:bg-yellow-50 text-yellow-500">
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-yellow-50 text-yellow-500">
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setPrinterToDelete(p)}
                         title="Eliminar"
-                        className="p-1.5 rounded-lg hover:bg-red-50 text-red-400">
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-red-50 text-red-400">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>

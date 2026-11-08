@@ -1,9 +1,12 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { X, Phone, Mail, MapPin, DollarSign, ShoppingBag, TrendingUp, Clock, Award, Cake } from 'lucide-react';
 import { formatSaleNumber } from '../../../utils/formatSaleNumber';
 import type { Customer } from '../../Restaurant/types';
 import { getTagConfig } from '../../../utils/customers';
 import customersService from '../../../services/customersService';
+import { usePermission } from '../../../hooks/usePermission';
+import { fmtMoney } from '../../../utils/displayFormat';
 
 interface CustomerDetailModalProps {
   isOpen: boolean;
@@ -15,6 +18,38 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [detailedStats, setDetailedStats] = useState<any>(null);
+  // LOTE 308b (FID-01): ajuste manual con el saldo a la vista antes de aplicar
+  const canAdjust = usePermission('customers.loyalty');
+  const [balance, setBalance] = useState<number | null>(null);
+  const [adjustValue, setAdjustValue] = useState('');
+  const [adjustReason, setAdjustReason] = useState('');
+  const [adjustError, setAdjustError] = useState<string | null>(null);
+  const [adjusting, setAdjusting] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen || !customer?.id) return;
+    setAdjustValue(''); setAdjustReason(''); setAdjustError(null);
+    customersService.getPointsBalance(customer.id)
+      .then((r: any) => setBalance(Number(r?.points ?? 0)))
+      .catch(() => setBalance(null));
+  }, [isOpen, customer?.id]);
+
+  const adjustNumber = Number(adjustValue);
+  const adjustValid = adjustValue.trim() !== '' && Number.isInteger(adjustNumber) && adjustNumber !== 0;
+  const applyAdjust = async () => {
+    if (!adjustValid || adjustReason.trim().length < 5) return;
+    setAdjusting(true);
+    setAdjustError(null);
+    try {
+      const r = await customersService.adjustPoints(customer.id, adjustNumber, adjustReason.trim());
+      setBalance(Number(r?.newPoints ?? 0));
+      setAdjustValue(''); setAdjustReason('');
+    } catch (e: any) {
+      setAdjustError(e?.response?.data?.message ?? e?.response?.data?.error ?? 'No se pudo aplicar el ajuste');
+    } finally {
+      setAdjusting(false);
+    }
+  };
 
   // BUG 3 + BUG 17: cargar datos reales al abrir el modal
   useEffect(() => {
@@ -37,12 +72,12 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
   const displayLastVisit    = detailedStats?.lastVisit    ?? customer.lastOrderAt ?? customer.lastVisit;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
+    createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 text-slate-900">
+      <div className="bg-white border border-slate-200 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-zinc-800 flex items-center justify-between flex-shrink-0">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0 flex-wrap gap-2">
           <div>
-            <h3 className="text-xl font-bold text-white mb-1">{customer.name}</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-1">{customer.name}</h3>
             <div className="flex items-center gap-2">
               {(customer.tags ?? []).map(tag => {
                 const config = getTagConfig(tag);
@@ -56,46 +91,86 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-colors"
           >
-            <X className="w-5 h-5 text-zinc-400" />
+            <X className="w-5 h-5 text-slate-600" />
           </button>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          {/* LOTE 308b (FID-01): saldo y ajuste manual de puntos */}
+          {canAdjust && balance !== null && (
+            <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3" data-testid="ajuste-puntos">
+              <p className="text-sm text-slate-700">Saldo actual: <span className="font-bold text-slate-900">{balance.toLocaleString('es-CL')} puntos</span></p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <input
+                  type="number"
+                  value={adjustValue}
+                  onChange={e => setAdjustValue(e.target.value)}
+                  placeholder="+100 o -50"
+                  aria-label="Puntos a ajustar"
+                  className="w-32 min-h-[44px] rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900"
+                />
+                <input
+                  value={adjustReason}
+                  onChange={e => setAdjustReason(e.target.value)}
+                  placeholder="Motivo (obligatorio)"
+                  maxLength={200}
+                  aria-label="Motivo del ajuste"
+                  className="flex-1 min-w-[160px] min-h-[44px] rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900"
+                />
+                <button
+                  type="button"
+                  onClick={applyAdjust}
+                  disabled={adjusting || !adjustValid || adjustReason.trim().length < 5 || balance + adjustNumber < 0}
+                  className="min-h-[44px] rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                >
+                  {adjusting ? 'Aplicando...' : 'Aplicar ajuste'}
+                </button>
+              </div>
+              {adjustValid && (
+                <p className={`mt-2 text-xs ${balance + adjustNumber < 0 ? 'text-red-600' : 'text-slate-600'}`}>
+                  {balance + adjustNumber < 0
+                    ? 'El saldo no puede quedar negativo'
+                    : <>Quedará en <span className="font-bold">{(balance + adjustNumber).toLocaleString('es-CL')} puntos</span></>}
+                </p>
+              )}
+              {adjustError && <p role="alert" className="mt-2 text-xs text-red-600">{adjustError}</p>}
+            </div>
+          )}
           {/* Stats Grid */}
           <div className="grid grid-cols-4 gap-3 mb-4">
-            <div className="bg-zinc-800 rounded-lg p-3">
+            <div className="bg-slate-50 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-1">
-                <ShoppingBag className="w-4 h-4 text-blue-400" />
-                <span className="text-xs text-zinc-500">Pedidos</span>
+                <ShoppingBag className="w-4 h-4 text-slate-500" />
+                <span className="text-xs text-slate-500">Pedidos</span>
               </div>
-              <div className="text-xl font-bold text-white">{displayTotalOrders}</div>
+              <div className="text-xl font-bold text-slate-900">{displayTotalOrders}</div>
             </div>
 
-            <div className="bg-zinc-800 rounded-lg p-3">
+            <div className="bg-slate-50 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-1">
-                <DollarSign className="w-4 h-4 text-green-400" />
-                <span className="text-xs text-zinc-500">Total Gastado</span>
+                <DollarSign className="w-4 h-4 text-slate-500" />
+                <span className="text-xs text-slate-500">Total Gastado</span>
               </div>
-              <div className="text-xl font-bold text-white">${((displayTotalSpent) / 1000).toFixed(0)}k</div>
+              <div className="text-xl font-bold text-slate-900">{fmtMoney(displayTotalSpent)}</div>
             </div>
 
-            <div className="bg-zinc-800 rounded-lg p-3">
+            <div className="bg-slate-50 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp className="w-4 h-4 text-orange-400" />
-                <span className="text-xs text-zinc-500">Ticket Prom.</span>
+                <span className="text-xs text-slate-500">Ticket Prom.</span>
               </div>
-              <div className="text-xl font-bold text-white">${((displayAverageTicket ?? 0) / 1000).toFixed(1)}k</div>
+              <div className="text-xl font-bold text-slate-900">{fmtMoney(displayAverageTicket ?? 0)}</div>
             </div>
 
-            <div className="bg-zinc-800 rounded-lg p-3">
+            <div className="bg-slate-50 rounded-lg p-3">
               <div className="flex items-center gap-2 mb-1">
-                <Clock className="w-4 h-4 text-purple-400" />
-                <span className="text-xs text-zinc-500">Última Compra</span>
+                <Clock className="w-4 h-4 text-slate-500" />
+                <span className="text-xs text-slate-500">Última Compra</span>
               </div>
-              <div className="text-xs font-bold text-white">
+              <div className="text-xs font-bold text-slate-900">
                 {displayLastVisit
                   ? new Date(displayLastVisit).toLocaleDateString('es-CL')
                   : 'Nunca'
@@ -105,23 +180,23 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
           </div>
 
           {/* Info de Contacto */}
-          <div className="bg-zinc-800 rounded-lg p-4 mb-4">
-            <h4 className="text-sm font-semibold text-zinc-300 mb-3">Información de Contacto</h4>
+          <div className="bg-slate-50 rounded-lg p-4 mb-4">
+            <h4 className="text-sm font-semibold text-slate-700 mb-3">Información de Contacto</h4>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-zinc-500" />
-                <span className="text-white">{customer.phone}</span>
+                <Phone className="w-4 h-4 text-slate-500" />
+                <span className="text-slate-900">{customer.phone}</span>
               </div>
               {customer.email && (
                 <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-zinc-500" />
-                  <span className="text-white">{customer.email}</span>
+                  <Mail className="w-4 h-4 text-slate-500" />
+                  <span className="text-slate-900">{customer.email}</span>
                 </div>
               )}
               {customer.address && (
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-zinc-500" />
-                  <span className="text-white">
+                  <MapPin className="w-4 h-4 text-slate-500" />
+                  <span className="text-slate-900">
                     {customer.address} {customer.addressNumber}
                     {customer.sector && `, ${customer.sector}`}
                   </span>
@@ -129,8 +204,8 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
               )}
               {customer.birthdate && (
                 <div className="flex items-center gap-2">
-                  <Cake className="w-4 h-4 text-zinc-500" />
-                  <span className="text-white">
+                  <Cake className="w-4 h-4 text-slate-500" />
+                  <span className="text-slate-900">
                     {new Date(customer.birthdate).toLocaleDateString('es-CL')}
                   </span>
                 </div>
@@ -140,19 +215,19 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
 
           {/* Productos Favoritos */}
           {(customer.favoriteProducts ?? []).length > 0 && (
-            <div className="bg-zinc-800 rounded-lg p-4 mb-4">
+            <div className="bg-slate-50 rounded-lg p-4 mb-4">
               <div className="flex items-center gap-2 mb-3">
                 <Award className="w-4 h-4 text-yellow-400" />
-                <h4 className="text-sm font-semibold text-zinc-300">Top 3 Productos Favoritos</h4>
+                <h4 className="text-sm font-semibold text-slate-700">Top 3 Productos Favoritos</h4>
               </div>
               <div className="space-y-2">
                 {(customer.favoriteProducts ?? []).map((product, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-yellow-400">#{index + 1}</span>
-                      <span className="text-sm text-white">{product.productName}</span>
+                      <span className="text-sm text-slate-900">{product.productName}</span>
                     </div>
-                    <span className="text-xs text-zinc-500">{product.quantity} veces</span>
+                    <span className="text-xs text-slate-500">{product.quantity} veces</span>
                   </div>
                 ))}
               </div>
@@ -160,28 +235,28 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
           )}
 
           {/* Historial de Pedidos */}
-          <div className="bg-zinc-800 rounded-lg p-4">
-            <h4 className="text-sm font-semibold text-zinc-300 mb-3">
+          <div className="bg-slate-50 rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-slate-700 mb-3">
               Historial de Pedidos ({orders.length})
             </h4>
             {orders.length === 0 ? (
-              <div className="text-center py-6 text-zinc-500 text-sm">
+              <div className="text-center py-6 text-slate-500 text-sm">
                 Sin pedidos registrados
               </div>
             ) : (
               <div className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
                 {orders.map(order => (
-                  <div key={order.id} className="bg-zinc-900 rounded-lg p-3 border border-zinc-700">
+                  <div key={order.id} className="bg-white rounded-lg p-3 border border-slate-200">
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <div className="text-sm font-semibold text-white">{formatSaleNumber(order.orderNumber)}</div>
-                        <div className="text-xs text-zinc-500">
+                        <div className="text-sm font-semibold text-slate-900">{formatSaleNumber(order.orderNumber)}</div>
+                        <div className="text-xs text-slate-500">
                           {new Date(order.date).toLocaleDateString('es-CL')} • {order.type === 'mostrador' ? 'Mostrador' : 'Delivery'}
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-bold text-blue-400">${order.total.toLocaleString()}</div>
-                        <div className="text-xs text-zinc-500">{order.items} productos</div>
+                        <div className="text-sm font-bold text-slate-500">${order.total.toLocaleString('es-CL')}</div>
+                        <div className="text-xs text-slate-500">{order.items} productos</div>
                       </div>
                     </div>
                   </div>
@@ -200,15 +275,15 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-zinc-800 flex-shrink-0">
+        <div className="p-4 border-t border-slate-200 flex-shrink-0">
           <button
             onClick={onClose}
-            className="w-full py-2.5 px-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-medium transition-colors"
+            className="min-h-[44px] w-full py-2.5 px-4 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium transition-colors"
           >
             Cerrar
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

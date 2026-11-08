@@ -28,6 +28,8 @@ interface OrderItem {
 }
 
 interface QROnlineOrder {
+  couponCode?:   string | null; // LOTE 308b (CUP-9)
+  couponDiscount?: number;
   id:            string;
   customerName:  string | null;
   customerPhone: string | null;
@@ -70,7 +72,7 @@ function fmtMin(min: number) {
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; cls: string }> = {
     pending:   { label: '⏳ Pendiente',  cls: 'bg-orange-100 text-orange-700' },
-    preparing: { label: '👨‍🍳 Preparando', cls: 'bg-blue-100 text-blue-700'   },
+    preparing: { label: '👨‍🍳 Preparando', cls: 'bg-slate-100 text-slate-700'   },
     done:      { label: '✅ Listo',       cls: 'bg-green-100 text-green-700'  },
     rejected:  { label: '❌ Rechazado',   cls: 'bg-red-100 text-red-600'     },
   };
@@ -101,9 +103,9 @@ function OrderCard({ order, defaults, onAccept, onDone, onReject, processing }: 
   const isDelivery       = String(order.orderType ?? '').toLowerCase() === 'delivery';
   const unanswered       = order.onlineStatus === 'pending' && order.minutesAgo > QR_UNANSWERED_MINUTES;
   const borderByStatus   = {
-    pending:   'border-orange-400 shadow-orange-100',
-    preparing: 'border-blue-400 shadow-blue-100',
-    done:      'border-green-300 shadow-green-50',
+    pending:   'border-orange-400 ',
+    preparing: 'border-slate-200 ',
+    done:      'border-slate-200 ',
     rejected:  'border-red-200 opacity-60',
   }[order.onlineStatus] ?? 'border-gray-200';
 
@@ -140,7 +142,12 @@ function OrderCard({ order, defaults, onAccept, onDone, onReject, processing }: 
             </p>
           )}
         </div>
-        <span className="text-xl font-black text-orange-500">{fmtCLP(order.total)}</span>
+        <div className="text-right">
+          <span className="text-xl font-black text-orange-500">{fmtCLP(order.total)}</span>
+          {order.couponCode && (
+            <p className="text-xs text-gray-500">Cupón {order.couponCode}: <span className="font-bold">-{fmtCLP(order.couponDiscount ?? 0)}</span></p>
+          )}
+        </div>
       </div>
 
       {/* Items */}
@@ -178,7 +185,7 @@ function OrderCard({ order, defaults, onAccept, onDone, onReject, processing }: 
 
       {/* Acciones */}
       {order.onlineStatus === 'pending' && mode === 'idle' && (
-        <div className="flex gap-2 mt-3">
+        <div className="flex-wrap flex gap-2 mt-3">
           <button
             onClick={() => setMode('accept')}
             disabled={isLoading}
@@ -231,7 +238,7 @@ function OrderCard({ order, defaults, onAccept, onDone, onReject, processing }: 
         <button
           onClick={() => onDone(order.id)}
           disabled={isLoading}
-          className="w-full mt-3 flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-bold py-2 rounded-lg text-sm transition-colors"
+          className="min-h-[44px] w-full mt-3 flex items-center justify-center gap-2 bg-white hover:bg-slate-50 disabled:bg-green-300 text-slate-700 font-bold py-2 rounded-lg text-sm transition-colors border border-slate-300"
         >
           {isLoading ? (
             <RefreshCw className="w-4 h-4 animate-spin" />
@@ -304,7 +311,9 @@ export default function OnlineOrders() {
                      : r.status === 'CONFIRMED'         ? 'done'
                      : r.status === 'REJECTED'          ? 'rejected'
                      :                                    'pending',
-        total:         Number(r.total ?? 0),
+        total:         Number(r.total ?? 0) - Number(r.couponDiscount ?? 0), // LOTE 308b (CUP-9)
+        couponCode:    r.couponCode ?? null,
+        couponDiscount: Number(r.couponDiscount ?? 0),
         items:         Array.isArray(r.items) ? r.items : [],
         customerNote:  r.notes ?? null,
         paymentMethod: r.paymentMethod ?? null,
@@ -409,7 +418,7 @@ export default function OnlineOrders() {
   return (
     <div className="p-6 max-w-2xl mx-auto">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <div>
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-6 h-6 text-orange-500" />
@@ -427,7 +436,7 @@ export default function OnlineOrders() {
         <button
           onClick={() => fetchOrders()}
           disabled={loading}
-          className="p-2 text-gray-400 hover:text-orange-500 transition-colors rounded-lg hover:bg-orange-50"
+          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 text-gray-400 hover:text-orange-500 transition-colors rounded-lg hover:bg-orange-50"
           title="Refrescar"
         >
           <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
@@ -447,7 +456,7 @@ export default function OnlineOrders() {
         {selectedDate !== todayStr && (
           <button
             onClick={() => { setSelectedDate(todayStr); setPage(1); }}
-            className="text-xs text-orange-500 hover:underline"
+            className="min-h-[44px] text-xs text-orange-500 hover:underline"
           >
             Ir a hoy
           </button>
@@ -465,9 +474,9 @@ export default function OnlineOrders() {
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`min-h-[44px] px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               filter === f.key
-                ? 'bg-orange-500 text-white shadow-md'
+                ? 'bg-orange-50 text-orange-700 shadow-md border border-orange-300'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
@@ -506,11 +515,11 @@ export default function OnlineOrders() {
 
           {/* Paginación */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-6">
+            <div className="flex-wrap flex justify-center items-center gap-2 mt-6">
               <button
                 disabled={page === 1}
                 onClick={() => setPage(p => p - 1)}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="min-h-[44px] px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 ← Anterior
               </button>
@@ -520,7 +529,7 @@ export default function OnlineOrders() {
               <button
                 disabled={page >= totalPages}
                 onClick={() => setPage(p => p + 1)}
-                className="px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="min-h-[44px] px-4 py-2 rounded-lg border border-gray-300 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 Siguiente →
               </button>

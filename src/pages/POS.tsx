@@ -323,7 +323,7 @@ export default function POS() {
     <>
     <div className="flex flex-col h-screen bg-zinc-950">
       {/* ZONA A: Selectores de Flujo */}
-      <div className="flex gap-4 p-6 bg-zinc-900/50 border-b border-zinc-800">
+      <div className="flex-wrap flex gap-4 p-6 bg-zinc-900/50 border-b border-zinc-800">
         <button
           onClick={() => {
             setMode('mesas');
@@ -577,7 +577,7 @@ export default function POS() {
                 {/* Selector de personas */}
                 <div className="bg-zinc-800/50 rounded-xl p-6 border border-zinc-700">
                   <label className="block text-sm font-medium text-zinc-300 mb-3">N�mero de personas</label>
-                  <div className="flex items-center justify-center gap-4">
+                  <div className="flex-wrap flex items-center justify-center gap-4">
                     <button
                       onClick={() => setGuestCount(Math.max(0, guestCount - 1))}
                       disabled={guestCount === 0}
@@ -719,7 +719,7 @@ ${formatCurrency(product.price ?? 0)}
                                 )} c/u
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex-wrap flex items-center gap-2">
                               <button
                                 onClick={() => updateQuantity(item.id, -1)}
                                 className="w-7 h-7 rounded-lg bg-zinc-700 hover:bg-zinc-600 flex items-center justify-center transition-colors"

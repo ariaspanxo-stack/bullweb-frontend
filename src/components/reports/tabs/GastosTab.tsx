@@ -43,11 +43,11 @@ export function GastosTab() {
         <KpiMoneyCard label="Total Gastos"    value={gastoTotal}       prev={prevGastoTotal}
           icon={Scale}      iconBg="bg-rose-100 text-rose-600"        loading={purchasesLoading} />
         <KpiIntCard   label="Nº Compras"      value={purchasesList.length} prev={0}
-          icon={Truck}      iconBg="bg-blue-100 text-blue-600"        loading={purchasesLoading} />
+          icon={Truck}      iconBg="bg-slate-100 text-slate-700"        loading={purchasesLoading} />
         <KpiMoneyCard label="Ingresos Period" value={totalSales}       prev={prevTotalSales}
-          icon={TrendingUp} iconBg="bg-emerald-100 text-emerald-600"  loading={salesLoading} />
+          icon={TrendingUp} iconBg="bg-slate-100 text-slate-700"  loading={salesLoading} />
         <KpiMoneyCard label="Result. Estim."  value={balanceNeto}      prev={0}
-          icon={Layers}     iconBg={balanceNeto >= 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'} loading={purchasesLoading} />
+          icon={Layers}     iconBg={balanceNeto >= 0 ? 'bg-slate-100 text-slate-700' : 'bg-rose-100 text-rose-600'} loading={purchasesLoading} />
       </div>
 
       {purchasesList.length === 0 ? <EmptyState message="Sin compras registradas en el período" /> : (

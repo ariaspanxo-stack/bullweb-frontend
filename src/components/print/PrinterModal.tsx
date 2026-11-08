@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef } from 'react';
 import { X, Check, RefreshCw } from 'lucide-react';
 import { adminService } from '@/services/adminService';
@@ -252,13 +253,13 @@ export function PrinterModal({ printer, branches, agents, onClose, onSave, savin
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white z-10">
+        <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white z-10 flex-wrap gap-2">
           <h2 className="text-lg font-semibold text-gray-900">
             {printer ? 'Editar impresora' : 'Nueva impresora'}
           </h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-gray-100">
             <X className="w-4 h-4 text-gray-500" />
           </button>
         </div>
@@ -299,9 +300,9 @@ export function PrinterModal({ printer, branches, agents, onClose, onSave, savin
             <div className="grid grid-cols-2 gap-2">
               {CONNECTION_TYPES.map(ct => (
                 <button key={ct} type="button" onClick={() => set('connection_type', ct)}
-                  className={`flex items-center gap-2 p-2.5 rounded-lg border text-sm font-medium transition-colors ${
+                  className={`min-h-[44px] flex items-center gap-2 p-2.5 rounded-lg border text-sm font-medium transition-colors ${
                     form.connection_type === ct
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      ? 'border-slate-200 bg-slate-50 text-slate-700'
                       : 'border-gray-200 hover:bg-gray-50 text-gray-600'
                   }`}>
                   {CONN_LABEL[ct]}
@@ -418,7 +419,7 @@ export function PrinterModal({ printer, branches, agents, onClose, onSave, savin
                   type="button"
                   onClick={detectOsPrinters}
                   disabled={osPrintersLoading || !form.agent_id}
-                  className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1 whitespace-nowrap">
+                  className="min-h-[44px] px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1 whitespace-nowrap">
                   {osPrintersLoading
                     ? <RefreshCw className="w-3 h-3 animate-spin" />
                     : <RefreshCw className="w-3 h-3" />}
@@ -468,7 +469,7 @@ export function PrinterModal({ printer, branches, agents, onClose, onSave, savin
                   type="button"
                   onClick={detectBluetoothPorts}
                   disabled={btLoading || !form.agent_id}
-                  className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1 whitespace-nowrap">
+                  className="min-h-[44px] px-3 py-2 text-sm border rounded-lg hover:bg-gray-50 disabled:opacity-40 flex items-center gap-1 whitespace-nowrap">
                   {btLoading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3" />}
                   Detectar
                 </button>
@@ -480,7 +481,7 @@ export function PrinterModal({ printer, branches, agents, onClose, onSave, savin
                   {BAUD_RATES.map(b => <option key={b} value={b}>{b}</option>)}
                 </select>
               </div>
-              <p className="text-xs text-gray-400 p-2 bg-cyan-50 border border-cyan-200 rounded">
+              <p className="text-xs text-gray-400 p-2 bg-slate-50 border border-slate-200 rounded">
                 📶 Asegúrate de emparejar la impresora Bluetooth con Windows antes de configurarla aquí.
                 Aparecerá como un puerto COM virtual. Haz clic en "Detectar" para ver los puertos disponibles en el agente.
               </p>
@@ -566,7 +567,7 @@ export function PrinterModal({ printer, branches, agents, onClose, onSave, savin
                   type="checkbox"
                   checked={!!form.print_qr}
                   onChange={e => set('print_qr', e.target.checked)}
-                  className="w-4 h-4 text-indigo-600 rounded"
+                  className="w-4 h-4 text-slate-700 rounded"
                 />
               </label>
               {form.print_qr && (
@@ -600,20 +601,20 @@ export function PrinterModal({ printer, branches, agents, onClose, onSave, savin
           )}
         </div>
 
-        <div className="flex justify-end gap-2 p-5 border-t border-gray-100 sticky bottom-0 bg-white">
+        <div className="flex-wrap flex justify-end gap-2 p-5 border-t border-gray-100 sticky bottom-0 bg-white">
           <button onClick={onClose}
-            className="px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
+            className="min-h-[44px] px-4 py-2 text-sm border border-gray-200 rounded-lg hover:bg-gray-50">
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={!form.name || (needsAgent && !form.agent_id) || saving}
-            className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+            className="min-h-[44px] px-4 py-2 text-sm bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2">
             {saving ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
             {saving ? 'Guardando...' : 'Guardar'}
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

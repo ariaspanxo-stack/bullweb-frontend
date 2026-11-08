@@ -19,15 +19,15 @@ export default function CustomersStats({
       label: 'Total Clientes',
       value: totalCustomers,
       icon: Users,
-      color: 'text-blue-600',
-      bg: 'bg-blue-100'
+      color: 'text-slate-700',
+      bg: 'bg-slate-100'
     },
     {
       label: 'Nuevos Este Mes',
       value: newThisMonth,
       icon: UserPlus,
-      color: 'text-green-600',
-      bg: 'bg-green-100'
+      color: 'text-slate-700',
+      bg: 'bg-slate-100'
     },
     {
       label: 'Puntos Totales',
@@ -40,8 +40,8 @@ export default function CustomersStats({
       label: 'Gasto Promedio',
       value: formatCurrency(averageSpent),
       icon: TrendingUp,
-      color: 'text-purple-600',
-      bg: 'bg-purple-100'
+      color: 'text-slate-700',
+      bg: 'bg-slate-100'
     }
   ];
 

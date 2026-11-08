@@ -3,6 +3,7 @@
 // Permite eliminar productos existentes y agregar nuevos
 // ═══════════════════════════════════════════════════════════════
 
+import { createPortal } from 'react-dom';
 import { useState, useRef } from 'react';
 import { X, Search, Plus, Minus, Trash2, Pencil, Star } from 'lucide-react';
 import type { Product, ProductCategory, CartItem } from '../../../types/restaurant.types';
@@ -153,28 +154,28 @@ export const EditOrderModal = ({
   };
 
   const accentBg = accent === 'purple'
-    ? 'bg-gradient-to-br from-purple-600 to-purple-700'
-    : 'bg-gradient-to-br from-blue-600 to-blue-700';
-  const accentText = accent === 'purple' ? 'text-purple-100' : 'text-blue-100';
+    ? ' '
+    : ' ';
+  const accentText = accent === 'purple' ? 'text-slate-500' : 'text-slate-500';
   const accentBtn = accent === 'purple'
-    ? 'bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700'
-    : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700';
+    ? 'bg-[#F97316] hover:bg-[#ea6a0a]'
+    : 'bg-[#F97316] hover:bg-[#ea6a0a]';
   const accentFocus = accent === 'purple'
-    ? 'focus:ring-purple-400 focus:border-purple-400'
-    : 'focus:ring-blue-400 focus:border-blue-400';
-  const accentDropdown = accent === 'purple' ? 'border-purple-400' : 'border-blue-400';
-  const accentPill = accent === 'purple' ? 'bg-purple-500 text-white' : 'bg-blue-500 text-white';
-  const accentPriceText = accent === 'purple' ? 'text-purple-600' : 'text-blue-600';
+    ? 'focus:ring-orange-500 focus:border-orange-500'
+    : 'focus:ring-orange-500 focus:border-orange-500';
+  const accentDropdown = accent === 'purple' ? 'border-slate-200' : 'border-slate-200';
+  const accentPill = accent === 'purple' ? 'bg-slate-500 text-white' : 'bg-slate-500 text-white';
+  const accentPriceText = accent === 'purple' ? 'text-slate-700' : 'text-slate-700';
 
   return (
-    <>
+    createPortal(<>
       {stockDialog}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] text-slate-900" onClick={onClose} />
 
-      <div className="fixed right-0 top-0 h-screen w-[480px] bg-white shadow-2xl z-[60] flex flex-col overflow-hidden">
+      <div className="fixed right-0 top-0 h-screen w-[480px] bg-white shadow-2xl z-[100] flex flex-col overflow-hidden">
 
         {/* ── HEADER ── */}
-        <div className={`${accentBg} text-white px-4 py-3 flex items-center justify-between flex-shrink-0`}>
+        <div className={`${accentBg} text-slate-900 px-4 py-3 flex items-center justify-between flex-shrink-0`}>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
               <Pencil size={18} />
@@ -188,7 +189,7 @@ export const EditOrderModal = ({
           </div>
           <button
             onClick={onClose}
-            className="w-9 h-9 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-9 h-9 bg-white/20 hover:bg-white/30 rounded-lg flex items-center justify-center transition-colors"
           >
             <X size={18} />
           </button>
@@ -247,7 +248,7 @@ export const EditOrderModal = ({
                       <button
                         onClick={() => toggleDelete(item.id)}
                         title={isMarked ? 'Deshacer' : 'Eliminar'}
-                        className={`flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
+                        className={`min-h-[44px] flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
                           isMarked
                             ? 'bg-red-200 text-red-600 hover:bg-red-300'
                             : 'bg-gray-200 text-gray-500 hover:bg-red-100 hover:text-red-500'
@@ -263,7 +264,7 @@ export const EditOrderModal = ({
           </div>
 
           {/* SEPARADOR */}
-          <div className={`mx-4 h-0.5 my-2 ${accent === 'purple' ? 'bg-purple-100' : 'bg-blue-100'}`} />
+          <div className={`mx-4 h-0.5 my-2 ${accent === 'purple' ? 'bg-slate-100' : 'bg-slate-100'}`} />
 
           {/* AGREGAR NUEVOS PRODUCTOS */}
           <div className="p-4 pt-2">
@@ -285,7 +286,7 @@ export const EditOrderModal = ({
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                 >
                   <X size={14} />
                 </button>
@@ -297,7 +298,7 @@ export const EditOrderModal = ({
                     <button
                       key={p.id}
                       onClick={() => withStockCheck(p as any, () => handleAddProduct(p))}
-                      className="w-full px-3 py-2.5 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-0 flex items-center justify-between gap-2"
+                      className="min-h-[44px] w-full px-3 py-2.5 hover:bg-gray-50 transition-colors text-left border-b border-gray-100 last:border-0 flex items-center justify-between gap-2"
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-0.5">
@@ -306,7 +307,7 @@ export const EditOrderModal = ({
                         </div>
                         <span className={`text-sm font-bold ${accentPriceText}`}>${fmt(p.price)}</span>
                       </div>
-                      <div className={`w-7 h-7 ${accent === 'purple' ? 'bg-purple-500' : 'bg-blue-500'} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                      <div className={`w-7 h-7 ${accent === 'purple' ? 'bg-slate-500' : 'bg-slate-500'} rounded-lg flex items-center justify-center flex-shrink-0`}>
                         <Plus size={14} className="text-white" />
                       </div>
                     </button>
@@ -324,7 +325,7 @@ export const EditOrderModal = ({
             <div className="flex gap-1.5 mt-2 overflow-x-auto pb-1">
               <button
                 onClick={() => setSelectedCategory('')}
-                className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${!selectedCategory ? accentPill : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                className={`min-h-[44px] px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${!selectedCategory ? accentPill : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
               >
                 Todos
               </button>
@@ -332,7 +333,7 @@ export const EditOrderModal = ({
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${selectedCategory === cat.id ? accentPill : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                  className={`min-h-[44px] px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-all ${selectedCategory === cat.id ? accentPill : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                 >
                   {cat.name}
                 </button>
@@ -342,24 +343,24 @@ export const EditOrderModal = ({
             {/* Carrito de nuevos */}
             {newCart.length > 0 && (
               <div className="mt-3 space-y-1.5">
-                <p className="text-xs font-bold text-green-600 uppercase tracking-wider">
+                <p className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   A agregar:
                 </p>
                 {newCart.map(item => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-xl px-2.5 py-2"
+                    className="flex-wrap flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"
                   >
                     <button
                       onClick={() => handleQty(item.id, item.quantity - 1)}
-                      className="w-5 h-5 bg-green-200 hover:bg-green-300 rounded-md flex items-center justify-center flex-shrink-0"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-5 h-5 bg-slate-100 hover:bg-slate-100 rounded-md flex items-center justify-center flex-shrink-0"
                     >
                       <Minus size={10} />
                     </button>
                     <span className="w-5 text-center text-sm font-bold text-gray-800">{item.quantity}</span>
                     <button
                       onClick={() => handleQty(item.id, item.quantity + 1)}
-                      className="w-5 h-5 bg-green-200 hover:bg-green-300 rounded-md flex items-center justify-center flex-shrink-0"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-5 h-5 bg-slate-100 hover:bg-slate-100 rounded-md flex items-center justify-center flex-shrink-0"
                     >
                       <Plus size={10} />
                     </button>
@@ -367,7 +368,7 @@ export const EditOrderModal = ({
                     <span className="text-sm font-bold text-gray-700 whitespace-nowrap">${fmt(item.subtotal)}</span>
                     <button
                       onClick={() => setNewCart(newCart.filter(i => i.id !== item.id))}
-                      className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 text-gray-400 hover:text-red-500 transition-colors"
                     >
                       <X size={13} />
                     </button>
@@ -389,12 +390,12 @@ export const EditOrderModal = ({
             </p>
           )}
           {newCart.length > 0 && (
-            <div className="text-sm text-gray-600 space-y-0.5 bg-green-50 border border-green-200 rounded-xl px-3 py-2">
+            <div className="text-sm text-gray-600 space-y-0.5 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
               <div className="flex justify-between">
                 <span>Nuevos subtotal</span>
                 <span className="font-medium">${fmt(newSubtotal)}</span>
               </div>
-              <div className={`flex justify-between font-bold pt-1 border-t border-green-200 ${accentPriceText}`}>
+              <div className={`flex justify-between font-bold pt-1 border-t border-slate-200 ${accentPriceText}`}>
                 <span>Adicional</span>
                 <span>${fmt(newTotal)}</span>
               </div>
@@ -403,7 +404,7 @@ export const EditOrderModal = ({
           <button
             onClick={handleSave}
             disabled={loading || !hasChanges}
-            className={`w-full py-3 ${hasChanges ? accentBtn : 'bg-gray-100'} ${hasChanges ? 'text-white' : 'text-gray-400'} rounded-xl font-bold transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+            className={`min-h-[44px] w-full py-3 ${hasChanges ? accentBtn : 'bg-gray-100'} ${hasChanges ? 'text-white' : 'text-gray-400'} rounded-xl font-bold transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
           >
             {loading ? (
               <>
@@ -427,7 +428,7 @@ export const EditOrderModal = ({
 
       {/* Hotfix #286: confirmacion al quitar el ultimo producto (anula el pedido) */}
       {voidModal}
-    </>
+    </>, document.body)
   );
 };
 

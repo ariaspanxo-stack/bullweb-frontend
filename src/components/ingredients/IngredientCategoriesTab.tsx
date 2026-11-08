@@ -17,14 +17,14 @@ export const IngredientCategoriesTab: React.FC<IngredientCategoriesTabProps> = (
 }) => {
   return (
     <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Categorías de Ingredientes</h2>
           <p className="text-gray-600 mt-1">Organiza tus ingredientes por tipo</p>
         </div>
         <button
           onClick={onAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600"
         >
           <PlusIcon className="w-5 h-5" />
           Nueva Categoría
@@ -49,17 +49,17 @@ export const IngredientCategoriesTab: React.FC<IngredientCategoriesTabProps> = (
               </div>
             </div>
 
-            <div className="flex gap-2 mt-4">
+            <div className="flex-wrap flex gap-2 mt-4">
               <button
                 onClick={() => onEdit(category)}
-                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-blue-600 bg-blue-50 rounded hover:bg-blue-100"
+                className="min-h-[44px] flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-slate-700 bg-slate-50 rounded hover:bg-slate-100"
               >
                 <PencilIcon className="w-4 h-4" />
                 Editar
               </button>
               <button
                 onClick={() => onDelete(category.id)}
-                className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-red-600 bg-red-50 rounded hover:bg-red-100"
+                className="min-h-[44px] flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-red-600 bg-red-50 rounded hover:bg-red-100"
               >
                 <TrashIcon className="w-4 h-4" />
                 Eliminar

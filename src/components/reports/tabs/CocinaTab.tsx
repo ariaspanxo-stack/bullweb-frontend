@@ -58,7 +58,7 @@ export function CocinaTab() {
                 <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Estaciones activas</span>
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-indigo-100 text-indigo-600"><ChefHat className="w-4 h-4" /></div>
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-slate-100 text-slate-700"><ChefHat className="w-4 h-4" /></div>
                   </div>
                   <div className="text-2xl font-extrabold text-gray-900">{stations.length}</div>
                 </div>
@@ -121,7 +121,7 @@ export function CocinaTab() {
                         <td className="px-4 py-3 text-gray-600">{(s.items ?? 0).toLocaleString('es-CL')}</td>
                         <td className="px-4 py-3">
                           {(s.avgTime !== null && s.avgTime !== undefined) ? (
-                            <span className="flex items-center gap-1.5 text-sm text-indigo-600 font-medium">
+                            <span className="flex items-center gap-1.5 text-sm text-slate-700 font-medium">
                               <Clock className="w-3.5 h-3.5" />
                               {s.avgTime} min
                             </span>

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cashRegistersService } from '@/services/cashRegistersService';
@@ -36,7 +37,7 @@ const fmtDate = (d: string | null | undefined) => {
 // ─── Status badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ open }: { open: boolean }) {
   return open ? (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
       <CheckCircle className="w-3 h-3" /> Abierta
     </span>
   ) : (
@@ -128,18 +129,18 @@ export default function CashRegisters() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <CreditCard className="w-7 h-7 text-indigo-600" />
+          <CreditCard className="w-7 h-7 text-slate-700" />
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Cajas Registradoras</h1>
             <p className="text-sm text-slate-500">Gestiona las cajas y sus sesiones de apertura/cierre</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex-wrap flex items-center gap-2">
           <button
             onClick={handleExport}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+            className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
           >
             <FileDown className="w-4 h-4" /> Exportar Excel
           </button>
@@ -159,14 +160,14 @@ export default function CashRegisters() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-slate-200">
+      <div className="flex-wrap flex gap-1 border-b border-slate-200">
         {(['registers', 'sessions'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            className={`min-h-[44px] px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               tab === t
-                ? 'border-indigo-600 text-indigo-600'
+                ? 'border-slate-200 text-slate-700'
                 : 'border-transparent text-slate-500 hover:text-slate-700'
             }`}
           >
@@ -183,7 +184,7 @@ export default function CashRegisters() {
           ) : registersList.length === 0 ? (
             <div className="p-8 text-center text-slate-500">
               No hay cajas registradas.{' '}
-              <button className="text-indigo-600 underline" onClick={() => { setEditingRegister(null); setIsRegisterModalOpen(true); }}>
+              <button className="min-h-[44px] text-slate-700 underline" onClick={() => { setEditingRegister(null); setIsRegisterModalOpen(true); }}>
                 Crear una
               </button>
             </div>
@@ -207,14 +208,14 @@ export default function CashRegisters() {
                     </td>
                     <td className="px-4 py-3 text-slate-600">{r._count?.sessions ?? 0}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block w-2 h-2 rounded-full ${r.active ? 'bg-green-500' : 'bg-slate-300'}`} />
+                      <span className={`inline-block w-2 h-2 rounded-full ${r.active ? 'bg-slate-500' : 'bg-slate-300'}`} />
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-center gap-1">
                         {r.isOpen ? (
                           <button
                             title="Cerrar sesión"
-                            className="p-1.5 rounded hover:bg-red-50 text-red-500"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-red-50 text-red-500"
                             onClick={() => { setTargetRegister(r); setIsCloseSessionModal(true); }}
                           >
                             <Lock className="w-4 h-4" />
@@ -222,7 +223,7 @@ export default function CashRegisters() {
                         ) : (
                           <button
                             title="Abrir sesión"
-                            className="p-1.5 rounded hover:bg-green-50 text-green-600"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-slate-100 text-slate-700"
                             onClick={() => { setTargetRegister(r); setIsOpenSessionModal(true); }}
                           >
                             <Unlock className="w-4 h-4" />
@@ -230,14 +231,14 @@ export default function CashRegisters() {
                         )}
                         <button
                           title="Editar"
-                          className="p-1.5 rounded hover:bg-slate-100 text-slate-600"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-slate-100 text-slate-600"
                           onClick={() => { setEditingRegister(r); setIsRegisterModalOpen(true); }}
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           title="Eliminar"
-                          className="p-1.5 rounded hover:bg-red-50 text-red-500"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded hover:bg-red-50 text-red-500"
                           onClick={async () => {
                             const ok = await confirmDialog({ message: `¿Eliminar la caja "${r.name}"?`, confirmLabel: 'Eliminar' });
                             if (ok) deleteRegister.mutate(r.id);
@@ -375,7 +376,7 @@ function RegisterModal({ register, onClose, onSave, loading }: {
   const f = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 text-slate-900">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
         <h2 className="text-lg font-semibold text-slate-900">
           {register ? 'Editar Caja' : 'Nueva Caja Registradora'}
@@ -388,7 +389,7 @@ function RegisterModal({ register, onClose, onSave, loading }: {
               type="text"
               value={form.name}
               onChange={e => f('name', e.target.value)}
-              className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               placeholder="Ej: Caja Principal"
             />
           </label>
@@ -398,14 +399,14 @@ function RegisterModal({ register, onClose, onSave, loading }: {
               type="checkbox"
               checked={form.active}
               onChange={e => f('active', e.target.checked)}
-              className="w-4 h-4 text-indigo-600 rounded"
+              className="w-4 h-4 text-slate-700 rounded"
             />
             <span className="text-sm text-slate-700">Caja activa</span>
           </label>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">
+        <div className="flex-wrap flex justify-end gap-2 pt-2">
+          <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">
             Cancelar
           </button>
           <Button
@@ -416,7 +417,7 @@ function RegisterModal({ register, onClose, onSave, loading }: {
           </Button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -451,7 +452,7 @@ function CloseSessionModal({ register, onClose, onSave, loading }: {
   const diff = cuadre ? closing - cuadre.expectedCash : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 text-slate-900">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
         <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
           <Lock className="w-5 h-5 text-red-500" />
@@ -514,15 +515,15 @@ function CloseSessionModal({ register, onClose, onSave, loading }: {
               min="0"
               value={closingCash}
               onChange={e => setClosingCash(e.target.value)}
-              className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
           </label>
 
           {/* Diferencia en tiempo real */}
           {cuadre && diff !== null && (
             <div className={`flex justify-between items-center text-sm font-semibold px-3 py-2 rounded-lg ${
-              diff === 0 ? 'bg-green-50 text-green-700' :
-              diff > 0  ? 'bg-blue-50 text-blue-700' :
+              diff === 0 ? 'bg-slate-50 text-slate-700' :
+              diff > 0  ? 'bg-slate-50 text-slate-700' :
                           'bg-red-50 text-red-700'
             }`}>
               <span>{diff > 0 ? 'Sobrante' : diff < 0 ? 'Faltante' : 'Cuadrado'}</span>
@@ -536,13 +537,13 @@ function CloseSessionModal({ register, onClose, onSave, loading }: {
               value={notes}
               onChange={e => setNotes(e.target.value)}
               rows={2}
-              className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+              className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
             />
           </label>
         </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <button onClick={onClose} className="px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">
+        <div className="flex-wrap flex justify-end gap-2 pt-2">
+          <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm rounded-lg border border-slate-200 hover:bg-slate-50">
             Cancelar
           </button>
           <Button
@@ -554,6 +555,6 @@ function CloseSessionModal({ register, onClose, onSave, loading }: {
           </Button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

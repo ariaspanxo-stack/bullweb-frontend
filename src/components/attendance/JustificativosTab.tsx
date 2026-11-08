@@ -16,17 +16,17 @@ interface JustificativosTabProps {
 type Tipo = 'medico' | 'personal' | 'vacaciones' | 'feriado' | 'licencia';
 
 const TIPOS: { value: Tipo; label: string; color: string }[] = [
-  { value: 'medico',     label: 'Médico',      color: 'bg-red-100    text-red-700'    },
-  { value: 'personal',   label: 'Personal',    color: 'bg-amber-100  text-amber-700'  },
-  { value: 'vacaciones', label: 'Vacaciones',  color: 'bg-green-100  text-green-700'  },
-  { value: 'feriado',    label: 'Feriado',     color: 'bg-blue-100   text-blue-700'   },
-  { value: 'licencia',   label: 'Licencia',    color: 'bg-purple-100 text-purple-700' },
+  { value: 'medico',     label: 'Médico',      color: 'bg-red-100 text-red-700'    },
+  { value: 'personal',   label: 'Personal',    color: 'bg-amber-100 text-amber-700'  },
+  { value: 'vacaciones', label: 'Vacaciones',  color: 'bg-slate-100 text-slate-700'  },
+  { value: 'feriado',    label: 'Feriado',     color: 'bg-slate-100 text-slate-700'   },
+  { value: 'licencia',   label: 'Licencia',    color: 'bg-slate-100 text-slate-700' },
 ];
 
 const ESTADOS: { value: string; label: string; color: string }[] = [
   { value: 'pendiente', label: 'Pendiente', color: 'bg-amber-100 text-amber-700'  },
-  { value: 'aprobado',  label: 'Aprobado',  color: 'bg-green-100 text-green-700'  },
-  { value: 'rechazado', label: 'Rechazado', color: 'bg-red-100   text-red-700'    },
+  { value: 'aprobado',  label: 'Aprobado',  color: 'bg-slate-100 text-slate-700'  },
+  { value: 'rechazado', label: 'Rechazado', color: 'bg-red-100 text-red-700'    },
 ];
 
 function tipoLabel(tipo: string) {
@@ -149,7 +149,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-gray-800">Justificativos de Ausencia</h3>
           {pending > 0 && (
@@ -158,10 +158,10 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex-wrap flex items-center gap-2">
           <button
             onClick={handleExportExcel}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+            className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg transition-colors"
             title="Exportar a Excel"
           >
             <Download className="w-4 h-4" />
@@ -169,7 +169,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
           </button>
           <button
             onClick={() => setShowForm(v => !v)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg transition-colors"
           >
             <Plus className="w-4 h-4" />
             Nuevo Justificativo
@@ -179,8 +179,8 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
 
       {/* Formulario crear */}
       {showForm && (
-        <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 space-y-3">
-          <h4 className="text-sm font-semibold text-indigo-800 flex items-center gap-2">
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+          <h4 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
             <FileText className="w-4 h-4" /> Nuevo Justificativo
           </h4>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -189,7 +189,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
               <select
                 value={formEmpId}
                 onChange={e => setFormEmpId(e.target.value)}
-                className="w-full border border-gray-200 bg-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-200 bg-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 <option value="">Seleccionar…</option>
                 {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
@@ -201,7 +201,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
                 type="date"
                 value={formFecha}
                 onChange={e => setFormFecha(e.target.value)}
-                className="w-full border border-gray-200 bg-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-200 bg-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
             <div>
@@ -209,7 +209,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
               <select
                 value={formTipo}
                 onChange={e => setFormTipo(e.target.value as Tipo)}
-                className="w-full border border-gray-200 bg-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-200 bg-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               >
                 {TIPOS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
@@ -220,21 +220,21 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
                 value={formDesc}
                 onChange={e => setFormDesc(e.target.value)}
                 placeholder="Opcional…"
-                className="w-full border border-gray-200 bg-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full border border-gray-200 bg-white rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex-wrap flex justify-end gap-2">
             <button
               onClick={() => setShowForm(false)}
-              className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 rounded-lg transition-colors"
+              className="min-h-[44px] px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 rounded-lg transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={() => createMut.mutate()}
               disabled={!formEmpId || !formFecha || createMut.isPending}
-              className="flex items-center gap-1.5 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="min-h-[44px] flex items-center gap-1.5 px-4 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {createMut.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
               Crear
@@ -250,7 +250,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
           <select
             value={filterEmp}
             onChange={e => setFilterEmp(e.target.value)}
-            className="pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
           >
             <option value="">Todos los empleados</option>
             {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
@@ -259,20 +259,20 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
         <select
           value={filterEstado}
           onChange={e => setFilterEstado(e.target.value)}
-          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
         >
           <option value="">Todos los estados</option>
           {ESTADOS.map(e => <option key={e.value} value={e.value}>{e.label}</option>)}
         </select>
         <input type="date" value={filterFrom} onChange={e => setFilterFrom(e.target.value)}
-          className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
         <span className="text-gray-400 text-xs">–</span>
         <input type="date" value={filterTo} onChange={e => setFilterTo(e.target.value)}
-          className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          className="border border-gray-200 rounded-lg px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500" />
         {(filterEmp || filterEstado || filterFrom || filterTo) && (
           <button
             onClick={() => { setFilterEmp(''); setFilterEstado(''); setFilterFrom(''); setFilterTo(''); }}
-            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600"
+            className="min-h-[44px] flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600"
           >
             <X className="w-3 h-3" /> Limpiar
           </button>
@@ -339,7 +339,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
                         href={`/api/attendance/uploads/justificativos/${j.documento_url.split('/').pop()}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                        className="inline-flex items-center gap-1 text-xs text-slate-700 hover:text-slate-700 font-medium"
                       >
                         <Eye className="w-3 h-3" /> Ver doc
                       </a>
@@ -352,7 +352,7 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
                       ) : (
                         <button
                           onClick={() => triggerUpload(j.id)}
-                          className="inline-flex items-center gap-1 text-xs text-gray-400 hover:text-indigo-600 transition-colors"
+                          className="min-h-[44px] inline-flex items-center gap-1 text-xs text-gray-400 hover:text-slate-700 transition-colors"
                           title="Subir documento"
                         >
                           <Paperclip className="w-3 h-3" /> Subir
@@ -366,14 +366,14 @@ export function JustificativosTab({ employees }: JustificativosTabProps) {
                         <button
                           onClick={() => approveMut.mutate({ id: j.id, estado: 'aprobado' })}
                           disabled={approveMut.isPending}
-                          className="flex items-center gap-1 px-2 py-1 bg-green-50 hover:bg-green-100 text-green-700 text-xs font-medium rounded-lg disabled:opacity-50 transition-colors"
+                          className="min-h-[44px] flex items-center gap-1 px-2 py-1 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium rounded-lg disabled:opacity-50 transition-colors"
                         >
                           <CheckCircle className="w-3 h-3" /> Aprobar
                         </button>
                         <button
                           onClick={() => approveMut.mutate({ id: j.id, estado: 'rechazado' })}
                           disabled={approveMut.isPending}
-                          className="flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium rounded-lg disabled:opacity-50 transition-colors"
+                          className="min-h-[44px] flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-medium rounded-lg disabled:opacity-50 transition-colors"
                         >
                           <XCircle className="w-3 h-3" /> Rechazar
                         </button>

@@ -63,7 +63,7 @@ export default function DateRangeSelector({
             <button
               key={preset.label}
               onClick={() => handlePreset(preset)}
-              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="min-h-[44px] px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               {preset.label}
             </button>

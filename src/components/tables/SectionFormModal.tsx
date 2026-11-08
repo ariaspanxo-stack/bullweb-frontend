@@ -81,13 +81,13 @@ export default function SectionFormModal({ isOpen, onClose }: SectionFormModalPr
     <Modal isOpen={isOpen} onClose={handleClose} title="Crear Nueva Sección">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {/* Header con icono */}
-        <div className="flex items-center gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+        <div className="flex items-center gap-3 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+          <div className="w-12 h-12 bg-slate-500 rounded-lg flex items-center justify-center">
             <Layers className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="font-semibold text-blue-900">Nueva Sección</h3>
-            <p className="text-sm text-blue-700">
+            <h3 className="font-semibold text-slate-700">Nueva Sección</h3>
+            <p className="text-sm text-slate-700">
               Organiza tus mesas por áreas del restaurante
             </p>
           </div>
@@ -122,7 +122,7 @@ export default function SectionFormModal({ isOpen, onClose }: SectionFormModalPr
         </div>
 
         {/* Botones */}
-        <div className="flex gap-3 pt-4 border-t border-gray-200">
+        <div className="flex-wrap flex gap-3 pt-4 border-t border-gray-200">
           <Button
             type="button"
             variant="outline"

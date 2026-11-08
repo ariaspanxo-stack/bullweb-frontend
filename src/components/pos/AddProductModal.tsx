@@ -120,7 +120,7 @@ export default function AddProductModal({
                 {product.description}
               </p>
             )}
-            <p className="text-xl font-bold text-blue-600">
+            <p className="text-xl font-bold text-slate-700">
               {formatCurrency(product.price)}
             </p>
           </div>
@@ -131,10 +131,10 @@ export default function AddProductModal({
           <label className="block text-sm font-semibold text-gray-700 mb-2">
             Cantidad
           </label>
-          <div className="flex items-center gap-4">
+          <div className="flex-wrap flex items-center gap-4">
             <button
               onClick={decrementQuantity}
-              className="w-10 h-10 rounded-lg bg-gray-100 border border-gray-300 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 border border-gray-300 flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all"
             >
               <Minus className="w-5 h-5 text-gray-700" />
             </button>
@@ -143,7 +143,7 @@ export default function AddProductModal({
             </span>
             <button
               onClick={incrementQuantity}
-              className="w-10 h-10 rounded-lg bg-blue-600 border border-blue-700 flex items-center justify-center hover:bg-blue-700 active:scale-95 transition-all"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all"
             >
               <Plus className="w-5 h-5 text-white" />
             </button>
@@ -162,9 +162,9 @@ export default function AddProductModal({
                 <button
                   key={modifier}
                   onClick={() => toggleModifier(modifier)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`min-h-[44px] px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
                     isSelected
-                      ? 'bg-blue-600 text-white shadow-sm'
+                      ? 'bg-orange-50 text-orange-700 shadow-sm border border-orange-300'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -188,7 +188,7 @@ export default function AddProductModal({
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Ej: Sin cebolla, término medio, etc."
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none text-sm"
             maxLength={200}
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -201,13 +201,13 @@ export default function AddProductModal({
           <span className="text-sm font-semibold text-gray-700">
             Subtotal:
           </span>
-          <span className="text-xl font-bold text-blue-600">
+          <span className="text-xl font-bold text-slate-700">
             {formatCurrency(subtotal)}
           </span>
         </div>
 
         {/* Botones */}
-        <div className="flex gap-3">
+        <div className="flex-wrap flex gap-3">
           <Button
             variant="outline"
             size="lg"

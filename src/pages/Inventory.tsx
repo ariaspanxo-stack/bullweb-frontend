@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { inventoryService } from '@/services/inventoryService';
@@ -7,14 +8,19 @@ import IngredientFormModal from '@/components/inventory/IngredientFormModal';
 import RecipesList from '@/components/inventory/RecipesList';
 import RecipeFormModal from '@/components/inventory/RecipeFormModal';
 import ProductsStockTab from '@/components/inventory/ProductsStockTab';
+import PurchasesTab, { PurchaseFormModal, METHOD_LABEL, DOC_LABEL, STATUS_LABEL, statusOf } from '@/components/inventory/PurchasesTab';
 import Button from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useConfirm } from '@/hooks/useConfirm';
-import { Plus, Search, AlertCircle, ShoppingCart, ArrowUpDown, Truck, Pencil, Trash2, FileDown } from 'lucide-react';
+import { Plus, Search, AlertCircle, ArrowUpDown, Truck, Pencil, Trash2, FileDown } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { exportToExcel, clp, fmtDateTime } from '@/utils/exportExcel';
+import { exportToExcel, fmtDateTime } from '@/utils/exportExcel';
 import { usePermission } from '@/hooks/usePermission';
 import { usePlan } from '@/hooks/usePlan';
+
+const MOV_LABEL: Record<string, string> = { PURCHASE: 'Compra', SALE: 'Venta', WASTE: 'Merma', ADJUSTMENT: 'Ajuste' };
+// LOTE 309: sin decimales basura de la suma de flotantes (17.499999)
+const qty = (n: any) => Math.round(Number(n ?? 0) * 1000) / 1000;
 
 export default function Inventory() {
   const queryClient = useQueryClient();
@@ -50,8 +56,10 @@ export default function Inventory() {
     mutationFn: (ingredientId: string) => inventoryService.deleteIngredient(ingredientId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['ingredients'] });
+      queryClient.invalidateQueries({ queryKey: ['ingredients-all'] });
       toast.success('Ingrediente eliminado');
-    }
+    },
+    onError: (err: any) => toast.error(err.message || 'No se pudo eliminar el ingrediente'), // LOTE 309: antes no decia nada
   });
 
   const deleteRecipeMutation = useMutation({
@@ -59,7 +67,8 @@ export default function Inventory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recipes'] });
       toast.success('Receta eliminada');
-    }
+    },
+    onError: (err: any) => toast.error(err.message || 'No se pudo eliminar la receta'),
   });
 
   // Queries para compras/movimientos
@@ -73,21 +82,12 @@ export default function Inventory() {
     ? allIngredients
     : (allIngredients as any)?.ingredients ?? [];
 
-  const { data: purchasesData, isLoading: purchasesLoading } = useQuery({
-    queryKey: ['purchases'],
-    queryFn: () => inventoryService.getPurchases({ perPage: 50 }),
-    enabled: activeTab === 'purchases',
-  });
-
   const { data: movementsData, isLoading: movementsLoading } = useQuery({
     queryKey: ['movements'],
     queryFn: () => inventoryService.getMovements({ perPage: 50 }),
     enabled: activeTab === 'movements',
   });
 
-  const purchasesList: any[] = Array.isArray(purchasesData)
-    ? purchasesData
-    : (purchasesData as any)?.purchases ?? [];
   const movementsList: any[] = Array.isArray(movementsData)
     ? movementsData
     : (movementsData as any)?.movements ?? [];
@@ -96,6 +96,9 @@ export default function Inventory() {
     mutationFn: inventoryService.createPurchase,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['purchases-payables'] }); // LOTE 310
+      queryClient.invalidateQueries({ queryKey: ['purchases-open'] });
+      queryClient.invalidateQueries({ queryKey: ['movements'] });
       queryClient.invalidateQueries({ queryKey: ['ingredients'] });
       queryClient.invalidateQueries({ queryKey: ['ingredients-all'] });
       setIsPurchaseModalOpen(false);
@@ -156,6 +159,84 @@ export default function Inventory() {
     onError: (err: any) => toast.error(err.message || 'Error al eliminar proveedor'),
   });
 
+  // LOTE 309: leia campos que no existen (costos y minimos en 0, movimientos sin ingrediente) y dejaba vacias las
+  // hojas de pestañas no visitadas. Pide todo al momento de exportar.
+  const handleExport = async () => {
+    try {
+      const [ings, purch, movs, sups]: any[] = await Promise.all([
+        inventoryService.getIngredients({ perPage: 500 }),
+        inventoryService.getPurchases({ perPage: 500 }),
+        inventoryService.getMovements({ perPage: 500 }),
+        inventoryService.getSuppliers({ perPage: 500 }),
+      ]);
+      const lista = (v: any, k: string): any[] => (Array.isArray(v) ? v : v?.[k] ?? []);
+      await exportToExcel([
+        {
+          sheetName: 'Ingredientes',
+          rows: lista(ings, 'ingredients').map((i: any) => ({
+            'Nombre': i.name,
+            'Stock': i.currentStock ?? 0,
+            'Unidad': i.unit ?? '—',
+            'Stock Mínimo': i.minStock ?? 0,
+            'Costo unit.': i.unitCost ?? 0,
+            'Stock Bajo': (i.currentStock ?? 0) <= (i.minStock ?? 0) ? 'SÍ' : 'NO',
+          })),
+        },
+        {
+          sheetName: 'Compras',
+          rows: lista(purch, 'purchases').map((p: any) => ({
+            'Fecha': fmtDateTime(p.createdAt),
+            'Proveedor': p.supplier ?? '—',
+            'Ingrediente': p.ingredients?.name ?? '—',
+            'Cantidad': p.quantity ?? 0,
+            'Unidad': p.ingredients?.unit ?? '—',
+            'Costo promedio actual': p.unitCost ?? 0,
+            'Total (CLP)': Math.round(p.total ?? 0),
+            // LOTE 310: costo real de la linea (compras desde el lote), pago y documento
+            'Costo compra': p.lineCost ?? '—',
+            'Total compra (CLP)': p.lineTotal === null || p.lineTotal === undefined ? '—' : Math.round(p.lineTotal),
+            'Medio': p.purchase?.paymentMethod ? METHOD_LABEL[p.purchase.paymentMethod] : '—',
+            'Estado': STATUS_LABEL[statusOf(p.purchase)],
+            'Documento': p.purchase?.documentType && p.purchase.documentType !== 'NONE' ? DOC_LABEL[p.purchase.documentType] : '—',
+            'N° documento': p.purchase?.documentNumber ?? '—',
+            'Vencimiento': p.purchase?.dueDate ?? '—',
+            'Factura': p.purchase?.invoiceNumber ?? '—',
+            'Pagado compra (CLP)': p.purchase ? Math.round(p.purchase.paidAmount ?? 0) : '—',
+            'Pendiente compra (CLP)': p.purchase ? Math.round(p.purchase.pendingAmount ?? 0) : 0,
+            'Notas': p.notes ?? '—',
+          })),
+        },
+        {
+          sheetName: 'Movimientos',
+          rows: lista(movs, 'movements').map((m: any) => ({
+            'Fecha': fmtDateTime(m.createdAt),
+            'Tipo': MOV_LABEL[m.type] ?? m.type,
+            'Ingrediente': m.ingredients?.name ?? m.products?.name ?? '—',
+            'Cantidad': m.quantity ?? 0,
+            'Unidad': m.ingredients?.unit ?? '—',
+            'Stock anterior': m.previousStock ?? 0,
+            'Stock nuevo': m.newStock ?? 0,
+            'Notas': m.notes ?? '—',
+          })),
+        },
+        {
+          sheetName: 'Proveedores',
+          rows: lista(sups, 'suppliers').map((p: any) => ({
+            'Nombre': p.name,
+            'Contacto': p.contactName ?? '—',
+            'Teléfono': p.phone ?? '—',
+            'Email': p.email ?? '—',
+            'Dirección': p.address ?? '—',
+            'RUT': p.taxId ?? '—',
+          })),
+        },
+      ], 'Inventario');
+      toast.success('Inventario exportado a Excel (4 hojas)');
+    } catch (err: any) {
+      toast.error(err.message || 'No se pudo exportar el inventario');
+    }
+  };
+
   const handleEditIngredient = (ingredient: any) => {
     setEditingIngredient(ingredient);
     setIsIngredientModalOpen(true);
@@ -179,7 +260,7 @@ export default function Inventory() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex-wrap flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Inventario</h1>
           <p className="text-gray-500 mt-1">Control de stock, recetas y movimientos</p>
@@ -208,60 +289,8 @@ export default function Inventory() {
           </Button>
         )}
         {!isBasico && <button
-          onClick={() => {
-            const purchases: any[] = (purchasesData as any)?.purchases ?? [];
-            const movements: any[] = (movementsData as any)?.movements ?? [];
-            const suppliers: any[] = suppliersList;
-            exportToExcel([
-              {
-                sheetName: 'Ingredientes',
-                rows: ingredientsList.map((i: any) => ({
-                  'Nombre': i.name,
-                  'Categoría': i.category ?? '—',
-                  'Stock': i.currentStock ?? 0,
-                  'Unidad': i.unit ?? '—',
-                  'Stock Mínimo': i.minimumStock ?? 0,
-                  'Costo unit.': i.costPerUnit ?? 0,
-                  'Stock Bajo': (i.currentStock ?? 0) <= (i.minimumStock ?? 0) ? 'SÍ' : 'NO',
-                })),
-              },
-              {
-                sheetName: 'Compras',
-                rows: purchases.map((p: any) => ({
-                  'Fecha': fmtDateTime(p.createdAt),
-                  'Proveedor': p.supplier ?? '—',
-                  'Ítems': Array.isArray(p.items) ? p.items.length : 0,
-                  'Total (CLP)': p.total ?? 0,
-                  'Total fmt': clp(p.total),
-                  'Estado': p.status ?? '—',
-                  'Notas': p.notes ?? '—',
-                })),
-              },
-              {
-                sheetName: 'Movimientos',
-                rows: movements.map((m: any) => ({
-                  'Fecha': fmtDateTime(m.createdAt),
-                  'Tipo': m.type,
-                  'Ingrediente': m.ingredient?.name ?? '—',
-                  'Cantidad': m.quantity ?? 0,
-                  'Unidad': m.unit ?? '—',
-                  'Notas': m.notes ?? '—',
-                })),
-              },
-              {
-                sheetName: 'Proveedores',
-                rows: suppliers.map((s: any) => ({
-                  'Nombre': s.name,
-                  'Contacto': s.contact ?? '—',
-                  'Teléfono': s.phone ?? '—',
-                  'Email': s.email ?? '—',
-                  'Dirección': s.address ?? '—',
-                })),
-              },
-            ], 'Inventario');
-            toast.success('Inventario exportado a Excel (4 hojas)');
-          }}
-          className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+          onClick={handleExport}
+          className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
         >
           <FileDown className="w-4 h-4" />
           Exportar Excel
@@ -289,7 +318,7 @@ export default function Inventory() {
               </div>
               <button
                 onClick={() => setShowLowStock(!showLowStock)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors ${
+                className={`min-h-[44px] flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-colors ${
                   showLowStock
                     ? 'border-red-500 bg-red-50 text-red-700'
                     : 'border-gray-200 hover:border-gray-300'
@@ -328,71 +357,8 @@ export default function Inventory() {
         />
       )}
 
-      {activeTab === 'purchases' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-gray-500" />
-              <h2 className="text-lg font-semibold text-gray-900">Registro de Compras</h2>
-            </div>
-          </div>
-
-          {purchasesLoading ? (
-            <div className="text-center py-8 text-gray-500">Cargando compras...</div>
-          ) : (
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-xs font-medium text-gray-500 uppercase bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 py-3">Fecha</th>
-                    <th className="px-4 py-3">Proveedor</th>
-                    <th className="px-4 py-3">Ítems</th>
-                    <th className="px-4 py-3">Total</th>
-                    <th className="px-4 py-3">Estado</th>
-                    <th className="px-4 py-3">Notas</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {purchasesList.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-4 py-12 text-center text-gray-400">
-                        No hay compras registradas
-                      </td>
-                    </tr>
-                  ) : (
-                    purchasesList.map((purchase: any) => (
-                      <tr key={purchase.id} className="border-t border-gray-100 hover:bg-gray-50">
-                        <td className="px-4 py-3 text-sm text-gray-600">
-                          {new Date(purchase.createdAt).toLocaleDateString('es-CL')}
-                        </td>
-                        <td className="px-4 py-3 font-medium">{purchase.supplier || '—'}</td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          {Array.isArray(purchase.items) ? purchase.items.length : 0} ítem(s)
-                        </td>
-                        <td className="px-4 py-3 font-semibold">
-                          ${Math.round(purchase.total ?? 0).toLocaleString('es-CL')}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex px-2 py-0.5 text-xs font-medium rounded-full ${
-                            purchase.status === 'RECEIVED'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-yellow-100 text-yellow-700'
-                          }`}>
-                            {purchase.status === 'RECEIVED' ? 'Recibido' : 'Pendiente'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-400 max-w-xs truncate">
-                          {purchase.notes || '—'}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
+      {/* LOTE 310: Compras con medio de pago, estado, documento y cuentas por pagar */}
+      {activeTab === 'purchases' && <PurchasesTab canPurchases={canPurchases} />}
 
       {activeTab === 'movements' && (
         <div className="space-y-4">
@@ -433,8 +399,8 @@ export default function Inventory() {
                         ADJUSTMENT: 'Ajuste',
                       };
                       const typeColor: Record<string, string> = {
-                        PURCHASE: 'bg-blue-100 text-blue-700',
-                        SALE: 'bg-purple-100 text-purple-700',
+                        PURCHASE: 'bg-slate-100 text-slate-700',
+                        SALE: 'bg-slate-100 text-slate-700',
                         WASTE: 'bg-red-100 text-red-700',
                         ADJUSTMENT: 'bg-yellow-100 text-yellow-700',
                       };
@@ -455,12 +421,12 @@ export default function Inventory() {
                               {typeLabel[mov.type] ?? mov.type}
                             </span>
                           </td>
-                          <td className={`px-4 py-3 font-semibold ${mov.quantity < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            {mov.quantity > 0 ? '+' : ''}{mov.quantity}
+                          <td className={`px-4 py-3 font-semibold ${mov.quantity < 0 ? 'text-red-600' : 'text-slate-700'}`}>
+                            {mov.quantity > 0 ? '+' : ''}{qty(mov.quantity)}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-500">{mov.previousStock}</td>
-                          <td className="px-4 py-3 text-sm font-medium">{mov.newStock}</td>
-                          <td className="px-4 py-3 text-sm text-gray-400">{mov.reference || mov.notes || '—'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-500">{qty(mov.previousStock)}</td>
+                          <td className="px-4 py-3 text-sm font-medium">{qty(mov.newStock)}</td>
+                          <td className="px-4 py-3 text-sm text-gray-400">{/* LOTE 309: la venta guarda el id del pedido: no se muestra un codigo crudo */}{mov.type === 'SALE' ? 'Venta de un pedido' : mov.reference || mov.notes || '—'}</td>
                         </tr>
                       );
                     })
@@ -515,7 +481,8 @@ export default function Inventory() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => { setEditingSupplier(s); setIsSupplierModalOpen(true); }}
-                              className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+                              aria-label={`Editar proveedor ${s.name}`}
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-gray-400 hover:text-slate-700 hover:bg-slate-100 rounded"
                             >
                               <Pencil className="w-4 h-4" />
                             </button>
@@ -524,7 +491,8 @@ export default function Inventory() {
                                 const ok = await confirmDialog({ message: `¿Eliminar proveedor "${s.name}"?`, confirmLabel: 'Eliminar' });
                                 if (ok) deleteSupplierMutation.mutate(s.id);
                               }}
-                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+                              aria-label={`Eliminar proveedor ${s.name}`}
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -561,7 +529,7 @@ export default function Inventory() {
 
       {/* Modal: Nueva Compra */}
       {isPurchaseModalOpen && (
-        <PurchaseModal
+        <PurchaseFormModal
           ingredients={ingredientsList}
           onClose={() => setIsPurchaseModalOpen(false)}
           onSubmit={(data) => createPurchaseMutation.mutate(data)}
@@ -600,157 +568,6 @@ export default function Inventory() {
 }
 
 // ============================================================================
-// PurchaseModal
-// ============================================================================
-function PurchaseModal({
-  ingredients,
-  onClose,
-  onSubmit,
-  isSubmitting,
-}: {
-  ingredients: any[];
-  onClose: () => void;
-  onSubmit: (data: any) => void;
-  isSubmitting: boolean;
-}) {
-  const [supplier, setSupplier] = useState('');
-  const [supplierNames, setSupplierNames] = useState<string[]>([]); // H235: typeahead — sugerencias, texto libre sigue válido
-  const [notes, setNotes] = useState('');
-  const [items, setItems] = useState([{ ingredientId: '', quantity: '', cost: '' }]);
-
-  // H235: cargar proveedores al abrir el modal (catch silencioso → lista vacía)
-  useEffect(() => {
-    inventoryService.getSuppliers({ perPage: 100 })
-      .then((res: any) => setSupplierNames(((res?.suppliers ?? []) as any[]).map((s) => s.name).filter(Boolean)))
-      .catch(() => setSupplierNames([]));
-  }, []);
-
-  const addItem = () => setItems((prev) => [...prev, { ingredientId: '', quantity: '', cost: '' }]);
-  const removeItem = (i: number) => setItems((prev) => prev.filter((_, idx) => idx !== i));
-  const updateItem = (i: number, field: string, value: string) => {
-    setItems((prev) => {
-      const next = [...prev];
-      next[i] = { ...next[i], [field]: value };
-      return next;
-    });
-  };
-
-  const handleSubmit = () => {
-    const validItems = items.filter((it) => it.ingredientId && it.quantity && it.cost);
-    const invalidCount = items.length - validItems.length;
-
-    // F-6: advertir sobre filas incompletas en lugar de descartar silenciosamente
-    if (validItems.length === 0) {
-      alert('Agrega al menos un ítem completo (ingrediente + cantidad + costo)');
-      return;
-    }
-    if (invalidCount > 0) {
-      const ok = window.confirm(
-        `${invalidCount} fila${invalidCount > 1 ? 's' : ''} incompleta${invalidCount > 1 ? 's' : ''} se omitirá${invalidCount > 1 ? 'n' : ''}. ` +
-        `¿Guardar con ${validItems.length} ítem${validItems.length !== 1 ? 's' : ''} válido${validItems.length !== 1 ? 's' : ''}?`
-      );
-      if (!ok) return;
-    }
-
-    onSubmit({
-      supplier,
-      notes,
-      items: validItems.map((it) => ({
-        ingredientId: it.ingredientId,
-        quantity: parseFloat(it.quantity),
-        cost: parseFloat(it.cost),
-      })),
-    });
-  };
-
-  return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-auto shadow-xl">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900">Nueva Compra</h2>
-        </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Proveedor</label>
-            <input
-              type="text"
-              value={supplier}
-              onChange={(e) => setSupplier(e.target.value)}
-              list="suppliers-datalist"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="Nombre del proveedor (opcional)"
-            />
-            <datalist id="suppliers-datalist">
-              {supplierNames.map((name) => (
-                <option key={name} value={name} />
-              ))}
-            </datalist>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-sm font-medium text-gray-700">Ítems</label>
-              <button type="button" onClick={addItem} className="text-sm text-primary-600 hover:text-primary-700 font-medium">
-                + Agregar ítem
-              </button>
-            </div>
-            <div className="space-y-2">
-              <div className="grid grid-cols-[1fr,88px,88px,28px] gap-2 text-xs text-gray-500 px-1">
-                <span>Ingrediente</span><span>Cantidad</span><span>Costo/u</span><span />
-              </div>
-              {items.map((item, i) => (
-                <div key={i} className="grid grid-cols-[1fr,88px,88px,28px] gap-2 items-center">
-                  <select
-                    value={item.ingredientId}
-                    onChange={(e) => updateItem(i, 'ingredientId', e.target.value)}
-                    className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value="">Seleccionar...</option>
-                    {ingredients.map((ing: any) => (
-                      <option key={ing.id} value={ing.id}>{ing.name} ({ing.unit})</option>
-                    ))}
-                  </select>
-                  <input
-                    type="number" value={item.quantity}
-                    onChange={(e) => updateItem(i, 'quantity', e.target.value)}
-                    placeholder="0" min="0.01" step="0.01"
-                    className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                  <input
-                    type="number" value={item.cost}
-                    onChange={(e) => updateItem(i, 'cost', e.target.value)}
-                    placeholder="0" min="0" step="1"
-                    className="border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                  {items.length > 1 ? (
-                    <button type="button" onClick={() => removeItem(i)} className="text-red-400 hover:text-red-600 text-xl leading-none">×</button>
-                  ) : <span />}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notas</label>
-            <textarea
-              value={notes} onChange={(e) => setNotes(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-              rows={2} placeholder="Notas adicionales..."
-            />
-          </div>
-        </div>
-        <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Guardando...' : 'Registrar Compra'}
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ============================================================================
 // MovementModal
 // ============================================================================
 function MovementModal({
@@ -770,13 +587,15 @@ function MovementModal({
   const [reason, setReason] = useState('');
 
   const handleSubmit = () => {
-    if (!ingredientId || !quantity) return;
-    onSubmit({ ingredientId, type, quantity: parseFloat(quantity), reason });
+    // LOTE 309: antes el boton no hacia nada si faltaba un dato
+    if (!ingredientId) { toast.error('Selecciona un ingrediente'); return; }
+    if (!quantity || parseFloat(quantity) === 0) { toast.error('Indica la cantidad'); return; }
+    onSubmit({ ingredientId, type, quantity: parseFloat(quantity), reason: reason.trim() });
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
+      <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-auto shadow-xl">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">Agregar Movimiento</h2>
         </div>
@@ -790,7 +609,7 @@ function MovementModal({
               <option value="">Seleccionar ingrediente...</option>
               {ingredients.map((ing: any) => (
                 <option key={ing.id} value={ing.id}>
-                  {ing.name} — stock actual: {ing.currentStock} {ing.unit}
+                  {ing.name} — stock actual: {qty(ing.currentStock)} {ing.unit}
                 </option>
               ))}
             </select>
@@ -809,7 +628,7 @@ function MovementModal({
             <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
             <input
               type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)}
-              placeholder="0" min="0.01" step="0.01"
+              placeholder="0" step="0.001"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
@@ -822,14 +641,14 @@ function MovementModal({
             />
           </div>
         </div>
-        <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
+        <div className="flex-wrap p-6 border-t border-gray-200 flex gap-3 justify-end">
+          <button type="button" onClick={onClose} className="min-h-[44px] px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting ? 'Guardando...' : 'Registrar'}
           </Button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -872,8 +691,8 @@ function SupplierModal({
   );
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
+      <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-auto shadow-xl">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">{supplier ? 'Editar Proveedor' : 'Nuevo Proveedor'}</h2>
         </div>
@@ -893,13 +712,13 @@ function SupplierModal({
             />
           </div>
         </div>
-        <div className="p-6 border-t border-gray-200 flex gap-3 justify-end">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
+        <div className="flex-wrap p-6 border-t border-gray-200 flex gap-3 justify-end">
+          <button type="button" onClick={onClose} className="min-h-[44px] px-4 py-2 text-gray-600 hover:text-gray-900">Cancelar</button>
           <Button onClick={handleSubmit} disabled={isSubmitting || !name.trim()}>
             {isSubmitting ? 'Guardando...' : supplier ? 'Actualizar' : 'Crear Proveedor'}
           </Button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

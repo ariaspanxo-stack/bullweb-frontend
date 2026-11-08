@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import {
@@ -13,11 +14,11 @@ import { useAuthStore } from '@/store/authStore';
 
 // ── Acciones Estándar CRUD ────────────────────────────────────────────────────────────────────────────────────
 const STD_ACTIONS = [
-  { key: 'view',   label: 'Ver',      color: 'text-blue-300',   activeBg: 'bg-blue-600 border-blue-500'     },
-  { key: 'create', label: 'Crear',    color: 'text-green-300',  activeBg: 'bg-green-600 border-green-500'   },
+  { key: 'view',   label: 'Ver',      color: 'text-slate-500',   activeBg: 'bg-slate-500 border-slate-200'     },
+  { key: 'create', label: 'Crear',    color: 'text-slate-500',  activeBg: 'bg-slate-500 border-slate-200'   },
   { key: 'edit',   label: 'Editar',   color: 'text-amber-300',  activeBg: 'bg-amber-600 border-amber-500'   },
   { key: 'delete', label: 'Eliminar', color: 'text-red-300',    activeBg: 'bg-red-600 border-red-500'       },
-  { key: 'export', label: 'Exportar', color: 'text-purple-300', activeBg: 'bg-purple-600 border-purple-500' },
+  { key: 'export', label: 'Exportar', color: 'text-slate-500', activeBg: 'bg-slate-500 border-slate-200' },
 ] as const;
 
 type Risk = 'critical' | 'high' | 'medium' | 'low';
@@ -263,14 +264,14 @@ function RoleModal({ role, onClose, onSave }: RoleModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 text-slate-900">
       <div className="bg-gray-800 rounded-xl border border-gray-600 w-full max-w-lg">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-600">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-600 flex-wrap gap-2">
           <h2 className="text-lg font-semibold text-white">
             {role ? 'Editar rol' : step === 'template' ? 'Nuevo rol — elegir plantilla' : 'Configurar rol'}
           </h2>
-          <button onClick={onClose} className="text-gray-300 hover:text-white"><X size={18} /></button>
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-300 hover:text-white"><X size={18} /></button>
         </div>
 
         {/* Step 1: elegir plantilla (solo en creación) */}
@@ -284,7 +285,7 @@ function RoleModal({ role, onClose, onSave }: RoleModalProps) {
                 <button
                   key={tpl.key}
                   onClick={() => applyTemplate(tpl)}
-                  className="flex flex-col items-start p-3 rounded-lg border border-gray-600 hover:border-indigo-400 hover:bg-indigo-900/20 transition-all text-left group"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center flex flex-col items-start p-3 rounded-lg border border-gray-600 hover:border-slate-300 hover:bg-slate-50 transition-all text-left group"
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: tpl.color }} />
@@ -296,7 +297,7 @@ function RoleModal({ role, onClose, onSave }: RoleModalProps) {
             </div>
             <button
               onClick={() => setStep('form')}
-              className="w-full py-2 border border-dashed border-gray-500 rounded-lg text-sm text-gray-200 hover:text-white hover:border-gray-300 transition"
+              className="min-h-[44px] w-full py-2 border border-dashed border-gray-500 rounded-lg text-sm text-gray-200 hover:text-white hover:border-gray-300 transition"
             >
               + Empezar en blanco
             </button>
@@ -307,10 +308,10 @@ function RoleModal({ role, onClose, onSave }: RoleModalProps) {
         {step === 'form' && (
           <div className="p-6 space-y-4">
             {template && (
-              <div className="flex items-center gap-2 text-xs bg-indigo-900/30 text-indigo-300 border border-indigo-700 rounded-lg px-3 py-2">
+              <div className="flex items-center gap-2 text-xs bg-slate-100 text-slate-700 border border-slate-200 rounded-lg px-3 py-2">
                 <Sparkles size={12} />
                 Basado en plantilla: <strong className="ml-1 capitalize">{template}</strong>
-                <button onClick={() => { setTemplate(''); setStep('template'); }} className="ml-auto text-gray-300 hover:text-white">
+                <button onClick={() => { setTemplate(''); setStep('template'); }} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center ml-auto text-gray-300 hover:text-white">
                   <X size={12} />
                 </button>
               </div>
@@ -320,7 +321,7 @@ function RoleModal({ role, onClose, onSave }: RoleModalProps) {
               <input
                 value={name} onChange={e => setName(e.target.value)}
                 disabled={role?.is_system}
-                className="w-full border border-gray-500 rounded-lg px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:border-indigo-400 disabled:opacity-50"
+                className="w-full border border-gray-500 rounded-lg px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:border-orange-500 disabled:opacity-50"
                 placeholder="Ej: Cajero Nocturno"
               />
             </div>
@@ -329,7 +330,7 @@ function RoleModal({ role, onClose, onSave }: RoleModalProps) {
               <textarea
                 value={description} onChange={e => setDescription(e.target.value)}
                 rows={2}
-                className="w-full bg-gray-900 border border-gray-500 rounded-lg px-3 py-2 text-white text-sm placeholder:text-gray-500 focus:outline-none focus:border-indigo-400 resize-none"
+                className="w-full bg-white border border-gray-500 rounded-lg px-3 py-2 text-slate-900 text-sm placeholder:text-gray-500 focus:outline-none focus:border-orange-500 resize-none"
                 placeholder="¿Qué puede hacer este rol?"
               />
             </div>
@@ -344,23 +345,23 @@ function RoleModal({ role, onClose, onSave }: RoleModalProps) {
                 <div className="flex gap-1 ml-2 flex-wrap">
                   {['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#6366f1','#6b7280'].map(c => (
                     <button key={c} onClick={() => setColor(c)}
-                      className="w-5 h-5 rounded-full border-2 transition-all"
+                      className="min-h-[44px] w-5 h-5 rounded-full border-2 transition-all"
                       style={{ background: c, borderColor: color === c ? 'white' : 'transparent' }} />
                   ))}
                 </div>
               </div>
             </div>
-            <div className="flex justify-between pt-2">
+            <div className="flex justify-between pt-2 flex-wrap gap-2">
               {!role && (
-                <button onClick={() => setStep('template')} className="text-sm text-gray-300 hover:text-white flex items-center gap-1">
+                <button onClick={() => setStep('template')} className="min-h-[44px] text-sm text-gray-300 hover:text-white flex items-center gap-1">
                   ← Plantillas
                 </button>
               )}
-              <div className="flex gap-3 ml-auto">
-                <button onClick={onClose} className="px-4 py-2 text-sm text-gray-200 hover:text-white">Cancelar</button>
+              <div className="flex-wrap flex gap-3 ml-auto">
+                <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm text-gray-200 hover:text-white">Cancelar</button>
                 <button
                   onClick={submit} disabled={saving}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm disabled:opacity-50"
+                  className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm disabled:opacity-50"
                 >
                   {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
                   Guardar
@@ -370,7 +371,7 @@ function RoleModal({ role, onClose, onSave }: RoleModalProps) {
           </div>
         )}
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 
@@ -424,32 +425,32 @@ function DiffModal({ roles, onClose }: {
     );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+    createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4 text-slate-900">
       <div className="bg-gray-800 rounded-xl border border-gray-600 w-full max-w-3xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-600 shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-600 shrink-0 flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <GitCompare size={18} className="text-indigo-400" />
+            <GitCompare size={18} className="text-slate-500" />
             <h2 className="text-lg font-semibold text-white">Comparar Roles</h2>
           </div>
-          <button onClick={onClose} className="text-gray-300 hover:text-white"><X size={18} /></button>
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-300 hover:text-white"><X size={18} /></button>
         </div>
-        <div className="px-6 py-4 border-b border-gray-600 flex items-center gap-4 shrink-0">
+        <div className="flex-wrap px-6 py-4 border-b border-gray-600 flex items-center gap-4 shrink-0">
           <select value={roleAId} onChange={e => setRoleAId(e.target.value)}
-            className="flex-1 bg-gray-900 border border-gray-500 text-white text-sm rounded-lg px-3 py-2 focus:outline-none">
+            className="flex-1 bg-white border border-gray-500 text-slate-900 text-sm rounded-lg px-3 py-2 focus:outline-none">
             <option value="">— Rol A —</option>
             {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
           <span className="text-gray-200 text-sm font-bold flex-shrink-0">vs</span>
           <select value={roleBId} onChange={e => setRoleBId(e.target.value)}
-            className="flex-1 bg-gray-900 border border-gray-500 text-white text-sm rounded-lg px-3 py-2 focus:outline-none">
+            className="flex-1 bg-white border border-gray-500 text-slate-900 text-sm rounded-lg px-3 py-2 focus:outline-none">
             <option value="">— Rol B —</option>
             {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
         {roleAId && roleBId && !loading && (
           <div className="px-6 py-3 flex items-center gap-6 text-sm border-b border-gray-600 shrink-0">
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-green-500" /><span className="text-gray-300"><strong className="text-white">{onlyInA}</strong> solo en <span style={{ color: roleA?.color }}>{roleA?.name}</span></span></span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-500" /><span className="text-gray-300"><strong className="text-white">{onlyInB}</strong> solo en <span style={{ color: roleB?.color }}>{roleB?.name}</span></span></span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-slate-500" /><span className="text-gray-300"><strong className="text-white">{onlyInA}</strong> solo en <span style={{ color: roleA?.color }}>{roleA?.name}</span></span></span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-slate-500" /><span className="text-gray-300"><strong className="text-white">{onlyInB}</strong> solo en <span style={{ color: roleB?.color }}>{roleB?.name}</span></span></span>
             <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-gray-500" /><span className="text-gray-300"><strong className="text-white">{inBoth}</strong> en com\u00fan</span></span>
           </div>
         )}
@@ -461,7 +462,7 @@ function DiffModal({ roles, onClose }: {
             const common = allKnownPerms.filter(p => permsA.has(p.key) && permsB.has(p.key));
             if (!diffs.length) return (
               <div className="flex flex-col items-center justify-center h-32 gap-2">
-                <Check size={24} className="text-green-400" />
+                <Check size={24} className="text-slate-500" />
                 <span className="text-gray-300 text-sm">Los roles tienen los mismos permisos</span>
               </div>
             );
@@ -483,10 +484,10 @@ function DiffModal({ roles, onClose }: {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${inA ? 'bg-green-900/50 text-green-300' : 'bg-gray-800 text-gray-500'}`}>
+                        <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${inA ? 'bg-slate-100 text-slate-700' : 'bg-gray-800 text-gray-500'}`}>
                           {inA ? <Check size={10} /> : <X size={10} />} {roleA?.name?.slice(0, 9)}
                         </span>
-                        <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${inB ? 'bg-blue-900/50 text-blue-300' : 'bg-gray-800 text-gray-500'}`}>
+                        <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${inB ? 'bg-slate-100 text-slate-700' : 'bg-gray-800 text-gray-500'}`}>
                           {inB ? <Check size={10} /> : <X size={10} />} {roleB?.name?.slice(0, 9)}
                         </span>
                       </div>
@@ -495,7 +496,7 @@ function DiffModal({ roles, onClose }: {
                 })}
                 {common.length > 0 && (
                   <div className="text-xs text-gray-500 pt-2 border-t border-gray-700">
-                    <Check size={11} className="inline text-green-600 mr-1" />{common.length} permisos id\u00e9nticos en ambos roles
+                    <Check size={11} className="inline text-slate-700 mr-1" />{common.length} permisos id\u00e9nticos en ambos roles
                   </div>
                 )}
               </div>
@@ -503,7 +504,7 @@ function DiffModal({ roles, onClose }: {
           })()}
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }
 // ── RoleDropdown: selector accesible con contraste garantizado ───────────────
@@ -528,7 +529,7 @@ function RoleDropdown({ roles, selected, onSelect }: {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(v => !v)}
-        className="flex items-center gap-2 min-w-52 px-3 py-2 bg-gray-800 border border-gray-500 rounded-lg text-sm text-white hover:border-indigo-400 transition-colors"
+        className="min-h-[44px] flex items-center gap-2 min-w-52 px-3 py-2 bg-white border border-gray-500 rounded-lg text-sm text-slate-700 hover:border-slate-300 transition-colors"
       >
         {selected ? (
           <>
@@ -547,8 +548,8 @@ function RoleDropdown({ roles, selected, onSelect }: {
             <button
               key={r.id}
               onClick={() => { onSelect(r); setOpen(false); }}
-              className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-gray-700 transition-colors ${
-                selected?.id === r.id ? 'bg-indigo-700/40 text-indigo-200' : 'text-white'
+              className={`min-h-[44px] w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-slate-50 transition-colors border border-slate-300${
+                selected?.id === r.id ? 'bg-orange-50 text-slate-500 border border-orange-300' : 'text-white'
               }`}
             >
               <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: r.color }} />
@@ -832,20 +833,20 @@ export default function RBACPage() {
   const customRoles = roles.filter(r => !r.is_system);
 
   return (
-    <div className="bg-gray-900 min-h-full rounded-2xl p-6 space-y-6">
+    <div className="bg-white min-h-full rounded-2xl p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <ShieldCheck className="text-indigo-400" size={24} />
+          <ShieldCheck className="text-slate-500" size={24} />
           <div>
-            <h1 className="text-xl font-bold text-white">Roles & Permisos</h1>
-            <p className="text-sm text-gray-300">Control de acceso basado en roles (RBAC)</p>
+            <h1 className="text-xl font-bold text-slate-900">Roles & Permisos</h1>
+            <p className="text-sm text-slate-700">Control de acceso basado en roles (RBAC)</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex-wrap flex items-center gap-2">
           <button
             onClick={() => setModal('diff')}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-sm border border-gray-600"
+            className="min-h-[44px] flex items-center gap-2 px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 rounded-lg text-sm border border-slate-200"
           >
             <GitCompare size={14} /> Comparar roles
           </button>
@@ -853,7 +854,7 @@ export default function RBACPage() {
           {tab === 'matrix' && selectedRole && (
             <button
               onClick={handleSave} disabled={saving || !hasUnsavedChanges}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg text-sm disabled:opacity-50"
+              className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-sm disabled:opacity-50 border border-slate-300"
             >
               {saving ? <RefreshCw size={14} className="animate-spin" /> : <Save size={14} />}
               {hasUnsavedChanges ? `Guardar (${diffCount} cambio${diffCount !== 1 ? 's' : ''})` : 'Sin cambios'}
@@ -866,30 +867,30 @@ export default function RBACPage() {
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Roles totales',    value: stats.total_roles,        icon: Users,      color: 'text-indigo-400' },
-            { label: 'Roles sistema',    value: stats.system_roles,       icon: Lock,       color: 'text-blue-400'   },
-            { label: 'Roles custom',     value: stats.custom_roles_count, icon: ShieldCheck,color: 'text-green-400'  },
+            { label: 'Roles totales',    value: stats.total_roles,        icon: Users,      color: 'text-slate-500' },
+            { label: 'Roles sistema',    value: stats.system_roles,       icon: Lock,       color: 'text-slate-500'   },
+            { label: 'Roles custom',     value: stats.custom_roles_count, icon: ShieldCheck,color: 'text-slate-500'  },
             { label: 'Permisos activos', value: stats.total_permissions,  icon: Key,        color: 'text-yellow-400' },
           ].map(s => (
-            <div key={s.label} className="bg-gray-800 rounded-xl border border-gray-600 p-4">
+            <div key={s.label} className="bg-slate-50 rounded-xl border border-slate-200 p-4">
               <div className="flex items-center gap-2 mb-1">
                 <s.icon size={16} className={s.color} />
-                <span className="text-xs text-gray-200 font-medium">{s.label}</span>
+                <span className="text-xs text-slate-700 font-medium">{s.label}</span>
               </div>
-              <span className="text-2xl font-bold text-white">{s.value}</span>
+              <span className="text-2xl font-bold text-slate-900">{s.value}</span>
             </div>
           ))}
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 bg-gray-800 rounded-lg p-1 w-fit border border-gray-700">
+      <div className="flex-wrap flex gap-1 bg-slate-50 rounded-lg p-1 w-fit border border-slate-200">
         {(['roles', 'matrix'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-              tab === t ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'
+            className={`min-h-[44px] px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              tab === t ? 'bg-orange-50 text-orange-700 border border-orange-300' : 'text-slate-500 hover:text-slate-900'
             }`}
           >
             {t === 'roles' ? <><LayoutGrid size={13} className="inline mr-1.5" />Roles</> : <><Key size={13} className="inline mr-1.5" />Matriz de Permisos</>}
@@ -900,7 +901,7 @@ export default function RBACPage() {
       {/* ── Tab: Roles ── */}
       {tab === 'roles' && (
         loading ? (
-          <div className="flex items-center justify-center h-48 text-gray-400">
+          <div className="flex items-center justify-center h-48 text-slate-500">
             <RefreshCw className="animate-spin mr-2" size={18} /> Cargando…
           </div>
         ) : (
@@ -909,33 +910,33 @@ export default function RBACPage() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Crown size={14} className="text-yellow-400" />
-                <h2 className="text-sm font-semibold text-gray-100">Roles del tenant</h2>
-                <span className="text-[10px] bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full ml-1">{systemRoles.length} roles</span>
+                <h2 className="text-sm font-semibold text-slate-700">Roles del tenant</h2>
+                <span className="text-[10px] bg-slate-50 text-slate-700 px-2 py-0.5 rounded-full ml-1">{systemRoles.length} roles</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {systemRoles.length === 0 && (
-                  <p className="text-sm text-gray-400 col-span-3">No hay roles configurados.</p>
+                  <p className="text-sm text-slate-500 col-span-3">No hay roles configurados.</p>
                 )}
                 {systemRoles.map(role => (
                   <div key={role.id}
-                    className="bg-gray-800 rounded-xl border border-gray-600 p-4 hover:border-gray-400 transition-all"
+                    className="bg-slate-50 rounded-xl border border-slate-200 p-4 hover:border-gray-400 transition-all"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2.5">
                         <div className="w-3.5 h-3.5 rounded-full flex-shrink-0" style={{ background: role.color }} />
                         <div>
-                          <h3 className="font-semibold text-white text-sm">{role.name}</h3>
-                          <p className="text-[11px] text-gray-400 mt-0.5">{role.description || ROLE_DESCRIPTIONS[role.name] || ''}</p>
+                          <h3 className="font-semibold text-slate-900 text-sm">{role.name}</h3>
+                          <p className="text-[11px] text-slate-500 mt-0.5">{role.description || ROLE_DESCRIPTIONS[role.name] || ''}</p>
                         </div>
                       </div>
                       {role.is_system && <Lock size={13} className="text-gray-600 mt-0.5 flex-shrink-0" />}
                     </div>
-                    <div className="text-xs text-gray-400 mb-3">
-                      <span className="text-indigo-300 font-medium">{role.permission_count}</span> permisos configurados
+                    <div className="text-xs text-slate-500 mb-3">
+                      <span className="text-slate-500 font-medium">{role.permission_count}</span> permisos configurados
                     </div>
                     <button
                       onClick={() => handleEditPermissions(role)}
-                      className="flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 px-2 py-1 rounded-lg hover:bg-orange-900/20 transition"
+                      className="min-h-[44px] flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 px-2 py-1 rounded-lg hover:bg-orange-900/20 transition"
                     >
                       <Settings size={11} /> Editar permisos
                     </button>
@@ -946,34 +947,34 @@ export default function RBACPage() {
 
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles size={14} className="text-indigo-400" />
-                <h2 className="text-sm font-semibold text-gray-100">Roles personalizados</h2>
-                <span className="text-[10px] bg-indigo-900/60 text-indigo-200 px-2 py-0.5 rounded-full ml-1">{customRoles.length} roles</span>
+                <Sparkles size={14} className="text-slate-500" />
+                <h2 className="text-sm font-semibold text-slate-700">Roles personalizados</h2>
+                <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full ml-1">{customRoles.length} roles</span>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {customRoles.length === 0 && (
-                  <p className="text-sm text-gray-400 col-span-3">No hay roles personalizados. Crea uno con + Nuevo rol.</p>
+                  <p className="text-sm text-slate-500 col-span-3">No hay roles personalizados. Crea uno con + Nuevo rol.</p>
                 )}
                 {customRoles.map(role => (
-                  <div key={role.id} className="bg-gray-800 rounded-xl border border-gray-600 p-5 hover:border-gray-400 transition-all">
+                  <div key={role.id} className="bg-slate-50 rounded-xl border border-slate-200 p-5 hover:border-gray-400 transition-all">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
                         <div className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: role.color }} />
                         <div>
-                          <h3 className="font-semibold text-white text-sm">{role.name}</h3>
+                          <h3 className="font-semibold text-slate-900 text-sm">{role.name}</h3>
                           {role.description && (
-                            <p className="text-xs text-gray-200 mt-0.5 line-clamp-2">{role.description}</p>
+                            <p className="text-xs text-slate-700 mt-0.5 line-clamp-2">{role.description}</p>
                           )}
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-300">
-                        <span className="text-indigo-300 font-medium">{role.permission_count}</span> permisos
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <span className="text-xs text-slate-700">
+                        <span className="text-slate-500 font-medium">{role.permission_count}</span> permisos
                       </span>
                       <button
                         onClick={() => handleEditPermissions(role)}
-                        className="flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 px-2 py-1 rounded hover:bg-orange-900/20"
+                        className="min-h-[44px] flex items-center gap-1.5 text-xs text-orange-400 hover:text-orange-300 px-2 py-1 rounded hover:bg-orange-900/20"
                       >
                         <Settings size={11} /> Editar permisos
                       </button>
@@ -991,7 +992,7 @@ export default function RBACPage() {
         <div className="space-y-4">
           {/* Selector de rol */}
           <div className="flex items-center gap-3 flex-wrap">
-            <label className="text-sm text-gray-200 whitespace-nowrap">Rol a editar:</label>
+            <label className="text-sm text-slate-700 whitespace-nowrap">Rol a editar:</label>
             <RoleDropdown
               roles={matrixRoles}
               selected={selectedRole}
@@ -1000,27 +1001,27 @@ export default function RBACPage() {
             {selectedRole && !loadingPerms && (
               <div className="flex items-center gap-2 text-sm">
                 <div className="w-3 h-3 rounded-full" style={{ background: selectedRole.color }} />
-                <span className="text-white">{selectedRole.name}</span>
-                <span className="text-gray-400">·</span>
-                <span className="text-indigo-300">{currentPermissions.length} permisos</span>
+                <span className="text-slate-900">{selectedRole.name}</span>
+                <span className="text-slate-500">·</span>
+                <span className="text-slate-500">{currentPermissions.length} permisos</span>
                 {hasUnsavedChanges && (
                   <span className="text-amber-400 text-xs font-medium">· {diffCount} cambio{diffCount !== 1 ? 's' : ''} sin guardar</span>
                 )}
                 {isSuperAdmin(selectedRole) && (
-                  <span className="text-xs bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">Solo lectura</span>
+                  <span className="text-xs bg-slate-50 text-slate-700 px-2 py-0.5 rounded-full">Solo lectura</span>
                 )}
               </div>
             )}
           </div>
 
           {!selectedRole && (
-            <div className="flex items-center justify-center h-48 text-gray-300 text-sm">
+            <div className="flex items-center justify-center h-48 text-slate-700 text-sm">
               Selecciona un rol para editar su matriz de permisos
             </div>
           )}
 
           {selectedRole && loadingPerms && (
-            <div className="flex items-center justify-center h-32 text-gray-400">
+            <div className="flex items-center justify-center h-32 text-slate-500">
               <RefreshCw className="animate-spin mr-2" size={18} /> Cargando permisos…
             </div>
           )}
@@ -1032,12 +1033,12 @@ export default function RBACPage() {
                 <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 flex items-center justify-between gap-4">
                   <div>
                     <p className="text-sm font-semibold text-orange-400">Este rol no tiene permisos configurados</p>
-                    <p className="text-xs text-gray-400 mt-1">Puedes aplicar los permisos recomendados para este rol</p>
+                    <p className="text-xs text-slate-500 mt-1">Puedes aplicar los permisos recomendados para este rol</p>
                   </div>
                   {DEFAULT_PERMISSIONS[selectedRole.name] && (
                     <button
                       onClick={() => handleApplyDefaults(selectedRole.id, selectedRole.name)}
-                      className="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg px-4 py-2 whitespace-nowrap flex-shrink-0"
+                      className="min-h-[44px] bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-lg px-4 py-2 whitespace-nowrap flex-shrink-0"
                     >
                       Aplicar permisos recomendados
                     </button>
@@ -1051,20 +1052,20 @@ export default function RBACPage() {
                 const allModuleActive = allModuleKeys.length > 0 && allModuleKeys.every(k => currentPermissions.includes(k));
                 const someModuleActive = activeInModule.length > 0 && !allModuleActive;
                 return (
-                  <div key={mod.module} className="rounded-xl border border-gray-700 overflow-hidden">
+                  <div key={mod.module} className="rounded-xl border border-slate-200 overflow-hidden">
                     {/* Cabecera del módulo */}
                     <div
-                      className="flex items-center justify-between px-4 py-3 border-b border-gray-700"
+                      className="flex items-center justify-between px-4 py-3 border-b border-slate-200"
                       style={{ background: `${mod.color}18` }}
                     >
                       <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: mod.color }} />
-                        <span className="text-sm font-semibold text-white">{mod.module}</span>
+                        <span className="text-sm font-semibold text-slate-900">{mod.module}</span>
                         <span className={`text-xs font-mono font-semibold ${
                           activeInModule.length === 0
                             ? 'text-gray-500'
                             : activeInModule.length === allModuleKeys.length
-                            ? 'text-green-400'
+                            ? 'text-slate-500'
                             : 'text-orange-400'
                         }`}>
                           {activeInModule.length}/{allModuleKeys.length}
@@ -1074,12 +1075,12 @@ export default function RBACPage() {
                         <button
                           onClick={() => allModuleActive ? toggleModule(allModuleKeys) : handleActivateAllInModule(allModuleKeys)}
                           title={allModuleActive ? 'Desactivar todo el módulo' : 'Activar todo el módulo'}
-                          className={`text-xs px-2.5 py-1 rounded-lg border transition-all ${
+                          className={`min-h-[44px] text-xs px-2.5 py-1 rounded-lg border transition-all ${
                             allModuleActive
-                              ? 'border-white/30 text-white bg-white/10 hover:bg-white/20'
+                              ? 'border-slate-200 text-slate-900 bg-slate-50 hover:bg-slate-100'
                               : someModuleActive
-                              ? 'border-yellow-500/50 text-yellow-300 bg-yellow-900/20 hover:bg-yellow-900/40'
-                              : 'border-gray-600 text-gray-400 hover:text-white hover:border-gray-400'
+                              ? 'border-yellow-500/50 text-amber-800 bg-orange-50 hover:bg-orange-100 border border-orange-300'
+                              : 'border-slate-200 text-slate-500 hover:text-slate-900 hover:border-gray-400'
                           }`}
                         >
                           {allModuleActive ? 'Desactivar todo' : 'Activar todo'}
@@ -1088,20 +1089,20 @@ export default function RBACPage() {
                     </div>
 
                     {/* Secciones del módulo */}
-                    <div className="p-4 space-y-4 bg-gray-900/40">
+                    <div className="p-4 space-y-4 bg-white">
                       {mod.sections.map(section => {
                         const sectionKeys = section.permissions.map(p => p.key);
                         const allSecActive = sectionKeys.every(k => currentPermissions.includes(k));
                         return (
                           <div key={section.label}>
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-[11px] font-bold uppercase tracking-widest text-gray-400">
+                              <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
                                 {section.label}
                               </span>
                               {!isSuperAdmin(selectedRole) && sectionKeys.length > 1 && (
                                 <button
                                   onClick={() => toggleSection(sectionKeys)}
-                                  className="text-[11px] text-indigo-400 hover:text-indigo-300 px-1.5 py-0.5 rounded hover:bg-indigo-900/30 transition-all"
+                                  className="min-h-[44px] text-[11px] text-slate-500 hover:text-slate-500 px-1.5 py-0.5 rounded hover:bg-slate-50 transition-all border border-slate-300"
                                 >
                                   {allSecActive ? 'Ninguno' : 'Todos'}
                                 </button>
@@ -1115,19 +1116,19 @@ export default function RBACPage() {
                                     key={perm.key}
                                     onClick={() => handleTogglePermission(perm.key, active)}
                                     disabled={isSuperAdmin(selectedRole)}
-                                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all disabled:cursor-not-allowed ${
+                                    className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all disabled:cursor-not-allowed ${
                                       active
-                                        ? 'border-indigo-500 bg-indigo-900/30 hover:bg-indigo-900/50'
-                                        : 'border-gray-700 bg-gray-800/40 hover:border-gray-500 hover:bg-gray-800/80'
+                                        ? 'border-slate-200 bg-orange-50 hover:bg-orange-100 border border-orange-300'
+                                        : 'border-slate-200 bg-orange-50 hover:border-gray-500 hover:bg-orange-100 border border-orange-300'
                                     }`}
                                   >
                                     <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                                      active ? 'bg-indigo-500 border-indigo-500' : 'border-gray-600 bg-transparent'
+                                      active ? 'bg-slate-500 border-slate-200' : 'border-slate-200 bg-transparent'
                                     }`}>
-                                      {active && <Check size={10} strokeWidth={3} className="text-white" />}
+                                      {active && <Check size={10} strokeWidth={3} className="text-slate-900" />}
                                     </div>
                                     <div className="min-w-0">
-                                      <div className="text-xs font-medium text-white truncate">{perm.label}</div>
+                                      <div className="text-xs font-medium text-slate-900 truncate">{perm.label}</div>
                                       <div className="text-[10px] text-gray-500 font-mono truncate">{perm.key}</div>
                                     </div>
                                   </button>
@@ -1144,22 +1145,22 @@ export default function RBACPage() {
 
               {/* Barra de acciones flotante */}
               {hasUnsavedChanges && !isSuperAdmin(selectedRole) && (
-                <div className="sticky bottom-4 flex items-center justify-between gap-4 bg-gray-800 border border-amber-600/40 rounded-xl px-4 py-3 shadow-xl">
+                <div className="sticky bottom-4 flex items-center justify-between gap-4 bg-slate-50 border border-amber-600/40 rounded-xl px-4 py-3  flex-wrap">
                   <div className="flex items-center gap-2 text-sm text-amber-300">
                     <AlertTriangle size={15} />
                     <span>{diffCount} cambio{diffCount !== 1 ? 's' : ''} sin guardar</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex-wrap flex gap-2">
                     <button
                       onClick={() => { setCurrentPermissions([...savedPermissions]); }}
-                      className="px-3 py-1.5 text-xs text-gray-300 hover:text-white border border-gray-600 rounded-lg hover:bg-gray-700 transition-all"
+                      className="min-h-[44px] px-3 py-1.5 text-xs text-slate-700 hover:text-slate-900 border border-slate-200 rounded-lg hover:bg-slate-50 transition-all"
                     >
                       Descartar
                     </button>
                     <button
                       onClick={handleSave}
                       disabled={saving}
-                      className="flex items-center gap-1.5 px-4 py-1.5 text-xs bg-green-600 hover:bg-green-500 text-white rounded-lg disabled:opacity-50 transition-all"
+                      className="min-h-[44px] flex items-center gap-1.5 px-4 py-1.5 text-xs bg-orange-500 hover:bg-orange-600 text-white rounded-lg disabled:opacity-50 transition-all"
                     >
                       {saving ? <RefreshCw size={12} className="animate-spin" /> : <Save size={12} />}
                       Guardar
@@ -1174,14 +1175,14 @@ export default function RBACPage() {
 
       {/* Modal: cambios sin guardar al cambiar rol */}
       {showUnsavedWarning && pendingRole && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="bg-gray-800 rounded-xl border border-gray-600 w-full max-w-sm p-6 space-y-4">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 text-slate-900">
+          <div className="bg-slate-50 rounded-xl border border-slate-200 w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center gap-2 text-amber-400">
               <AlertTriangle size={18} />
               <h3 className="font-semibold">Cambios sin guardar</h3>
             </div>
-            <p className="text-sm text-gray-300">
-              Tienes <strong className="text-white">{diffCount}</strong> cambio{diffCount !== 1 ? 's' : ''} sin guardar en <strong className="text-white">{selectedRole?.name}</strong>. ¿Qué deseas hacer?
+            <p className="text-sm text-slate-700">
+              Tienes <strong className="text-slate-900">{diffCount}</strong> cambio{diffCount !== 1 ? 's' : ''} sin guardar en <strong className="text-slate-900">{selectedRole?.name}</strong>. ¿Qué deseas hacer?
             </p>
             <div className="flex flex-col gap-2">
               <button
@@ -1190,7 +1191,7 @@ export default function RBACPage() {
                   setShowUnsavedWarning(false);
                   if (pendingRole) { loadRole(pendingRole); setPendingRole(null); }
                 }}
-                className="w-full py-2 bg-green-600 hover:bg-green-500 text-white text-sm rounded-lg transition-all"
+                className="min-h-[44px] w-full py-2 bg-orange-500 hover:bg-orange-600 text-white text-sm rounded-lg transition-all"
               >
                 Guardar y cambiar de rol
               </button>
@@ -1199,19 +1200,19 @@ export default function RBACPage() {
                   setShowUnsavedWarning(false);
                   if (pendingRole) { loadRole(pendingRole); setPendingRole(null); }
                 }}
-                className="w-full py-2 border border-gray-600 text-gray-300 hover:text-white text-sm rounded-lg hover:bg-gray-700 transition-all"
+                className="min-h-[44px] w-full py-2 border border-slate-200 text-slate-700 hover:text-slate-900 text-sm rounded-lg hover:bg-slate-50 transition-all"
               >
                 Descartar cambios y cambiar
               </button>
               <button
                 onClick={() => { setShowUnsavedWarning(false); setPendingRole(null); }}
-                className="w-full py-2 text-gray-500 hover:text-gray-300 text-sm transition-all"
+                className="min-h-[44px] w-full py-2 text-gray-500 hover:text-gray-300 text-sm transition-all"
               >
                 Cancelar
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
 
       {/* Modals */}
@@ -1230,8 +1231,8 @@ export default function RBACPage() {
       )}
 
       {cloneDialogRole && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-80 flex flex-col gap-4">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 text-slate-900">
+          <div className="bg-white rounded-xl p-6 w-80 flex flex-col gap-4">
             <h3 className="text-base font-semibold text-gray-900">Clonar rol</h3>
             <p className="text-sm text-gray-500">Nombre para el clon de <strong>{cloneDialogRole.name}</strong>:</p>
             <input
@@ -1240,14 +1241,14 @@ export default function RBACPage() {
               onChange={e => setCloneDialogName(e.target.value)}
               onKeyDown={e => { if (e.key === 'Enter') doClone(); if (e.key === 'Escape') setCloneDialogRole(null); }}
               autoFocus
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
             />
-            <div className="flex justify-end gap-2">
-              <button onClick={() => setCloneDialogRole(null)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
-              <button onClick={doClone} disabled={!cloneDialogName.trim()} className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">Clonar</button>
+            <div className="flex-wrap flex justify-end gap-2">
+              <button onClick={() => setCloneDialogRole(null)} className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Cancelar</button>
+              <button onClick={doClone} disabled={!cloneDialogName.trim()} className="min-h-[44px] px-4 py-2 text-sm bg-white text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 border border-slate-300">Clonar</button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
     </div>
   );

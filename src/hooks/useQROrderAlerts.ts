@@ -114,7 +114,8 @@ export function useQROrderAlerts() {
       // Normalizar tipos numéricos al recibir el payload del WebSocket
       const normalized: QROrder = {
         ...order,
-        total:      Number(order.total)      || 0,
+        // LOTE 308b (CUP-9): el total del aviso ya descuenta el cupon de la carta
+        total:      (Number(order.total) || 0) - (Number((order as any).couponDiscount) || 0),
         cashAmount: order.cashAmount != null ? Number(order.cashAmount) : null,
         deliveryFee:        Number(order.deliveryFee ?? 0) || 0,
         deliveryFeeDefault: Number(order.deliveryFeeDefault ?? 2000) || 2000,

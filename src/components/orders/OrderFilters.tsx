@@ -21,9 +21,9 @@ interface OrderFiltersProps {
 
 const statusOptions = [
   { value: 'PENDING',   label: 'Pendiente',  color: 'bg-yellow-100 text-yellow-700' },
-  { value: 'PREPARING', label: 'Preparando', color: 'bg-blue-100 text-blue-700'    },
-  { value: 'READY',     label: 'Lista',      color: 'bg-purple-100 text-purple-700' },
-  { value: 'PAID',      label: 'Pagada',     color: 'bg-green-100 text-green-700'  },
+  { value: 'PREPARING', label: 'Preparando', color: 'bg-slate-100 text-slate-700'    },
+  { value: 'READY',     label: 'Lista',      color: 'bg-slate-100 text-slate-700' },
+  { value: 'PAID',      label: 'Pagada',     color: 'bg-slate-100 text-slate-700'  },
   { value: 'CANCELLED', label: 'Cancelada',  color: 'bg-red-100 text-red-700'      },
 ];
 
@@ -72,7 +72,7 @@ export default function OrderFilters({ filters, onFiltersChange, onReset, waiter
   return (
     <div className="bg-white rounded-lg border border-gray-200 p-4">
       {/* Barra superior */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex-wrap flex items-center gap-4 mb-4">
         {/* Búsqueda */}
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -120,7 +120,7 @@ export default function OrderFilters({ filters, onFiltersChange, onReset, waiter
                 <button
                   key={status.value}
                   onClick={() => toggleStatus(status.value)}
-                  className={cn(
+                  className={cn('min-h-[44px]', 
                     'px-3 py-1.5 rounded-lg text-sm font-medium transition-all',
                     filters.status?.includes(status.value) ? 'ring-2 ring-primary-500 shadow-sm' : '',
                     status.color
@@ -140,7 +140,7 @@ export default function OrderFilters({ filters, onFiltersChange, onReset, waiter
                 <button
                   key={type.value}
                   onClick={() => toggleType(type.value)}
-                  className={cn(
+                  className={cn('min-h-[44px]', 
                     'px-4 py-2 rounded-lg text-sm font-medium border-2 transition-all',
                     filters.type?.includes(type.value)
                       ? 'border-primary-500 bg-primary-50 text-primary-700'

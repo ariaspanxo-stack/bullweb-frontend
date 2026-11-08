@@ -84,7 +84,7 @@ export default function ProductMultiSelect({
               <button
                 type="button"
                 onClick={() => remove(p.id)}
-                className="p-0.5 rounded hover:bg-orange-200 transition-colors"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-0.5 rounded hover:bg-orange-200 transition-colors"
                 aria-label={`Quitar ${p.name}`}
               >
                 <X className="w-3 h-3" />
@@ -128,7 +128,7 @@ export default function ProductMultiSelect({
                     <button
                       type="button"
                       onClick={() => toggle(p.id)}
-                      className={`w-full text-left px-3 py-2 flex items-center justify-between gap-2 transition-colors ${
+                      className={`min-h-[44px] w-full text-left px-3 py-2 flex items-center justify-between gap-2 transition-colors ${
                         isSelected ? 'bg-orange-50' : 'hover:bg-gray-50'
                       }`}
                     >

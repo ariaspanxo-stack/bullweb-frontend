@@ -117,7 +117,7 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
 
         {/* Ingredientes */}
         <div>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
             <label className="block text-sm font-medium text-gray-700">
               Ingredientes
             </label>
@@ -129,7 +129,7 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
 
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {(items || []).map((item, index) => (
-              <div key={index} className="flex items-center gap-2">
+              <div key={index} className="flex-wrap flex items-center gap-2">
                 <select
                   value={item.ingredientId}
                   onChange={(e) => updateItem(index, 'ingredientId', e.target.value)}
@@ -152,7 +152,7 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
                 />
                 <button
                   onClick={() => removeItem(index)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded"
+                  className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 text-red-600 hover:bg-red-50 rounded"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -172,7 +172,7 @@ export default function RecipeFormModal({ isOpen, onClose, recipe }: RecipeFormM
         </div>
 
         {/* Botones */}
-        <div className="flex gap-3 pt-4">
+        <div className="flex-wrap flex gap-3 pt-4">
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancelar
           </Button>

@@ -199,6 +199,12 @@ class CustomersService {
     return response.data?.data ?? response.data ?? null;
   }
 
+  /** LOTE 308b (FID-01): ajuste manual de puntos; devuelve saldo anterior y nuevo */
+  async adjustPoints(customerId: string, points: number, reason: string): Promise<{ previousPoints: number; newPoints: number }> {
+    const response = await api.post<any>(`/customers/${customerId}/points`, { points, reason });
+    return response.data?.data ?? response.data;
+  }
+
   /** Historial de puntos de un cliente */
   async getPointsHistory(customerId: string): Promise<any[]> {
     const response = await api.get<any>(`/customers/${customerId}/points/history`);

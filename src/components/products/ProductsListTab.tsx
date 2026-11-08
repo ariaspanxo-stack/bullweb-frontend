@@ -1,3 +1,4 @@
+import { displayName } from '@/utils/displayFormat';
 import React, { useState, useMemo, useEffect } from 'react';
 import {
   Search,
@@ -234,7 +235,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
     <>
       {/* Encabezado — Hotfix #258 (A3/A4/A5): fondo claro, título legible, crear naranja arriba a la derecha */}
       <div className="sticky top-0 z-20 bg-[#F8FAFC]/95 backdrop-blur border-b border-[#E2E8F0] px-6 py-4">
-        <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
           <div>
             <h1 className={TITLE}>Productos</h1>
             <p className={SUBTITLE}>
@@ -242,7 +243,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
               {filteredProducts.length !== products.length && ` (${products.length} en total)`}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex-wrap flex items-center gap-2">
             {onImportMenu && (
               <button onClick={onImportMenu} className={BTN_OUTLINE}>
                 <FileUp className="w-5 h-5" />
@@ -276,7 +277,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
             <span className="hidden sm:inline">CSV</span>
           </button>
 
-          <div className="flex gap-2">
+          <div className="flex-wrap flex gap-2">
             <button
               onClick={() => setViewType('grid')}
               className={viewType === 'grid' ? filterClass(true) : BTN_ICON}
@@ -312,7 +313,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                   className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                   style={{ backgroundColor: colorForCategory(categories, cat.id) }}
                 />
-                {cat.name}
+                {displayName(cat.name)}
                 <span className="text-xs text-[#64748B]">
                   ({products.filter(p => p.categoryId === cat.id).length})
                 </span>
@@ -358,11 +359,11 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
             {selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''}
           </span>
           {selectedIds.size < currentItems.length && (
-            <button onClick={toggleSelectAll} className="text-sm text-[#475569] hover:text-[#0F172A] underline">
+            <button onClick={toggleSelectAll} className="min-h-[44px] text-sm text-[#475569] hover:text-[#0F172A] underline">
               Seleccionar todos ({currentItems.length})
             </button>
           )}
-          <div className="flex items-center gap-2 ml-auto flex-shrink-0">
+          <div className="flex-wrap flex items-center gap-2 ml-auto flex-shrink-0">
             <button onClick={() => handleBulkAvailability(true)} disabled={bulkLoading} className={BTN_OUTLINE}>
               <ToggleRight className="w-4 h-4" />
               Habilitar
@@ -504,11 +505,11 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                     {category && (
                       <span className="inline-flex items-center gap-1.5 text-xs text-[#475569] mb-1">
                         <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: catColor }} />
-                        {category.name}
+                        {displayName(category.name)}
                       </span>
                     )}
                     <h3 className="font-bold text-[#0F172A] text-[15px] mb-1 line-clamp-1" title={product.name}>
-                      {product.name}
+                      {displayName(product.name)}
                     </h3>
                     {product.description && (
                       <p className="text-xs text-[#64748B] mb-2 line-clamp-1">{product.description}</p>
@@ -527,7 +528,7 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                           aria-checked={product.showInQr !== false}
                           aria-label={`Mostrar ${product.name} en carta QR`}
                           onClick={() => onToggleShowInQr(product, product.showInQr === false)}
-                          className="w-full h-11 mb-2 inline-flex items-center gap-2 px-2 rounded-lg hover:bg-slate-50"
+                          className="min-h-[44px] w-full h-11 mb-2 inline-flex items-center gap-2 px-2 rounded-lg hover:bg-slate-50"
                         >
                           <span className={`relative inline-flex w-10 h-6 rounded-full transition-colors flex-shrink-0 ${product.showInQr !== false ? 'bg-[#1E2A4A]' : 'bg-[#CBD5E1]'}`}>
                             <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${product.showInQr !== false ? 'left-5' : 'left-1'}`} />
@@ -537,12 +538,12 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                       )}
 
                       {(
-                        <div className="flex items-center gap-2">
+                        <div className="flex-wrap flex items-center gap-2">
                           <button
                             onClick={() => onEditProduct(product)}
                             title="Editar"
                             aria-label={`Editar ${product.name}`}
-                            className={`${BTN_OUTLINE} flex-1`}
+                            className={`min-h-[44px] ${BTN_OUTLINE} flex-1`}
                           >
                             <Pencil className="w-4 h-4" />
                             Editar

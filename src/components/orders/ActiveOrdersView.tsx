@@ -1,3 +1,4 @@
+import { displayName } from '@/utils/displayFormat';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { posService } from '@/services/posService';
@@ -43,26 +44,26 @@ const STATUS_CONFIG = {
   },
   READY: {
     label: 'Listo',
-    border: 'border-green-400',
-    bg: 'bg-green-50',
-    dot: 'bg-green-500',
-    textColor: 'text-green-700',
-    timeBg: 'bg-green-100 text-green-800',
+    border: 'border-slate-200',
+    bg: 'bg-slate-50',
+    dot: 'bg-slate-500',
+    textColor: 'text-slate-700',
+    timeBg: 'bg-slate-100 text-slate-700',
   },
   DELIVERED: {
     label: 'Entregado',
-    border: 'border-purple-400',
-    bg: 'bg-purple-50',
-    dot: 'bg-purple-400',
-    textColor: 'text-purple-700',
-    timeBg: 'bg-purple-100 text-purple-800',
+    border: 'border-slate-200',
+    bg: 'bg-slate-50',
+    dot: 'bg-slate-500',
+    textColor: 'text-slate-700',
+    timeBg: 'bg-slate-100 text-slate-700',
   },
 } as const;
 
 const TYPE_CONFIG: Record<string, { icon: string; label: string; bg: string }> = {
-  DINE_IN:  { icon: '🍽️', label: 'Mesa',      bg: 'bg-indigo-100 text-indigo-700' },
-  TAKEAWAY: { icon: '🥡',        label: 'Mostrador', bg: 'bg-purple-100 text-purple-700' },
-  DELIVERY: { icon: '🚀',        label: 'Delivery',  bg: 'bg-blue-100 text-blue-700' },
+  DINE_IN:  { icon: '🍽️', label: 'Mesa',      bg: 'bg-slate-100 text-slate-700' },
+  TAKEAWAY: { icon: '🥡',        label: 'Mostrador', bg: 'bg-slate-100 text-slate-700' },
+  DELIVERY: { icon: '🚀',        label: 'Delivery',  bg: 'bg-slate-100 text-slate-700' },
 };
 
 function getOrderTitle(order: ActiveOrder): string {
@@ -160,7 +161,7 @@ function ActiveOrderCard({ order, lateThresholdMinutes = 20 }: { order: ActiveOr
         {allItems.slice(0, 4).map((item, i) => (
           <div key={i} className="flex gap-2 text-sm text-gray-700">
             <span className="font-bold w-5 text-right shrink-0">{item.quantity}x</span>
-            <span className="truncate">{item.products?.name ?? item.product?.name ?? 'Producto'}</span>
+            <span className="truncate">{displayName(item.products?.name ?? item.product?.name ?? 'Producto')}</span>
           </div>
         ))}
         {allItems.length > 4 && (
@@ -219,7 +220,7 @@ function OldOrdersSection({ orders, lateThresholdMinutes }: { orders: ActiveOrde
     <div className="mt-6">
       <button
         onClick={() => setExpanded(e => !e)}
-        className="flex items-center gap-2 w-full text-left"
+        className="min-h-[44px] flex items-center gap-2 w-full text-left"
       >
         <div className="h-px flex-1 bg-amber-200" />
         <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 text-xs font-medium text-amber-700 hover:bg-amber-100 transition-colors whitespace-nowrap">
@@ -303,12 +304,12 @@ export default function ActiveOrdersView({ lateThresholdMinutes = 20 }: { lateTh
         <KpiCard icon="⏳" value={pending}          label="Pendientes"    color="bg-amber-50 text-amber-800" />
         <KpiCard icon="🔥" value={preparing}  label="En Cocina"     color="bg-orange-50 text-orange-800" />
         <KpiCard icon="✅" value={ready}            label="Listos"        color="bg-green-50 text-green-800" />
-        <KpiCard icon="⏱" value={`${avgMins} min`} label="Tiempo Prom." color="bg-blue-50 text-blue-800" />
+        <KpiCard icon="⏱" value={`${avgMins} min`} label="Tiempo Prom." color="bg-slate-50 text-slate-700" />
       </div>
 
       {gridOrders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-          <CheckCircle className="w-16 h-16 mb-4 text-green-300" />
+          <CheckCircle className="w-16 h-16 mb-4 text-slate-500" />
           <p className="text-lg font-medium">No hay pedidos activos</p>
           <p className="text-sm">Todos los pedidos al dia</p>
         </div>

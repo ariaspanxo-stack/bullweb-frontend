@@ -83,7 +83,7 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
         (i) =>
           i.name.toLowerCase().includes(search) ||
           i.description?.toLowerCase().includes(search) ||
-          i.sku.toLowerCase().includes(search) ||
+          i.sku?.toLowerCase().includes(search) ||
           i.supplier?.toLowerCase().includes(search)
       );
     }
@@ -91,7 +91,7 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
     // Filtros
     switch (filterType) {
       case 'active':
-        filtered = filtered.filter((i) => i.status === 'active');
+        filtered = filtered.filter((i) => (i as any).active !== false); // LOTE 309: la columna es active
         break;
       case 'lowStock':
         filtered = filtered.filter((i) => stockLevel(i.currentStock, i.minStock) === 'low');
@@ -151,7 +151,7 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
     // H127: wrapper plano — el scroll de página lo maneja el Layout; el fondo lo pinta Products.tsx.
     <div className="p-6 space-y-6">
       {/* Encabezado — A4/A5 */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h2 className={TITLE}>Ingredientes</h2>
           <p className={SUBTITLE}>
@@ -267,7 +267,7 @@ export const IngredientsListTab: React.FC<IngredientsListTabProps> = ({
                   {ingredient.supplier && <p className="text-xs text-[#64748B] truncate">🏢 {ingredient.supplier}</p>}
 
                   <div className="flex items-center gap-2 pt-1 mt-auto">
-                    <button onClick={() => onEditIngredient(ingredient)} className={`${BTN_OUTLINE} flex-1`}>
+                    <button onClick={() => onEditIngredient(ingredient)} className={`min-h-[44px] ${BTN_OUTLINE} flex-1`}>
                       <Pencil className="w-4 h-4" />
                       Editar
                     </button>

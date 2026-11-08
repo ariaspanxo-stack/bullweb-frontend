@@ -101,7 +101,7 @@ export function QrAcceptForm({ isDelivery, subtotal, defaults, initialFee, dark 
       )}
       <div className="flex items-center justify-between pt-1">
         <span className={`text-sm ${label}`}>Total{isDelivery ? ' con envío' : ''}</span>
-        <span className={`text-lg font-black ${dark ? 'text-white' : 'text-gray-900'}`}>{formatCurrency(total)}</span>
+        <span className={`text-lg font-black ${dark ? 'text-slate-900' : 'text-gray-900'}`}>{formatCurrency(total)}</span>
       </div>
       {!minutesOk && <p className="text-xs text-red-500">Ingresa minutos entre 1 y 999.</p>}
       <div className="grid grid-cols-2 gap-2 pt-1">

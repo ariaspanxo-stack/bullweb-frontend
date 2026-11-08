@@ -117,13 +117,13 @@ export default function Campaigns() {
       ? 'bg-rose-500/10 text-rose-400 ring-rose-500/20'
       : u.sent >= u.limit * 0.8
       ? 'bg-amber-500/10 text-amber-400 ring-amber-500/20'
-      : 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20';
+      : 'bg-slate-100 text-slate-700 ring-slate-300';
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* ── Header ── */}
       <div className="bg-white border-b border-gray-200 px-6 py-5">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-3">
             <div className="bg-orange-50 p-2.5 rounded-xl">
               <Heart className="h-6 w-6 text-orange-500" />
@@ -142,11 +142,11 @@ export default function Campaigns() {
               </span>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex-wrap flex gap-2">
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm text-gray-600"
+              className="min-h-[44px] flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 text-sm text-gray-600"
             >
               <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
               Actualizar
@@ -154,7 +154,7 @@ export default function Campaigns() {
             {activeTab === 'campaigns' && (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm font-medium"
+                className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm font-medium"
               >
                 <Plus className="h-4 w-4" />
                 Nueva Campaña
@@ -183,7 +183,7 @@ export default function Campaigns() {
               href={buildUpsellWhatsAppURL()}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 text-sm font-medium shrink-0"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-slate-700 rounded-lg hover:bg-slate-50 text-sm font-medium shrink-0 border border-slate-300"
             >
               Activar por WhatsApp
             </a>
@@ -191,7 +191,7 @@ export default function Campaigns() {
         )}
 
         {/* ── Tabs ── */}
-        <div className="flex gap-1 mt-5">
+        <div className="flex-wrap flex gap-1 mt-5">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
@@ -199,7 +199,7 @@ export default function Campaigns() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`min-h-[44px] flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   active
                     ? 'bg-orange-50 text-orange-600 border border-orange-200'
                     : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
@@ -217,9 +217,9 @@ export default function Campaigns() {
       <div className="p-6">
         {/* Error banner */}
         {loadError && (
-          <div className="mb-5 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between">
+          <div className="mb-5 bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl flex items-center justify-between flex-wrap gap-2">
             <span>{loadError}</span>
-            <button onClick={loadData} className="text-xs underline font-medium ml-4">Reintentar</button>
+            <button onClick={loadData} className="min-h-[44px] text-xs underline font-medium ml-4">Reintentar</button>
           </div>
         )}
         {/* ── Tab: Automatizaciones ── */}

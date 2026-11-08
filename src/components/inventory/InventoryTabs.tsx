@@ -22,7 +22,7 @@ const tabs = [
 export default function InventoryTabs({ activeTab, onTabChange, onlyStockSimple = false }: InventoryTabsProps) {
   return (
     <div className="border-b border-gray-200">
-      <nav className="flex gap-4">
+      <nav className="flex-wrap flex gap-4">
         {tabs.filter((t) => !onlyStockSimple || t.value === 'products' || t.value === 'movements').map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.value;
@@ -31,7 +31,7 @@ export default function InventoryTabs({ activeTab, onTabChange, onlyStockSimple 
             <button
               key={tab.value}
               onClick={() => onTabChange(tab.value)}
-              className={cn(
+              className={cn('min-h-[44px]', 
                 'flex items-center gap-2 px-4 py-3 border-b-2 transition-colors',
                 isActive
                   ? 'border-orange-500 text-orange-600 font-medium'

@@ -18,7 +18,7 @@ interface TableMapProps {
 // ============================================================================
 
 const statusColors = {
-  AVAILABLE: 'bg-green-100 border-green-500 text-green-700 hover:bg-green-200',
+  AVAILABLE: 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-100',
   OCCUPIED: 'bg-amber-500 border-amber-600 text-white hover:bg-amber-600',
   RESERVED: 'bg-yellow-100 border-yellow-500 text-yellow-700 hover:bg-yellow-200',
   CLEANING: 'bg-gray-100 border-gray-500 text-gray-700 hover:bg-gray-200'
@@ -71,7 +71,7 @@ export default function TableMap({ selectedSection, onTableClick }: TableMapProp
     return (
       <div className="flex items-center justify-center h-[600px] bg-gray-50 rounded-lg border border-gray-200">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
           <p className="text-gray-500">Cargando mesas...</p>
         </div>
       </div>
@@ -155,7 +155,7 @@ export default function TableMap({ selectedSection, onTableClick }: TableMapProp
 
               {/* Badge de mesero asignado */}
               {table.assignedWaiter && (
-                <div className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md">
+                <div className="absolute -top-2 -right-2 bg-slate-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center shadow-md">
                   {table.assignedWaiter.name.charAt(0).toUpperCase()}
                 </div>
               )}

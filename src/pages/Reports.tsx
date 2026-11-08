@@ -65,17 +65,17 @@ function ReportsInner() {
   return (
     <div className="space-y-0">
       {/* Header oscuro */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl -mx-2 px-6 pt-6 pb-0 mb-6 shadow-xl border border-slate-700/40">
+      <div className=" rounded-2xl -mx-2 px-6 pt-6 pb-0 mb-6 border border-slate-200">
 
         {/* Título + controles */}
         <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30">
-              <BarChart3 className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg ">
+              <BarChart3 className="w-5 h-5 text-slate-900" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white tracking-tight">Reportes &amp; Analytics</h1>
-              <p className="text-slate-400 text-xs mt-0.5">Periodo: {dateFrom} → {dateTo}</p>
+              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Reportes &amp; Analytics</h1>
+              <p className="text-slate-500 text-xs mt-0.5">Periodo: {dateFrom} → {dateTo}</p>
             </div>
           </div>
 
@@ -90,11 +90,11 @@ function ReportsInner() {
               <button
                 key={p.id}
                 onClick={() => applyPreset(p.id)}
-                className={cn(
+                className={cn('min-h-[44px]', 
                   'px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border',
                   activePreset === p.id
-                    ? 'bg-orange-500 text-white border-orange-500 shadow-sm shadow-orange-500/30'
-                    : 'bg-slate-700/80 hover:bg-slate-600 text-slate-300 hover:text-white border-slate-600/50'
+                    ? 'bg-orange-50 text-orange-700 border-orange-300 shadow-sm '
+                    : 'bg-orange-50 hover:bg-slate-100 text-slate-700 hover:text-slate-900 border-slate-200 border border-orange-300'
                 )}
               >
                 {p.label}
@@ -106,15 +106,15 @@ function ReportsInner() {
               type="date"
               value={dateFrom}
               onChange={e => { if (e.target.value.length === 10) { applyPreset(''); setDateFrom(e.target.value); } }}
-              className="date-input-dark border border-white/20 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
+              className="border border-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
               style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: 'white', colorScheme: 'dark' }}
             />
-            <span className="text-white/60 text-sm select-none">—</span>
+            <span className="text-slate-500 text-sm select-none">—</span>
             <input
               type="date"
               value={dateTo}
               onChange={e => { if (e.target.value.length === 10) { applyPreset(''); setDateTo(e.target.value); } }}
-              className="date-input-dark border border-white/20 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
+              className="border border-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-orange-400 focus:bg-white/20 transition-colors cursor-pointer [color-scheme:dark]"
               style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', color: 'white', colorScheme: 'dark' }}
             />
 
@@ -123,22 +123,22 @@ function ReportsInner() {
               <select
                 value={waiterId}
                 onChange={e => setWaiterId(e.target.value)}
-                className="select-dark appearance-none pl-8 pr-8 py-1.5 rounded-lg text-xs focus:outline-none focus:border-orange-400 transition-colors cursor-pointer"
+                className="bg-white border border-slate-200 text-slate-900 appearance-none pl-8 pr-8 py-1.5 rounded-lg text-xs focus:outline-none focus:border-orange-400 transition-colors cursor-pointer"
               >
                 <option value="" className="text-gray-900 bg-white">Todos los meseros</option>
                 {waitersForFilter.map((w: any) => (
                   <option key={w.waiter?.id} value={w.waiter?.id} className="text-gray-900 bg-white">{w.waiter?.name}</option>
                 ))}
               </select>
-              <Users className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+              <Users className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500 pointer-events-none" />
             </div>
 
             {waiterId && (
-              <span className="flex items-center gap-1.5 bg-orange-500/20 text-orange-300 text-xs font-medium px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1.5 bg-orange-50 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-full">
                 <Users className="w-3 h-3" />
                 {waitersForFilter.find((w: any) => w.waiter?.id === waiterId)?.waiter?.name ?? 'Mesero'}
-                <button onClick={() => setWaiterId('')} className="hover:text-orange-100 ml-0.5">
+                <button onClick={() => setWaiterId('')} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center hover:text-orange-100 ml-0.5">
                   <X className="w-3 h-3" />
                 </button>
               </span>
@@ -148,7 +148,7 @@ function ReportsInner() {
               <button
                 onClick={() => handleExport('csv')}
                 disabled={isExporting}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-slate-700/80 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition-colors disabled:opacity-40 border border-slate-600/50"
+                className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 rounded-lg transition-colors disabled:opacity-40 border border-slate-200"
               >
                 <Download className="w-3.5 h-3.5" /> CSV
               </button>
@@ -157,7 +157,7 @@ function ReportsInner() {
               <button
                 onClick={() => handleExport('excel')}
                 disabled={isExporting}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-orange-500 hover:bg-orange-400 text-white rounded-lg transition-colors disabled:opacity-40 shadow-md shadow-orange-500/25"
+                className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 rounded-lg transition-colors disabled:opacity-40 shadow-md  border border-slate-300"
               >
                 <Download className="w-3.5 h-3.5" /> Excel
               </button>
@@ -167,7 +167,7 @@ function ReportsInner() {
             <button
               onClick={handleRefresh}
               title="Actualizar datos ahora"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-slate-700/80 hover:bg-slate-600 text-slate-300 hover:text-white rounded-lg transition-colors border border-slate-600/50"
+              className="min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-slate-100 text-slate-700 hover:text-white rounded-lg transition-colors border border-slate-200"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Actualizar</span>
@@ -182,24 +182,24 @@ function ReportsInner() {
           const trendTicket  = prevAvgTicket   > 0 ? ((avgTicket    - prevAvgTicket)   / prevAvgTicket)   * 100 : null;
           const headerKpis = [
             { label: 'Ventas del período', value: salesError ? '—' : formatCurrency(totalSales),                                                               prevVal: salesError ? null : formatCurrency(prevTotalSales),  trend: salesError ? null : trendSales,  icon: TrendingUp,  color: 'text-orange-400', bg: 'bg-orange-500/20' },
-            { label: 'Órdenes',            value: salesError ? '—' : totalOrders.toLocaleString('es-CL'),                                                      prevVal: salesError ? null : prevTotalOrders.toLocaleString('es-CL'), trend: salesError ? null : trendOrders, icon: ShoppingCart, color: 'text-indigo-400', bg: 'bg-indigo-500/20' },
-            { label: 'Ticket promedio',    value: salesError ? '—' : formatCurrency(avgTicket),                                                                prevVal: salesError ? null : formatCurrency(prevAvgTicket),   trend: salesError ? null : trendTicket, icon: ArrowUpRight, color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
+            { label: 'Órdenes',            value: salesError ? '—' : totalOrders.toLocaleString('es-CL'),                                                      prevVal: salesError ? null : prevTotalOrders.toLocaleString('es-CL'), trend: salesError ? null : trendOrders, icon: ShoppingCart, color: 'text-slate-700', bg: 'bg-slate-100' },
+            { label: 'Ticket promedio',    value: salesError ? '—' : formatCurrency(avgTicket),                                                                prevVal: salesError ? null : formatCurrency(prevAvgTicket),   trend: salesError ? null : trendTicket, icon: ArrowUpRight, color: 'text-slate-700', bg: 'bg-slate-100' },
             { label: 'Top producto',       value: (dashboardData as any).topProducts?.[0]?.product?.name ?? '—', prevVal: null, trend: null, icon: Star,         color: 'text-amber-400',   bg: 'bg-amber-500/20' },
           ];
           return (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-2 px-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-2 px-1">
               {headerKpis.map(kpi => (
-                <div key={kpi.label} className="bg-white/15 backdrop-blur-sm rounded-xl px-4 py-3 flex items-center gap-3 border border-white/20">
+                <div key={kpi.label} className="bg-slate-50 backdrop-blur-sm rounded-xl px-4 py-3 flex items-center gap-3 border border-slate-200">
                   <div className={`p-2 rounded-lg ${kpi.bg} flex-shrink-0`}>
                     <kpi.icon className={`w-4 h-4 ${kpi.color}`} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-white/80 leading-none mb-1">{kpi.label}</p>
-                    <p className="text-lg font-extrabold text-white truncate">{kpi.value}</p>
+                    <p className="text-xs font-semibold text-slate-500 leading-none mb-1">{kpi.label}</p>
+                    <p className="text-lg font-extrabold text-slate-900 truncate">{kpi.value}</p>
                     {kpi.trend !== null && kpi.trend !== undefined ? (
-                      <p className={`text-xs font-semibold mt-0.5 ${kpi.trend >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <p className={`text-xs font-semibold mt-0.5 ${kpi.trend >= 0 ? 'text-slate-500' : 'text-red-400'}`}>
                         {kpi.trend >= 0 ? '↑' : '↓'}{Math.abs(kpi.trend).toFixed(1)}%
-                        <span className="text-white/60 font-normal ml-1">ant: {kpi.prevVal}</span>
+                        <span className="text-slate-500 font-normal ml-1">ant: {kpi.prevVal}</span>
                       </p>
                     ) : null}
                   </div>
@@ -212,7 +212,7 @@ function ReportsInner() {
         {/* Tab bar */}
         <div className="relative -mx-6">
           {/* Fade derecho: indica que hay más tabs */}
-          <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-slate-900 to-transparent pointer-events-none z-10 lg:hidden" />
+          <div className="absolute right-0 top-0 bottom-0 w-10 to-transparent pointer-events-none z-10 lg:hidden" />
           <div className="flex gap-1 overflow-x-auto px-6 pb-4 pt-1 scrollbar-hide scroll-smooth">
             {TABS.filter(tab => !(isBasico && BASICO_HIDDEN_TABS.includes(tab.id))).map(tab => {
               const Icon = tab.icon;
@@ -221,11 +221,11 @@ function ReportsInner() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={cn(
+                  className={cn('min-h-[44px]', 
                     'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0',
                     isActive
-                      ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/30'
-                      : 'bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white'
+                      ? 'bg-orange-50 text-orange-700 shadow-sm  border border-orange-300'
+                      : 'bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                   )}
                 >
                   <Icon className="w-3.5 h-3.5" />

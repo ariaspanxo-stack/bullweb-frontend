@@ -249,7 +249,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
           {/* Botón menú (mobile) */}
           <button
             onClick={onMenuClick}
-            className="lg:hidden p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            className="lg:hidden min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             aria-label="Abrir menú"
           >
             <Menu className="h-6 w-6" />
@@ -280,7 +280,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 window.$crisp.push(['do', 'chat:open'])
               }
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            className="min-h-[44px] min-w-[44px] justify-center flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             aria-label="Abrir chat de soporte"
           >
             <MessageCircle className="h-4 w-4" />
@@ -307,7 +307,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
                 // Refrescar el estado de suscripción al abrir (#180)
                 if (!isSuperAdmin) queryClient.invalidateQueries({ queryKey: ['billing-status-bell'] });
               }}
-              className="relative p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+              className="relative min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
               aria-label="Notificaciones"
             >
               <Bell className="h-5 w-5" />

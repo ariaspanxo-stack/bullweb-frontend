@@ -149,7 +149,12 @@ export default function AttendanceCheckin() {
         return attendancePublicService.getEmployees(tid);
       })
       .then(res => setEmployees(res.data.data ?? []))
-      .catch(() => setErrorMsg('No se pudo obtener la lista de empleados.'))
+      .catch((err: any) => setErrorMsg(
+        // LOTE 308b (ASI-03): al empleado no se le habla de planes
+        err?.response?.data?.code === 'plan_upgrade_required'
+          ? 'La asistencia no está activa en este local. Avísale al administrador.'
+          : 'No se pudo obtener la lista de empleados.',
+      ))
       .finally(() => setLoading(false));
   }, []);
 

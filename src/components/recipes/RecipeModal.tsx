@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Loader2, Check } from 'lucide-react';
 import type { Recipe, RecipeFormData, RecipeFormErrors } from '../../types/recipe.types';
@@ -173,7 +174,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    createPortal(<div className="fixed inset-0 z-[100] overflow-y-auto text-slate-900">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
@@ -184,7 +185,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
-          <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-gray-200">
+          <div className="sticky top-0 bg-white z-10 flex items-center justify-between p-6 border-b border-gray-200 flex-wrap gap-2">
             <div>
               <h2 className="text-2xl font-bold text-gray-900">
                 {mode === 'create' ? '📋 Nueva Ficha Técnica' : '✏️ Editar Ficha Técnica'}
@@ -195,7 +196,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -218,7 +219,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                     <select
                       value={formData.productId}
                       onChange={(e) => handleChange('productId', e.target.value)}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${
                         errors.productId ? 'border-red-500' : 'border-gray-300'
                       }`}
                     >
@@ -244,7 +245,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                       value={formData.name}
                       onChange={(e) => handleChange('name', e.target.value)}
                       placeholder="Ej: Pizza Margarita - Receta estándar"
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${
                         errors.name ? 'border-red-500' : 'border-gray-300'
                       }`}
                     />
@@ -263,7 +264,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                       onChange={(e) => handleChange('description', e.target.value)}
                       placeholder="Descripción de la receta..."
                       rows={2}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
 
@@ -278,7 +279,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                         value={formData.servings}
                         onChange={(e) => handleChange('servings', parseInt(e.target.value) || 1)}
                         min="1"
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-orange-500 ${
                           errors.servings ? 'border-red-500' : 'border-gray-300'
                         }`}
                       />
@@ -295,7 +296,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                         value={formData.prepTime}
                         onChange={(e) => handleChange('prepTime', parseInt(e.target.value) || 0)}
                         min="0"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                       />
                     </div>
                     <div>
@@ -307,7 +308,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                         value={formData.cookTime}
                         onChange={(e) => handleChange('cookTime', parseInt(e.target.value) || 0)}
                         min="0"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                       />
                     </div>
                   </div>
@@ -349,7 +350,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                     onChange={(e) => handleChange('instructions', e.target.value)}
                     placeholder="Paso a paso de la preparación..."
                     rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
 
@@ -363,7 +364,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                     onChange={(e) => handleChange('notes', e.target.value)}
                     placeholder="Notas, tips, variaciones..."
                     rows={2}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                   />
                 </div>
               </div>
@@ -373,12 +374,12 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                 <h3 className="text-lg font-semibold text-gray-900">📊 Cálculos</h3>
 
                 {/* Costo Total */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800 mb-1">Costo Total</p>
-                  <p className="text-3xl font-bold text-blue-900">
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                  <p className="text-sm text-slate-700 mb-1">Costo Total</p>
+                  <p className="text-3xl font-bold text-slate-700">
                     {formatCurrency(calculations.totalCost || 0)}
                   </p>
-                  <p className="text-xs text-blue-700 mt-1">
+                  <p className="text-xs text-slate-700 mt-1">
                     Por porción: ${(calculations.costPerServing || 0).toFixed(0)}
                   </p>
                 </div>
@@ -388,7 +389,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                   <div
                     className={`border rounded-lg p-4 ${
                       calculations.comparison.status === 'match'
-                        ? 'bg-green-50 border-green-200'
+                        ? 'bg-slate-50 border-slate-200'
                         : calculations.comparison.status === 'higher'
                         ? 'bg-red-50 border-red-200'
                         : 'bg-yellow-50 border-yellow-200'
@@ -414,7 +415,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                           className={`font-mono font-bold ${
                             calculations.comparison.difference > 0
                               ? 'text-red-600'
-                              : 'text-green-600'
+                              : 'text-slate-700'
                           }`}
                         >
                           {calculations.comparison.difference > 0 ? '+' : ''}
@@ -447,7 +448,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                         <span
                           className={`font-bold text-lg ${
                             calculations.realMargin >= 40
-                              ? 'text-green-600'
+                              ? 'text-slate-700'
                               : calculations.realMargin >= 20
                               ? 'text-yellow-600'
                               : 'text-red-600'
@@ -461,8 +462,8 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
                 )}
 
                 {/* Precios Sugeridos */}
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                  <p className="text-sm font-semibold text-purple-900 mb-2">
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                  <p className="text-sm font-semibold text-slate-700 mb-2">
                     💡 Precios Sugeridos
                   </p>
                   <div className="space-y-1 text-sm">
@@ -517,21 +518,21 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
             </div>
 
             {/* Botones */}
-            <div className="flex gap-3 pt-6 mt-6 border-t border-gray-200">
+            <div className="flex-wrap flex gap-3 pt-6 mt-6 border-t border-gray-200">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                className="min-h-[44px] flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`flex-1 px-4 py-2.5 rounded-lg transition-colors font-medium flex items-center justify-center gap-2 ${
+                className={`min-h-[44px] flex-1 px-4 py-2.5 rounded-lg transition-colors font-medium flex items-center justify-center gap-2 ${
                   isSubmitting
-                    ? 'bg-blue-400 cursor-not-allowed text-white'
-                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    ? 'bg-orange-500 cursor-not-allowed text-white'
+                    : 'bg-orange-500 hover:bg-orange-600 text-white'
                 }`}
               >
                 {isSubmitting ? (
@@ -550,7 +551,7 @@ export const RecipeModal: React.FC<RecipeModalProps> = ({
           </form>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 

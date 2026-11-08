@@ -49,7 +49,14 @@ function _forceLogout(): void {
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    const err = new Error(error.message || error.error || `HTTP error! status: ${response.status}`) as any;
+    // LOTE 309: nunca un mensaje pelado: el primer motivo de la validacion, y sin codigos HTTP en pantalla
+    const detalle = Array.isArray(error.details) ? error.details[0]?.message : undefined;
+    const fallback = response.status === 429
+      ? 'Demasiadas solicitudes seguidas. Espera un minuto e inténtalo de nuevo.'
+      : response.status >= 500
+      ? 'El sistema no pudo completar la acción. Inténtalo de nuevo; si sigue, avísanos.'
+      : `No se pudo completar la acción (código ${response.status}).`;
+    const err = new Error(detalle || error.message || error.error || fallback) as any;
     err.status = response.status;
     err.data   = error;
     throw err;
@@ -258,7 +265,7 @@ export const categoriesApi = {
 // ============================================
 export const ingredientsApi = {
   getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/inventory/ingredients`, {
+    const response = await fetch(`${API_BASE_URL}/inventory/ingredients?perPage=500`, { // LOTE 309: sin esto solo llegaban los primeros 20
       headers: getAuthHeaders()
     });
     const result = await handleResponse<any>(response);
@@ -309,7 +316,7 @@ export const ingredientsApi = {
 // ============================================
 export const recipesApi = {
   getAll: async () => {
-    const response = await fetch(`${API_BASE_URL}/inventory/recipes`, {
+    const response = await fetch(`${API_BASE_URL}/inventory/recipes?perPage=500`, { // LOTE 309: sin esto solo llegaban las primeras 50
       headers: getAuthHeaders()
     });
     const result = await handleResponse<any>(response);

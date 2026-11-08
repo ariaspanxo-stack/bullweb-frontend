@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { LogIn, LogOut, X, Loader2, AlertTriangle, AlertCircle } from 'lucide-react';
 import api from '@/services/api';
@@ -33,6 +34,15 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
   const [editNote,  setEditNote]  = useState('');
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState<string | null>(null);
+  // LOTE 308b: historial de ediciones de esta marca
+  const [history,   setHistory]   = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!record.editedAt) return;
+    api.get(`/attendance/records/${record.id}/history`)
+      .then(res => setHistory(Array.isArray(res.data) ? res.data : (res.data?.data ?? [])))
+      .catch(() => setHistory([]));
+  }, [record.id, record.editedAt]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +55,8 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
     try {
       await api.patch(`/attendance/records/${record.id}`, {
         type,
-        timestamp,
+        // LOTE 308b: instante con zona; sin esto el servidor leia la hora local como si fuera UTC
+        timestamp: new Date(timestamp).toISOString(),
         notes: notes || null,
         editNote,
       });
@@ -60,18 +71,18 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+        <div className="flex items-center justify-between p-6 border-b border-gray-100 flex-wrap gap-2">
           <div>
             <h2 className="font-black text-gray-800 text-lg">Editar registro</h2>
             <p className="text-sm text-gray-400 mt-0.5">{record.employeeName}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl hover:bg-gray-100 transition-colors"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded-xl hover:bg-gray-100 transition-colors"
           >
             <X className="w-5 h-5 text-gray-400" />
           </button>
@@ -91,6 +102,22 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
                 {record.editNote && <p>Motivo: {record.editNote}</p>}
               </div>
             </div>
+            {history.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-amber-100 max-h-36 overflow-y-auto" data-testid="historial-marca">
+                <p className="text-xs font-semibold text-amber-900 mb-1">Historial de ediciones ({history.length})</p>
+                <ul className="space-y-1.5">
+                  {history.map(h => (
+                    <li key={h.id} className="text-xs text-amber-900">
+                      <span className="font-semibold">{fmtDateTime(h.editedAt)}</span> · {h.editedByName ?? 'Usuario'}
+                      <br />
+                      {h.oldType !== h.newType && <>{h.oldType === 'ENTRY' ? 'Entrada' : 'Salida'} a {h.newType === 'ENTRY' ? 'Entrada' : 'Salida'}. </>}
+                      {new Date(h.oldTimestamp).getTime() !== new Date(h.newTimestamp).getTime() && <>{fmtDateTime(h.oldTimestamp)} a {fmtDateTime(h.newTimestamp)}. </>}
+                      Motivo: {h.editNote}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
@@ -100,13 +127,13 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
           {/* Tipo ENTRY / EXIT */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
-            <div className="flex gap-2">
+            <div className="flex-wrap flex gap-2">
               <button
                 type="button"
                 onClick={() => setType('ENTRY')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors border-2 ${
+                className={`min-h-[44px] flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors border-2 ${
                   type === 'ENTRY'
-                    ? 'bg-green-50 border-green-400 text-green-700'
+                    ? 'bg-slate-50 border-slate-200 text-slate-700'
                     : 'bg-white border-gray-200 text-gray-500'
                 }`}
               >
@@ -115,9 +142,9 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
               <button
                 type="button"
                 onClick={() => setType('EXIT')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors border-2 ${
+                className={`min-h-[44px] flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors border-2 ${
                   type === 'EXIT'
-                    ? 'bg-blue-50 border-blue-400 text-blue-700'
+                    ? 'bg-slate-50 border-slate-200 text-slate-700'
                     : 'bg-white border-gray-200 text-gray-500'
                 }`}
               >
@@ -134,7 +161,7 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
               value={timestamp}
               onChange={e => setTimestamp(e.target.value)}
               required
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-400"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-orange-500"
             />
           </div>
 
@@ -148,7 +175,7 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="Ej: Trabajó en sala VIP"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-400"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-orange-500"
             />
           </div>
 
@@ -163,7 +190,7 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
               required
               rows={2}
               placeholder="Ej: Empleado olvidó marcar entrada"
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-indigo-400 resize-none"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-orange-500 resize-none"
             />
             <p className="text-xs text-gray-400 mt-1">Queda registrado en el historial de auditoría</p>
           </div>
@@ -177,18 +204,18 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
           )}
 
           {/* Footer */}
-          <div className="flex items-center gap-3 pt-2">
+          <div className="flex-wrap flex items-center gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
+              className="min-h-[44px] flex-1 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading || !editNote.trim()}
-              className="flex-1 py-2.5 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="min-h-[44px] flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               {loading ? 'Guardando...' : 'Guardar cambios'}
@@ -196,6 +223,6 @@ export function EditAttendanceModal({ record, onClose, onSaved }: Props) {
           </div>
         </form>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

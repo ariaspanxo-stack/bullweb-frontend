@@ -11,6 +11,7 @@
  *  - Botón "Crear roles estándar" si hay pocos roles
  */
 
+import { createPortal } from 'react-dom';
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -42,7 +43,7 @@ function isValidPhone(val: string): boolean {
 // ---------------------------------------------------------------------------
 const StatusBadge = ({ active }: { active: boolean }) => (
   <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-    active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+    active ? 'bg-slate-100 text-slate-700' : 'bg-red-100 text-red-700'
   }`}>
     {active ? <CheckCircle size={10} /> : <XCircle size={10} />}
     {active ? 'Activo' : 'Suspendido'}
@@ -63,7 +64,7 @@ const SecurityIndicators = ({ profile }: { profile: AdminUser['user_security_pro
   return (
     <div className="flex items-center gap-1">
       {profile.twoFactorEnabled && (
-        <span title="2FA activo" className="text-green-500"><Shield size={13} /></span>
+        <span title="2FA activo" className="text-slate-500"><Shield size={13} /></span>
       )}
       {profile.lockedUntil && new Date(profile.lockedUntil) > new Date() && (
         <span title="Cuenta bloqueada" className="text-red-500"><Lock size={13} /></span>
@@ -97,7 +98,7 @@ const InlineRoleSelect = ({ user, roles, onRoleChange }: InlineRoleSelectProps) 
         {user.roles && <RoleBadge name={user.roles.name} color={user.roles.color} />}
         <button
           onClick={() => setIsEditing(true)}
-          className="p-0.5 text-gray-300 hover:text-orange-400 opacity-0 group-hover:opacity-100 transition-all"
+          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-0.5 text-gray-300 hover:text-orange-400 opacity-0 group-hover:opacity-100 transition-all"
           title="Cambiar rol"
         >
           <Pencil size={12} />
@@ -167,14 +168,14 @@ const SimulateModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-        <div className="p-6 border-b flex items-center justify-between">
+        <div className="p-6 border-b flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <PlayCircle size={20} className="text-orange-500" />
             <h2 className="text-xl font-bold text-gray-900">Simular sesión</h2>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700"><X size={18} /></button>
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-700"><X size={18} /></button>
         </div>
         <div className="p-6 space-y-4">
           {!done ? (
@@ -208,23 +209,23 @@ const SimulateModal = ({
             </>
           ) : (
             <div className="flex flex-col items-center gap-3 py-4 text-center">
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle size={24} className="text-green-600" />
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center">
+                <CheckCircle size={24} className="text-slate-700" />
               </div>
               <p className="font-semibold text-gray-900">Sesión de simulación iniciada</p>
               <p className="text-sm text-gray-500">Se abrió una nueva pestaña con la vista de <strong>{user.name}</strong>.</p>
             </div>
           )}
         </div>
-        <div className="p-6 border-t flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">
+        <div className="flex-wrap p-6 border-t flex justify-end gap-3">
+          <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">
             Cerrar
           </button>
           {!done && (
             <button
               onClick={simulate}
               disabled={loading}
-              className="flex items-center gap-2 px-5 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50 transition"
+              className="min-h-[44px] flex items-center gap-2 px-5 py-2 bg-white text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 disabled:opacity-50 transition border border-slate-300"
             >
               {loading ? <RefreshCw size={14} className="animate-spin" /> : <PlayCircle size={14} />}
               Simular sesión
@@ -232,7 +233,7 @@ const SimulateModal = ({
           )}
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 
@@ -296,10 +297,10 @@ const EditUserModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl">
         {/* Header */}
-        <div className="p-5 border-b flex items-center justify-between">
+        <div className="p-5 border-b flex items-center justify-between flex-wrap gap-2">
           <div>
             <h2 className="text-lg font-bold text-gray-900">{user.name}</h2>
             <p className="text-xs text-gray-400 mt-0.5">
@@ -313,7 +314,7 @@ const EditUserModal = ({
               )}
             </p>
           </div>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded-lg transition">
             <X size={18} className="text-gray-500" />
           </button>
         </div>
@@ -329,7 +330,7 @@ const EditUserModal = ({
               <div className="flex items-center justify-between mb-4">
                 <span className="text-sm font-medium text-gray-700">Estado del PIN</span>
                 {user.hasPin ? (
-                  <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2.5 py-1">
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1">
                     🔐 PIN activo
                   </span>
                 ) : (
@@ -370,7 +371,7 @@ const EditUserModal = ({
                   <button
                     type="button"
                     onClick={() => setShowPin(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="min-h-[44px] absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showPin ? '🙈' : '👁️'}
                   </button>
@@ -396,7 +397,7 @@ const EditUserModal = ({
                       pinConfirm.length === 4 && pin !== pinConfirm
                         ? 'border-red-300 bg-red-50'
                         : pinConfirm.length === 4 && pin === pinConfirm
-                          ? 'border-green-300 bg-green-50'
+                          ? 'border-slate-200 bg-slate-50'
                           : 'border-gray-200'
                     }`}
                   />
@@ -404,7 +405,7 @@ const EditUserModal = ({
                     <p className="text-xs text-red-500 mt-1">Los PINs no coinciden</p>
                   )}
                   {pinsMatch && (
-                    <p className="text-xs text-green-600 mt-1">✅ PINs coinciden</p>
+                    <p className="text-xs text-slate-700 mt-1">✅ PINs coinciden</p>
                   )}
                 </div>
               )}
@@ -417,7 +418,7 @@ const EditUserModal = ({
                   type="button"
                   disabled={saving}
                   onClick={handleSavePin}
-                  className="w-full bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-xl py-2.5 text-sm font-medium transition-colors mb-2"
+                  className="min-h-[44px] w-full bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-700 rounded-xl py-2.5 text-sm font-medium transition-colors mb-2 border border-slate-300"
                 >
                   {saving ? 'Guardando...' : `🔐 ${user.hasPin ? 'Actualizar PIN' : 'Asignar PIN'}`}
                 </button>
@@ -429,7 +430,7 @@ const EditUserModal = ({
                   type="button"
                   disabled={saving}
                   onClick={handleRemovePin}
-                  className="w-full border border-red-200 text-red-500 hover:bg-red-50 disabled:opacity-50 rounded-xl py-2 text-xs font-medium transition-colors"
+                  className="min-h-[44px] w-full border border-red-200 text-red-500 hover:bg-red-50 disabled:opacity-50 rounded-xl py-2 text-xs font-medium transition-colors"
                 >
                   🗑️ Eliminar PIN
                 </button>
@@ -438,7 +439,7 @@ const EditUserModal = ({
           )}
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 
@@ -480,14 +481,14 @@ const ResetPasswordModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-        <div className="p-6 border-b flex items-center justify-between">
+        <div className="p-6 border-b flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <Key size={20} className="text-blue-500" />
+            <Key size={20} className="text-slate-500" />
             <h2 className="text-xl font-bold text-gray-900">Resetear contraseña</h2>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700"><X size={18} /></button>
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-700"><X size={18} /></button>
         </div>
         <div className="p-6 space-y-4">
           {!tempPass ? (
@@ -502,7 +503,7 @@ const ResetPasswordModal = ({
             </>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-2 text-slate-700 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
                 <CheckCircle size={16} />
                 <span className="text-sm font-medium">Contraseña reseteada exitosamente</span>
               </div>
@@ -514,10 +515,10 @@ const ResetPasswordModal = ({
                   </div>
                   <button
                     onClick={copyToClipboard}
-                    className="p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition"
+                    className="min-h-[44px] p-3 bg-gray-100 hover:bg-gray-200 rounded-xl transition"
                     title="Copiar"
                   >
-                    {copied ? <CheckCheck size={18} className="text-green-600" /> : <Copy size={18} className="text-gray-500" />}
+                    {copied ? <CheckCheck size={18} className="text-slate-700" /> : <Copy size={18} className="text-gray-500" />}
                   </button>
                 </div>
                 <p className="text-xs text-orange-600 mt-3 text-center font-medium">
@@ -527,15 +528,15 @@ const ResetPasswordModal = ({
             </div>
           )}
         </div>
-        <div className="p-6 border-t flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">
+        <div className="flex-wrap p-6 border-t flex justify-end gap-3">
+          <button onClick={onClose} className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition">
             {tempPass ? 'Cerrar' : 'Cancelar'}
           </button>
           {!tempPass && (
             <button
               onClick={doReset}
               disabled={loading}
-              className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+              className="min-h-[44px] flex items-center gap-2 px-5 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50 transition"
             >
               {loading ? <RefreshCw size={14} className="animate-spin" /> : <Key size={14} />}
               Generar contraseña temporal
@@ -543,7 +544,7 @@ const ResetPasswordModal = ({
           )}
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 
@@ -562,22 +563,22 @@ const BulkActionsBar = ({
   if (selected.length === 0) return null;
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white rounded-xl shadow-2xl px-6 py-3 flex items-center gap-4 animate-in slide-in-from-bottom">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white text-slate-900 rounded-xl shadow-2xl px-6 py-3 flex items-center gap-4 animate-in slide-in-from-bottom border border-slate-200">
       <span className="text-sm font-medium">{selected.length} seleccionado(s)</span>
       <div className="h-4 w-px bg-gray-600" />
-      <button onClick={() => onAction('ACTIVATE')} className="flex items-center gap-1.5 text-sm hover:text-green-400 transition-colors" disabled={isLoading}>
+      <button onClick={() => onAction('ACTIVATE')} className="min-h-[44px] flex items-center gap-1.5 text-sm hover:text-slate-500 transition-colors" disabled={isLoading}>
         <CheckCircle size={15} /> Activar
       </button>
-      <button onClick={() => onAction('SUSPEND')} className="flex items-center gap-1.5 text-sm hover:text-yellow-400 transition-colors" disabled={isLoading}>
+      <button onClick={() => onAction('SUSPEND')} className="min-h-[44px] flex items-center gap-1.5 text-sm hover:text-yellow-400 transition-colors" disabled={isLoading}>
         <XCircle size={15} /> Suspender
       </button>
-      <button onClick={() => onAction('RESET_PASSWORD')} className="flex items-center gap-1.5 text-sm hover:text-blue-400 transition-colors" disabled={isLoading}>
+      <button onClick={() => onAction('RESET_PASSWORD')} className="min-h-[44px] flex items-center gap-1.5 text-sm hover:text-slate-500 transition-colors" disabled={isLoading}>
         <Key size={15} /> Reset contraseña
       </button>
-      <button onClick={() => onAction('REVOKE_SESSIONS')} className="flex items-center gap-1.5 text-sm hover:text-orange-400 transition-colors" disabled={isLoading}>
+      <button onClick={() => onAction('REVOKE_SESSIONS')} className="min-h-[44px] flex items-center gap-1.5 text-sm hover:text-orange-400 transition-colors" disabled={isLoading}>
         <RefreshCw size={15} /> Cerrar sesiones
       </button>
-      <button onClick={() => onAction('DELETE')} className="flex items-center gap-1.5 text-sm hover:text-red-400 transition-colors" disabled={isLoading}>
+      <button onClick={() => onAction('DELETE')} className="min-h-[44px] flex items-center gap-1.5 text-sm hover:text-red-400 transition-colors" disabled={isLoading}>
         <Trash2 size={15} /> Eliminar
       </button>
     </div>
@@ -620,13 +621,13 @@ const CreateUserModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl">
-        <div className="p-6 border-b flex items-center justify-between">
+        <div className="p-6 border-b flex items-center justify-between flex-wrap gap-2">
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <UserPlus size={20} className="text-blue-600" /> Nuevo Usuario
+            <UserPlus size={20} className="text-slate-700" /> Nuevo Usuario
           </h2>
-          <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg transition">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1 hover:bg-gray-100 rounded-lg transition">
             <X size={18} className="text-gray-500" />
           </button>
         </div>
@@ -637,7 +638,7 @@ const CreateUserModal = ({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
               <input
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 placeholder="María"
                 value={form.firstName}
                 onChange={set('firstName')}
@@ -646,7 +647,7 @@ const CreateUserModal = ({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Apellido</label>
               <input
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 placeholder="González"
                 value={form.lastName}
                 onChange={set('lastName')}
@@ -659,7 +660,7 @@ const CreateUserModal = ({
             <label className="block text-sm font-medium text-gray-700 mb-1">Correo personal (notificaciones) *</label>
             <input
               type="email"
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
               placeholder="maria@restaurante.com"
               value={form.email}
               onChange={set('email')}
@@ -673,7 +674,7 @@ const CreateUserModal = ({
             <div className="relative">
               <input
                 type={showPass ? 'text' : 'password'}
-                className={`w-full border rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full border rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${
                   passwordWeak ? 'border-red-300 focus:ring-red-400' : 'border-gray-200'
                 }`}
                 placeholder="Mínimo 8 caracteres"
@@ -682,7 +683,7 @@ const CreateUserModal = ({
                 autoComplete="new-password"
               />
               <button type="button" onClick={() => setShowPass((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                className="min-h-[44px] absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
@@ -695,7 +696,7 @@ const CreateUserModal = ({
             <div className="relative">
               <input
                 type={showConfirm ? 'text' : 'password'}
-                className={`w-full border rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full border rounded-lg px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${
                   passwordMismatch ? 'border-red-300 focus:ring-red-400' : 'border-gray-200'
                 }`}
                 placeholder="Repetir contraseña"
@@ -704,7 +705,7 @@ const CreateUserModal = ({
                 autoComplete="new-password"
               />
               <button type="button" onClick={() => setShowConfirm((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                className="min-h-[44px] absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
                 {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
@@ -716,7 +717,7 @@ const CreateUserModal = ({
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Rol *</label>
               <select
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 value={form.roleId}
                 onChange={set('roleId')}
               >
@@ -728,7 +729,7 @@ const CreateUserModal = ({
               <label className="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
               <input
                 type="tel"
-                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 ${
                   phoneInvalid ? 'border-red-300 focus:ring-red-400' : 'border-gray-200'
                 }`}
                 placeholder="+56 9 1234 5678"
@@ -745,7 +746,7 @@ const CreateUserModal = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Comentario (auditoría)</label>
             <textarea
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
               rows={2}
               placeholder="Cajero turno tarde, contrato hasta Dic 2026..."
               value={form.comment}
@@ -753,20 +754,20 @@ const CreateUserModal = ({
             />
           </div>
 
-          <div className="flex items-start gap-2 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
-            <Shield size={14} className="text-blue-500 mt-0.5 shrink-0" />
-            <p className="text-xs text-blue-700">
+          <div className="flex items-start gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
+            <Shield size={14} className="text-slate-500 mt-0.5 shrink-0" />
+            <p className="text-xs text-slate-700">
               El usuario podrá iniciar sesión inmediatamente con el email y contraseña que establezcas.
             </p>
           </div>
         </div>
 
-        <div className="p-6 border-t flex justify-end gap-3">
-          <button className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition" onClick={onClose}>
+        <div className="flex-wrap p-6 border-t flex justify-end gap-3">
+          <button className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition" onClick={onClose}>
             Cancelar
           </button>
           <button
-            className="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+            className="min-h-[44px] px-5 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50 transition"
             disabled={!canSubmit}
             onClick={handleSubmit}
           >
@@ -774,7 +775,7 @@ const CreateUserModal = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 
@@ -813,14 +814,14 @@ const UserCreatedModal = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
       <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
-        <div className="p-6 border-b flex items-center justify-between">
+        <div className="p-6 border-b flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <CheckCircle size={20} className="text-green-500" />
+            <CheckCircle size={20} className="text-slate-500" />
             <h2 className="text-xl font-bold text-gray-900">Usuario creado exitosamente</h2>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700"><X size={18} /></button>
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-700"><X size={18} /></button>
         </div>
 
         <div className="p-6 space-y-4">
@@ -831,21 +832,21 @@ const UserCreatedModal = ({
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Datos de Acceso</p>
 
           {/* Correo de acceso — login principal */}
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
             <div className="flex items-center gap-1.5 mb-2">
               <span className="text-base">🔑</span>
-              <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Correo de acceso</p>
+              <p className="text-xs font-semibold text-slate-700 uppercase tracking-wide">Correo de acceso</p>
             </div>
             <div className="flex items-center gap-2">
-              <code className="flex-1 font-mono text-sm text-blue-900 bg-white border border-blue-100 rounded-lg px-3 py-2 break-all">
+              <code className="flex-1 font-mono text-sm text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2 break-all">
                 {user.loginEmail}
               </code>
               <button
                 onClick={() => copy(user.loginEmail, 'login')}
-                className="p-2 hover:bg-blue-100 rounded-lg transition shrink-0"
+                className="min-h-[44px] p-2 hover:bg-slate-100 rounded-lg transition shrink-0"
                 title="Copiar"
               >
-                {copied === 'login' ? <CheckCheck size={16} className="text-green-600" /> : <Copy size={16} className="text-blue-500" />}
+                {copied === 'login' ? <CheckCheck size={16} className="text-slate-700" /> : <Copy size={16} className="text-slate-500" />}
               </button>
             </div>
           </div>
@@ -862,10 +863,10 @@ const UserCreatedModal = ({
               </code>
               <button
                 onClick={() => copy(user.email, 'alt')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition shrink-0"
+                className="min-h-[44px] p-2 hover:bg-gray-100 rounded-lg transition shrink-0"
                 title="Copiar"
               >
-                {copied === 'alt' ? <CheckCheck size={16} className="text-green-600" /> : <Copy size={16} className="text-gray-400" />}
+                {copied === 'alt' ? <CheckCheck size={16} className="text-slate-700" /> : <Copy size={16} className="text-gray-400" />}
               </button>
             </div>
           </div>
@@ -888,23 +889,23 @@ const UserCreatedModal = ({
           </div>
         </div>
 
-        <div className="p-6 border-t flex justify-end gap-3">
+        <div className="flex-wrap p-6 border-t flex justify-end gap-3">
           <button
             onClick={copyAll}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition"
+            className="min-h-[44px] flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition"
           >
-            {copied === 'all' ? <CheckCheck size={14} className="text-green-600" /> : <Copy size={14} />}
+            {copied === 'all' ? <CheckCheck size={14} className="text-slate-700" /> : <Copy size={14} />}
             Copiar todo
           </button>
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition"
+            className="min-h-[44px] px-5 py-2 bg-white text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition border border-slate-300"
           >
             Cerrar
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 
@@ -1025,18 +1026,18 @@ export const AdminUsers = () => {
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Banner roles estándar — visible si hay pocos roles personalizados */}
       {!isLoading && customRolesCount <= 1 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5 flex items-center gap-3">
-          <Info size={18} className="text-blue-500 shrink-0" />
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-5 flex items-center gap-3">
+          <Info size={18} className="text-slate-500 shrink-0" />
           <div className="flex-1">
-            <p className="font-medium text-blue-800 text-sm">Configura los roles de tu restaurante</p>
-            <p className="text-xs text-blue-600 mt-0.5">
+            <p className="font-medium text-slate-700 text-sm">Configura los roles de tu restaurante</p>
+            <p className="text-xs text-slate-700 mt-0.5">
               Crea los roles estándar (Cajero, Mesero, Cocinero, Supervisor) con permisos preconfigurados.
             </p>
           </div>
           <button
             onClick={handleCreateDefaultRoles}
             disabled={creatingDefaultRoles}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium whitespace-nowrap hover:bg-blue-400 disabled:opacity-50 transition"
+            className="min-h-[44px] px-4 py-2 bg-orange-500 text-white rounded-lg text-sm font-medium whitespace-nowrap hover:bg-orange-600 disabled:opacity-50 transition"
           >
             {creatingDefaultRoles ? 'Creando...' : 'Crear roles estándar'}
           </button>
@@ -1044,23 +1045,23 @@ export const AdminUsers = () => {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
           <p className="text-gray-500 text-sm mt-0.5">
             {meta?.total ?? 0} usuarios registrados
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex-wrap flex items-center gap-2">
           <button
             onClick={handleExport}
-            className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition-colors"
+            className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
           >
             <FileDown size={16} /> Exportar Excel
           </button>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition"
+            className="min-h-[44px] flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition"
           >
             <UserPlus size={16} /> Nuevo Usuario
           </button>
@@ -1068,21 +1069,21 @@ export const AdminUsers = () => {
       </div>
 
       {/* Filtros */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4 flex items-center gap-4">
+      <div className="flex-wrap bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4 flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
-            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
             placeholder="Buscar por nombre o email..."
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
           />
         </div>
-        <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
           <option value="">Todos los roles</option>
           {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
         </select>
-        <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select className="border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-500">
           <option value="">Todos los estados</option>
           <option value="true">Activos</option>
           <option value="false">Suspendidos</option>
@@ -1128,7 +1129,7 @@ export const AdminUsers = () => {
                 </td>
               </tr>
             ) : users.map((user) => (
-              <tr key={user.id} className={`hover:bg-gray-50 transition-colors group ${selected.includes(user.id) ? 'bg-blue-50' : ''}`}>
+              <tr key={user.id} className={`hover:bg-gray-50 transition-colors group ${selected.includes(user.id) ? 'bg-slate-50' : ''}`}>
                 <td className="px-4 py-3">
                   <input
                     type="checkbox"
@@ -1141,7 +1142,7 @@ export const AdminUsers = () => {
                   <div>
                     <p className="font-medium text-gray-900">{user.name}</p>
                     {user.bullwebEmail
-                      ? <p className="text-blue-600 text-xs font-mono break-all" title={user.bullwebEmail}>{user.bullwebEmail}</p>
+                      ? <p className="text-slate-700 text-xs font-mono break-all" title={user.bullwebEmail}>{user.bullwebEmail}</p>
                       : <p className="text-gray-500 text-xs">{user.email}</p>
                     }
                   </div>
@@ -1162,7 +1163,7 @@ export const AdminUsers = () => {
                     {isMeseroUser(user) ? (
                       user.hasPin
                         ? (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 rounded-full px-2.5 py-1">
+                          <span className="inline-flex items-center gap-1 text-xs font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-full px-2.5 py-1">
                             🔐 PIN activo
                           </span>
                         )
@@ -1185,33 +1186,33 @@ export const AdminUsers = () => {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => setEditUser(user)}
-                      className="p-1.5 hover:bg-orange-50 rounded-lg text-gray-400 hover:text-orange-500 transition"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 hover:bg-orange-50 rounded-lg text-gray-400 hover:text-orange-500 transition"
                       title="Editar usuario (PIN App Mesero)"
                     >
                       <Edit size={14} />
                     </button>
                     <button
                       onClick={() => setResetPwdUser(user)}
-                      className="p-1.5 hover:bg-blue-50 rounded-lg text-gray-400 hover:text-blue-500 transition"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 hover:bg-slate-100 rounded-lg text-gray-400 hover:text-slate-500 transition"
                       title="Resetear contraseña (genera temporal)"
                     >
                       <Key size={14} />
                     </button>
                     <button
                       onClick={() => setSimulateUser(user)}
-                      className="p-1.5 hover:bg-orange-50 rounded-lg text-gray-400 hover:text-orange-500 transition"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 hover:bg-orange-50 rounded-lg text-gray-400 hover:text-orange-500 transition"
                       title="Simular sesión como este usuario"
                     >
                       <PlayCircle size={14} />
                     </button>
                     <button
                       onClick={() => navigate(`/admin/users/${user.id}`)}
-                      className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition"
                       title="Ver detalle"
                     >
                       <Eye size={14} />
                     </button>
-                    <button className="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition">
+                    <button className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 transition">
                       <MoreVertical size={14} />
                     </button>
                   </div>
@@ -1223,12 +1224,12 @@ export const AdminUsers = () => {
 
         {/* Paginación */}
         {meta && meta.pages > 1 && (
-          <div className="px-4 py-3 border-t flex items-center justify-between text-sm text-gray-600">
+          <div className="px-4 py-3 border-t flex items-center justify-between text-sm text-gray-600 flex-wrap gap-2">
             <span>Mostrando {((page - 1) * 20) + 1}–{Math.min(page * 20, meta.total)} de {meta.total}</span>
-            <div className="flex items-center gap-1">
-              <button className="px-3 py-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40 transition" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Anterior</button>
+            <div className="flex-wrap flex items-center gap-1">
+              <button className="min-h-[44px] px-3 py-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40 transition" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Anterior</button>
               <span className="px-3 py-1.5 text-gray-500">{page} / {meta.pages}</span>
-              <button className="px-3 py-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40 transition" disabled={page >= meta.pages} onClick={() => setPage((p) => p + 1)}>Siguiente →</button>
+              <button className="min-h-[44px] px-3 py-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-40 transition" disabled={page >= meta.pages} onClick={() => setPage((p) => p + 1)}>Siguiente →</button>
             </div>
           </div>
         )}

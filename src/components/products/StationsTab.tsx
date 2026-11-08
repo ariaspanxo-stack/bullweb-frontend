@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus, Trash2, AlertCircle, ChefHat, Printer, Loader2,
@@ -93,7 +94,7 @@ const StationForm: React.FC<StationFormProps> = ({ initial = {}, saving, error, 
               onClick={() => setColor(c.value)}
               title={c.label}
               aria-label={`Color ${c.label}`}
-              className="w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-slate-50"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-11 h-11 inline-flex items-center justify-center rounded-lg hover:bg-slate-50"
             >
               <span
                 className={`w-7 h-7 rounded-full border-2 transition-transform ${
@@ -110,7 +111,7 @@ const StationForm: React.FC<StationFormProps> = ({ initial = {}, saving, error, 
           <AlertCircle className="w-3.5 h-3.5" />{error}
         </p>
       )}
-      <div className="flex gap-2 pt-1">
+      <div className="flex-wrap flex gap-2 pt-1">
         <button
           onClick={() => onSave({ name, description: desc, color })}
           disabled={saving}
@@ -268,19 +269,19 @@ export const StationsTab: React.FC<StationsTabProps> = ({ onStationsChange }) =>
     <div className="p-6">
 
       {/* Encabezado — A4/A5 */}
-      <div className="flex items-center justify-between gap-4 mb-5">
+      <div className="flex items-center justify-between gap-4 mb-5 flex-wrap">
         <div>
           <h2 className={TITLE}>Estaciones</h2>
           <p className={SUBTITLE}>Estaciones de cocina y la impresora donde sale cada comanda</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex-wrap flex gap-2">
           <button onClick={fetchStations} title="Recargar" aria-label="Recargar estaciones" className={BTN_ICON}>
             <RotateCcw className="w-4 h-4" />
           </button>
           <button
             onClick={() => { setShowCreate(true); setCreateError(''); }}
             disabled={stations.length >= MAX_STATIONS || showCreate}
-            className={`${BTN_PRIMARY} disabled:cursor-not-allowed`}
+            className={`min-h-[44px] ${BTN_PRIMARY} disabled:cursor-not-allowed`}
           >
             <Plus className="w-4 h-4" />
             Agregar estación
@@ -422,7 +423,7 @@ export const StationsTab: React.FC<StationsTabProps> = ({ onStationsChange }) =>
                     </div>
 
                     {/* Acciones */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex-wrap flex items-center gap-2 flex-shrink-0">
                       {/* Editar */}
                       <button
                         onClick={() => { setEditingId(station.id); setEditError(''); }}
@@ -441,7 +442,7 @@ export const StationsTab: React.FC<StationsTabProps> = ({ onStationsChange }) =>
                         onClick={() => handleToggleActive(station)}
                         disabled={isToggling}
                         title={station.active ? 'Desactivar estación' : 'Activar estación'}
-                        className="h-11 inline-flex items-center gap-2 px-2 rounded-lg hover:bg-slate-50 disabled:opacity-50"
+                        className="min-h-[44px] h-11 inline-flex items-center gap-2 px-2 rounded-lg hover:bg-slate-50 disabled:opacity-50"
                       >
                         <span className={`relative inline-flex w-10 h-6 rounded-full transition-colors ${station.active ? 'bg-[#1E2A4A]' : 'bg-[#CBD5E1]'}`}>
                           <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all ${station.active ? 'left-5' : 'left-1'}`} />
@@ -488,7 +489,7 @@ export const StationsTab: React.FC<StationsTabProps> = ({ onStationsChange }) =>
 
       {/* Modal confirmar eliminación */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        createPortal(<div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 text-slate-900">
           <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 bg-[#FEE2E2] rounded-full flex items-center justify-center flex-shrink-0">
@@ -503,21 +504,21 @@ export const StationsTab: React.FC<StationsTabProps> = ({ onStationsChange }) =>
               ¿Eliminar <strong>"{deleteTarget.name}"</strong>? Los productos de esta estación
               quedarán sin estación de destino de impresión.
             </p>
-            <div className="flex gap-3">
+            <div className="flex-wrap flex gap-3">
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 h-11 flex items-center justify-center gap-2 border-[1.5px] border-[#B91C1C] text-[#B91C1C] bg-white hover:bg-red-50/60 text-sm font-bold rounded-lg disabled:opacity-60 transition-colors"
+                className="min-h-[44px] flex-1 h-11 flex items-center justify-center gap-2 border-[1.5px] border-[#B91C1C] text-[#B91C1C] bg-white hover:bg-red-50/60 text-sm font-bold rounded-lg disabled:opacity-60 transition-colors"
               >
                 {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                 {deleting ? 'Eliminando…' : 'Sí, eliminar'}
               </button>
-              <button onClick={() => setDeleteTarget(null)} disabled={deleting} className={`${BTN_OUTLINE} flex-1`}>
+              <button onClick={() => setDeleteTarget(null)} disabled={deleting} className={`min-h-[44px] ${BTN_OUTLINE} flex-1`}>
                 Cancelar
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
     </div>
   );

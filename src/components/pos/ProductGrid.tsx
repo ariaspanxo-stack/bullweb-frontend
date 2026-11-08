@@ -48,7 +48,7 @@ export default function ProductGrid({ onProductClick }: ProductGridProps) {
             placeholder="Buscar productos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+            className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 transition-shadow"
           />
         </div>
       </div>
@@ -57,10 +57,10 @@ export default function ProductGrid({ onProductClick }: ProductGridProps) {
       <div className="flex gap-2 overflow-x-auto pb-3 mb-4 scrollbar-hide">
         <button
           onClick={() => setSelectedCategory(null)}
-          className={cn(
+          className={cn('min-h-[44px]', 
             'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors',
             !selectedCategory
-              ? 'bg-blue-600 text-white shadow-sm'
+              ? 'bg-orange-50 text-orange-700 shadow-sm border border-orange-300'
               : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
           )}
         >
@@ -70,10 +70,10 @@ export default function ProductGrid({ onProductClick }: ProductGridProps) {
           <button
             key={category.id}
             onClick={() => setSelectedCategory(category.id)}
-            className={cn(
+            className={cn('min-h-[44px]', 
               'px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors',
               selectedCategory === category.id
-                ? 'bg-blue-600 text-white shadow-sm'
+                ? 'bg-orange-50 text-orange-700 shadow-sm border border-orange-300'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             )}
           >
@@ -102,7 +102,7 @@ export default function ProductGrid({ onProductClick }: ProductGridProps) {
               <button
                 key={product.id}
                 onClick={() => onProductClick(product)}
-                className="group bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-lg transition-all overflow-hidden text-left"
+                className="min-h-[44px] group bg-white rounded-lg border border-gray-200 hover:border-slate-300 hover:shadow-lg transition-all overflow-hidden text-left"
               >
                 {/* Imagen */}
                 <div className="aspect-square bg-gray-100 relative overflow-hidden">
@@ -139,10 +139,10 @@ export default function ProductGrid({ onProductClick }: ProductGridProps) {
                     </p>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-blue-600">
+                    <span className="font-bold text-slate-700">
                       {formatCurrency(product.price)}
                     </span>
-                    <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-7 h-7 rounded-full bg-slate-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <Plus className="w-4 h-4 text-white" />
                     </div>
                   </div>

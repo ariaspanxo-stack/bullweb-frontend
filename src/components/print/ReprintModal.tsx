@@ -71,23 +71,23 @@ export function ReprintModal({ open, orderId, orderNumber, onClose, onSuccess }:
   };
 
   return createPortal(
-    <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={e => { e.stopPropagation(); onClose(); }}>
+    <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 text-slate-900" onClick={e => { e.stopPropagation(); onClose(); }}>
       <div
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Printer className="w-4 h-4 text-blue-600" />
+            <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
+              <Printer className="w-4 h-4 text-slate-700" />
             </div>
             <div>
               <h3 className="font-semibold text-gray-900">Reimprimir Orden #{orderNumber}</h3>
               <p className="text-xs text-gray-500">Selecciona impresora y tipo de ticket</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-gray-100 text-gray-400">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -104,11 +104,11 @@ export function ReprintModal({ open, orderId, orderNumber, onClose, onSuccess }:
                 <button
                   key={value}
                   onClick={() => setSelectedType(value)}
-                  className={`flex items-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                  className={`min-h-[44px] flex items-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all ${
                     selectedType === value
                       ? color === 'orange'
                         ? 'border-orange-400 bg-orange-50 text-orange-700'
-                        : 'border-blue-400 bg-blue-50 text-blue-700'
+                        : 'border-slate-200 bg-slate-50 text-slate-700'
                       : 'border-gray-200 text-gray-600 hover:border-gray-300'
                   }`}
                 >
@@ -137,9 +137,9 @@ export function ReprintModal({ open, orderId, orderNumber, onClose, onSuccess }:
                     <button
                       key={p.id}
                       onClick={() => setSelectedPrinter(p.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left text-sm transition-all ${
+                      className={`min-h-[44px] w-full flex items-center justify-between px-3 py-2.5 rounded-xl border text-left text-sm transition-all ${
                         selectedPrinter === p.id
-                          ? 'border-blue-400 bg-blue-50'
+                          ? 'border-slate-200 bg-slate-50'
                           : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                       }`}
                     >
@@ -149,8 +149,8 @@ export function ReprintModal({ open, orderId, orderNumber, onClose, onSuccess }:
                         <span className="text-xs text-gray-400 capitalize">{p.type}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
-                        <span className={`w-2 h-2 rounded-full ${online ? 'bg-green-400' : 'bg-gray-300'}`} />
-                        <span className={`text-xs ${online ? 'text-green-600' : 'text-gray-400'}`}>
+                        <span className={`w-2 h-2 rounded-full ${online ? 'bg-slate-500' : 'bg-gray-300'}`} />
+                        <span className={`text-xs ${online ? 'text-slate-700' : 'text-gray-400'}`}>
                           {online ? 'Agente OK' : 'Sin agente'}
                         </span>
                       </div>
@@ -163,7 +163,7 @@ export function ReprintModal({ open, orderId, orderNumber, onClose, onSuccess }:
 
           {/* Estado de resultado */}
           {printState === 'done' && (
-            <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 rounded-xl px-3 py-2.5">
+            <div className="flex items-center gap-2 text-sm text-slate-700 bg-slate-50 rounded-xl px-3 py-2.5">
               <span className="text-base">✅</span>
               Impresión enviada correctamente
             </div>
@@ -177,18 +177,18 @@ export function ReprintModal({ open, orderId, orderNumber, onClose, onSuccess }:
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
+        <div className="flex-wrap flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl">
           <button
             onClick={onClose}
             disabled={printState === 'printing'}
-            className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
+            className="min-h-[44px] px-4 py-2 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit}
             disabled={!selectedPrinter || printState === 'printing' || printState === 'done'}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-white text-slate-700 text-sm font-medium rounded-xl hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border border-slate-300"
           >
             {printState === 'printing' ? (
               <><Loader2 className="w-4 h-4 animate-spin" /> Imprimiendo...</>

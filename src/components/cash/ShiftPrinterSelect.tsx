@@ -76,9 +76,7 @@ export function ShiftPrinterSelect({
             <select
               value={effectivePrinterId}
               onChange={e => setSelectedId(e.target.value)}
-              className="w-full appearance-none pl-3 pr-8 py-2.5
-                         bg-gray-100 text-gray-700 border border-gray-200
-                         rounded-xl text-sm focus:outline-none focus:border-gray-400"
+              className="w-full appearance-none pl-3 pr-8 py-2.5 bg-gray-100 text-gray-700 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-orange-500"
             >
               {receiptPrinters.map((p: any) => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -95,7 +93,7 @@ export function ShiftPrinterSelect({
             'flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all',
             receiptPrinters.length === 1 ? 'w-full justify-center' : '',
             printed
-              ? 'bg-green-100 text-green-700'
+              ? 'bg-slate-100 text-slate-700'
               : 'bg-gray-100 hover:bg-gray-200 text-gray-700',
             'disabled:opacity-40 disabled:cursor-not-allowed',
           ].join(' ')}
@@ -125,8 +123,7 @@ export function ShiftPrinterSelect({
           <select
             value={effectivePrinterId}
             onChange={e => setSelectedId(e.target.value)}
-            className="appearance-none pl-2.5 pr-7 py-1.5 bg-gray-100 text-gray-600
-                       border border-gray-200 rounded-lg text-xs focus:outline-none"
+            className="appearance-none pl-2.5 pr-7 py-1.5 bg-gray-100 text-gray-600 border border-gray-200 rounded-lg text-xs focus:outline-none"
           >
             {receiptPrinters.map((p: any) => (
               <option key={p.id} value={p.id}>{p.name}</option>
@@ -142,7 +139,7 @@ export function ShiftPrinterSelect({
         className={[
           'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
           printed
-            ? 'bg-green-100 text-green-600'
+            ? 'bg-slate-100 text-slate-700'
             : 'bg-gray-100 hover:bg-gray-200 text-gray-600',
           'disabled:opacity-40',
         ].join(' ')}

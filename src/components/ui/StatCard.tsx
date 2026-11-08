@@ -32,14 +32,14 @@ export default function StatCard({
 }: StatCardProps) {
   const colorStyles = {
     blue: {
-      bg: 'bg-blue-50',
-      icon: 'bg-blue-600',
-      text: 'text-blue-600'
+      bg: 'bg-slate-50',
+      icon: 'bg-slate-500',
+      text: 'text-slate-700'
     },
     green: {
-      bg: 'bg-green-50',
-      icon: 'bg-green-600',
-      text: 'text-green-600'
+      bg: 'bg-slate-50',
+      icon: 'bg-slate-500',
+      text: 'text-slate-700'
     },
     orange: {
       bg: 'bg-orange-50',
@@ -47,9 +47,9 @@ export default function StatCard({
       text: 'text-orange-600'
     },
     purple: {
-      bg: 'bg-purple-50',
-      icon: 'bg-purple-600',
-      text: 'text-purple-600'
+      bg: 'bg-slate-50',
+      icon: 'bg-slate-500',
+      text: 'text-slate-700'
     },
     red: {
       bg: 'bg-red-50',
@@ -84,14 +84,14 @@ export default function StatCard({
           {trend && (
             <div className="flex items-center gap-1">
               {trend.isPositive ? (
-                <TrendingUp className="h-4 w-4 text-green-600" />
+                <TrendingUp className="h-4 w-4 text-slate-700" />
               ) : (
                 <TrendingDown className="h-4 w-4 text-red-600" />
               )}
               <span
                 className={cn(
                   'text-sm font-medium',
-                  trend.isPositive ? 'text-green-600' : 'text-red-600'
+                  trend.isPositive ? 'text-slate-700' : 'text-red-600'
                 )}
               >
                 {trend.isPositive ? '+' : ''}
@@ -104,7 +104,7 @@ export default function StatCard({
 
         {/* Icon */}
         <div className={cn('w-12 h-12 rounded-lg flex items-center justify-center', styles.bg)}>
-          <Icon className={cn('h-6 w-6 text-white', styles.icon.replace('bg-', 'text-'))} />
+          <Icon className={cn('h-6 w-6 text-slate-900', styles.icon.replace('bg-', 'text-'))} />
         </div>
       </div>
     </div>

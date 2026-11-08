@@ -91,10 +91,7 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`
-                relative flex items-center gap-2 h-12 px-4 text-sm font-semibold whitespace-nowrap
-                border-b-2 transition-colors duration-200
-                ${
+              className={`min-h-[44px]  relative flex items-center gap-2 h-12 px-4 text-sm font-semibold whitespace-nowrap border-b-2 transition-colors duration-200 ${
                   isActive
                     ? 'border-[#F97316] text-[#0F172A]'
                     : 'border-transparent text-[#64748B] hover:text-[#0F172A]'

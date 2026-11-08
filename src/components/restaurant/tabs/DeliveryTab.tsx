@@ -54,15 +54,15 @@ export function DeliveryTab() {
         />
       )}
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100 flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Truck size={20} className="text-purple-600" />
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Truck size={20} className="text-slate-700" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-gray-800">Órdenes de delivery</h2>
             {activeCount > 0 && (
-              <p className="text-xs text-purple-500 font-medium mt-0.5">
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
                 {activeCount} {activeCount !== 1 ? 'órdenes' : 'orden'} activa{activeCount !== 1 ? 's' : ''}
               </p>
             )}
@@ -70,7 +70,7 @@ export function DeliveryTab() {
         </div>
         <button
           onClick={() => setShowDeliveryModal(true)}
-          className="flex items-center gap-2 h-11 px-4 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-xl font-semibold text-sm transition-colors"
+          className="min-h-[44px] flex items-center gap-2 h-11 px-4 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-xl font-semibold text-sm transition-colors"
         >
           <Plus size={16} />
           Nuevo Delivery
@@ -87,16 +87,16 @@ export function DeliveryTab() {
               <button
                 key={tab.key}
                 onClick={() => setStatusFilter(tab.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                className={`min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
                   isActive
-                    ? 'bg-violet-50 border-[1.5px] border-violet-600 text-violet-700'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-purple-300 hover:text-purple-600'
+                    ? 'bg-slate-50 border-[1.5px] border-slate-200 text-slate-700'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-slate-300 hover:text-slate-700'
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${tab.dot}`} />
                 {tab.label}
                 <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
-                  isActive ? 'bg-white text-violet-700' : 'bg-gray-100 text-gray-500'
+                  isActive ? 'bg-white text-slate-700' : 'bg-gray-100 text-gray-500'
                 }`}>
                   {count}
                 </span>
@@ -108,13 +108,13 @@ export function DeliveryTab() {
 
       {/* Empty State — sin ordenes */}
       {deliveryOrders.length === 0 ? (
-        <div className="flex flex-col items-center py-20 bg-gradient-to-b from-purple-50 to-white rounded-2xl border border-dashed border-purple-200">
+        <div className="flex flex-col items-center py-20 to-white rounded-2xl border border-dashed border-slate-200">
           <PackageOpen className="w-16 h-16 text-zinc-400 mb-5" />
           <p className="text-lg font-semibold text-gray-700">Sin deliveries activos</p>
           <p className="text-sm text-gray-400 mt-1 mb-6">Los nuevos pedidos apareceran aqui</p>
           <button
             onClick={() => setShowDeliveryModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md shadow-purple-200"
+            className="min-h-[44px] flex items-center gap-2 px-6 py-3 bg-[#F97316] hover:bg-[#ea6a0a] text-white rounded-xl font-semibold text-sm transition-all shadow-md "
           >
             <Plus size={16} />
             Crear primer delivery
@@ -128,7 +128,7 @@ export function DeliveryTab() {
           </p>
           <button
             onClick={() => setStatusFilter('ALL')}
-            className="mt-2 text-xs text-purple-500 hover:underline"
+            className="min-h-[44px] mt-2 text-xs text-slate-500 hover:underline"
           >
             Ver todas
           </button>

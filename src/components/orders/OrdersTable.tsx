@@ -141,14 +141,14 @@ export default function OrdersTable({
                   <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => onViewDetails(order)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-slate-700 hover:bg-slate-100 rounded transition-colors"
                       title="Ver detalles"
                     >
                       <Eye className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => onPrint(order)}
-                      className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                      className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-gray-600 hover:bg-gray-100 rounded transition-colors"
                       title="Re-imprimir"
                     >
                       <Printer className="w-4 h-4" />
@@ -156,7 +156,7 @@ export default function OrdersTable({
                     {order.status !== 'PAID' && order.status !== 'CANCELLED' && (
                       <button
                         onClick={() => onCancel(order)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
+                        className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
                         title="Cancelar"
                       >
                         <Trash2 className="w-4 h-4" />

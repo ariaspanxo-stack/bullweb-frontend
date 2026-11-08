@@ -68,7 +68,7 @@ const fmt = (n: number) => Math.round(Math.abs(n)).toLocaleString('es-CL');
 // Hotfix #256 (D4): un solo patrón de tarjeta, campos y botones de contorno
 const CARD        = 'rounded-xl border border-slate-200 bg-white p-3';
 const CARD_TITLE  = 'text-xs font-bold uppercase tracking-wider text-slate-600';
-const FIELD       = 'w-full min-h-[44px] border border-slate-300 rounded-xl bg-white text-base font-bold text-slate-900 focus:outline-none focus:border-slate-500 transition-colors';
+const FIELD       = 'w-full min-h-[44px] border border-slate-300 rounded-xl bg-white text-base font-bold text-slate-900 focus:outline-none focus:border-orange-500 transition-colors';
 const BTN_OUTLINE = 'min-h-[44px] px-3 border border-slate-300 rounded-xl bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed';
 const BTN_ICON    = 'w-11 h-11 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors flex-shrink-0';
 const AMBER_NOTE  = 'flex items-start gap-2 text-sm font-medium text-amber-900 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2';
@@ -92,14 +92,14 @@ const RowInput = memo(({ row, onMethod, onAmount, onRemove, canRemove, placehold
   const selectedName = activeMethods.find(m => m.code === row.method)?.name ?? '';
   const Icon = methodIcon(selectedName);
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex-wrap flex items-center gap-2">
       {/* Selector de método */}
       <div className="relative flex-shrink-0">
         <Icon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10 text-slate-500" />
         <select
           value={row.method}
           onChange={e => onMethod(e.target.value)}
-          className="appearance-none min-h-[44px] pl-9 pr-8 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800 cursor-pointer focus:outline-none focus:border-slate-500 transition-colors"
+          className="appearance-none min-h-[44px] pl-9 pr-8 rounded-xl border border-slate-300 bg-white text-sm font-bold text-slate-800 cursor-pointer focus:outline-none focus:border-orange-500 transition-colors"
         >
           <option value="" disabled>Método...</option>
           {activeMethods.map(m => (
@@ -123,7 +123,7 @@ const RowInput = memo(({ row, onMethod, onAmount, onRemove, canRemove, placehold
         />
       </div>
       {quickFill !== undefined && quickFill > 0 && (
-        <button type="button" onClick={() => onAmount(String(quickFill))} className={`${BTN_OUTLINE} flex-shrink-0`}>
+        <button type="button" onClick={() => onAmount(String(quickFill))} className={`min-h-[44px] ${BTN_OUTLINE} flex-shrink-0`}>
           Exacto
         </button>
       )}
@@ -431,7 +431,7 @@ export const PaymentModal = ({
 
   if (paymentCompleted) {
     return createPortal(
-      <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
         <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center">
           <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-orange-600" />
@@ -452,7 +452,7 @@ export const PaymentModal = ({
               setPaymentCompleted(false);
               onClose();
             }}
-            className={`${BTN_OUTLINE} w-full`}
+            className={`min-h-[44px] ${BTN_OUTLINE} w-full`}
           >
             Cerrar
           </button>
@@ -464,16 +464,16 @@ export const PaymentModal = ({
 
   return createPortal(
     <>
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100]" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] text-slate-900" onClick={onClose} />
 
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 text-slate-900">
         <div
           className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden"
           style={{ height: 'min(92vh, 780px)' }}
           onClick={e => e.stopPropagation()}
         >
           {/* HEADER — una sola línea (D4) */}
-          <div className="flex-shrink-0 flex items-center justify-between gap-3 px-5 min-h-[60px] border-b border-slate-200">
+          <div className="flex-shrink-0 flex items-center justify-between gap-3 px-5 min-h-[60px] border-b border-slate-200 flex-wrap">
             <h2 className="text-lg font-bold text-slate-900 truncate">
               {channelLabel} · <span className="font-black">${fmt(finalTotal)}</span>
               {orderNumber && <span className="ml-2 text-xs font-medium text-slate-400">{orderNumber}</span>}
@@ -597,7 +597,7 @@ export const PaymentModal = ({
                             type="button"
                             onClick={() => persistDiscount(currentDiscount)}
                             disabled={applyingDiscount}
-                            className={`${BTN_OUTLINE} flex-shrink-0`}
+                            className={`min-h-[44px] ${BTN_OUTLINE} flex-shrink-0`}
                           >
                             {applyingDiscount ? '…' : 'Aplicar'}
                           </button>
@@ -626,7 +626,7 @@ export const PaymentModal = ({
                       type="button"
                       onClick={handleValidateCoupon}
                       disabled={couponLoading || !couponCode.trim()}
-                      className={`${BTN_OUTLINE} flex-shrink-0`}
+                      className={`min-h-[44px] ${BTN_OUTLINE} flex-shrink-0`}
                     >
                       {couponLoading ? '…' : 'Aplicar'}
                     </button>
@@ -669,7 +669,7 @@ export const PaymentModal = ({
                   if (!anyTipEnabled && tipRows.length === 0) return null;
                   return (
                     <section className={CARD}>
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                         <p className={CARD_TITLE}>
                           Propina
                           {tipConfig && <span className="ml-1 normal-case tracking-normal font-medium text-slate-400">({tipConfig.tip_percentage}%)</span>}
@@ -701,7 +701,7 @@ export const PaymentModal = ({
 
                 {/* PAGO */}
                 <section className={CARD}>
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
                     <p className={CARD_TITLE}>
                       Pago
                       <span className="ml-1 normal-case tracking-normal font-medium text-slate-400">· venta ${fmt(saleTotal)}</span>

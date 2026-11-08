@@ -36,8 +36,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       button: 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500',
     },
     info: {
-      icon: 'text-blue-600 bg-blue-100',
-      button: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
+      icon: 'text-slate-700 bg-slate-100',
+      button: 'bg-slate-500 hover:bg-slate-700 focus:ring-orange-500',
     },
   };
 
@@ -52,7 +52,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-[100]"
         onClick={onClose}
       />
 
@@ -62,7 +62,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           {/* Botón cerrar */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
             disabled={isLoading}
           >
             <X className="w-6 h-6" />
@@ -86,18 +86,18 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             </p>
 
             {/* Botones */}
-            <div className="flex gap-3">
+            <div className="flex-wrap flex gap-3">
               <button
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                className="min-h-[44px] flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
               >
                 {cancelText}
               </button>
               <button
                 onClick={handleConfirm}
                 disabled={isLoading}
-                className={`flex-1 px-4 py-2.5 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${styles.button}`}
+                className={`min-h-[44px] flex-1 px-4 py-2.5 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${styles.button}`}
               >
                 {isLoading ? 'Procesando...' : confirmText}
               </button>

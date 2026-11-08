@@ -18,12 +18,12 @@ type EstadoDia =
   | null;
 
 const ESTADO_STYLE: Record<string, string> = {
-  presente:   'bg-green-100  text-green-700  border-green-200',
-  ausente:    'bg-red-100    text-red-700    border-red-200',
-  tardanza:   'bg-amber-100  text-amber-700  border-amber-200',
-  justificado:'bg-blue-100   text-blue-700   border-blue-200',
-  libre:      'bg-gray-50    text-gray-400   border-gray-100',
-  futuro:     'bg-white      text-gray-200   border-gray-100',
+  presente:   'bg-slate-100 text-slate-700 border-slate-200',
+  ausente:    'bg-red-100 text-red-700 border-red-200',
+  tardanza:   'bg-amber-100 text-amber-700 border-amber-200',
+  justificado:'bg-slate-100 text-slate-700 border-slate-200',
+  libre:      'bg-gray-50 text-gray-400 border-gray-100',
+  futuro:     'bg-white text-gray-200 border-gray-100',
 };
 
 const ESTADO_LABEL: Record<string, string> = {
@@ -122,19 +122,19 @@ export function CalendarioMensual({ employees }: CalendarioMensualProps) {
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-gray-800">Calendario Mensual</h3>
           {/* Toggle Individual / Equipo */}
-          <div className="flex items-center bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
+          <div className="flex-wrap flex items-center bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
             <button
               onClick={() => setView('individual')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors ${
-                view === 'individual' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              className={`min-h-[44px] flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors ${
+                view === 'individual' ? 'bg-white text-slate-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               <User className="w-3.5 h-3.5" /> Individual
             </button>
             <button
               onClick={() => setView('equipo')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors ${
-                view === 'equipo' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              className={`min-h-[44px] flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors ${
+                view === 'equipo' ? 'bg-white text-slate-700 shadow-sm' : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               <Users className="w-3.5 h-3.5" /> Equipo
@@ -149,7 +149,7 @@ export function CalendarioMensual({ employees }: CalendarioMensualProps) {
               <select
                 value={selectedEmp}
                 onChange={e => setSelectedEmp(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-[180px]"
+                className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 min-w-[180px]"
               >
                 <option value="">Seleccionar empleado…</option>
                 {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
@@ -157,10 +157,10 @@ export function CalendarioMensual({ employees }: CalendarioMensualProps) {
             </div>
           )}
           {/* Navegación mes */}
-          <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1">
+          <div className="flex-wrap flex items-center gap-1 bg-gray-100 rounded-xl p-1">
             <button
               onClick={prevMonth}
-              className="p-1.5 rounded-lg hover:bg-white text-gray-600 transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-white text-gray-600 transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -169,7 +169,7 @@ export function CalendarioMensual({ employees }: CalendarioMensualProps) {
             </span>
             <button
               onClick={nextMonth}
-              className="p-1.5 rounded-lg hover:bg-white text-gray-600 transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg hover:bg-white text-gray-600 transition-colors"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -199,7 +199,7 @@ export function CalendarioMensual({ employees }: CalendarioMensualProps) {
                   {Array.from({ length: new Date(year, month, 0).getDate() }, (_, i) => i + 1).map(d => (
                     <th key={d} className={`px-1.5 py-2 text-center font-medium w-7 ${
                       d === now.getDate() && month === now.getMonth() + 1 && year === now.getFullYear()
-                        ? 'text-indigo-600 font-bold' : 'text-gray-500'
+                        ? 'text-slate-700 font-bold' : 'text-gray-500'
                     }`}>
                       {d}
                     </th>
@@ -222,10 +222,10 @@ export function CalendarioMensual({ employees }: CalendarioMensualProps) {
                         const dia = emp.dias?.find((x: any) => x.fecha === fecha);
                         const estado = dia?.estado ?? (new Date(year, month - 1, d) > now ? 'futuro' : 'libre');
                         const dot: Record<string, string> = {
-                          presente:    'bg-green-400',
+                          presente:    'bg-slate-500',
                           tardanza:    'bg-amber-400',
                           ausente:     'bg-red-400',
-                          justificado: 'bg-blue-400',
+                          justificado: 'bg-slate-500',
                           libre:       'bg-gray-200',
                           futuro:      '',
                         };
@@ -237,7 +237,7 @@ export function CalendarioMensual({ employees }: CalendarioMensualProps) {
                           </td>
                         );
                       })}
-                      <td className="px-3 py-1.5 text-center font-bold text-green-700">{emp.resumen?.presentes ?? 0}</td>
+                      <td className="px-3 py-1.5 text-center font-bold text-slate-700">{emp.resumen?.presentes ?? 0}</td>
                       <td className="px-3 py-1.5 text-center font-bold text-red-600">{emp.resumen?.ausentes ?? 0}</td>
                       <td className="px-3 py-1.5 text-center font-bold text-amber-600">{emp.resumen?.tardanzas ?? 0}</td>
                     </tr>
@@ -266,11 +266,11 @@ export function CalendarioMensual({ employees }: CalendarioMensualProps) {
             {Object.keys(stats).length > 0 && (
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
               {[
-                { key: 'presentes',    label: 'Presentes',    cls: 'bg-green-50  text-green-700'  },
-                { key: 'tardanzas',    label: 'Tardanzas',    cls: 'bg-amber-50  text-amber-700'  },
-                { key: 'ausentes',     label: 'Ausentes',     cls: 'bg-red-50    text-red-700'    },
-                { key: 'justificados', label: 'Justificados', cls: 'bg-blue-50   text-blue-700'   },
-                { key: 'horasTrabajadas', label: 'Horas netas', cls: 'bg-indigo-50 text-indigo-700' },
+                { key: 'presentes',    label: 'Presentes',    cls: 'bg-slate-50 text-slate-700'  },
+                { key: 'tardanzas',    label: 'Tardanzas',    cls: 'bg-amber-50 text-amber-700'  },
+                { key: 'ausentes',     label: 'Ausentes',     cls: 'bg-red-50 text-red-700'    },
+                { key: 'justificados', label: 'Justificados', cls: 'bg-slate-50 text-slate-700'   },
+                { key: 'horasTrabajadas', label: 'Horas netas', cls: 'bg-slate-50 text-slate-700' },
               ].map(({ key, label, cls }) => (
                 stats[key] != null && (
                   <div key={key} className={`rounded-xl p-3 text-center ${cls}`}>
@@ -320,7 +320,7 @@ export function CalendarioMensual({ employees }: CalendarioMensualProps) {
                     {/* Número del día */}
                     <span className={`text-xs w-6 h-6 flex items-center justify-center rounded-full font-semibold ${
                       isToday
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-slate-500 text-white'
                         : 'text-gray-700'
                     }`}>
                       {cell.day}

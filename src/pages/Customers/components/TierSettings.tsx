@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { Crown, Plus, Trash2, Save, AlertTriangle, Settings as SettingsIcon } from 'lucide-react';
 import customersService from '../../../services/customersService';
@@ -111,20 +112,20 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
   };
 
   const inputCls =
-    'w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-gray-800 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none placeholder-gray-400';
+    'w-full bg-white border border-gray-300 rounded-md px-3 py-2 text-gray-800 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none placeholder-slate-400';
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+    createPortal(<div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4 text-slate-900">
+      <div className="bg-white border border-slate-200 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-zinc-800 flex items-center justify-between flex-shrink-0">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Crown className="w-5 h-5 text-yellow-400" />
-            <h3 className="text-xl font-bold text-white">Niveles de Fidelización</h3>
+            <h3 className="text-xl font-bold text-slate-900">Niveles de Fidelización</h3>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors text-zinc-400"
+            className="min-h-[44px] w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-colors text-slate-600"
           >
             ✕
           </button>
@@ -133,18 +134,18 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar space-y-4">
           {loading ? (
-            <div className="text-center py-8 text-zinc-500">Cargando...</div>
+            <div className="text-center py-8 text-slate-500">Cargando...</div>
           ) : (
             <>
               {/* Config de inactividad */}
-              <div className="bg-zinc-800/60 rounded-lg p-4 border border-zinc-700/50">
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
                 <div className="flex items-center gap-2 mb-3">
-                  <SettingsIcon className="w-4 h-4 text-blue-400" />
-                  <h4 className="text-sm font-semibold text-zinc-200">Reglas de Caída de Nivel</h4>
+                  <SettingsIcon className="w-4 h-4 text-slate-500" />
+                  <h4 className="text-sm font-semibold text-slate-800">Reglas de Caída de Nivel</h4>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-medium text-zinc-400 block mb-1.5">Días de Inactividad (caída)</label>
+                    <label className="text-xs font-medium text-slate-600 block mb-1.5">Días de Inactividad (caída)</label>
                     <input
                       type="number"
                       value={inactivityDays}
@@ -153,7 +154,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-zinc-400 block mb-1.5">Días de Alerta Preventiva</label>
+                    <label className="text-xs font-medium text-slate-600 block mb-1.5">Días de Alerta Preventiva</label>
                     <input
                       type="number"
                       value={riskDays}
@@ -162,7 +163,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
                     />
                   </div>
                 </div>
-                <div className="mt-3 flex items-start gap-2 text-xs text-zinc-400 bg-zinc-900/50 rounded-md p-2.5 border border-zinc-700/40">
+                <div className="mt-3 flex items-start gap-2 text-xs text-slate-600 bg-white rounded-md p-2.5 border border-slate-200">
                   <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 mt-0.5 flex-shrink-0" />
                   <span>
                     Tras {riskDays} días antes de caer, el cliente se marca "En Riesgo". Al superar {inactivityDays} días sin comprar, baja un nivel.
@@ -171,12 +172,12 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
               </div>
 
               {/* Lista de niveles */}
-              <div className="bg-zinc-800/60 rounded-lg p-4 border border-zinc-700/50">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-sm font-semibold text-zinc-200">Niveles</h4>
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                  <h4 className="text-sm font-semibold text-slate-800">Niveles</h4>
                   <button
                     onClick={addTier}
-                    className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-colors"
+                    className="min-h-[44px] flex items-center gap-1 px-2.5 py-1 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium transition-colors"
                   >
                     <Plus className="w-3.5 h-3.5" /> Agregar
                   </button>
@@ -185,7 +186,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
                   {tiers.map((tier, idx) => (
                     <div
                       key={idx}
-                      className="bg-zinc-900/60 rounded-lg p-3 border border-zinc-700/60 grid grid-cols-1 md:grid-cols-12 gap-3 items-center"
+                      className="bg-white rounded-lg p-3 border border-slate-200 grid grid-cols-1 md:grid-cols-12 gap-3 items-center"
                     >
                       {/* Color */}
                       <div className="md:col-span-1 flex items-center gap-2">
@@ -199,7 +200,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
                       </div>
                       {/* Nombre */}
                       <div className="md:col-span-3">
-                        <label className="text-[10px] font-medium text-zinc-500 uppercase tracking-wide block mb-1 md:hidden">Nombre</label>
+                        <label className="text-[10px] font-medium text-slate-500 uppercase tracking-wide block mb-1 md:hidden">Nombre</label>
                         <input
                           type="text"
                           value={tier.name}
@@ -210,7 +211,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
                       </div>
                       {/* Gasto mínimo */}
                       <div className="md:col-span-3">
-                        <label className="text-[10px] font-medium text-zinc-500 uppercase tracking-wide block mb-1 md:hidden">Gasto Mínimo</label>
+                        <label className="text-[10px] font-medium text-slate-500 uppercase tracking-wide block mb-1 md:hidden">Gasto Mínimo</label>
                         <input
                           type="number"
                           value={tier.minSpent}
@@ -221,7 +222,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
                       </div>
                       {/* Beneficio */}
                       <div className="md:col-span-4">
-                        <label className="text-[10px] font-medium text-zinc-500 uppercase tracking-wide block mb-1 md:hidden">Beneficio</label>
+                        <label className="text-[10px] font-medium text-slate-500 uppercase tracking-wide block mb-1 md:hidden">Beneficio</label>
                         <input
                           type="text"
                           value={tier.benefitText ?? ''}
@@ -234,7 +235,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
                       <div className="md:col-span-1 flex items-center justify-center">
                         <button
                           onClick={() => removeTier(idx)}
-                          className="w-9 h-9 rounded-md flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+                          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-9 h-9 rounded-md flex items-center justify-center text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-colors"
                           title="Eliminar nivel"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -246,7 +247,7 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
               </div>
 
               {msg && (
-                <div className={`rounded-lg p-3 text-sm ${msg.type === 'ok' ? 'bg-green-500/10 text-green-400 border border-green-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'}`}>
+                <div className={`rounded-lg p-3 text-sm ${msg.type === 'ok' ? 'bg-slate-100 text-slate-700 border border-slate-200' : 'bg-red-500/10 text-red-400 border border-red-500/30'}`}>
                   {msg.text}
                 </div>
               )}
@@ -255,22 +256,22 @@ export default function TierSettings({ isOpen, onClose }: { isOpen: boolean; onC
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-zinc-800 flex-shrink-0 flex gap-2">
+        <div className="flex-wrap p-4 border-t border-slate-200 flex-shrink-0 flex gap-2">
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 px-4 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-medium transition-colors"
+            className="min-h-[44px] flex-1 py-2.5 px-4 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-medium transition-colors"
           >
             Cancelar
           </button>
           <button
             onClick={handleSave}
             disabled={saving || loading}
-            className="flex-1 py-2.5 px-4 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-medium transition-colors flex items-center justify-center gap-2"
+            className="min-h-[44px] flex-1 py-2.5 px-4 rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-medium transition-colors flex items-center justify-center gap-2"
           >
             <Save className="w-4 h-4" /> {saving ? 'Guardando...' : 'Guardar'}
           </button>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

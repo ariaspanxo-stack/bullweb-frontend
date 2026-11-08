@@ -71,9 +71,9 @@ export function VentasTab() {
         <KpiMoneyCard label="Total Ventas"    value={totalSales}    prev={prevTotalSales}
           icon={DollarSign}   iconBg="bg-orange-100 text-orange-600"   loading={salesLoading || prevLoading} />
         <KpiIntCard   label="Nº Órdenes"      value={totalOrders}   prev={prevTotalOrders}
-          icon={ShoppingCart} iconBg="bg-indigo-100 text-indigo-600"   loading={salesLoading || prevLoading} />
+          icon={ShoppingCart} iconBg="bg-slate-100 text-slate-700"   loading={salesLoading || prevLoading} />
         <KpiMoneyCard label="Ticket Promedio" value={avgTicket}     prev={prevAvgTicket}
-          icon={ArrowUpRight} iconBg="bg-emerald-100 text-emerald-600" loading={salesLoading || prevLoading} />
+          icon={ArrowUpRight} iconBg="bg-slate-100 text-slate-700" loading={salesLoading || prevLoading} />
         <ReportCard
           label="Top Producto"
           value={(dashboardData as any)?.topProducts?.[0]?.product?.name ?? '—'}
@@ -105,7 +105,7 @@ export function VentasTab() {
           </div>
           <div className="flex items-center gap-4 text-xs text-gray-500 flex-shrink-0">
             <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-orange-400 inline-block" /> Ventas ($)</span>
-            <span className="flex items-center gap-1.5"><span className="w-5 h-[2px] bg-indigo-500 inline-block rounded" /> Órdenes</span>
+            <span className="flex items-center gap-1.5"><span className="w-5 h-[2px] bg-slate-500 inline-block rounded" /> Órdenes</span>
           </div>
         </div>
         {mixedChartData.length === 0
@@ -235,7 +235,7 @@ export function VentasTab() {
                       {o.refunded && <span className="block text-[10px] font-semibold text-red-600">Anulada con devolución</span>}
                     </td>
                     <td className="px-5 py-3 text-xs">
-                      <span className={cn('px-2 py-0.5 rounded-full font-medium', o.type === 'DELIVERY' ? 'bg-indigo-100 text-indigo-700' : o.type === 'TAKEAWAY' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700')}>
+                      <span className={cn('px-2 py-0.5 rounded-full font-medium', o.type === 'DELIVERY' ? 'bg-slate-100 text-slate-700' : o.type === 'TAKEAWAY' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700')}>
                         {o.type === 'DELIVERY' ? 'Delivery' : o.type === 'TAKEAWAY' ? 'Para llevar' : 'Mesa'}
                       </span>
                     </td>
@@ -248,14 +248,14 @@ export function VentasTab() {
             </table>
           </div>
           {salesTotalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+            <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500 flex-wrap gap-2">
               <span>Mostrando <span className="font-semibold text-gray-600">{(salesPage - 1) * SALES_PAGE_SIZE + 1}–{Math.min(salesPage * SALES_PAGE_SIZE, rawOrders.length)}</span> de <span className="font-semibold text-gray-600">{rawOrders.length}</span> órdenes</span>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setSalesPage(1)} disabled={salesPage === 1} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronsLeft className="w-4 h-4" /></button>
-                <button onClick={() => setSalesPage(p => p - 1)} disabled={salesPage === 1} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronLeft className="w-4 h-4" /></button>
+              <div className="flex-wrap flex items-center gap-1">
+                <button onClick={() => setSalesPage(1)} disabled={salesPage === 1} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronsLeft className="w-4 h-4" /></button>
+                <button onClick={() => setSalesPage(p => p - 1)} disabled={salesPage === 1} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronLeft className="w-4 h-4" /></button>
                 <span className="text-sm text-gray-600 px-2"><span className="font-bold">{salesPage}</span> / <span className="font-bold">{salesTotalPages}</span></span>
-                <button onClick={() => setSalesPage(p => p + 1)} disabled={salesPage >= salesTotalPages} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronRight className="w-4 h-4" /></button>
-                <button onClick={() => setSalesPage(salesTotalPages)} disabled={salesPage >= salesTotalPages} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronsRight className="w-4 h-4" /></button>
+                <button onClick={() => setSalesPage(p => p + 1)} disabled={salesPage >= salesTotalPages} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronRight className="w-4 h-4" /></button>
+                <button onClick={() => setSalesPage(salesTotalPages)} disabled={salesPage >= salesTotalPages} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"><ChevronsRight className="w-4 h-4" /></button>
               </div>
             </div>
           )}

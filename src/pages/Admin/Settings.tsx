@@ -37,7 +37,7 @@ function ConfigField({
   const isNumber = !isNaN(Number(entry.value)) && entry.value !== '' && !isBoolean;
 
   return (
-    <div className="flex items-start justify-between gap-6 py-4 border-b last:border-0">
+    <div className="flex items-start justify-between gap-6 py-4 border-b last:border-0 flex-wrap">
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-800">{entry.label}</p>
         {entry.description && <p className="text-xs text-gray-400 mt-0.5">{entry.description}</p>}
@@ -47,7 +47,7 @@ function ConfigField({
         {isBoolean ? (
           <button
             onClick={() => onChange(entry.key, value === 'true' ? 'false' : 'true')}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${value === 'true' ? 'bg-blue-600' : 'bg-gray-200'}`}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${value === 'true' ? 'bg-orange-500' : 'bg-gray-200'}`}
           >
             <span
               className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${value === 'true' ? 'translate-x-6' : 'translate-x-1'}`}
@@ -58,7 +58,7 @@ function ConfigField({
             type={isPassword ? 'password' : isNumber ? 'number' : 'text'}
             value={value}
             onChange={e => onChange(entry.key, e.target.value)}
-            className="w-56 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-56 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
         )}
       </div>
@@ -150,7 +150,7 @@ function KioskSecurityPanel() {
       {/* IP Whitelist */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 mb-1">
-          <Wifi className="w-4 h-4 text-blue-500" />
+          <Wifi className="w-4 h-4 text-slate-500" />
           <h4 className="text-sm font-semibold text-gray-800">Lista blanca de IPs</h4>
         </div>
         <p className="text-xs text-gray-400">
@@ -162,11 +162,11 @@ function KioskSecurityPanel() {
             onChange={e => setIpInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && addIp()}
             placeholder="181.43.12.1 o 181.43.12.0/24"
-            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
           <button
             onClick={addIp}
-            className="flex items-center gap-1 px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+            className="min-h-[44px] flex items-center gap-1 px-3 py-2 bg-orange-500 text-white text-sm rounded-lg hover:bg-orange-600 transition-colors"
           >
             <Plus className="w-4 h-4" /> Agregar
           </button>
@@ -174,9 +174,9 @@ function KioskSecurityPanel() {
         {ipList.length > 0 && (
           <ul className="space-y-1.5">
             {ipList.map((ip, i) => (
-              <li key={i} className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+              <li key={i} className="flex items-center justify-between gap-3 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 flex-wrap">
                 <span className="font-mono text-sm text-gray-700">{ip}</span>
-                <button onClick={() => setIpList(prev => prev.filter((_, j) => j !== i))} className="text-gray-400 hover:text-red-500 transition-colors">
+                <button onClick={() => setIpList(prev => prev.filter((_, j) => j !== i))} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors">
                   <X className="w-4 h-4" />
                 </button>
               </li>
@@ -190,7 +190,7 @@ function KioskSecurityPanel() {
 
       {/* Geofencing */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between gap-2 mb-1">
+        <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
           <div className="flex items-center gap-2">
             <MapPin className="w-4 h-4 text-orange-500" />
             <h4 className="text-sm font-semibold text-gray-800">Geofencing</h4>
@@ -226,7 +226,7 @@ function KioskSecurityPanel() {
               <input type="number" min="10" max="5000" value={geoRadius} onChange={e => setGeoRadius(e.target.value)}
                 className="w-32 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400" />
             </div>
-            <button onClick={useMyLocation} className="flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 font-medium transition-colors">
+            <button onClick={useMyLocation} className="min-h-[44px] flex items-center gap-1.5 text-sm text-orange-600 hover:text-orange-700 font-medium transition-colors">
               <MapPin className="w-4 h-4" /> Usar mi ubicación actual
             </button>
           </div>
@@ -236,7 +236,7 @@ function KioskSecurityPanel() {
       <button
         onClick={handleSave}
         disabled={saving}
-        className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-60"
+        className="min-h-[44px] flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-60"
       >
         {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
         {saving ? 'Guardando…' : 'Guardar configuración del kiosco'}
@@ -298,14 +298,14 @@ export function TipSettingsPanel() {
   if (isLoading) return <p className="py-10 text-center text-gray-400">Cargando…</p>;
 
   const ToggleRow = ({ label, desc, field }: { label: string; desc?: string; field: keyof TipSettings }) => (
-    <div className="flex items-center justify-between gap-4 py-3.5 border-b last:border-0">
+    <div className="flex items-center justify-between gap-4 py-3.5 border-b last:border-0 flex-wrap">
       <div>
         <p className="text-sm font-medium text-gray-800">{label}</p>
         {desc && <p className="text-xs text-gray-400 mt-0.5">{desc}</p>}
       </div>
       <button
         onClick={() => toggle(field)}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${cfg[field] ? 'bg-amber-500' : 'bg-gray-200'}`}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${cfg[field] ? 'bg-orange-500' : 'bg-gray-200'}`}
       >
         <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${cfg[field] ? 'translate-x-6' : 'translate-x-1'}`} />
       </button>
@@ -347,8 +347,8 @@ export function TipSettingsPanel() {
       <div>
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Imprimir propina en</p>
         <div className="bg-gray-50 rounded-xl border border-gray-100 px-4">
-          <ToggleRow label="Control de Mesa"    desc="Incluir línea de propina en el ticket de pre-cuenta" field="print_on_table_control"  />
-          <ToggleRow label="Ticket de Mostrador" desc="Incluir línea de propina en el ticket de venta"      field="print_on_counter_ticket" />
+          <ToggleRow label="Control de Mesa"    desc="Línea de propina en la pre-cuenta de mesas (requiere propina activa en Mesas)" field="print_on_table_control"  />
+          <ToggleRow label="Ticket de Mostrador" desc="Línea de propina en la pre-cuenta de mostrador y delivery (requiere propina activa en ese canal)" field="print_on_counter_ticket" />
         </div>
       </div>
 
@@ -367,7 +367,7 @@ export function TipSettingsPanel() {
       <button
         onClick={handleSave}
         disabled={saving}
-        className="flex items-center gap-2 px-5 py-2.5 bg-amber-500 text-white text-sm font-semibold rounded-lg hover:bg-amber-600 transition-colors disabled:opacity-60"
+        className="min-h-[44px] flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white text-sm font-semibold rounded-lg hover:bg-orange-600 transition-colors disabled:opacity-60"
       >
         {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
         {saving ? 'Guardando…' : 'Guardar configuración de propinas'}
@@ -425,7 +425,7 @@ function EmpleadorDTPanel() {
       <div className="space-y-1">
         <label className="block text-sm font-medium text-gray-700">Razón Social</label>
         <input
-          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
           value={razonSocial}
           onChange={e => setRazonSocial(e.target.value)}
           placeholder="Ej: Restaurante Hamachi Ltda."
@@ -434,7 +434,7 @@ function EmpleadorDTPanel() {
       <div className="space-y-1">
         <label className="block text-sm font-medium text-gray-700">RUT Empleador</label>
         <input
-          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
           value={rutEmp}
           onChange={e => setRutEmp(e.target.value)}
           placeholder="Ej: 76.123.456-7"
@@ -443,7 +443,7 @@ function EmpleadorDTPanel() {
       <div className="space-y-1">
         <label className="block text-sm font-medium text-gray-700">Dirección</label>
         <input
-          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
           value={direccion}
           onChange={e => setDireccion(e.target.value)}
           placeholder="Ej: Av. Apoquindo 4800, Las Condes, Santiago"
@@ -453,10 +453,10 @@ function EmpleadorDTPanel() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+          className={`min-h-[44px] flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
             saved
-              ? 'bg-green-600 text-white'
-              : 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-60'
+              ? 'bg-orange-500 text-white'
+              : 'bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-60'
           }`}
         >
           {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4" /> : <Save className="w-4 h-4" />}
@@ -531,7 +531,7 @@ export default function Settings() {
         </div>
         <button
           onClick={() => qc.invalidateQueries({ queryKey: ['admin', 'settings'] })}
-          className="flex items-center gap-2 px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
+          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center flex items-center gap-2 px-4 py-2 text-sm border rounded-lg hover:bg-gray-50"
         >
           <RefreshCw className="w-4 h-4" />
         </button>
@@ -544,9 +544,9 @@ export default function Settings() {
             <button
               key={group}
               onClick={() => setActiveGroup(group)}
-              className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
+              className={`min-h-[44px] w-full text-left px-3 py-2 text-sm rounded-lg transition-colors ${
                 activeGroup === group
-                  ? 'bg-blue-50 text-blue-700 font-medium'
+                  ? 'bg-slate-50 text-slate-700 font-medium'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
@@ -565,11 +565,11 @@ export default function Settings() {
               <button
                 onClick={handleSave}
                 disabled={!dirty || saveMut.isPending || isLoading}
-                className={`flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors ${
+                className={`min-h-[44px] flex items-center gap-2 px-4 py-2 text-sm rounded-lg transition-colors ${
                   savedGroup === activeGroup
-                    ? 'bg-green-600 text-white'
+                    ? 'bg-orange-500 text-white'
                     : dirty
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-orange-500 text-white hover:bg-orange-600'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
               >

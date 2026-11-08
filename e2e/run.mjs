@@ -15,11 +15,13 @@ mkdirSync(RUN, { recursive: true });
 const [, , env, ...flags] = process.argv;
 if (env !== 'local' && env !== 'sandbox') { console.error('uso: run.mjs <local|sandbox> [--sin-montaje] [--flujo F1]'); process.exit(2); }
 const sinMontaje = flags.includes('--sin-montaje');
+const mantener = flags.includes('--mantener'); // LOTE 309: deja el montaje arriba para iterar
+const bajar = flags.includes('--bajar'); // LOTE 309: solo limpia y baja un montaje dejado con --mantener
 const flujo = flags.includes('--flujo') ? flags[flags.indexOf('--flujo') + 1] : null;
 const ref = flags.includes('--ref') ? flags[flags.indexOf('--ref') + 1] : null;
 if (ref && env !== 'local') { console.error('--ref solo aplica a local'); process.exit(2); }
 if (ref && !/^[\w./-]+$/.test(ref)) { console.error('ref invalida'); process.exit(2); }
-if (ref) process.env.E2E_BACKEND_REF = ref;
+if (ref) process.env.E2E_BACKEND_REF = process.env.E2E_BACKEND_REF ?? ref; // E2E_BACKEND_REF deja elegir otra rama de backend (main frente a master)
 
 const dotenv = () => Object.fromEntries(readFileSync(resolve(FE, '.env.e2e'), 'utf8').split(/\r?\n/).map((l) => l.match(/^([A-Z0-9_]+)=(.*)$/)).filter(Boolean).map((m) => [m[1], m[2].trim()]));
 const GIT_BASH = 'C:/Program Files/Git/bin/bash.exe';
@@ -103,7 +105,7 @@ async function subirPreview() {
 }
 
 function correrPlaywright() {
-  const grep = flujo ?? (env === 'local' ? 'F1|F2|F5|F8' : 'F1|F5|F8');
+  const grep = flujo ?? (env === 'local' ? 'F1|F2|F5|F8|F9' : 'F1|F5|F8|F9');
   return npx(['playwright', 'test', '--config', 'e2e/playwright.config.ts', '--grep', `"${grep}"`], { E2E_ENV: env, E2E_FECHA: process.env.E2E_FECHA ?? fechaLocal() });
 }
 function fechaLocal() {
@@ -130,6 +132,13 @@ const conteo = () => {
   return r.out.split(/\r?\n/).filter((l) => l.startsWith('CONTEO ')).map((l) => l.trim());
 };
 
+if (bajar) {
+  const l = psqlFile(resolve(here, 'sql/limpieza.sql')); console.log(`limpieza local rc=${l.rc}: ${l.out.trim()}`);
+  const st = psqlFile(resolve(here, 'sql/stock_local_restaurar.sql')); console.log(`stock local repuesto rc=${st.rc} ${st.out.trim()}`);
+  const u = psqlFile(resolve(here, 'sql/usuarios_borrar.sql')); console.log(`usuarios locales fuera rc=${u.rc}: ${u.out.trim()}`);
+  console.log(montaje('down').out.trim());
+  process.exit(0);
+}
 let rc = 1;
 let antes = [];
 try {
@@ -138,7 +147,7 @@ try {
     if (!sinMontaje || !existsSync(resolve(here, '.dist/index.html'))) await subirPreview();
   }
   antes = conteo();
-  if (antes.length !== 12) throw new Error(`conteo inicial incompleto (${antes.length} de 12)`);
+  if (antes.length !== 13) throw new Error(`conteo inicial incompleto (${antes.length} de 13)`); // LOTE 310: + compras
   console.log(`conteo antes:\n${antes.join('\n')}`);
   const t0 = Date.now();
   rc = correrPlaywright();
@@ -163,12 +172,12 @@ try {
   if (env === 'local') {
     const l = psqlFile(resolve(here, 'sql/limpieza.sql'));
     console.log(`limpieza local rc=${l.rc}: ${l.out.trim()}`);
-    if (!sinMontaje) {
+    if (!sinMontaje && !mantener) {
       const st = psqlFile(resolve(here, 'sql/stock_local_restaurar.sql'));
       console.log(`stock local repuesto rc=${st.rc} ${st.out.trim()}`);
     }
     verificar();
-    if (!sinMontaje) {
+    if (!sinMontaje && !mantener) {
       const u = psqlFile(resolve(here, 'sql/usuarios_borrar.sql'));
       console.log(`usuarios locales fuera rc=${u.rc}: ${u.out.trim()}`);
       console.log(montaje('down').out.trim());

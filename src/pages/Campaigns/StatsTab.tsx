@@ -32,11 +32,11 @@ function KpiCard({
   icon: React.ElementType; color: string; trend?: 'up' | 'down' | 'neutral';
 }) {
   const TrendIcon  = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Minus;
-  const trendColor = trend === 'up' ? 'text-green-500' : trend === 'down' ? 'text-red-500' : 'text-gray-400';
+  const trendColor = trend === 'up' ? 'text-slate-500' : trend === 'down' ? 'text-red-500' : 'text-gray-400';
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-start gap-4">
       <div className={`p-3 rounded-xl ${color}`}>
-        <Icon className="h-5 w-5 text-white" />
+        <Icon className="h-5 w-5 text-slate-900" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{label}</p>
@@ -120,7 +120,7 @@ export function StatsTab(_props: StatsTabProps) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
         <p className="text-red-700 text-sm mb-3">{error}</p>
-        <button onClick={load} className="text-red-600 text-sm underline">Reintentar</button>
+        <button onClick={load} className="min-h-[44px] text-red-600 text-sm underline">Reintentar</button>
       </div>
     );
   }
@@ -139,20 +139,20 @@ export function StatsTab(_props: StatsTabProps) {
           label="Total enviados"
           value={fmt(stats?.totalDeliveries ?? 0)}
           sub={`${fmt(stats?.totalRecipients ?? 0)} destinatarios`}
-          icon={Users} color="bg-blue-500" trend="up"
+          icon={Users} color="bg-slate-500" trend="up"
         />
         <KpiCard
           label="Tasa de apertura"
           value={pct(stats?.averageOpenRate ?? 0)}
           sub={`Clicks: ${pct(stats?.averageClickRate ?? 0)}`}
-          icon={MousePointerClick} color="bg-purple-500"
+          icon={MousePointerClick} color="bg-slate-500"
           trend={(stats?.averageOpenRate ?? 0) > 0.2 ? 'up' : (stats?.averageOpenRate ?? 0) > 0.1 ? 'neutral' : 'down'}
         />
         <KpiCard
           label="Revenue total"
           value={`$${fmt(stats?.totalRevenue ?? 0)}`}
           sub="atribuido a campaÃ±as"
-          icon={DollarSign} color="bg-emerald-500" trend="up"
+          icon={DollarSign} color="bg-slate-500" trend="up"
         />
       </div>
 
@@ -222,9 +222,9 @@ export function StatsTab(_props: StatsTabProps) {
                     </div>
                   </td>
                   <td className="py-2.5 text-right font-medium text-gray-900">{fmt(c.successfulDeliveries ?? 0)}</td>
-                  <td className="py-2.5 text-right text-blue-700 font-medium">{pct(c.openRate ?? 0)}</td>
-                  <td className="py-2.5 text-right text-purple-700 font-medium">{pct(c.clickRate ?? 0)}</td>
-                  <td className="py-2.5 text-right font-semibold text-emerald-700">${fmt(c.actualRevenue ?? 0)}</td>
+                  <td className="py-2.5 text-right text-slate-700 font-medium">{pct(c.openRate ?? 0)}</td>
+                  <td className="py-2.5 text-right text-slate-700 font-medium">{pct(c.clickRate ?? 0)}</td>
+                  <td className="py-2.5 text-right font-semibold text-slate-700">${fmt(c.actualRevenue ?? 0)}</td>
                 </tr>
               ))}
             </tbody>

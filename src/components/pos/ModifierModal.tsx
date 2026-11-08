@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Product } from '../../types/product.types';
@@ -151,17 +152,17 @@ const ModifierModal: React.FC<ModifierModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    createPortal(<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="flex justify-between items-start p-6 border-b border-gray-200">
+        <div className="flex justify-between items-start p-6 border-b border-gray-200 flex-wrap gap-2">
           <div className="flex-1">
             <h2 className="text-xl font-bold text-gray-900">{product.name}</h2>
             <p className="text-sm text-gray-500 mt-1">Personaliza tu producto</p>
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="w-6 h-6" />
           </button>
@@ -214,7 +215,7 @@ const ModifierModal: React.FC<ModifierModalProps> = ({
                           key={option.id}
                           className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
                             isSelected
-                              ? 'border-blue-500 bg-blue-50'
+                              ? 'border-slate-200 bg-slate-50'
                               : 'border-gray-200 hover:border-gray-300 bg-white'
                           } ${hasError ? 'border-red-300' : ''}`}
                         >
@@ -224,7 +225,7 @@ const ModifierModal: React.FC<ModifierModalProps> = ({
                               name={`group-${group.id}`}
                               checked={isSelected}
                               onChange={() => handleModifierSelect(group, option.id)}
-                              className="w-4 h-4 text-blue-600 focus:ring-2 focus:ring-blue-500"
+                              className="w-4 h-4 text-slate-700 focus:ring-2 focus:ring-orange-500"
                             />
                             <span className="text-sm font-medium text-gray-900">
                               {option.name}
@@ -233,7 +234,7 @@ const ModifierModal: React.FC<ModifierModalProps> = ({
                           {option.priceAdjustment !== 0 && (
                             <span
                               className={`text-sm font-semibold ${
-                                option.priceAdjustment > 0 ? 'text-green-600' : 'text-red-600'
+                                option.priceAdjustment > 0 ? 'text-slate-700' : 'text-red-600'
                               }`}
                             >
                               {option.priceAdjustment > 0 ? '+' : ''}
@@ -261,36 +262,36 @@ const ModifierModal: React.FC<ModifierModalProps> = ({
             {modifiersPrice !== 0 && (
               <div className="text-right">
                 <p className="text-sm text-gray-500">Modificadores</p>
-                <p className={`text-lg font-semibold ${modifiersPrice > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                <p className={`text-lg font-semibold ${modifiersPrice > 0 ? 'text-slate-700' : 'text-red-600'}`}>
                   {modifiersPrice > 0 ? '+' : ''}{formatCurrency(Math.abs(modifiersPrice))}
                 </p>
               </div>
             )}
             <div className="text-right">
               <p className="text-sm text-gray-500">Total</p>
-              <p className="text-2xl font-bold text-blue-600">
+              <p className="text-2xl font-bold text-slate-700">
                 {formatCurrency(totalPrice)}
               </p>
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex-wrap flex gap-3">
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              className="min-h-[44px] flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
             <button
               onClick={handleConfirm}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+              className="min-h-[44px] flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-semibold"
             >
               Agregar al carrito
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 };
 

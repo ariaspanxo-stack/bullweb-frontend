@@ -40,21 +40,21 @@ export function BalanceTab() {
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiMoneyCard label="Ingresos (Ventas)"  value={balanceIngresos} prev={prevTotalSales}
-          icon={TrendingUp} iconBg="bg-emerald-100 text-emerald-600"   loading={salesLoading} />
+          icon={TrendingUp} iconBg="bg-slate-100 text-slate-700"   loading={salesLoading} />
         <KpiMoneyCard label="Costos (Compras)"   value={balanceCostos}   prev={prevGastoTotal}
           icon={Truck}      iconBg="bg-rose-100 text-rose-600"          loading={purchasesLoading} />
         <KpiMoneyCard label="Balance Neto"       value={balanceNeto}     prev={0}
-          icon={Layers}     iconBg={balanceNeto >= 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'} loading={salesLoading} />
+          icon={Layers}     iconBg={balanceNeto >= 0 ? 'bg-slate-100 text-slate-700' : 'bg-rose-100 text-rose-600'} loading={salesLoading} />
         <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Margen Bruto</span>
             <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center',
-              balanceMargen >= 50 ? 'bg-emerald-100 text-emerald-600' : balanceMargen >= 20 ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600')}>
+              balanceMargen >= 50 ? 'bg-slate-100 text-slate-700' : balanceMargen >= 20 ? 'bg-amber-100 text-amber-600' : 'bg-rose-100 text-rose-600')}>
               <Scale className="w-4 h-4" />
             </div>
           </div>
           <div className={cn('text-[1.6rem] font-extrabold mb-3 tabular-nums leading-none',
-            balanceMargen >= 50 ? 'text-emerald-600' : balanceMargen >= 20 ? 'text-amber-600' : 'text-rose-600')}>
+            balanceMargen >= 50 ? 'text-slate-700' : balanceMargen >= 20 ? 'text-amber-600' : 'text-rose-600')}>
             {balanceMargen.toFixed(1)}%
           </div>
           <div className="text-[11px] text-gray-400">{balanceMargen >= 50 ? '✅ Excelente margen' : balanceMargen >= 20 ? '⚠️ Margen ajustado' : '❌ Margen crítico'}</div>
@@ -90,7 +90,7 @@ export function BalanceTab() {
           <h3 className="text-sm font-bold text-gray-900 mb-5">Resumen P&amp;L</h3>
           <div className="space-y-4">
             {[
-              { label: 'Ventas totales',           value: balanceIngresos, color: 'text-emerald-600', bg: 'bg-emerald-50', sign: '+' },
+              { label: 'Ventas totales',           value: balanceIngresos, color: 'text-slate-700', bg: 'bg-slate-50', sign: '+' },
               { label: 'Descuentos otorgados',     value: -totalDiscount,  color: 'text-amber-600',  bg: 'bg-amber-50',   sign: '−' },
               { label: 'Costo de insumos/compras', value: -balanceCostos,  color: 'text-rose-600',   bg: 'bg-rose-50',    sign: '−' },
             ].map((row, i) => (
@@ -105,7 +105,7 @@ export function BalanceTab() {
             <div className="border-t-2 border-gray-200 pt-3 flex items-center justify-between">
               <span className="text-sm font-bold text-gray-900">Balance estimado</span>
               <span className={cn('text-xl font-extrabold tabular-nums',
-                balanceNeto >= 0 ? 'text-emerald-600' : 'text-rose-600')}>
+                balanceNeto >= 0 ? 'text-slate-700' : 'text-rose-600')}>
                 {balanceNeto >= 0 ? '+' : ''}{formatCurrency(balanceNeto)}
               </span>
             </div>

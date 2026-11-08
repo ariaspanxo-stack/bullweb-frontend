@@ -42,6 +42,8 @@ const FIELD = 'h-11 border border-[#CBD5E1] rounded-lg px-3 bg-white text-sm tex
 export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [], recipes = [] }) => {
   const [selectedProduct, setSelectedProduct] = useState('');
   const [items, setItems] = useState<{ ingredientId: string; quantity: number }[]>([{ ingredientId: '', quantity: 1 }]);
+  // LOTE 309: rendimiento (porciones que salen de esta ficha). El costo del producto y el descuento de stock se dividen por este valor.
+  const [recipeYield, setRecipeYield] = useState('1');
   const [loading, setLoading] = useState(false);
 
   // H128: gestión de fichas — lista local (re-fetch tras cada mutación) + estado de edición inline
@@ -73,6 +75,8 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
     }
   };
 
+  useEffect(() => { void loadRecipes(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleAddItem = () => {
     setItems([...items, { ingredientId: '', quantity: 1 }]);
   };
@@ -99,6 +103,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
       quantity: ri.quantity,
     }));
     setItems(loaded.length > 0 ? loaded : [{ ingredientId: '', quantity: 1 }]);
+    setRecipeYield(String(recipe.yield && recipe.yield > 0 ? recipe.yield : 1));
     // scroll al formulario para que la edición sea visible
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -109,6 +114,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
     setFormOpen(false);
     setSelectedProduct('');
     setItems([{ ingredientId: '', quantity: 1 }]);
+    setRecipeYield('1');
   };
 
   // H128: botón 🗑️ — confirmación + DELETE vía servicio directo + refresco
@@ -123,7 +129,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
       toast.success('Ficha técnica eliminada');
       await loadRecipes();
     } catch (e: any) {
-      toast.error(e?.message || e?.response?.data?.error || 'Error al eliminar la ficha');
+      toast.error(e?.message || "No se pudo eliminar la ficha");
     } finally {
       setDeletingId(null);
     }
@@ -138,7 +144,21 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
     }
     const validItems = items.filter(i => i.ingredientId && i.quantity > 0);
     if (validItems.length === 0) {
-      toast.error('Agrega al menos un ingrediente válido');
+      toast.error(ingredients.length === 0 ? 'Primero crea tus ingredientes en la pestaña Ingredientes' : 'Agrega al menos un ingrediente con su cantidad');
+      return;
+    }
+    // LOTE 309: una linea a medias se perdia sin aviso; un ingrediente repetido daba error de la BD
+    if (items.some(i => i.ingredientId && !(i.quantity > 0))) {
+      toast.error('Cada ingrediente debe tener una cantidad mayor a 0');
+      return;
+    }
+    if (new Set(validItems.map(i => i.ingredientId)).size !== validItems.length) {
+      toast.error('Hay un ingrediente repetido: déjalo en una sola línea');
+      return;
+    }
+    const rendimiento = Number(recipeYield);
+    if (!(rendimiento > 0)) {
+      toast.error('El rendimiento debe ser mayor a 0');
       return;
     }
 
@@ -147,22 +167,25 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
       if (editingRecipeId) {
         await api.recipes.update(editingRecipeId, {
           items: validItems,
+          yield: rendimiento,
         });
         toast.success('Ficha actualizada. El costo del producto se recalculó.');
         handleCancelEdit();
       } else {
         await api.post('/inventory/recipes', {
           productId: selectedProduct,
-          items: validItems
+          items: validItems,
+          yield: rendimiento,
         });
-        toast.success('Vinculación creada. El stock se descontará automáticamente.');
+        toast.success('Ficha creada. El stock se descontará al vender.');
         setSelectedProduct('');
         setItems([{ ingredientId: '', quantity: 1 }]);
+        setRecipeYield('1');
         setFormOpen(false);
       }
       await loadRecipes();
     } catch (e: any) {
-      toast.error(e?.response?.data?.error || e?.message || 'Error al vincular');
+      toast.error(e?.message || 'No se pudo guardar la ficha');
     } finally {
       setLoading(false);
     }
@@ -187,7 +210,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
       {/* Formulario colapsable (misma lógica de guardado) */}
       {showForm && (
         <div className={`${CARD} p-6 space-y-4`}>
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <h3 className="text-base font-bold text-[#0F172A]">
               {editingRecipeId ? 'Editar ficha — el producto no se puede cambiar' : 'Nueva ficha'}
             </h3>
@@ -213,6 +236,11 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
               {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
+
+          {/* LOTE 309: aviso cuando no hay con que armar la ficha */}
+          {ingredients.length === 0 && (
+            <p className="text-sm text-[#92400E] bg-[#FEF3C7] rounded-lg p-3">Aún no tienes ingredientes. Créalos en la pestaña Ingredientes para poder armar la ficha.</p>
+          )}
 
           <div className="space-y-3">
             <label className="block text-sm font-semibold text-[#475569]">Ingredientes a descontar</label>
@@ -277,6 +305,20 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
             <Plus className="w-4 h-4" /> Agregar otro ingrediente
           </button>
 
+          <div>
+            <label htmlFor="ficha-rendimiento" className="block text-sm font-semibold text-[#475569] mb-1">Rendimiento (porciones)</label>
+            <input
+              id="ficha-rendimiento"
+              type="number"
+              min="0.01"
+              step="any"
+              value={recipeYield}
+              onChange={e => setRecipeYield(e.target.value)}
+              className={`${FIELD} w-32`}
+            />
+            <p className="text-xs text-[#64748B] mt-1">Cuántas porciones salen con estas cantidades. Al vender una porción se descuenta la parte que corresponde.</p>
+          </div>
+
           {/* H235: costo estimado en vivo — Σ de líneas válidas (ingredientId + quantity > 0), se confirma al guardar */}
           <div className="bg-[#F8FAFC] rounded-lg p-3">
             <p className="font-bold text-[#0F172A] tabular-nums">
@@ -288,6 +330,17 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                 }, 0)
               )}
             </p>
+            {Number(recipeYield) > 1 && (
+              <p className="text-sm font-bold text-[#0F172A] tabular-nums">
+                Por porción: {formatCurrency(
+                  items.reduce((sum, it) => {
+                    const ing = ingredients.find(i => i.id === it.ingredientId);
+                    if (it.ingredientId && it.quantity > 0 && ing?.unitCost != null) return sum + it.quantity * ing.unitCost;
+                    return sum;
+                  }, 0) / Number(recipeYield)
+                )}
+              </p>
+            )}
             <p className="text-xs text-[#64748B] mt-0.5">se confirma al guardar</p>
           </div>
 
@@ -321,6 +374,8 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                 ?? products.find(p => p.id === recipe.productId)?.name
                 ?? 'Producto';
               const totalCost = Number(recipe.totalCost ?? 0);
+              // LOTE 309: el margen se compara contra lo que cuesta UNA porcion, no toda la preparacion
+              const portionCost = totalCost / (Number(recipe.yield) > 0 ? Number(recipe.yield) : 1);
               const venta = recipe.products?.price ?? products.find(p => p.id === recipe.productId)?.price;
               return (
                 <div
@@ -341,7 +396,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                     <div className="space-y-1">
                       {recipe.recipe_items?.slice(0, 3).map((ri) => (
                         <p key={ri.id} className="text-xs text-[#475569] truncate">
-                          • {ri.ingredients?.name ?? 'Ingrediente'} — {formatQty(ri.quantity)} {formatUnit(ri.ingredients?.unit ?? ri.unit ?? '')}
+                          • {ri.ingredients?.name ?? 'Ingrediente'} — {formatQty(ri.quantity, 3)} {formatUnit(ri.ingredients?.unit ?? ri.unit ?? '')}
                         </p>
                       ))}
                       {itemCount > 3 && <p className="text-xs text-[#94A3B8]">+ {itemCount - 3} más</p>}
@@ -349,8 +404,9 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
 
                     {/* Costo total grande */}
                     <div className="bg-[#F8FAFC] rounded-lg p-2.5">
-                      <p className="text-xs text-[#64748B]">Costo total</p>
-                      <p className="text-2xl font-bold text-[#0F172A] tabular-nums">{formatCurrency(totalCost)}</p>
+                      <p className="text-xs text-[#64748B]">{Number(recipe.yield) > 1 ? 'Costo por porción' : 'Costo total'}</p>
+                      <p className="text-2xl font-bold text-[#0F172A] tabular-nums">{formatCurrency(portionCost)}</p>
+                      {Number(recipe.yield) > 1 && <p className="text-xs text-[#64748B] tabular-nums">Preparación completa: {formatCurrency(totalCost)}</p>}
                     </div>
 
                     {/* Venta y margen (13px, color por rango; costo 0 => "Sin costo cargado") */}
@@ -359,7 +415,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                         <span className="text-[13px] text-[#475569]">
                           Venta <span className="font-bold text-[#0F172A]">{formatCurrency(venta)}</span>
                         </span>
-                        <MarginBadge price={venta} cost={totalCost} />
+                        <MarginBadge price={venta} cost={portionCost} />
                       </div>
                     ) : (
                       <p className="text-[13px] text-[#94A3B8]">Sin precio de venta</p>
@@ -367,7 +423,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
 
                     {/* H235: rinde condicional — solo si el GET trae yield > 1, sin ceros ni guiones */}
                     {Number(recipe.yield) > 1 && (
-                      <p className="text-xs text-[#475569]">Rinde {formatQty(Number(recipe.yield))} {formatUnit(recipe.yieldUnit ?? '')}</p>
+                      <p className="text-xs text-[#475569]">Rinde {formatQty(Number(recipe.yield))} {recipe.yieldUnit && recipe.yieldUnit !== 'porción' ? formatUnit(recipe.yieldUnit) : 'porciones'}</p>
                     )}
 
                     {/* Notas (solo si el GET las trae) */}
@@ -378,7 +434,7 @@ export const RecipesListTab: React.FC<Props> = ({ products = [], ingredients = [
                       <button
                         onClick={() => handleEdit(recipe)}
                         disabled={editingRecipeId !== null || deletingId !== null}
-                        className={`${BTN_OUTLINE} flex-1`}
+                        className={`min-h-[44px] ${BTN_OUTLINE} flex-1`}
                         title="Editar ficha"
                         aria-label={`Editar ficha de ${productName}`}
                       >

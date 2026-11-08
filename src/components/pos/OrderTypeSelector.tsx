@@ -53,28 +53,28 @@ export default function OrderTypeSelector({ value, onChange }: OrderTypeSelector
           <button
             key={type.value}
             onClick={() => onChange(type.value as any)}
-            className={cn(
+            className={cn('min-h-[44px]', 
               'flex flex-col items-center gap-3 p-4 rounded-lg border-2 transition-all',
               'hover:shadow-md active:scale-95',
               isActive
-                ? 'border-blue-500 bg-blue-50 shadow-md'
+                ? 'border-slate-200 bg-slate-50 shadow-md'
                 : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
             )}
           >
             <Icon className={cn(
               'w-8 h-8 transition-colors',
-              isActive ? 'text-blue-600' : 'text-gray-400'
+              isActive ? 'text-slate-700' : 'text-gray-400'
             )} />
             <div className="text-center">
               <span className={cn(
                 'font-semibold text-sm block',
-                isActive ? 'text-blue-700' : 'text-gray-700'
+                isActive ? 'text-slate-700' : 'text-gray-700'
               )}>
                 {type.label}
               </span>
               <span className={cn(
                 'text-xs mt-1',
-                isActive ? 'text-blue-600' : 'text-gray-500'
+                isActive ? 'text-slate-700' : 'text-gray-500'
               )}>
                 {type.description}
               </span>

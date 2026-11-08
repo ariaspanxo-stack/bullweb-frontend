@@ -14,8 +14,19 @@ DELETE FROM orders WHERE id IN (SELECT id FROM _e2e_o);
 DELETE FROM points_history WHERE "customerId" IN (SELECT id FROM _e2e_c);
 DELETE FROM loyalty_points WHERE "customerId" IN (SELECT id FROM _e2e_c);
 DELETE FROM customers WHERE id IN (SELECT id FROM _e2e_c);
+DELETE FROM coupons WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND code LIKE 'E2EPW%';
+-- LOTE 309: datos de F9 con la marca (fichas, movimientos, ingredientes, proveedores y productos). Va despues de los pedidos.
+-- LOTE 310: compras de F9 (proveedor o notas con la marca, o enlazadas a movimientos de ingredientes con la marca). Se anotan antes de borrar movimientos.
+CREATE TEMP TABLE _e2e_pu AS SELECT id FROM purchases WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND (supplier LIKE 'E2E-PW-%' OR notes LIKE 'E2E-PW-%' OR id IN (SELECT "purchaseId" FROM stock_movements WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND "purchaseId" IS NOT NULL AND "ingredientId" IN (SELECT id FROM ingredients WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND name LIKE 'E2E-PW-%')));
+DELETE FROM recipes WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND "productId" IN (SELECT id FROM products WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND name LIKE 'E2E-PW-%');
+DELETE FROM stock_movements WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND (("ingredientId" IN (SELECT id FROM ingredients WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND name LIKE 'E2E-PW-%')) OR ("productId" IN (SELECT id FROM products WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND name LIKE 'E2E-PW-%')));
+DELETE FROM ingredients WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND name LIKE 'E2E-PW-%';
+DELETE FROM purchases WHERE id IN (SELECT id FROM _e2e_pu);
+DELETE FROM suppliers WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND name LIKE 'E2E-PW-%';
+DELETE FROM products WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND name LIKE 'E2E-PW-%';
 COMMIT;
 SELECT 'restos pedidos=' || (SELECT count(*) FROM orders WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND "customerName" ILIKE 'E2E-PW-%')
   || ' qr=' || (SELECT count(*) FROM qr_pending_orders WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND customer_name ILIKE 'E2E-PW-%')
   || ' clientes=' || (SELECT count(*) FROM customers WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND name ILIKE 'E2E-PW-%')
-  || ' previos_E2E_no_tocados=' || (SELECT count(*) FROM orders WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND "customerName" LIKE 'E2E-%' AND "customerName" NOT ILIKE 'E2E-PW-%');
+  || ' previos_E2E_no_tocados=' || (SELECT count(*) FROM orders WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND "customerName" LIKE 'E2E-%' AND "customerName" NOT ILIKE 'E2E-PW-%')
+  || ' f9_ingredientes=' || (SELECT count(*) FROM ingredients WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND name LIKE 'E2E-PW-%') || ' f9_proveedores=' || (SELECT count(*) FROM suppliers WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND name LIKE 'E2E-PW-%') || ' f9_compras=' || (SELECT count(*) FROM purchases WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND (supplier LIKE 'E2E-PW-%' OR notes LIKE 'E2E-PW-%')) || ' f9_productos=' || (SELECT count(*) FROM products WHERE "tenantId"::text = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568' AND name LIKE 'E2E-PW-%');

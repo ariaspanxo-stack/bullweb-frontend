@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { SalesFilters } from './SalesFilters';
@@ -247,7 +248,7 @@ export const Sales = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-4xl font-bold text-gray-800">VENTAS</h1>
+        <h1 className="text-4xl font-bold text-gray-800">Ventas</h1>
         {/* HOTFIX 299 (B2-07): "Abrir la caja" solo si no hay un turno abierto (/cash-registers/active) */}
         {activeRegister?.isOpen ? (
           <span className="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-lg border border-gray-200 bg-white text-sm font-semibold text-gray-700">
@@ -257,7 +258,7 @@ export const Sales = () => {
         ) : (
           <button
             onClick={handleOpenCash}
-            className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors shadow-md"
+            className="min-h-[44px] bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 transition-colors shadow-md"
           >
             <DollarSign size={20} />
             Abrir la caja
@@ -272,10 +273,10 @@ export const Sales = () => {
 
       {/* Tabs de navegación */}
       {!todayOnly && (
-      <div className="mb-6 flex gap-4 border-b border-gray-200">
+      <div className="flex-wrap mb-6 flex gap-4 border-b border-gray-200">
         <button
           onClick={() => setActiveTab('ventas')}
-          className={`px-4 py-2 font-semibold transition-colors ${
+          className={`min-h-[44px] px-4 py-2 font-semibold transition-colors ${
             activeTab === 'ventas'
               ? 'text-orange-600 border-b-2 border-orange-600'
               : 'text-gray-600 hover:text-gray-800'
@@ -285,7 +286,7 @@ export const Sales = () => {
         </button>
         <button
           onClick={() => setActiveTab('movimientos')}
-          className={`px-4 py-2 font-semibold transition-colors ${
+          className={`min-h-[44px] px-4 py-2 font-semibold transition-colors ${
             activeTab === 'movimientos'
               ? 'text-orange-600 border-b-2 border-orange-600'
               : 'text-gray-600 hover:text-gray-800'
@@ -295,7 +296,7 @@ export const Sales = () => {
         </button>
         <button
           onClick={() => setActiveTab('arqueos')}
-          className={`px-4 py-2 font-semibold transition-colors ${
+          className={`min-h-[44px] px-4 py-2 font-semibold transition-colors ${
             activeTab === 'arqueos'
               ? 'text-orange-600 border-b-2 border-orange-600'
               : 'text-gray-600 hover:text-gray-800'
@@ -306,7 +307,7 @@ export const Sales = () => {
         {canViewTips && (
         <button
           onClick={() => setActiveTab('propinas')}
-          className={`px-4 py-2 font-semibold transition-colors ${
+          className={`min-h-[44px] px-4 py-2 font-semibold transition-colors ${
             activeTab === 'propinas'
               ? 'text-orange-600 border-b-2 border-orange-600'
               : 'text-gray-600 hover:text-gray-800'
@@ -317,7 +318,7 @@ export const Sales = () => {
         )}
         <button
           onClick={() => setActiveTab('descuentos')}
-          className={`px-4 py-2 font-semibold transition-colors ${
+          className={`min-h-[44px] px-4 py-2 font-semibold transition-colors ${
             activeTab === 'descuentos'
               ? 'text-orange-600 border-b-2 border-orange-600'
               : 'text-gray-600 hover:text-gray-800'
@@ -386,10 +387,10 @@ export const Sales = () => {
 
       {/* Modal Abrir Caja */}
       {showCashModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] text-slate-900">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
             <div className="bg-orange-500 px-5 py-3">
-              <h2 className="text-white font-bold text-sm uppercase tracking-wide">Nuevo Arqueo de Caja</h2>
+              <h2 className="text-white font-bold text-sm tracking-wide">Nuevo Arqueo de Caja</h2>
             </div>
             <div className="px-6 py-5 space-y-4">
               {/* Estado de carga de cajas */}
@@ -404,7 +405,7 @@ export const Sales = () => {
                   <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
                     {registerError}
                   </div>
-                  <button onClick={loadRegisters} className="text-xs text-orange-600 underline">
+                  <button onClick={loadRegisters} className="min-h-[44px] text-xs text-orange-600 underline">
                     Reintentar
                   </button>
                 </div>
@@ -434,7 +435,7 @@ export const Sales = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Hora de apertura <span className="text-red-500">*</span>
                 </label>
-                <div className="flex gap-2">
+                <div className="flex-wrap flex gap-2">
                   <input
                     type="date"
                     value={openDate}
@@ -470,24 +471,24 @@ export const Sales = () => {
                 </div>
               </div>
             </div>
-            <div className="px-6 pb-5 flex justify-end gap-2">
+            <div className="flex-wrap px-6 pb-5 flex justify-end gap-2">
               <button
                 onClick={() => setShowCashModal(false)}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                className="min-h-[44px] px-4 py-2 text-sm rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
               >
                 Cancelar
               </button>
               <button
                 disabled={openingCash || loadingRegisters || !openDate || !openTime || !selectedRegisterId}
                 onClick={handleConfirmOpenCash}
-                className="px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
+                className="min-h-[44px] px-4 py-2 text-sm rounded-lg bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white font-semibold transition-colors flex items-center gap-2"
               >
                 {openingCash ? <Loader2 className="animate-spin" size={15} /> : null}
                 Iniciar Arqueo
               </button>
             </div>
           </div>
-        </div>
+        </div>, document.body)
       )}
     </div>
   );

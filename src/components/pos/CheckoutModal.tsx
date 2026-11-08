@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CreditCard, Banknote, Smartphone, DollarSign, Percent, Hash } from 'lucide-react';
@@ -150,7 +151,7 @@ const { dteIsConfigured, lastPaidOrderId } = useRestaurant();
 
   if (paymentCompleted) {
     return (
-      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+      createPortal(<div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 text-slate-900">
         <div className="bg-white rounded-2xl p-8 w-full max-w-md shadow-2xl text-center">
           <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle size={32} className="text-orange-600" />
@@ -171,12 +172,12 @@ isConfigured={dteIsConfigured}
               setPaymentCompleted(false);
               handleClose();
             }}
-            className="w-full py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+            className="min-h-[44px] w-full py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
           >
             Cerrar
           </button>
         </div>
-      </div>
+      </div>, document.body)
     );
   }
 
@@ -191,7 +192,7 @@ isConfigured={dteIsConfigured}
           </div>
           
           {discount > 0 && (
-            <div className="flex justify-between text-sm text-green-600">
+            <div className="flex justify-between text-sm text-slate-700">
               <span>Descuento:</span>
               <span className="font-medium">-{formatCurrency(discount)}</span>
             </div>
@@ -215,12 +216,12 @@ isConfigured={dteIsConfigured}
           </label>
           
           {/* Botones rápidos */}
-          <div className="flex gap-2 mb-3">
+          <div className="flex-wrap flex gap-2 mb-3">
             {[10, 15, 20].map(percentage => (
               <button
                 key={percentage}
                 onClick={() => applyQuickTip(percentage)}
-                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                className={`min-h-[44px] flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
                   tipType === 'PERCENTAGE' && tipPercentage === percentage
                     ? 'bg-orange-600 text-white shadow-sm'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -232,10 +233,10 @@ isConfigured={dteIsConfigured}
           </div>
 
           {/* Tipo de propina */}
-          <div className="flex gap-2 mb-3">
+          <div className="flex-wrap flex gap-2 mb-3">
             <button
               onClick={() => handleTipTypeChange('PERCENTAGE')}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all ${
+              className={`min-h-[44px] flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all ${
                 tipType === 'PERCENTAGE'
                   ? 'bg-orange-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -246,7 +247,7 @@ isConfigured={dteIsConfigured}
             </button>
             <button
               onClick={() => handleTipTypeChange('FIXED')}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all ${
+              className={`min-h-[44px] flex-1 py-2 px-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 transition-all ${
                 tipType === 'FIXED'
                   ? 'bg-orange-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -330,7 +331,7 @@ isConfigured={dteIsConfigured}
                     key={method.id}
                     onClick={() => setSelectedMethodId(method.id)}
                     disabled={!method.isActive}
-                    className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
+                    className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center w-full p-3 rounded-lg border-2 transition-all text-left ${
                       !method.isActive
                         ? 'opacity-50 cursor-not-allowed bg-gray-100 border-gray-200'
                         : isSelected
@@ -367,7 +368,7 @@ isConfigured={dteIsConfigured}
         </div>
 
         {/* Botones */}
-        <div className="flex gap-3 pt-4 border-t border-gray-200">
+        <div className="flex-wrap flex gap-3 pt-4 border-t border-gray-200">
           <Button
             variant="outline"
             size="lg"

@@ -74,8 +74,8 @@ export default function CustomersTable({
                       {customer.segment && (
                         <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
                           customer.segment === 'VIP'      ? 'bg-yellow-100 text-yellow-700' :
-                          customer.segment === 'FREQUENT' ? 'bg-green-100 text-green-700'  :
-                          customer.segment === 'REGULAR'  ? 'bg-blue-100 text-blue-700'    :
+                          customer.segment === 'FREQUENT' ? 'bg-slate-100 text-slate-700'  :
+                          customer.segment === 'REGULAR'  ? 'bg-slate-100 text-slate-700'    :
                           customer.segment === 'INACTIVE' ? 'bg-red-100 text-red-600'      :
                           'bg-gray-100 text-gray-600'
                         }`}>
@@ -113,21 +113,21 @@ export default function CustomersTable({
                 <div className="flex items-center justify-end gap-2">
                   <button
                     onClick={() => onViewDetails(customer)}
-                    className="p-1.5 text-blue-600 hover:bg-blue-50 rounded"
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-slate-700 hover:bg-slate-100 rounded"
                     title="Ver detalles"
                   >
                     <Eye className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => onEdit(customer)}
-                    className="p-1.5 text-gray-600 hover:bg-gray-100 rounded"
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-gray-600 hover:bg-gray-100 rounded"
                     title="Editar"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => onDelete(customer)}
-                    className="p-1.5 text-red-600 hover:bg-red-50 rounded"
+                    className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-1.5 text-red-600 hover:bg-red-50 rounded"
                     title="Eliminar"
                   >
                     <Trash2 className="w-4 h-4" />

@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState, useEffect } from 'react';
 import { X, ChevronRight, ChevronLeft, Users, Loader2, Check, LayoutTemplate } from 'lucide-react';
 import campaignsService from '@/services/campaignsService';
@@ -113,15 +114,15 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+    createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] p-4 text-slate-900">
       <div className="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-5 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-orange-500 to-orange-400 px-6 py-5 flex items-center justify-between flex-wrap gap-2">
           <div>
             <h2 className="text-lg font-bold text-white">Nueva Campaña</h2>
             <p className="text-orange-100 text-xs mt-0.5">Paso {step + 1} de {STEPS.length}: {STEPS[step]}</p>
           </div>
-          <button onClick={onClose} className="text-orange-100 hover:text-white">
+          <button onClick={onClose} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-orange-100 hover:text-white">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -135,7 +136,7 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
                 i === step
                   ? 'text-orange-600 border-b-2 border-orange-500 bg-orange-50'
                   : i < step
-                  ? 'text-green-600'
+                  ? 'text-slate-700'
                   : 'text-gray-400'
               }`}
             >
@@ -186,7 +187,7 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
                       type="button"
                       onClick={() => update({ type: opt.value })}
                       disabled={opt.comingSoon}
-                      className={`flex flex-col items-center py-3 px-2 rounded-xl border-2 text-xs font-medium transition-all ${
+                      className={`min-h-[44px] flex flex-col items-center py-3 px-2 rounded-xl border-2 text-xs font-medium transition-all ${
                         opt.comingSoon
                           ? 'opacity-50 cursor-not-allowed border-gray-200 text-gray-400'
                           : formData.type === opt.value
@@ -221,7 +222,7 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
                       key={opt.value}
                       type="button"
                       onClick={() => update({ targetSegment: opt.value as any })}
-                      className={`text-left px-3 py-2.5 rounded-lg border text-sm transition-all ${
+                      className={`min-h-[44px] text-left px-3 py-2.5 rounded-lg border text-sm transition-all ${
                         (formData.targetSegment ?? '') === opt.value
                           ? 'border-orange-500 bg-orange-50 text-orange-700 font-medium'
                           : 'border-gray-200 hover:border-gray-300 text-gray-700'
@@ -233,24 +234,24 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
-                <Users className="h-5 w-5 text-blue-500 shrink-0" />
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex items-center gap-3">
+                <Users className="h-5 w-5 text-slate-500 shrink-0" />
                 <div>
-                  <p className="text-xs text-blue-700 font-medium">Audiencia estimada</p>
+                  <p className="text-xs text-slate-700 font-medium">Audiencia estimada</p>
                   {estimating ? (
                     <div className="flex items-center gap-2 mt-0.5">
-                      <Loader2 className="h-3 w-3 animate-spin text-blue-400" />
-                      <span className="text-xs text-blue-500">Calculando...</span>
+                      <Loader2 className="h-3 w-3 animate-spin text-slate-500" />
+                      <span className="text-xs text-slate-500">Calculando...</span>
                     </div>
                   ) : (
-                    <p className="text-xl font-bold text-blue-800 mt-0.5">
+                    <p className="text-xl font-bold text-slate-700 mt-0.5">
                       {audienceEst != null
                         ? Number(audienceEst).toLocaleString('es-CL') + ' clientes'
                         : '—'}
                     </p>
                   )}
                   {/* Hotfix #179 — filtros del estimado comunicados (antes invisibles) */}
-                  <p className="text-[11px] text-blue-500 mt-0.5">
+                  <p className="text-[11px] text-slate-500 mt-0.5">
                     Solo clientes activos con email registrado que aceptan novedades
                   </p>
                   {/* Hotfix #98 — Aviso pre-envío: cuota disponible del mes */}
@@ -259,7 +260,7 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
                       className={`text-xs mt-1 font-medium ${
                         audienceEst != null && audienceEst > emailUsage.remaining
                           ? 'text-red-600'
-                          : 'text-blue-600'
+                          : 'text-slate-700'
                       }`}
                     >
                       Disponibles este mes: {emailUsage.remaining}
@@ -297,7 +298,7 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
                             update({ subject: t.subject ?? '', message: t.body });
                             void campaignsService.useTemplate(t.id).catch(() => null);
                           }}
-                          className="px-3 py-1.5 text-xs bg-orange-50 border border-orange-200 text-orange-700 rounded-lg hover:bg-orange-100 font-medium transition-colors"
+                          className="min-h-[44px] px-3 py-1.5 text-xs bg-orange-50 border border-orange-200 text-orange-700 rounded-lg hover:bg-orange-100 font-medium transition-colors"
                         >
                           {t.name}
                         </button>
@@ -342,7 +343,7 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
                 <button
                   type="button"
                   onClick={() => update({ scheduledAt: undefined })}
-                  className={`flex flex-col items-center py-5 px-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                  className={`min-h-[44px] flex flex-col items-center py-5 px-3 rounded-xl border-2 text-sm font-medium transition-all ${
                     !formData.scheduledAt
                       ? 'border-orange-500 bg-orange-50 text-orange-700'
                       : 'border-gray-200 hover:border-gray-300 text-gray-600'
@@ -359,7 +360,7 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
                     d.setHours(d.getHours() + 1, 0, 0, 0);
                     update({ scheduledAt: d.toISOString() });
                   }}
-                  className={`flex flex-col items-center py-5 px-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                  className={`min-h-[44px] flex flex-col items-center py-5 px-3 rounded-xl border-2 text-sm font-medium transition-all ${
                     formData.scheduledAt
                       ? 'border-orange-500 bg-orange-50 text-orange-700'
                       : 'border-gray-200 hover:border-gray-300 text-gray-600'
@@ -401,11 +402,11 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between gap-3">
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-between gap-3 flex-wrap">
           <button
             type="button"
             onClick={step === 0 ? onClose : () => { setError(null); setStep((s) => (s - 1) as Step); }}
-            className="flex items-center gap-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-white text-sm text-gray-700"
+            className="min-h-[44px] flex items-center gap-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-white text-sm text-gray-700"
           >
             {step > 0 && <ChevronLeft className="h-3.5 w-3.5" />}
             {step === 0 ? 'Cancelar' : 'Anterior'}
@@ -416,7 +417,7 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
               type="button"
               onClick={() => { setError(null); setStep((s) => (s + 1) as Step); }}
               disabled={!canNext()}
-              className="flex items-center gap-1 px-5 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm font-medium disabled:opacity-50"
+              className="min-h-[44px] flex items-center gap-1 px-5 py-2 bg-white text-slate-700 rounded-lg hover:bg-slate-50 text-sm font-medium disabled:opacity-50 border border-slate-300"
             >
               Siguiente
               <ChevronRight className="h-3.5 w-3.5" />
@@ -426,7 +427,7 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
               type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className="flex items-center gap-1.5 px-5 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm font-medium disabled:opacity-50"
+              className="min-h-[44px] flex items-center gap-1.5 px-5 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 text-sm font-medium disabled:opacity-50"
             >
               {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
               {formData.scheduledAt ? 'Programar campaña' : 'Crear y enviar'}
@@ -434,6 +435,6 @@ export function CreateCampaignModal({ onClose, onSuccess, emailUsage }: CreateCa
           )}
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

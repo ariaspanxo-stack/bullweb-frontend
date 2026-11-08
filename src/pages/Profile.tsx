@@ -13,21 +13,6 @@ function avatarInitials(name: string) {
     .join('');
 }
 
-function avatarColor(name: string) {
-  const colors = [
-    'from-blue-500 to-blue-600',
-    'from-purple-500 to-purple-600',
-    'from-green-500 to-green-600',
-    'from-orange-500 to-orange-600',
-    'from-pink-500 to-pink-600',
-    'from-teal-500 to-teal-600',
-    'from-indigo-500 to-indigo-600',
-    'from-red-500 to-red-600',
-  ];
-  let hash = 0;
-  for (const c of name) hash = (hash * 31 + c.charCodeAt(0)) & 0xffffffff;
-  return colors[Math.abs(hash) % colors.length];
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-CL', {
@@ -49,12 +34,12 @@ function PasswordInput({
           value={value}
           onChange={e => onChange(e.target.value)}
           placeholder={placeholder}
-          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
         />
         <button
           type="button"
           onClick={() => setShow(s => !s)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
         >
           {show ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
         </button>
@@ -138,15 +123,14 @@ export default function Profile() {
   if (!user) return null;
 
   const initials = avatarInitials(user.name);
-  const color    = avatarColor(user.name);
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
 
       {/* ── Header ─────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 bg-gradient-to-br from-violet-500 to-violet-600 rounded-lg flex items-center justify-center">
-          <User className="w-7 h-7 text-white" />
+        <div className="w-12 h-12 rounded-lg flex items-center justify-center">
+          <User className="w-7 h-7 text-slate-900" />
         </div>
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Mi Perfil</h1>
@@ -157,18 +141,18 @@ export default function Profile() {
       {/* ── Profile card ────────────────────────────────────────────── */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {/* Header gradient */}
-        <div className="h-24 bg-gradient-to-r from-blue-500 to-violet-600" />
+        <div className="h-24 " />
 
         {/* Avatar + info */}
         <div className="px-6 pb-6">
           <div className="flex items-end justify-between -mt-12 mb-4">
-            <div className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${color} flex items-center justify-center ring-4 ring-white shadow-lg`}>
+            <div className={`w-24 h-24 rounded-2xl bg-slate-600 flex items-center justify-center ring-4 ring-white shadow-lg`}>
               <span className="text-3xl font-bold text-white">{initials}</span>
             </div>
             {!editMode && (
               <button
                 onClick={startEdit}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors"
+                className="min-h-[44px] flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <Edit3 className="w-4 h-4" />
                 Editar perfil
@@ -184,7 +168,7 @@ export default function Profile() {
                   type="text"
                   value={editName}
                   onChange={e => setEditName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
               <div>
@@ -193,21 +177,21 @@ export default function Profile() {
                   type="email"
                   value={editEmail}
                   onChange={e => setEditEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
-              <div className="flex gap-3">
+              <div className="flex-wrap flex gap-3">
                 <button
                   onClick={handleSaveProfile}
                   disabled={saving}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                  className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-orange-500 text-white text-sm font-medium rounded-lg hover:bg-orange-600 disabled:opacity-50 transition-colors"
                 >
                   <Save className="w-4 h-4" />
                   {saving ? 'Guardando...' : 'Guardar cambios'}
                 </button>
                 <button
                   onClick={cancelEdit}
-                  className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                  className="min-h-[44px] flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <X className="w-4 h-4" />
                   Cancelar
@@ -218,7 +202,7 @@ export default function Profile() {
             <div className="space-y-1">
               <h2 className="text-2xl font-bold text-gray-900">{user.name}</h2>
               {user.role && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-700">
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-slate-100 text-slate-700">
                   <Shield className="w-3 h-3" />
                   {user.role.name}
                 </span>
@@ -231,8 +215,8 @@ export default function Profile() {
         {!editMode && (
           <div className="border-t border-gray-100 px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Mail className="w-4 h-4 text-blue-600" />
+              <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Mail className="w-4 h-4 text-slate-700" />
               </div>
               <div>
                 <p className="text-xs text-gray-400">Email</p>
@@ -241,8 +225,8 @@ export default function Profile() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Phone className="w-4 h-4 text-purple-600" />
+              <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Phone className="w-4 h-4 text-slate-700" />
               </div>
               <div>
                 <p className="text-xs text-gray-400">Teléfono</p>
@@ -251,8 +235,8 @@ export default function Profile() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-green-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Calendar className="w-4 h-4 text-green-600" />
+              <div className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-4 h-4 text-slate-700" />
               </div>
               <div>
                 <p className="text-xs text-gray-400">Miembro desde</p>
@@ -263,12 +247,12 @@ export default function Profile() {
             </div>
 
             <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 ${user.active ? 'bg-emerald-50' : 'bg-red-50'} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                <div className={`w-3 h-3 rounded-full ${user.active ? 'bg-emerald-500' : 'bg-red-500'}`} />
+              <div className={`w-8 h-8 ${user.active ? 'bg-slate-50' : 'bg-red-50'} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                <div className={`w-3 h-3 rounded-full ${user.active ? 'bg-slate-500' : 'bg-red-500'}`} />
               </div>
               <div>
                 <p className="text-xs text-gray-400">Estado</p>
-                <p className={`text-sm font-medium ${user.active ? 'text-emerald-700' : 'text-red-700'}`}>
+                <p className={`text-sm font-medium ${user.active ? 'text-slate-700' : 'text-red-700'}`}>
                   {user.active ? 'Cuenta activa' : 'Cuenta inactiva'}
                 </p>
               </div>
@@ -317,8 +301,8 @@ export default function Profile() {
                 { ok: /[A-Z]/.test(newPwd),  label: 'Una mayúscula' },
                 { ok: /[0-9]/.test(newPwd),  label: 'Un número' },
               ].map(({ ok, label }) => (
-                <div key={label} className={`flex items-center gap-1 ${ok ? 'text-green-600' : 'text-gray-400'}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${ok ? 'bg-green-500' : 'bg-gray-300'}`} />
+                <div key={label} className={`flex items-center gap-1 ${ok ? 'text-slate-700' : 'text-gray-400'}`}>
+                  <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${ok ? 'bg-slate-500' : 'bg-gray-300'}`} />
                   {label}
                 </div>
               ))}
@@ -328,7 +312,7 @@ export default function Profile() {
           <button
             type="submit"
             disabled={changingPwd || !currentPwd || !newPwd || !confirmPwd}
-            className="w-full py-2.5 bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-orange-700 disabled:opacity-50 transition-colors"
+            className="min-h-[44px] w-full py-2.5 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-colors border border-slate-300"
           >
             {changingPwd ? 'Cambiando contraseña...' : 'Cambiar contraseña'}
           </button>

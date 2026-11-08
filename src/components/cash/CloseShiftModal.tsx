@@ -99,8 +99,8 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
           >
             <div className="flex items-center gap-2">
               {isCash(p.method)
-                ? <Banknote className="w-4 h-4 text-green-500" />
-                : <CreditCard className="w-4 h-4 text-blue-500" />
+                ? <Banknote className="w-4 h-4 text-slate-500" />
+                : <CreditCard className="w-4 h-4 text-slate-500" />
               }
               <span className="text-sm font-medium text-gray-700">{p.method}</span>
               <span className="text-xs text-gray-400">({p.count})</span>
@@ -253,7 +253,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
 
   // HOTFIX 299: modal por portal z-[100]; el ConfirmModal (z-[60]) va dentro para quedar encima
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[100] bg-gray-950/80 backdrop-blur-sm flex items-center justify-center p-4 text-slate-900">
     <ConfirmModal
       isOpen={shiftConfirmOpen}
       title="Diferencia en arqueo"
@@ -269,14 +269,14 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
         {cr ? (
           <>
             {/* Header éxito */}
-            <div className="bg-gray-900 px-6 py-5 flex-shrink-0">
+            <div className="bg-white px-6 py-5 flex-shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-orange-500/20 rounded-xl">
                   <CheckCircle className="w-5 h-5 text-orange-400" />
                 </div>
                 <div>
-                  <h2 className="font-black text-white text-lg">Turno cerrado</h2>
-                  <p className="text-gray-400 text-sm">{register.name}</p>
+                  <h2 className="font-black text-slate-900 text-lg">Turno cerrado</h2>
+                  <p className="text-slate-500 text-sm">{register.name}</p>
                 </div>
               </div>
             </div>
@@ -373,8 +373,8 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
                     >
                       <div className="flex items-center gap-2">
                         {isCash(p.method)
-                          ? <Banknote className="w-4 h-4 text-green-500" />
-                          : <CreditCard className="w-4 h-4 text-blue-500" />
+                          ? <Banknote className="w-4 h-4 text-slate-500" />
+                          : <CreditCard className="w-4 h-4 text-slate-500" />
                         }
                         <span className="text-sm font-medium text-gray-700">{p.method}</span>
                         <span className="text-xs text-gray-400">({p.count})</span>
@@ -395,7 +395,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
                 type="button"
                 onClick={handlePrintArqueo}
                 disabled={printing}
-                className="w-full min-h-[44px] py-3 bg-[#F97316] hover:bg-[#EA580C] text-white font-bold rounded-2xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full min-h-[44px] py-3 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-2xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50 border border-slate-300"
               >
                 {printing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Printer className="w-5 h-5" />}
                 Imprimir arqueo
@@ -413,37 +413,37 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
           </>
         ) : (
           <>
-            <div className="bg-gray-900 px-6 py-5 flex-shrink-0">
-          <div className="flex items-start justify-between">
+            <div className="bg-white px-6 py-5 flex-shrink-0">
+          <div className="flex items-start justify-between flex-wrap gap-2">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-orange-500/20 rounded-xl">
                 <DollarSign className="w-5 h-5 text-orange-400" />
               </div>
               <div>
-                <h2 className="font-black text-white text-lg">Cierre de turno</h2>
-                <p className="text-gray-400 text-sm">{register.name}</p>
+                <h2 className="font-black text-slate-900 text-lg">Cierre de turno</h2>
+                <p className="text-slate-500 text-sm">{register.name}</p>
               </div>
             </div>
             <button
               onClick={onCancel}
-              className="p-2 rounded-xl hover:bg-gray-800 transition-colors"
+              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center p-2 rounded-xl hover:bg-slate-50 transition-colors border border-slate-300"
             >
-              <X className="w-5 h-5 text-gray-400" />
+              <X className="w-5 h-5 text-slate-500" />
             </button>
           </div>
 
           {/* Info del turno */}
           <div className="grid grid-cols-2 gap-2 mt-4">
-            <div className="bg-gray-800/60 rounded-xl px-3 py-2">
-              <p className="text-xs text-gray-400">Apertura</p>
-              <p className="text-sm text-white font-medium flex items-center gap-1.5">
+            <div className="bg-slate-50 rounded-xl px-3 py-2">
+              <p className="text-xs text-slate-500">Apertura</p>
+              <p className="text-sm text-slate-900 font-medium flex items-center gap-1.5">
                 <Clock className="w-3.5 h-3.5" />
                 {format(new Date(session.openedAt), 'HH:mm')}
               </p>
             </div>
-            <div className="bg-gray-800/60 rounded-xl px-3 py-2">
-              <p className="text-xs text-gray-400">Duración</p>
-              <p className="text-sm text-white font-medium">{shiftDuration}</p>
+            <div className="bg-slate-50 rounded-xl px-3 py-2">
+              <p className="text-xs text-slate-500">Duración</p>
+              <p className="text-sm text-slate-900 font-medium">{shiftDuration}</p>
             </div>
           </div>
         </div>
@@ -505,8 +505,8 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
                       >
                         <div className="flex items-center gap-2">
                           {isCash(p.method)
-                            ? <Banknote className="w-4 h-4 text-green-500" />
-                            : <CreditCard className="w-4 h-4 text-blue-500" />
+                            ? <Banknote className="w-4 h-4 text-slate-500" />
+                            : <CreditCard className="w-4 h-4 text-slate-500" />
                           }
                           <span className="text-sm font-medium text-gray-700">{p.method}</span>
                           <span className="text-xs text-gray-400">
@@ -527,7 +527,7 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
                 {Number((cuadre as { onlineAdopted?: { count: number } }).onlineAdopted?.count ?? 0) > 0 && (
                   <div className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2.5">
                     <div className="flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-blue-500" />
+                      <CreditCard className="w-4 h-4 text-slate-500" />
                       <span className="text-sm font-medium text-gray-700">Pagos en linea adoptados</span>
                       <span className="text-xs text-gray-400">({(cuadre as unknown as { onlineAdopted: { count: number } }).onlineAdopted.count})</span>
                     </div>
@@ -681,11 +681,11 @@ export function CloseShiftModal({ register, session, onClosed, onCancel }: Close
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-3xl flex items-center gap-3">
+        <div className="flex-wrap flex-shrink-0 px-6 py-4 border-t border-gray-100 bg-gray-50 rounded-b-3xl flex items-center gap-3">
           <button
             type="button"
             onClick={onCancel}
-            className="flex-1 py-3 border-2 border-gray-200 text-gray-600 font-medium rounded-2xl hover:bg-gray-100 transition-colors"
+            className="min-h-[44px] flex-1 py-3 border-2 border-gray-200 text-gray-600 font-medium rounded-2xl hover:bg-gray-100 transition-colors"
           >
             Cancelar
           </button>

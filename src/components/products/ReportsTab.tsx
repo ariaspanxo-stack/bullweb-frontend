@@ -70,7 +70,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({ products, categories }) 
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-600">Total Productos</span>
-            <PackageIcon className="w-5 h-5 text-blue-600" />
+            <PackageIcon className="w-5 h-5 text-slate-700" />
           </div>
           <p className="text-2xl font-bold text-gray-900">{totalProducts}</p>
           <p className="text-xs text-gray-500 mt-1">
@@ -82,7 +82,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({ products, categories }) 
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-600">Valor Inventario</span>
-            <DollarSignIcon className="w-5 h-5 text-green-600" />
+            <DollarSignIcon className="w-5 h-5 text-slate-700" />
           </div>
           <p className="text-2xl font-bold text-gray-900">
             {formatMetric(totalInventoryValue, 'currency')}
@@ -96,7 +96,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({ products, categories }) 
         <div className="bg-white border border-gray-200 rounded-lg p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm text-gray-600">Margen Promedio</span>
-            <TrendingUpIcon className="w-5 h-5 text-purple-600" />
+            <TrendingUpIcon className="w-5 h-5 text-slate-700" />
           </div>
           <p className="text-2xl font-bold text-gray-900">
             {avgMarginPercent.toFixed(1)}%
@@ -143,7 +143,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({ products, categories }) 
               </div>
               <div className="text-right">
                 <p className="text-sm text-gray-600">Margen</p>
-                <p className="text-lg font-bold text-green-600">
+                <p className="text-lg font-bold text-slate-700">
                   {product.metrics.marginPercent}%
                 </p>
               </div>
@@ -173,7 +173,7 @@ export const ReportsTab: React.FC<ReportsTabProps> = ({ products, categories }) 
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
-                    className="bg-blue-600 h-2 rounded-full transition-all"
+                    className="bg-slate-500 h-2 rounded-full transition-all"
                     style={{ width: `${percentage}%` }}
                   />
                 </div>

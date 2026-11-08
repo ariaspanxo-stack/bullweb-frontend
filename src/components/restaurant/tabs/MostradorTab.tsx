@@ -56,15 +56,15 @@ export function MostradorTab() {
         />
       )}
       {/* ── Header ── */}
-      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100 flex-wrap gap-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <ShoppingBag size={20} className="text-blue-600" />
+          <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <ShoppingBag size={20} className="text-slate-700" />
           </div>
           <div>
             <h2 className="text-xl font-bold text-gray-800">Órdenes para llevar</h2>
             {activeCount > 0 && (
-              <p className="text-xs text-blue-500 font-medium mt-0.5">
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
                 {activeCount} {activeCount !== 1 ? 'órdenes' : 'orden'} activa{activeCount !== 1 ? 's' : ''}
               </p>
             )}
@@ -72,7 +72,7 @@ export function MostradorTab() {
         </div>
         <button
           onClick={() => setShowMostradorModal(true)}
-          className="flex items-center gap-2 h-11 px-4 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-xl font-semibold text-sm transition-colors"
+          className="min-h-[44px] flex items-center gap-2 h-11 px-4 bg-[#F97316] hover:bg-[#EA580C] text-white rounded-xl font-semibold text-sm transition-colors"
         >
           <Plus size={16} />
           Nueva Orden
@@ -89,10 +89,10 @@ export function MostradorTab() {
               <button
                 key={tab.key}
                 onClick={() => setStatusFilter(tab.key)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
+                className={`min-h-[44px] flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all border ${
                   isActive
-                    ? 'bg-blue-50 border-[1.5px] border-slate-800 text-slate-800'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+                    ? 'bg-slate-50 border-[1.5px] border-slate-800 text-slate-800'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-slate-300 hover:text-slate-700'
                 }`}
               >
                 <span className={`w-2 h-2 rounded-full flex-shrink-0 ${tab.dot}`} />
@@ -110,7 +110,7 @@ export function MostradorTab() {
 
       {/* ── Empty State ── */}
       {mostradorOrders.length === 0 ? (
-        <div className="flex flex-col items-center py-20 bg-gradient-to-b from-blue-50 to-white rounded-2xl border border-dashed border-blue-200">
+        <div className="flex flex-col items-center py-20 to-white rounded-2xl border border-dashed border-slate-200">
           <svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="mb-5">
             <circle cx="60" cy="60" r="56" fill="#EFF6FF" />
             <rect x="30" y="42" width="60" height="46" rx="8" fill="#DBEAFE" />
@@ -123,7 +123,7 @@ export function MostradorTab() {
           <p className="text-sm text-gray-400 mt-1 mb-6">Las nuevas órdenes aparecerán aquí</p>
           <button
             onClick={() => setShowMostradorModal(true)}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md shadow-blue-200"
+            className="min-h-[44px] flex items-center gap-2 px-6 py-3 bg-[#F97316] hover:bg-[#ea6a0a] text-white rounded-xl font-semibold text-sm transition-all shadow-md "
           >
             <Plus size={16} />
             Crear primera orden
@@ -135,7 +135,7 @@ export function MostradorTab() {
           <p className="text-sm font-medium">Sin órdenes con estado "{STATUS_TABS.find(t => t.key === statusFilter)?.label}"</p>
           <button
             onClick={() => setStatusFilter('ALL')}
-            className="mt-2 text-xs text-blue-500 hover:underline"
+            className="min-h-[44px] mt-2 text-xs text-slate-500 hover:underline"
           >
             Ver todas
           </button>

@@ -2,6 +2,8 @@
 // QROrderAlert — Modal de alerta para nuevos pedidos QR
 // Se muestra en el panel cuando llega un pedido (Parte 3 del flujo)
 // ─────────────────────────────────────────────────────────────────────────────
+import { displayName } from '@/utils/displayFormat';
+import { createPortal } from 'react-dom';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CheckCircle, XCircle, Phone, MapPin, ShoppingBag, Clock } from 'lucide-react';
@@ -76,7 +78,7 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+    createPortal(<div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 text-slate-900">
       <div className="bg-gray-900 rounded-3xl shadow-2xl w-full max-w-md border border-orange-500/40 overflow-hidden">
 
         {/* Barra de progreso countdown */}
@@ -151,7 +153,7 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
               <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
               <a
                 href={`tel:${order.customerPhone}`}
-                className="text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-slate-500 hover:text-slate-500 transition-colors"
               >
                 {order.customerPhone}
               </a>
@@ -182,7 +184,7 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
                 {isCashMethodName(order.paymentMethod) && order.cashAmount != null && ( /* HOTFIX 304 (B5-04): Efectivo por nombre */
                   <div className="text-right">
                     <div className="text-gray-400 text-xs">Paga con</div>
-                    <div className="text-green-400 font-bold">{fmtCLP(order.cashAmount)}</div>
+                    <div className="text-slate-500 font-bold">{fmtCLP(order.cashAmount)}</div>
                     {order.cashAmount > order.total && (
                       <div className="text-gray-500 text-xs">
                         Vuelto: {fmtCLP(order.cashAmount - order.total)}
@@ -202,7 +204,7 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
               <div key={i} className="flex justify-between items-center px-3 py-2 text-sm">
                 <span className="text-gray-300">
                   <span className="text-orange-400 font-bold">{item.quantity}×</span>{' '}
-                  {item.name}
+                  {displayName(item.name)}
                 </span>
                 <span className="text-white font-semibold shrink-0 ml-2">
                   {fmtCLP(item.price * item.quantity)}
@@ -262,6 +264,6 @@ export function QROrderAlert({ order, onAccept, onCancel }: Props) {
           )}
         </div>
       </div>
-    </div>
+    </div>, document.body)
   );
 }

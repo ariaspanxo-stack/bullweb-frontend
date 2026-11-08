@@ -84,7 +84,7 @@ export function useAdminPin() {
 
   const pinModal = open
     ? createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60" onClick={() => finish(null)}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 text-slate-900" onClick={() => finish(null)}>
           <div className="w-full max-w-sm rounded-2xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-bold text-slate-900">PIN de administrador</h3>
             <p className="mt-1 text-sm text-slate-600">{message}</p>
@@ -97,7 +97,7 @@ export function useAdminPin() {
               value={pin}
               onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
               onKeyDown={(e) => { if (e.key === 'Enter' && pin) finish(pin); }}
-              className="mt-3 w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-center text-lg font-bold tracking-[0.4em] text-slate-900 focus:outline-none focus:border-slate-500"
+              className="mt-3 w-full min-h-[44px] rounded-xl border border-slate-300 px-3 text-center text-lg font-bold tracking-[0.4em] text-slate-900 focus:outline-none focus:border-orange-500"
               placeholder="••••"
             />
             <div className="mt-4 grid grid-cols-2 gap-2">

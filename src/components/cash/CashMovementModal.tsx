@@ -75,7 +75,7 @@ export function CashMovementModal({ sessionId, initialType, canIncome, canExpens
       onClick={() => { setType(t); setConfirmBig(false); }}
       className={`flex-1 min-h-[44px] inline-flex items-center justify-center gap-1.5 rounded-xl text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
         type === t
-          ? 'bg-[#F97316] text-white'
+          ? 'bg-orange-50 text-orange-700 border border-orange-300'
           : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50'
       }`}
     >
@@ -86,11 +86,11 @@ export function CashMovementModal({ sessionId, initialType, canIncome, canExpens
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 text-slate-900"
       onClick={e => { e.stopPropagation(); if (!saving) onClose(); }}
     >
       <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 flex-wrap gap-2">
           <h3 className="text-base font-bold text-gray-900">Movimiento de caja</h3>
           <button
             type="button"
@@ -150,7 +150,7 @@ export function CashMovementModal({ sessionId, initialType, canIncome, canExpens
           )}
         </div>
 
-        <div className="px-5 pb-5 flex gap-2">
+        <div className="flex-wrap px-5 pb-5 flex gap-2">
           <button
             type="button"
             onClick={onClose}

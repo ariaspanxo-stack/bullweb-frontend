@@ -156,7 +156,7 @@ export function TwoFactorCard() {
               <code className={`flex-1 text-xs font-mono text-gray-600 break-all leading-relaxed transition-all ${!showSecret ? 'blur-sm select-none' : ''}`}>
                 {secret}
               </code>
-              <div className="flex gap-1 flex-shrink-0">
+              <div className="flex-wrap flex gap-1 flex-shrink-0">
                 <button onClick={() => setShowSecret(p => !p)} className="p-1.5 rounded-lg hover:bg-gray-200 transition-colors">
                   {showSecret
                     ? <EyeOff className="w-3.5 h-3.5 text-gray-400" />
@@ -285,7 +285,7 @@ export function TwoFactorCard() {
             autoFocus
             className="w-full text-center text-2xl font-mono tracking-[0.4em] py-4 border-2 border-red-200 rounded-xl focus:border-red-400 focus:outline-none transition-colors"
           />
-          <div className="flex gap-2">
+          <div className="flex-wrap flex gap-2">
             <button onClick={reset} className="flex-1 py-3 bg-gray-100 text-gray-600 font-semibold rounded-xl hover:bg-gray-200 transition-colors">
               Cancelar
             </button>

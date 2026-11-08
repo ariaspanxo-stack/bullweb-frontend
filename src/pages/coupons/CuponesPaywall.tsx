@@ -33,7 +33,7 @@ export function CuponesPaywall() {
               href={waLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-xl transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-6 py-3 rounded-xl transition-colors shadow-sm border border-slate-300"
             >
               🎟️ Activar por $2.990/mes vía WhatsApp
             </a>
@@ -51,7 +51,7 @@ export function CuponesPaywall() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-xs text-gray-600">
             <div className="flex justify-between items-center mb-2">
               <span className="font-semibold text-gray-800">Cupón creado</span>
-              <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs font-medium">
+              <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs font-medium">
                 ✅ Activo
               </span>
             </div>
@@ -63,7 +63,7 @@ export function CuponesPaywall() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-xs text-gray-600">
             <div className="flex justify-between items-center mb-2">
               <span className="font-semibold text-gray-800">Usos totales</span>
-              <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-medium">
+              <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full text-xs font-medium">
                 12 usos
               </span>
             </div>
@@ -122,7 +122,7 @@ export function CuponesPaywall() {
 
       {/* Pasos 1-2-3 */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-        <h3 className="font-semibold text-gray-700 mb-4 text-sm uppercase tracking-wide">
+        <h3 className="font-semibold text-gray-700 mb-4 text-sm tracking-wide">
           ¿Cómo activarlo?
         </h3>
         <div className="flex flex-col md:flex-row gap-4">
@@ -137,13 +137,13 @@ export function CuponesPaywall() {
               n: '2',
               title: 'Realiza el pago',
               desc: 'Te enviamos el link de pago de $2.990/mes vía Flow o transferencia bancaria.',
-              color: 'bg-blue-100 text-blue-600',
+              color: 'bg-slate-100 text-slate-700',
             },
             {
               n: '3',
               title: 'Acceso inmediato',
               desc: 'Al confirmar el pago activamos el módulo al instante. Sin esperas.',
-              color: 'bg-green-100 text-green-600',
+              color: 'bg-slate-100 text-slate-700',
             },
           ].map(step => (
             <div key={step.n} className="flex gap-3 flex-1">
@@ -162,7 +162,7 @@ export function CuponesPaywall() {
             href={waLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors"
+            className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors border border-slate-300"
           >
             Activar Cupones por $2.990/mes →
           </a>

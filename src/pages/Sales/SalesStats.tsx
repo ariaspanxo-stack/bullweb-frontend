@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { useState } from 'react';
 import { ChevronUp, ChevronDown, X, XCircle, TrendingUp, TrendingDown, ArrowRight } from 'lucide-react';
 import type { Sale, SalesStats as Stats, SalesFilters } from '../../types/sales.types';
@@ -17,12 +18,12 @@ interface Props {
 /** Color de barra según nombre del método de pago */
 function barColor(method: string): string {
   const n = method.toLowerCase();
-  if (n.includes('efectivo') || n.includes('cash'))    return 'bg-green-500';
-  if (n.includes('débito') || n.includes('debito'))    return 'bg-cyan-500';
-  if (n.includes('crédito') || n.includes('credito'))  return 'bg-blue-500';
-  if (n.includes('tarjeta') || n.includes('card'))     return 'bg-blue-500';
-  if (n.includes('transfer'))                          return 'bg-purple-500';
-  if (n.includes('yape') || n.includes('plin'))        return 'bg-pink-500';
+  if (n.includes('efectivo') || n.includes('cash'))    return 'bg-slate-500';
+  if (n.includes('débito') || n.includes('debito'))    return 'bg-slate-500';
+  if (n.includes('crédito') || n.includes('credito'))  return 'bg-slate-500';
+  if (n.includes('tarjeta') || n.includes('card'))     return 'bg-slate-500';
+  if (n.includes('transfer'))                          return 'bg-slate-500';
+  if (n.includes('yape') || n.includes('plin'))        return 'bg-slate-500';
   if (n === 'unpaid' || n === 'sin pagar')              return 'bg-gray-400';
   return 'bg-orange-500';
 }
@@ -34,7 +35,7 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
 
   // Mejora E — semáforo de color para promedio por venta
   const ticketColor =
-    stats.averagePerSale >= 5000 ? 'text-green-600' :
+    stats.averagePerSale >= 5000 ? 'text-slate-700' :
     stats.averagePerSale >= 2000 ? 'text-amber-500' :
     'text-red-500';
 
@@ -67,7 +68,7 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
     });
     return [
       mk('🚴', 'Delivery',  buckets.delivery,  'bg-orange-50 text-orange-700 border-orange-200'),
-      mk('👨‍🍳', 'Mesa',     buckets.mesa,      'bg-blue-50 text-blue-700 border-blue-200'),
+      mk('👨‍🍳', 'Mesa',     buckets.mesa,      'bg-slate-50 text-slate-700 border-slate-200'),
       mk('🛍️', 'Mostrador', buckets.mostrador, 'bg-gray-100 text-gray-600 border-gray-200'),
     ].filter(ch => ch.amount > 0);
   })();
@@ -80,7 +81,7 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
     const isUp = diff > 0;
     if (diff === 0) return <span className="text-xs text-gray-400">= igual</span>;
     return (
-      <span className={`flex items-center gap-0.5 text-xs font-semibold ${isUp ? 'text-green-500' : 'text-red-500'}`}>
+      <span className={`flex items-center gap-0.5 text-xs font-semibold ${isUp ? 'text-slate-500' : 'text-red-500'}`}>
         {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
         {isUp ? '+' : ''}{pct}%
         <span className="font-normal text-gray-400 ml-1">{label}</span>
@@ -100,7 +101,7 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
     const pct  = ((diff / previous) * 100).toFixed(1);
     const isUp = diff > 0;
     return (
-      <span className={`flex items-center gap-0.5 text-xs font-semibold ${isUp ? 'text-green-600' : 'text-red-500'}`}>
+      <span className={`flex items-center gap-0.5 text-xs font-semibold ${isUp ? 'text-slate-700' : 'text-red-500'}`}>
         {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
         {isUp ? '+' : ''}{pct}%
         <span className="font-normal text-gray-400 ml-1">vs ayer</span>
@@ -169,7 +170,7 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
           )}
           {/* Semántica del dinero — ventas en curso NO suman al total */}
           {(stats.pendingCount ?? 0) > 0 && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-full text-xs font-medium">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-50 text-slate-700 border border-slate-200 rounded-full text-xs font-medium">
               {stats.pendingCount} en curso
             </span>
           )}
@@ -203,7 +204,7 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
       <div className="border-t pt-4">
         <button
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 text-orange-600 hover:text-orange-700 font-medium text-sm"
+          className="min-h-[44px] flex items-center gap-2 text-orange-600 hover:text-orange-700 font-medium text-sm"
         >
           MÁS INFO {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </button>
@@ -240,10 +241,10 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
           </div>
 
           {/* Botones adicionales — Mejora #1 */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex-wrap flex gap-3 pt-4">
             <button
               onClick={() => setShowCancelModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded text-sm font-medium text-red-700 transition-colors"
+              className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 rounded text-sm font-medium text-red-700 transition-colors"
             >
               <XCircle className="w-4 h-4" />
               Cancelaciones
@@ -255,7 +256,7 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
             </button>
             <button
               onClick={() => setShowTipsModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded text-sm font-medium text-amber-700 transition-colors"
+              className="min-h-[44px] flex items-center gap-2 px-4 py-2 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded text-sm font-medium text-amber-700 transition-colors"
             >
               Propinas
               {stats.tipsCount > 0 && (
@@ -267,7 +268,7 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
             {onNavigateToTab && (
               <button
                 onClick={() => onNavigateToTab('ventas')}
-                className="flex items-center gap-1 px-3 py-2 text-xs text-orange-600 hover:text-orange-800 transition-colors ml-auto"
+                className="min-h-[44px] flex items-center gap-1 px-3 py-2 text-xs text-orange-600 hover:text-orange-800 transition-colors ml-auto"
               >
                 Ver detalle <ArrowRight className="w-3 h-3" />
               </button>
@@ -278,14 +279,14 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
 
       {/* Modal Cancelaciones */}
       {showCancelModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowCancelModal(false)}>
+        createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] text-slate-900" onClick={() => setShowCancelModal(false)}>
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                 <XCircle className="w-5 h-5 text-red-500" />
                 Cancelaciones del período
               </h2>
-              <button onClick={() => setShowCancelModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setShowCancelModal(false)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -318,22 +319,22 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
             {onNavigateToTab && (
               <button
                 onClick={() => { setShowCancelModal(false); onNavigateToTab('ventas'); }}
-                className="mt-5 w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
+                className="min-h-[44px] mt-5 w-full flex items-center justify-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium transition-colors"
               >
                 Ver listado completo <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>
-        </div>
+        </div>, document.body)
       )}
 
       {/* Modal Propinas */}
       {showTipsModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowTipsModal(false)}>
+        createPortal(<div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] text-slate-900" onClick={() => setShowTipsModal(false)}>
           <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <h2 className="text-lg font-bold text-gray-800">Propinas del período</h2>
-              <button onClick={() => setShowTipsModal(false)} className="text-gray-400 hover:text-gray-600">
+              <button onClick={() => setShowTipsModal(false)} className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -372,13 +373,13 @@ export const SalesStats = ({ stats, startDate, endDate, recordCount, previousSta
             {onNavigateToTab && (
               <button
                 onClick={() => { setShowTipsModal(false); onNavigateToTab('propinas'); }}
-                className="mt-5 w-full flex items-center justify-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-medium transition-colors"
+                className="min-h-[44px] mt-5 w-full flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-lg text-sm font-medium transition-colors border border-slate-300"
               >
                 Ver listado propinas <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>
-        </div>
+        </div>, document.body)
       )}
     </div>
   );

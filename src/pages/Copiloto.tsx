@@ -29,8 +29,10 @@ const arqueo = (f: CopilotFigures) => {
 
 const alertItem = (kind: CopilotAlert['kind'], it: Record<string, any>) => {
   const dec = (n: number) => Number(n).toLocaleString('es-CL');
-  if (kind === 'stock') return `${it.nombre}: quedan ${dec(it.stock)}, se venden ${dec(it.ventaDiaria)} al día (${dec(it.dias)} días)`;
-  if (kind === 'pedido_abierto') return `Pedido ${it.numero}: ${it.horas} horas abierto, ${clp(it.total)}`;
+  // LOTE 318: singular con 1 (1 día, 1 hora)
+  const uno = (n: number, s: string, p: string) => `${dec(n)} ${Number(n) === 1 ? s : p}`;
+  if (kind === 'stock') return `${it.nombre}: quedan ${dec(it.stock)}, se venden ${dec(it.ventaDiaria)} al día (${uno(it.dias, 'día', 'días')})`;
+  if (kind === 'pedido_abierto') return `Pedido ${it.numero}: ${uno(it.horas, 'hora', 'horas')} abierto, ${clp(it.total)}`;
   return String(it.nombre);
 };
 

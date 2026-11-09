@@ -57,7 +57,7 @@ if [ "$MODE" = "up" ]; then
   if [ -d src/modules/delivery-zones ]; then
     q -f "$D/_314_migracion.sql" > /dev/null; echo "rc_migracion_314=$?"
     GK=$(node -e "console.log(require('crypto').randomBytes(16).toString('hex'))")
-    printf 'GOOGLE_MAPS_SERVER_KEY=sim-%s\nGOOGLE_MAPS_API_BASE=http://127.0.0.1:4397\n' "$GK" >> .env.test
+    printf 'GOOGLE_MAPS_SERVER_KEY=sim-%s\nGOOGLE_MAPS_API_BASE=http://127.0.0.1:4397\nGOOGLE_ROUTES_API_BASE=http://127.0.0.1:4397\n' "$GK" >> .env.test # LOTE 321: la Routes API del 320 tambien va al simulado
   fi
   : > "$LOG"
   # El backend lo arranca run.mjs: lanzado desde este bash moria sin traza a mitad de la corrida.

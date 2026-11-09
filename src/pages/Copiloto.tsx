@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Sparkles, AlertTriangle, MessageCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+import CopilotChat from '@/components/copilot/CopilotChat'; // LOTE 321
 import { copilotService, type CopilotAlert, type CopilotDigest, type CopilotFigures, type CopilotHistory, type CopilotSettings } from '@/services/copilotService';
 
 const clp = (n: number) => `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
@@ -115,6 +116,7 @@ export default function Copiloto() {
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [loadError, setLoadError] = useState(false);
+  const [tab, setTab] = useState<'resumen' | 'preguntar'>('resumen'); // LOTE 321
 
   useEffect(() => {
     (async () => {
@@ -194,14 +196,28 @@ export default function Copiloto() {
         </div>
       </section>
 
-      {history && history.alerts.length > 0 && (
+      {/* LOTE 321: pestañas Resumen / Preguntar; Preguntar solo con el Copiloto encendido */}
+      {enabled && (
+        <div className="flex gap-1 border-b border-gray-200" role="tablist" aria-label="Secciones del Copiloto">
+          {([['resumen', 'Resumen'], ['preguntar', 'Preguntar']] as const).map(([k, label]) => (
+            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+              className={`min-h-[44px] px-4 -mb-px border-b-2 text-sm font-semibold ${tab === k ? 'border-[#F97316] text-[#F97316]' : 'border-transparent text-gray-500 hover:text-gray-900'}`}>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {enabled && tab === 'preguntar' && <CopilotChat enabled={enabled} />}
+
+      {(!enabled || tab === 'resumen') && history && history.alerts.length > 0 && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold text-gray-900">Alertas</h2>
           {history.alerts.map((a) => <AlertCard key={a.id} a={a} />)}
         </section>
       )}
 
-      {history && (
+      {(!enabled || tab === 'resumen') && history && (
         <section className="space-y-3">
           <h2 className="text-lg font-semibold text-gray-900">Resúmenes de cierre</h2>
           {history.digests.length === 0 && (

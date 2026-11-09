@@ -47,7 +47,36 @@ export interface CopilotHistory {
   alerts: CopilotAlert[];
 }
 
+// LOTE 321: chat del dueño (pestaña Preguntar)
+export interface CopilotChatItem {
+  id: string;
+  pregunta: string;
+  status: 'ok' | 'tabla' | 'fuera_de_alcance' | 'error' | 'sin_clave';
+  respuesta: string;
+  tabla: { titulo: string; columnas: string[]; filas: string[][] } | null;
+  sugerencias: string[];
+  waLink: string;
+  createdAt: string;
+}
+
+export interface CopilotChatDay {
+  habilitado: boolean;
+  mensaje?: string;
+  fecha?: string;
+  items: CopilotChatItem[];
+  restantes: number;
+  limiteDia?: number;
+  ejemplos: string[];
+}
+
 export const copilotService = {
+  async getChat(): Promise<CopilotChatDay> {
+    return (await api.get<any>('/copilot/chat')).data as CopilotChatDay;
+  },
+  async ask(pregunta: string): Promise<CopilotChatItem> {
+    // dos llamadas al modelo: 75 s (el resto de la app sigue con 10 s); el servidor corta cada llamada a los 15 s
+    return (await api.post<any>('/copilot/chat', { pregunta }, { timeoutMs: 75_000 })).data as CopilotChatItem;
+  },
   async getSettings(): Promise<CopilotSettings> {
     return (await api.get<any>('/copilot/settings')).data as CopilotSettings;
   },

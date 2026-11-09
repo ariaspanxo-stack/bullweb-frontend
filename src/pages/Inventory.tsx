@@ -128,10 +128,17 @@ export default function Inventory() {
 
   const suppliersList: any[] = (suppliersData as any)?.suppliers ?? [];
 
+  // LOTE 321: si la carga inicial de la lista sigue en curso al crear o editar, invalidateQueries se cuelga de esa misma
+  // peticion (salio antes del POST y no trae la fila nueva) y no vuelve a pedir. Se cancela primero y se pide de nuevo al servidor.
+  const recargarProveedores = async () => {
+    await queryClient.cancelQueries({ queryKey: ['suppliers'] });
+    await queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+  };
+
   const createSupplierMutation = useMutation({
     mutationFn: inventoryService.createSupplier,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      recargarProveedores();
       setIsSupplierModalOpen(false);
       setEditingSupplier(null);
       toast.success('Proveedor creado');
@@ -142,7 +149,7 @@ export default function Inventory() {
   const updateSupplierMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: any }) => inventoryService.updateSupplier(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      recargarProveedores();
       setIsSupplierModalOpen(false);
       setEditingSupplier(null);
       toast.success('Proveedor actualizado');
@@ -153,7 +160,7 @@ export default function Inventory() {
   const deleteSupplierMutation = useMutation({
     mutationFn: inventoryService.deleteSupplier,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      recargarProveedores();
       toast.success('Proveedor eliminado');
     },
     onError: (err: any) => toast.error(err.message || 'Error al eliminar proveedor'),

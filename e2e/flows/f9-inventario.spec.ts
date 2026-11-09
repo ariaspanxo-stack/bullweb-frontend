@@ -129,12 +129,16 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
   await seccion('proveedor creado mientras la lista inicial aun carga', async () => {
     const nombre = `${N.prov}-R`;
     let demorada = false;
+    let pendiente: Promise<void> | null = null;
     await page.route(/\/api\/suppliers(\?|$)/, async (route) => {
       if (demorada || route.request().method() !== 'GET') return route.fallback();
       demorada = true;
-      const resp = await route.fetch(); // la peticion llega al servidor ya, antes del POST
-      await page.waitForTimeout(6000); // y su respuesta vuelve tarde
-      await route.fulfill({ response: resp });
+      pendiente = (async () => {
+        const resp = await route.fetch(); // la peticion llega al servidor ya, antes del POST
+        await new Promise((r) => setTimeout(r, 6000)); // y su respuesta vuelve tarde
+        await route.fulfill({ response: resp }).catch(() => { /* la pagina ya la descarto: es lo esperado con el arreglo */ });
+      })();
+      await pendiente;
     });
     try {
       await inventario('Proveedores');
@@ -146,6 +150,7 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
       await expect(fila(nombre), 'la fila nueva aparece sin reabrir la pestana').toBeVisible({ timeout: 20000 });
       await shot(page, F, '02b_proveedor_lista_lenta');
     } finally {
+      await (pendiente as Promise<void> | null)?.catch(() => {});
       await page.unroute(/\/api\/suppliers(\?|$)/);
     }
   });

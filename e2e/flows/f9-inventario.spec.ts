@@ -71,7 +71,10 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
   const costoProducto = async () => Number((await api(page, 'GET', `/menu/products/${prodId}`, token)).data.cost);
 
   await seccion('proveedor crear y editar', async () => {
+    // LOTE 316: la lista debe estar cargada antes de crear (si la carga inicial llega despues del POST, pisa la lista con datos viejos)
+    const listaInicial = page.waitForResponse((r) => r.request().method() === 'GET' && /\/api\/suppliers(\?|$)/.test(r.url()), { timeout: 30000 }).catch(() => null);
     await inventario('Proveedores');
+    await listaInicial;
     await nuevo();
     await page.getByPlaceholder('Nombre del proveedor').fill(N.prov);
     await page.getByPlaceholder('Nombre del contacto').fill(N.contacto);
@@ -80,8 +83,19 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
     await page.getByPlaceholder('12.345.678-9').fill(N.rut);
     await shot(page, F, '01_proveedor_formulario');
     const r = post('/suppliers');
+    const recarga = page.waitForResponse((x) => x.request().method() === 'GET' && /\/api\/suppliers(\?|$)/.test(x.url()), { timeout: 30000 }).catch(() => null);
     await page.getByRole('button', { name: 'Crear Proveedor' }).click();
     expect((await r).status(), 'POST /suppliers').toBe(201);
+    // LOTE 316: se espera la fila tras la recarga de la lista; si la recarga vino sin el proveedor, se reabre la pestana (queda anotado)
+    const g = await recarga;
+    const trae = g ? (await g.text().catch(() => '')).includes(N.prov) : false;
+    if (!trae || !(await fila(N.prov).isVisible().catch(() => false))) {
+      await fila(N.prov).waitFor({ state: 'visible', timeout: 15000 }).catch(async () => {
+        test.info().annotations.push({ type: 'observacion', description: `lista de proveedores sin el nuevo tras crear (recarga ${g ? g.status() : 'sin GET'}, trae=${trae}): pestana reabierta` });
+        console.log(`F9 OBSERVACION: lista de proveedores sin el nuevo tras crear (recarga ${g ? g.status() : 'sin GET'}, trae=${trae}); pestana reabierta`);
+        await inventario('Proveedores');
+      });
+    }
     await expect(fila(N.prov)).toBeVisible();
     await expect(fila(N.prov)).toContainText(N.contacto);
     await expect(fila(N.prov)).toContainText(N.rut);

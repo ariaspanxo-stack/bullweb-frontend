@@ -61,7 +61,7 @@ function DigestCard({ d }: { d: CopilotDigest }) {
         <h3 className="text-base font-semibold text-gray-900 first-letter:uppercase">{fecha(d.businessDate)}</h3>
         <span className="text-xs text-gray-500">{d.source === 'pendiente' ? 'En preparación' : EMAIL_TEXT[d.emailStatus ?? ''] ?? ''}</span>
       </div>
-      {d.narrative && <p className="text-sm leading-relaxed text-gray-700">{d.narrative}</p>}
+      {d.narrative && <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-line">{d.narrative}</p>}
       <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 text-sm">
         {filas.map(([k, v]) => (
           <div key={k} className="flex items-baseline justify-between gap-3 py-1.5 border-b border-gray-100">

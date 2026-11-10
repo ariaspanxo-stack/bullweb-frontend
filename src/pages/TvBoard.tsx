@@ -89,7 +89,7 @@ export default function TvBoard() {
     <div className="h-screen w-screen bg-gray-950 text-white flex flex-col overflow-hidden select-none" data-testid="tv-board">
       <header className="flex items-center justify-between gap-6 px-10 py-4" style={{ backgroundColor: theme, color: onTheme }}>
         <div className="flex items-center gap-6 min-w-0">
-          {data?.logo && <img src={data.logo} alt="" className="h-20 w-20 object-contain rounded-xl bg-white/90 p-1 flex-shrink-0" />}
+          {data?.logo && <img src={data.logo} alt="" onError={(e) => { e.currentTarget.style.display = 'none'; }} className="h-20 w-20 object-contain rounded-xl bg-white/90 p-1 flex-shrink-0" />}
           <h1 className="font-extrabold truncate" style={{ fontSize: BIG }}>{data?.name ?? 'Pedidos'}</h1>
         </div>
         <div className="flex items-center gap-6 flex-shrink-0">

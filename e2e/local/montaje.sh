@@ -11,7 +11,7 @@ q() { "$PGB/psql.exe" -h 127.0.0.1 -p 5433 -U postgres -d bullweb_test -X -A -t 
 HQ=$(sed -n '/^HQ="/,/subscriptions s))"$/p' "$D/_288b_bateria_local.sh" | sed -e '1s/^HQ="//' -e '$s/"$//' -e 's/[\]"/"/g')
 # netstat desde Git Bash no siempre lista 4299: se pregunta por PowerShell. Los procesos se detienen por linea de comando (ver memoria del montaje).
 listeners() { powershell.exe -NoProfile -Command "(Get-NetTCPConnection -State Listen -LocalPort $1 -ErrorAction SilentlyContinue).OwningProcess" | tr -d '\r' | sort -u | grep -v '^0$'; }
-detener() { powershell.exe -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { \$_.Name -in 'node.exe','cmd.exe','nohup.exe' -and \$_.CommandLine -match 'dist/server\.js|_mpa_mp_simulado|_314_google_simulado|vite.*preview.*vite\.e2e\.config' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force -ErrorAction SilentlyContinue }" > /dev/null 2>&1; }
+detener() { powershell.exe -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { \$_.Name -in 'node.exe','cmd.exe','nohup.exe' -and \$_.CommandLine -match 'dist/server\.js|_mpa_mp_simulado|_314_google_simulado|_copiloto_simulado|vite.*preview.*vite\.e2e\.config' } | ForEach-Object { Stop-Process -Id \$_.ProcessId -Force -ErrorAction SilentlyContinue }" > /dev/null 2>&1; }
 if [ "$MODE" = "up" ]; then
   if [ -n "$(listeners 4299)" ] || [ -n "$(listeners 5175)" ]; then echo "== puertos 4299/5175 ocupados: ABORTADO"; exit 1; fi
   "$PGB/pg_ctl.exe" -D "$PGD" -l "$PGD/../pg.log" -o "-p 5433" start -w > /dev/null 2>&1 < /dev/null; echo "== postgres rc=$?"
@@ -47,11 +47,17 @@ if [ "$MODE" = "up" ]; then
   if grep -q paymentStatus src/modules/inventory/inventory.service.ts; then q -f "$D/_310_migracion.sql" > /dev/null; echo "rc_migracion_310=$?"; fi
   # LOTE 312: solo si la rama trae el Copiloto (tablas copilot_* nuevas)
   if [ -d src/modules/copilot ]; then q -f "$D/_copiloto_migracion.sql" > /dev/null; echo "rc_migracion_copiloto=$?"; fi
+  # LOTE 321: solo si la rama trae el chat del dueno (tabla copilot_chat y modelo simulado 4398, que arranca run.mjs)
+  if [ -f src/modules/copilot/copilot.chat.ts ]; then
+    q -f "$D/_321_migracion.sql" > /dev/null; echo "rc_migracion_321=$?"
+    CK=$(node -e "console.log(require('crypto').randomBytes(16).toString('hex'))")
+    printf 'GEMINI_API_KEY=sim-%s\nGEMINI_API_BASE=http://127.0.0.1:4398\nCOPILOT_GEMINI_TIMEOUT_MS=5000\nGEMINI_MODEL_FALLBACK=gemini-sim-respaldo\n' "$CK" >> .env.test
+  fi
   # LOTE 314: solo si la rama trae el envio por tramos (tablas nuevas; el Google simulado 4397 lo arranca run.mjs)
   if [ -d src/modules/delivery-zones ]; then
     q -f "$D/_314_migracion.sql" > /dev/null; echo "rc_migracion_314=$?"
     GK=$(node -e "console.log(require('crypto').randomBytes(16).toString('hex'))")
-    printf 'GOOGLE_MAPS_SERVER_KEY=sim-%s\nGOOGLE_MAPS_API_BASE=http://127.0.0.1:4397\n' "$GK" >> .env.test
+    printf 'GOOGLE_MAPS_SERVER_KEY=sim-%s\nGOOGLE_MAPS_API_BASE=http://127.0.0.1:4397\nGOOGLE_ROUTES_API_BASE=http://127.0.0.1:4397\n' "$GK" >> .env.test # LOTE 321: la Routes API del 320 tambien va al simulado
   fi
   : > "$LOG"
   # El backend lo arranca run.mjs: lanzado desde este bash moria sin traza a mitad de la corrida.
@@ -62,6 +68,7 @@ if [ "$MODE" = "down" ]; then
   echo "listeners_4299=$(listeners 4299 | wc -l) listeners_5175=$(listeners 5175 | wc -l)"
   if [ -f "$RUN/.e2e_horas" ]; then H=$(cat "$RUN/.e2e_horas"); if [ "$H" = "NULL" ]; then q -c "UPDATE tenants SET \"cartaBusinessHours\" = NULL WHERE id = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568'"; else q -c "UPDATE tenants SET \"cartaBusinessHours\" = '$H'::jsonb WHERE id = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568'"; fi; rm -f "$RUN/.e2e_horas"; echo "horas devueltas"; fi
   if [ "$(q -c "SELECT count(*) FROM information_schema.tables WHERE table_name = 'delivery_zones'")" != "0" ]; then q -f "$D/_314_rollback.sql" > /dev/null; echo "rc_rollback_314=$?"; fi # LOTE 314
+  if [ "$(q -c "SELECT count(*) FROM information_schema.tables WHERE table_name = 'copilot_chat'")" != "0" ]; then q -f "$D/_321_rollback.sql" > /dev/null; echo "rc_rollback_321=$?"; fi # LOTE 321
   if [ "$(q -c "SELECT count(*) FROM information_schema.tables WHERE table_name = 'copilot_settings'")" != "0" ]; then q -f "$D/_copiloto_rollback.sql" > /dev/null; echo "rc_rollback_copiloto=$?"; fi # LOTE 312
   if [ "$(q -c "SELECT count(*) FROM information_schema.tables WHERE table_name = '_bk308b_print_settings'")" != "0" ]; then q -f "$D/_308b_rollback.sql" > /dev/null; echo "rc_rollback_308b=$?"; fi # LOTE 308b
   if [ "$(q -c "SELECT count(*) FROM information_schema.columns WHERE table_name = 'purchases' AND column_name = 'paymentStatus'")" != "0" ]; then q -f "$D/_310_rollback.sql" > /dev/null; echo "rc_rollback_310=$?"; q -c "DROP TABLE IF EXISTS _bk310_purchases"; fi # LOTE 310

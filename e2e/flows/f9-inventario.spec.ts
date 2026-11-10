@@ -123,7 +123,39 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
     esperados.pop();
   });
 
-  const crearIngrediente = async (nombre: string, unidad: string, costo: string, minimo: string, stock: string) => {
+  // LOTE 321: el caso que anoto F9 (lista sin el proveedor nuevo tras un POST 201). La carga inicial de la lista llega al
+  // servidor ANTES del POST y su respuesta vuelve DESPUES (red lenta o el freno de la suite). Hasta el 321, invalidateQueries
+  // se colgaba de esa peticion vieja y la fila no aparecia sin reabrir la pestana. Aqui NO se reabre: la fila debe llegar sola.
+  await seccion('proveedor creado mientras la lista inicial aun carga', async () => {
+    const nombre = `${N.prov}-R`;
+    let demorada = false;
+    let pendiente: Promise<void> | null = null;
+    await page.route(/\/api\/suppliers(\?|$)/, async (route) => {
+      if (demorada || route.request().method() !== 'GET') return route.fallback();
+      demorada = true;
+      pendiente = (async () => {
+        const resp = await route.fetch(); // la peticion llega al servidor ya, antes del POST
+        await new Promise((r) => setTimeout(r, 6000)); // y su respuesta vuelve tarde
+        await route.fulfill({ response: resp }).catch(() => { /* la pagina ya la descarto: es lo esperado con el arreglo */ });
+      })();
+      await pendiente;
+    });
+    try {
+      await inventario('Proveedores');
+      await nuevo();
+      await page.getByPlaceholder('Nombre del proveedor').fill(nombre);
+      const r = post('/suppliers');
+      await page.getByRole('button', { name: 'Crear Proveedor' }).click();
+      expect((await r).status(), 'POST /suppliers con la lista aun cargando').toBe(201);
+      await expect(fila(nombre), 'la fila nueva aparece sin reabrir la pestana').toBeVisible({ timeout: 20000 });
+      await shot(page, F, '02b_proveedor_lista_lenta');
+    } finally {
+      await (pendiente as Promise<void> | null)?.catch(() => {});
+      await page.unroute(/\/api\/suppliers(\?|$)/);
+    }
+  });
+
+  const crearIngrediente =async (nombre: string, unidad: string, costo: string, minimo: string, stock: string) => {
     await nuevo();
     await page.getByPlaceholder('Ej: Tomate, Pollo, Arroz').fill(nombre);
     await page.locator('select[name="unit"]').selectOption(unidad);

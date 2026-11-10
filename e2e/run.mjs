@@ -72,6 +72,12 @@ async function subirBackend() {
     g.unref();
     console.log('google simulado 4397 arriba');
   }
+  // LOTE 321: rama con chat del dueno -> modelo simulado local 4398 (nada sale a internet); el montaje lo detiene al bajar
+  if (vars.GEMINI_API_BASE === 'http://127.0.0.1:4398' && existsSync(resolve(WS, '_deploy', '_copiloto_simulado.js'))) {
+    const s = spawn(process.execPath, [resolve(WS, '_deploy', '_copiloto_simulado.js')], { detached: true, windowsHide: true, stdio: ['ignore', log, log] });
+    s.unref();
+    console.log('modelo simulado 4398 arriba');
+  }
   const child = spawn(process.execPath, ['dist/server.js'], { cwd: work, env: { ...process.env, ...vars }, detached: true, windowsHide: true, stdio: ['ignore', log, log] });
   backendVivo = true;
   child.on('exit', (code, signal) => { backendVivo = false; console.log(`BACKEND LOCAL TERMINO code=${code} signal=${signal}`); });
@@ -111,7 +117,8 @@ async function subirPreview() {
 }
 
 function correrPlaywright() {
-  const grep = flujo ?? (env === 'local' ? 'F1|F2|F5|F8|F9' : 'F1|F5|F8|F9');
+  // LOTE 321: cada flujo con limite de palabra (F1 no debe tomar F10)
+  const grep = (flujo ?? (env === 'local' ? 'F1|F2|F5|F8|F9|F10' : 'F1|F5|F8|F9')).split('|').map((x) => `${x}(?![0-9])`).join('|');
   return npx(['playwright', 'test', '--config', 'e2e/playwright.config.ts', '--grep', `"${grep}"`], { E2E_ENV: env, E2E_FECHA: process.env.E2E_FECHA ?? fechaLocal() });
 }
 function fechaLocal() {

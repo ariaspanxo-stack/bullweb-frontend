@@ -82,7 +82,8 @@ registerRoute(
 registerRoute(
   ({ url }) =>
     url.pathname.startsWith('/api/pos/orders') ||
-    url.pathname.startsWith('/api/reports'),
+    url.pathname.startsWith('/api/reports') ||
+    url.pathname.startsWith('/api/suppliers'), // LOTE 321: la lista de proveedores siempre del servidor (NetworkFirst con 10 s servia la vieja)
   new NetworkOnly(),
   'GET'
 );

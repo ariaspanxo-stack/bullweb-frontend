@@ -118,7 +118,7 @@ async function subirPreview() {
 
 function correrPlaywright() {
   // LOTE 321: cada flujo con limite de palabra (F1 no debe tomar F10)
-  const grep = (flujo ?? (env === 'local' ? 'F1|F2|F5|F8|F9|F10' : 'F1|F5|F8|F9')).split('|').map((x) => `${x}(?![0-9])`).join('|');
+  const grep = (flujo ?? (env === 'local' ? 'F1|F2|F5|F8|F9|F10|F11' : 'F1|F5|F8|F9')).split('|').map((x) => `${x}(?![0-9])`).join('|');
   return npx(['playwright', 'test', '--config', 'e2e/playwright.config.ts', '--grep', `"${grep}"`], { E2E_ENV: env, E2E_FECHA: process.env.E2E_FECHA ?? fechaLocal() });
 }
 function fechaLocal() {

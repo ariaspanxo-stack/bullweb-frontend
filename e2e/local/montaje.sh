@@ -55,6 +55,8 @@ if [ "$MODE" = "up" ]; then
   fi
   # LOTE 322: solo si la rama trae las fichas genericas (columna customers.is_generic)
   if [ -f src/modules/customers/generic.ts ]; then q -f "$D/_322_migracion.sql" > /dev/null; echo "rc_migracion_322=$?"; fi
+  # LOTE 324: solo si la rama trae pagos en linea por local y pantalla de pedidos (columnas aditivas de tenants)
+  if [ -f src/modules/mercadopago/mp-settings.ts ]; then q -f "$D/_324_migracion.sql" > /dev/null; echo "rc_migracion_324=$?"; fi
   # LOTE 314: solo si la rama trae el envio por tramos (tablas nuevas; el Google simulado 4397 lo arranca run.mjs)
   if [ -d src/modules/delivery-zones ]; then
     q -f "$D/_314_migracion.sql" > /dev/null; echo "rc_migracion_314=$?"
@@ -69,6 +71,7 @@ if [ "$MODE" = "down" ]; then
   detener; sleep 3; detener; sleep 2
   echo "listeners_4299=$(listeners 4299 | wc -l) listeners_5175=$(listeners 5175 | wc -l)"
   if [ -f "$RUN/.e2e_horas" ]; then H=$(cat "$RUN/.e2e_horas"); if [ "$H" = "NULL" ]; then q -c "UPDATE tenants SET \"cartaBusinessHours\" = NULL WHERE id = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568'"; else q -c "UPDATE tenants SET \"cartaBusinessHours\" = '$H'::jsonb WHERE id = '6c9d34d2-29d0-4094-93a8-9abd1f5c9568'"; fi; rm -f "$RUN/.e2e_horas"; echo "horas devueltas"; fi
+  if [ "$(q -c "SELECT count(*) FROM information_schema.columns WHERE table_name = 'tenants' AND column_name = 'online_payments_enabled'")" != "0" ]; then q -f "$D/_324_rollback.sql" > /dev/null; echo "rc_rollback_324=$?"; fi # LOTE 324
   if [ "$(q -c "SELECT count(*) FROM information_schema.columns WHERE table_name = 'customers' AND column_name = 'is_generic'")" != "0" ]; then q -f "$D/_322_rollback.sql" > /dev/null; echo "rc_rollback_322=$?"; fi # LOTE 322
   if [ "$(q -c "SELECT count(*) FROM information_schema.tables WHERE table_name = 'delivery_zones'")" != "0" ]; then q -f "$D/_314_rollback.sql" > /dev/null; echo "rc_rollback_314=$?"; fi # LOTE 314
   if [ "$(q -c "SELECT count(*) FROM information_schema.tables WHERE table_name = 'copilot_chat'")" != "0" ]; then q -f "$D/_321_rollback.sql" > /dev/null; echo "rc_rollback_321=$?"; fi # LOTE 321

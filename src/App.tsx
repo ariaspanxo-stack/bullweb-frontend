@@ -81,6 +81,9 @@ const AppSettings     = lazy(() => import('@/pages/Settings'));
 const PrintSettingsPage = lazy(() => import('@/pages/Settings/PrintSettingsPage'));
 const PaymentsSettingsPage = lazy(() => import('@/pages/Settings/PaymentsSettingsPage')); // LOTE MP-A
 const DeliverySettingsPage = lazy(() => import('@/pages/Settings/DeliverySettingsPage')); // LOTE 314
+const LocalSettingsPage    = lazy(() => import('@/pages/Settings/LocalSettingsPage')); // LOTE 324
+const ChannelsSettingsPage = lazy(() => import('@/pages/Settings/ChannelsSettingsPage')); // LOTE 324
+const TvBoard              = lazy(() => import('@/pages/TvBoard')); // LOTE 324: pantalla de pedidos publica
 const AttendanceKiosk = lazy(() => import('@/pages/AttendanceKiosk'));
 const AttendanceCheckin = lazy(() => import('@/pages/AttendanceCheckin'));
 const KioskPage       = lazy(() => import('@/pages/KioskPage'));
@@ -223,6 +226,7 @@ function AppContent() {
             <Route path="/carta/:slug/pedido/:orderId" element={<CartaPedido />} /> {/* HOTFIX 272b */}
             <Route path="/mesa/:slug"  element={<MesaQR />} />
             <Route path="/r/:orderId"  element={<ReceiptPage />} />
+            <Route path="/tv/:token"  element={<TvBoard />} /> {/* LOTE 324 */}
 
             {/* App Mesero — login PWA (sin auth) */}
             <Route path="/mesero/login" element={<WaiterLoginPage />} />
@@ -290,6 +294,8 @@ function AppContent() {
               <Route path="settings/print" element={<PrintSettingsPage />} />
               <Route path="settings/pagos" element={<PermissionGuard permission="settings.manage"><PaymentsSettingsPage /></PermissionGuard>} /> {/* LOTE MP-A */}
               <Route path="settings/delivery" element={<PermissionGuard permission="settings.manage"><DeliverySettingsPage /></PermissionGuard>} /> {/* LOTE 314 */}
+              <Route path="settings/local" element={<PermissionGuard permission="settings.manage"><LocalSettingsPage /></PermissionGuard>} /> {/* LOTE 324 */}
+              <Route path="settings/canales" element={<PermissionGuard permission="settings.manage"><ChannelsSettingsPage /></PermissionGuard>} /> {/* LOTE 324 */}
               <Route path="profile"  element={<Profile />} />
               <Route path="profile/password" element={<ChangePasswordPage />} />{/* HOTFIX 307 */}
               <Route path="profile/restaurant" element={<PermissionGuard permission="settings.manage"><RestaurantProfilePage /></PermissionGuard>} />{/* HOTFIX 306 (B7-02) */}

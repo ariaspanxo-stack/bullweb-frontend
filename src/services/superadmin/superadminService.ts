@@ -24,6 +24,15 @@ async function saFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return (body?.data ?? body) as T;
 }
 
+// LOTE 324
+export interface OnlinePaymentsCfg {
+  available:    boolean;
+  enabled:      boolean;
+  feeOnlinePct: number;
+  feePointPct:  number;
+  source:       'db' | 'env';
+}
+
 export interface Tenant {
   id: string;
   name: string;
@@ -310,6 +319,11 @@ const superadminService = {
 
   // Ficha completa del tenant
   getTenantDetail: (id: string) => saFetch<any>(`/superadmin/tenants/${id}/detail`),
+
+  // LOTE 324: pagos en linea por local (switch y comisiones BullWeb), con auditoria superadmin
+  getOnlinePayments: (id: string) => saFetch<OnlinePaymentsCfg>(`/superadmin/tenants/${id}/online-payments`),
+  updateOnlinePayments: (id: string, body: Partial<Pick<OnlinePaymentsCfg, 'enabled' | 'feeOnlinePct' | 'feePointPct'>>) =>
+    saFetch<OnlinePaymentsCfg>(`/superadmin/tenants/${id}/online-payments`, { method: 'PATCH', body: JSON.stringify(body) }),
 
   // Notas internas
   getTenantNotes:    (id: string)                   => saFetch<any[]>(`/superadmin/tenants/${id}/notes`),

@@ -40,6 +40,8 @@ import { colorForCategory, emojiForCategory, categoryLabel } from '../../../lib/
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { useActivePromotions } from '../../../hooks/useActivePromotions'; // HOTFIX 299
 import { priceCartWithPromotions, restaurantCartToPromoLines, type PromoLineResult } from '../../../utils/promoPricing'; // HOTFIX 299
+import { localChannelsService } from '../../../services/localChannelsService'; // LOTE 324
+import { normalizeWhatsAppPhone } from '../../../components/carta/QrOrderTracking'; // LOTE 324
 
 interface OrderModalProps {
   table: Table;
@@ -62,6 +64,14 @@ interface OrderModalProps {
   setNumberOfPeople: (value: number) => void;
   isSubmitting?: boolean;
   tables?: Table[];
+}
+
+// LOTE 324: texto del WhatsApp de "pedido listo" (primer nombre, numero corto y linea de resenas Google)
+export function readyWhatsAppText(name: string, orderNumber: string, reviewUrl: string): string {
+  const first = String(name ?? '').trim().split(/\s+/)[0] ?? '';
+  const num = String(orderNumber ?? '').split('-').pop() ?? '';
+  const saludo = first && !/\d/.test(first) ? `Hola ${first}` : 'Hola';
+  return `${saludo}, tu pedido${num ? ` ${num}` : ''} está listo para retirar.\n¿Nos ayudas con una reseña en Google? ${reviewUrl}`;
 }
 
 export const OrderModal = ({
@@ -182,6 +192,8 @@ export const OrderModal = ({
   const canReprint  = usePermission(['printers.view', 'ALL_PERMISSIONS']); // HOTFIX 302
   const [showReprint, setShowReprint] = useState(false); // HOTFIX 302
   const [reprintNumber, setReprintNumber] = useState<string>(''); // HOTFIX 302: numero de pedido para el titulo
+  // LOTE 324: WhatsApp de "pedido listo" con la linea de resenas Google; solo si el local configuro el enlace (sin enlace nada cambia)
+  const { data: localCfg } = useQuery({ queryKey: ['settings', 'local'], queryFn: () => localChannelsService.getLocal(), staleTime: 5 * 60 * 1000, enabled: !!existingOrderId });
 
   const handleTransfer = async (newTableId: string) => {
     if (!existingOrderId) return;
@@ -1109,6 +1121,18 @@ export const OrderModal = ({
                         {updatingStatus ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
                         Listo
                       </button>
+                    )}
+                    {/* LOTE 324: pedido listo -> aviso por WhatsApp con la linea de resenas Google (verde solo WhatsApp) */}
+                    {existingOrderId && existingStatus === 'READY' && localCfg?.valid && localCfg.googleReviewUrl && normalizeWhatsAppPhone(clientPhone) && (
+                      <a
+                        href={`https://wa.me/${normalizeWhatsAppPhone(clientPhone)}?text=${encodeURIComponent(readyWhatsAppText(clientName, reprintNumber, localCfg.googleReviewUrl))}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        data-testid="pos-wa-ready"
+                        className="w-full min-h-[44px] py-2 bg-white border-2 border-[#128C7E] text-[#128C7E] rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2"
+                      >
+                        Avisar por WhatsApp
+                      </a>
                     )}
 
                     {/* Editar venta */}

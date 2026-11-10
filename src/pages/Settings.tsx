@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import {
   Settings, Bell, Monitor, Globe, RefreshCw, ShieldCheck,
-  ChevronRight, Check, Info, CreditCard, Truck
+  ChevronRight, Check, Info, CreditCard, Truck, Store, Tv
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
@@ -206,6 +206,40 @@ export default function AppSettings() {
           }
         />
       </Section>
+
+      {/* LOTE 324: Configuracion -> Local (enlace de resenas Google) */}
+      {canManagePayments && (
+        <Section title="Local" icon={Store}>
+          <button
+            onClick={() => navigate('/settings/local')}
+            data-testid="settings-local"
+            className="w-full min-h-[44px] flex items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left"
+          >
+            <div>
+              <p className="text-sm font-medium text-gray-800">Enlace de reseñas Google</p>
+              <p className="text-xs text-gray-400 mt-0.5">QR en el ticket, botón en la carta y línea en el WhatsApp de pedido listo</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          </button>
+        </Section>
+      )}
+
+      {/* LOTE 324: Configuracion -> Canales (pantalla de pedidos) */}
+      {canManagePayments && (
+        <Section title="Canales" icon={Tv}>
+          <button
+            onClick={() => navigate('/settings/canales')}
+            data-testid="settings-canales"
+            className="w-full min-h-[44px] flex items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50 transition-colors text-left"
+          >
+            <div>
+              <p className="text-sm font-medium text-gray-800">Pantalla de pedidos</p>
+              <p className="text-xs text-gray-400 mt-0.5">Muestra en una TV los pedidos en preparación y listos para retirar</p>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          </button>
+        </Section>
+      )}
 
       {/* LOTE 314: Configuracion -> Delivery */}
       {canManagePayments && (

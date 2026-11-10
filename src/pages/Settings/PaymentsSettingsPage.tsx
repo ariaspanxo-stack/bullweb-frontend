@@ -112,10 +112,17 @@ export default function PaymentsSettingsPage() {
                 {!status.liveMode && <div className="col-span-2 text-amber-700">Cuenta de prueba: los pagos no son reales.</div>}
               </>
             )}
+            {/* LOTE 324: % del local fijado por BullWeb (solo lectura) */}
             <div>
-              <dt className="text-gray-500">Comision BullWeb</dt>
-              <dd className="font-bold text-gray-900">{status.feePct.toLocaleString('es-CL')} %</dd>
+              <dt className="text-gray-500">Comision BullWeb pago en linea</dt>
+              <dd className="font-bold text-gray-900" data-testid="pagos-fee-online">{status.feePct.toLocaleString('es-CL')} %</dd>
             </div>
+            {status.feePointPct != null && (
+              <div>
+                <dt className="text-gray-500">Comision BullWeb Point</dt>
+                <dd className="font-bold text-gray-900" data-testid="pagos-fee-point">{status.feePointPct.toLocaleString('es-CL')} %</dd>
+              </div>
+            )}
           </dl>
         )}
 

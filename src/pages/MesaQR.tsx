@@ -219,6 +219,16 @@ export default function MesaQR() {
           </div>
         )}
 
+        {/* LOTE 323 (B5-13): enlace a la carta del local (con la mesa del QR) */}
+        {slug && (
+          <a
+            href={`/carta/${encodeURIComponent(slug)}${mesaIdParam ? `?mesaId=${encodeURIComponent(mesaIdParam)}` : mesaParam ? `?mesa=${encodeURIComponent(mesaParam)}` : ''}`}
+            className="w-full min-h-[48px] rounded-xl border-2 border-orange-500 text-orange-600 font-bold hover:bg-orange-50 inline-flex items-center justify-center"
+          >
+            Ver carta
+          </a>
+        )}
+
         <p className="text-xs text-gray-400 mt-4">Escanea este QR solo desde tu mesa</p>
       </div>
     </div>

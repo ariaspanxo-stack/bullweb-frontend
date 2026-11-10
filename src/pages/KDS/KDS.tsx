@@ -553,9 +553,16 @@ export default function KDS() {
                           {style.badge.label}
                         </span>
                       )}
-                      <span className="text-xs text-white/60 font-mono tabular-nums">
-                        {urgency.minutes}min
-                      </span>
+                      {/* LOTE 323 (B4-12): pedido abierto de un dia anterior: se ve con aviso (antes desaparecia a las 48 h) */}
+                      {new Date(order.createdAt).toLocaleDateString('es-CL', { timeZone: 'America/Santiago' }) !== new Date().toLocaleDateString('es-CL', { timeZone: 'America/Santiago' }) ? (
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">
+                          De días anteriores
+                        </span>
+                      ) : (
+                        <span className="text-xs text-white/60 font-mono tabular-nums">
+                          {urgency.minutes}min
+                        </span>
+                      )}
                     </div>
                   </div>
 

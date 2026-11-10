@@ -1,5 +1,7 @@
-import { Package, ShoppingCart, Activity, Truck, Boxes } from 'lucide-react';
+import { Package, ShoppingCart, Activity, Truck, Boxes, BookOpen } from 'lucide-react';
+import { Link } from 'react-router-dom'; // LOTE 323: acceso a Fichas tecnicas
 import { cn } from '@/lib/utils';
+import { useAuthStore } from '@/store/authStore'; // LOTE 323
 
 interface InventoryTabsProps {
   activeTab: 'ingredients' | 'products' | 'recipes' | 'purchases' | 'movements' | 'suppliers';
@@ -20,6 +22,9 @@ const tabs = [
 ] as const;
 
 export default function InventoryTabs({ activeTab, onTabChange, onlyStockSimple = false }: InventoryTabsProps) {
+  // LOTE 323: el enlace a Fichas tecnicas solo con acceso a Productos (la ruta exige products.view)
+  const perms: string[] = useAuthStore((st) => ((st.user as any)?.role?.permissions ?? []) as string[]);
+  const canFichas = perms.includes('ALL_PERMISSIONS') || perms.includes('products.view');
   return (
     <div className="border-b border-gray-200">
       <nav className="flex-wrap flex gap-4">
@@ -43,6 +48,17 @@ export default function InventoryTabs({ activeTab, onTabChange, onlyStockSimple 
             </button>
           );
         })}
+        {/* LOTE 323: acceso a Fichas tecnicas (viven en Productos > Fichas tecnicas, una sola fuente); no en Basico */}
+        {!onlyStockSimple && canFichas && (
+          <Link
+            to="/products?tab=fichas"
+            data-testid="inventario-fichas-tecnicas"
+            className="min-h-[44px] flex items-center gap-2 px-4 py-3 border-b-2 border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300 transition-colors"
+          >
+            <BookOpen className="w-5 h-5" />
+            <span>Fichas técnicas</span>
+          </Link>
+        )}
       </nav>
     </div>
   );

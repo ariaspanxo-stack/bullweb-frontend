@@ -21,6 +21,16 @@ import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin';
  *
  * SuperAdmin: query deshabilitada (silencio, igual que la campanita y overlay).
  */
+/** LOTE 325: estado de un modulo por local (GET /billing/status y ficha del superadmin). */
+export interface TenantModuleStateFE {
+  key:         string;
+  label:       string;
+  enabled:     boolean;
+  source:      'plan' | 'forced';
+  state:       'plan' | 'on' | 'off';
+  planDefault: boolean;
+}
+
 export interface BillingStatusData {
   plan?:         string | null;
   status?:       string;   // ACTIVE | TRIAL | PAST_DUE | SUSPENDED | CANCELLED
@@ -34,6 +44,8 @@ export interface BillingStatusData {
   /** HOTFIX #230: features del plan EFECTIVO (plan_config via getStatus) —
    *  las consume hasFeature() de usePlan. null si el backend aún no las sirve. */
   features?:     string[] | null;
+  /** LOTE 325: modulos efectivos del local (sin fila = plan; con fila manda la fila). null en backends previos. */
+  modules?:      TenantModuleStateFE[] | null;
   subscription?: {
     flowSubscriptionId?: string | null;
     plan?:               string | null;

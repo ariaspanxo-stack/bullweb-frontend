@@ -91,6 +91,8 @@ interface MenuItem {
    * (la pantalla que VENDE el upgrade — el tab bloqueado es el vendedor).
    */
   visibleLocked?: boolean;
+  /** LOTE 325: modulo por local (module_subscriptions). Forzado apagado = oculto aunque sea visibleLocked; forzado encendido = visible aunque el plan no lo incluya. */
+  moduleKey?: string;
 }
 
 interface MenuSection {
@@ -118,7 +120,7 @@ const menuSections: MenuSection[] = [
       { name: 'Órdenes',          icon: Receipt,         path: '/orders',        permission: 'pos.access'   },
       { name: 'Pedidos Online',   icon: ShoppingBag,     path: '/online-orders', permission: 'pos.access'   },
       { name: 'Ventas',           icon: TrendingUp,      path: '/sales',         permission: ['sales.view', 'sales.today'] }, // HOTFIX 302
-      { name: 'KDS',              icon: Tv,              path: '/kds',           permission: ['kds.view', 'kitchen.view'], /* LOTE 323 (B7-10) */ planRequired: 'TODO' },
+      { name: 'KDS',              icon: Tv,              path: '/kds',           permission: ['kds.view', 'kitchen.view'], /* LOTE 323 (B7-10) */ planRequired: 'TODO', moduleKey: 'kds' },
     ]
   },
   {
@@ -150,10 +152,10 @@ const menuSections: MenuSection[] = [
       // HOTFIX #230: App Mesero incluida en BASICO — gate por feature plan_config
       // (hasFeature('waiter'), decisión #229) en vez del plan-string TODO.
       { name: 'App Mesero',      icon: MonitorSmartphone, path: '/admin/mesero-app', permission: 'apps.view', badge: 'Nuevo', featureRequired: 'waiter' },
-      { name: 'Mapeo Delivery',  icon: Truck,             path: '/delivery/mappings', permission: 'delivery.view', planRequired: 'TODO' },
+      { name: 'Mapeo Delivery',  icon: Truck,             path: '/delivery/mappings', permission: 'delivery.view', planRequired: 'TODO', moduleKey: 'mapeo_delivery' },
       // HOTFIX 300: el Repartidor (delivery.own) entra a sus repartos asignados
       { name: 'Repartos',        icon: Truck,             path: '/delivery',          permission: ['delivery.own', 'delivery.view', 'pos.delivery'] }, // LOTE 323 (B7-10): Cajero con pos.delivery de locales antiguos
-      { name: 'Fidelización', icon: Heart,             path: '/campaigns',        permission: 'marketing.view', planRequired: 'TODO', visibleLocked: true },
+      { name: 'Fidelización', icon: Heart,             path: '/campaigns',        permission: 'marketing.view', planRequired: 'TODO', visibleLocked: true, moduleKey: 'fidelizacion' },
       { name: 'Carta QR',    icon: QrCode,            path: '/carta-qr',         permission: 'marketing.view' },
       // HOTFIX 278: Cupones incluidos en BASICO — gate por feature plan_config (hasFeature('coupons'))
       { name: 'Cupones',     icon: Tag,               path: '/coupons',          permission: 'coupons.view', featureRequired: 'coupons' },
@@ -165,7 +167,7 @@ const menuSections: MenuSection[] = [
     colorClass: 'text-orange-400',
     items: [
       { name: 'Reportes',       icon: BarChart3,    path: '/reports',        permission: 'reports.view'   },
-      { name: 'Copiloto',       icon: Sparkles,     path: '/copiloto',       permission: 'settings.manage', badge: 'Nuevo' }, // LOTE COPILOTO 1
+      { name: 'Copiloto',       icon: Sparkles,     path: '/copiloto',       permission: 'settings.manage', badge: 'Nuevo', moduleKey: 'copiloto' }, // LOTE COPILOTO 1
       { name: 'Boletas DTE',    icon: ReceiptIcon,  path: '/dte/documentos', permission: 'billing.view', planRequired: 'TODO' },
       { name: 'Facturación SII', icon: FileText,    path: '/apps/dte',       permission: 'billing.config', planRequired: 'TODO' },
     ]
@@ -259,7 +261,6 @@ const adminSections: MenuSection[] = [
     items: [
       { name: 'API Keys',       icon: Key,      path: '/admin/keys'          },
       { name: 'Webhooks',       icon: Webhook,  path: '/admin/webhooks'      },
-      { name: 'Feature Flags',  icon: Cpu,      path: '/admin/feature-flags' },
       { name: 'API Playground', icon: Monitor,  path: '/admin/api-playground'},
       { name: 'Integraciones',  icon: Plug2,    path: '/admin/integrations'  },
       { name: 'Audit Trail',    icon: FileText, path: '/admin/audit-trail'   },
@@ -322,10 +323,12 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   // Grandfathered (STARTER/PRO/ENTERPRISE/null → TODO) no notan nada.
   // HOTFIX #230: además hasFeature — gate por feature de plan_config para los
   // ítems migrados (SOLO App Mesero en este hotfix; el resto sigue plan-string).
-  const { isBasico, hasFeature } = usePlan();
+  const { isBasico, hasFeature, moduleState } = usePlan();
 
   /** true si el plan del usuario permite el item (BASICO no ve planRequired:'TODO') */
-  const planAllows = (item: { planRequired?: 'TODO'; featureRequired?: string }): boolean => {
+  const planAllows = (item: { planRequired?: 'TODO'; featureRequired?: string; moduleKey?: string }): boolean => {
+    // LOTE 325: con fila del modulo manda la fila (encendido = visible aunque el plan no lo incluya).
+    if (item.moduleKey) { const st = moduleState(item.moduleKey)?.state; if (st === 'on') return true; if (st === 'off') return false; }
     // HOTFIX #230: item con gate por feature (plan_config) — visible si el plan
     // incluye la feature (TODO/grandfathered siempre true por el fallback del hook).
     if (item.featureRequired) return hasFeature(item.featureRequired);
@@ -338,7 +341,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     .map(section => ({
       ...section,
       items: section.items
-        .filter(item => canSee(item.permission) && (planAllows(item) || item.visibleLocked === true))
+        .filter(item => canSee(item.permission) && !(item.moduleKey && moduleState(item.moduleKey)?.state === 'off') && (planAllows(item) || item.visibleLocked === true))
         .map(item => ({
           ...item,
           subItems: item.subItems?.filter(sub => canSee(sub.permission) && planAllows(sub)),
@@ -519,7 +522,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             </span>
                           )}
                           {/* GATING FASE C — candado vendedor del item bloqueado-visible */}
-                          {isBasico && item.visibleLocked && (
+                          {isBasico && item.visibleLocked && !planAllows(item) && (
                             <Lock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" aria-label="Disponible en plan Full" />
                           )}
                           {item.path === '/online-orders' && pendingQrCount > 0 && (

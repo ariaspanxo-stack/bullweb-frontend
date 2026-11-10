@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { homePathFor } from '@/utils/homePath'; // HOTFIX 300
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import { PlanGuard } from '@/components/PlanGuard';
+import { PlanGuard, ModuleGuard } from '@/components/PlanGuard'; // LOTE 325: ModuleGuard
 import Layout from '@/components/layout/Layout';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 
@@ -50,7 +50,6 @@ const Analytics       = lazy(() => import('@/pages/Admin/Analytics'));
 const MaintenancePage = lazy(() => import('@/pages/Admin/MaintenancePage'));
 const LogsPage        = lazy(() => import('@/pages/Admin/LogsPage'));
 const IpBlocklistPage  = lazy(() => import('@/pages/Admin/IpBlocklistPage'));
-const FeatureFlagsPage = lazy(() => import('@/pages/Admin/FeatureFlagsPage'));
 const EmailPage       = lazy(() => import('@/pages/Admin/EmailPage'));
 const BackupPage      = lazy(() => import('@/pages/Admin/BackupPage'));
 const SchedulerPage   = lazy(() => import('@/pages/Admin/SchedulerPage'));
@@ -268,7 +267,7 @@ function AppContent() {
               
               {/* Operaciones */}
     
-              <Route path="kds"    element={<PermissionGuard permission={['kds.view', 'kitchen.view']}><PlanGuard><KDS /></PlanGuard></PermissionGuard>} />
+              <Route path="kds"    element={<PermissionGuard permission={['kds.view', 'kitchen.view']}><PlanGuard module="kds"><KDS /></PlanGuard></PermissionGuard>} />
               
               {/* Gestión */}
               <Route path="menu"           element={<Navigate to="/products" replace />} />
@@ -277,17 +276,17 @@ function AppContent() {
               <Route path="cash-registers" element={<PermissionGuard permission="cash.view"><CashRegisters /></PermissionGuard>} />
               <Route path="caja"           element={<PermissionGuard permission="pos.access"><CashPage /></PermissionGuard>} />
               <Route path="customers"      element={<PermissionGuard permission="customers.view"><PlanGuard><Customers /></PlanGuard></PermissionGuard>} />
-              <Route path="campaigns"      element={<PermissionGuard permission="marketing.view"><PlanGuard><Campaigns /></PlanGuard></PermissionGuard>} />
+              <Route path="campaigns"      element={<PermissionGuard permission="marketing.view"><PlanGuard module="fidelizacion"><Campaigns /></PlanGuard></PermissionGuard>} />
               <Route path="carta-qr"       element={<PermissionGuard permission="marketing.view"><CartaQRPage /></PermissionGuard>} />
               <Route path="delivery"       element={<PermissionGuard permission={['delivery.view', 'delivery.own', 'pos.delivery']}><Delivery /></PermissionGuard>} />
-              <Route path="delivery/mappings" element={<PermissionGuard permission="delivery.view"><PlanGuard><DeliveryMappings /></PlanGuard></PermissionGuard>} />
+              <Route path="delivery/mappings" element={<PermissionGuard permission="delivery.view"><PlanGuard module="mapeo_delivery"><DeliveryMappings /></PlanGuard></PermissionGuard>} />
               <Route path="employees"      element={<PermissionGuard permission="employees.view"><Employees /></PermissionGuard>} />
               
               {/* Reportes */}
               <Route path="reports"          element={<PermissionGuard permission="reports.view"><Reports /></PermissionGuard>} />
               <Route path="reports/sales"    element={<Navigate to="/reports" replace />} />
               <Route path="reports/analytics" element={<Navigate to="/reports" replace />} />
-              <Route path="copiloto"         element={<PermissionGuard permission="settings.manage"><Copiloto /></PermissionGuard>} />{/* LOTE COPILOTO 1 */}
+              <Route path="copiloto"         element={<PermissionGuard permission="settings.manage"><ModuleGuard module="copiloto"><Copiloto /></ModuleGuard></PermissionGuard>} />{/* LOTE COPILOTO 1 */}
               
               {/* Sistema */}
               <Route path="settings" element={<AppSettings />} />
@@ -337,7 +336,6 @@ function AppContent() {
               <Route path="maintenance"     element={<SuperAdminRoute><MaintenancePage /></SuperAdminRoute>} />
               <Route path="logs"            element={<SuperAdminRoute><LogsPage /></SuperAdminRoute>} />
               <Route path="ip-blocklist"    element={<SuperAdminRoute><IpBlocklistPage /></SuperAdminRoute>} />
-              <Route path="feature-flags"   element={<SuperAdminRoute><FeatureFlagsPage /></SuperAdminRoute>} />
               <Route path="email"           element={<SuperAdminRoute><EmailPage /></SuperAdminRoute>} />
               <Route path="backup"          element={<SuperAdminRoute><BackupPage /></SuperAdminRoute>} />
               <Route path="scheduler"       element={<SuperAdminRoute><SchedulerPage /></SuperAdminRoute>} />

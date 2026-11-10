@@ -22,7 +22,8 @@ export function useStockAlerts() {
   const canViewInventory =
     perms.includes('ALL_PERMISSIONS') || perms.includes('inventory.view');
   // HOTFIX 262: inventario no está en Básico — sin llamada (antes 403 cada 5 min)
-  const { isBasico, planReady } = usePlan();
+  const { hasModule, planReady } = usePlan();
+  const sinInventario = !hasModule('inventario'); // LOTE 325: inventario completo por local (sin fila = plan)
 
   const { data } = useQuery({
     queryKey: ['stock-alerts'],
@@ -36,7 +37,7 @@ export function useStockAlerts() {
           ...products.map((p) => ({ id: p.id, name: p.name, unit: 'u', currentStock: Number(p.stock), minStock: Number(p.stockMin) })),
         ];
       }),
-    enabled: isAuthenticated && canViewInventory && planReady && !isBasico,
+    enabled: isAuthenticated && canViewInventory && planReady && !sinInventario,
     staleTime: 5 * 60 * 1000,   // 5 minutos
     refetchInterval: 5 * 60 * 1000,
   });

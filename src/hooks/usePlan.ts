@@ -1,7 +1,7 @@
 import { useIsSuperAdmin } from '@/hooks/useIsSuperAdmin';
 // HOTfix #218 (P0-1): consume la query COMPARTIDA ['billing','status'] —
 // sin queryKey propia (antes ['billing-status-plan'], parte de la tormenta).
-import { useBillingStatus } from '@/hooks/useBillingStatus';
+import { useBillingStatus, type TenantModuleStateFE } from '@/hooks/useBillingStatus';
 
 /**
  * GATING FASE C — El plan del tenant en el frontend.
@@ -39,6 +39,10 @@ export function usePlan(): {
   /** HOTFIX 262 — true cuando el plan ya se conoce. Las llamadas a módulos que Básico
    *  no incluye esperan este flag (enabled: planReady && !isBasico) para no disparar 403. */
   planReady: boolean;
+  /** LOTE 325: true si el local tiene el modulo encendido (fila forzada o, sin fila, lo que da el plan). */
+  hasModule: (key: string) => boolean;
+  /** LOTE 325: estado guardado del modulo (plan / on / off); null si el backend no lo sirve. */
+  moduleState: (key: string) => TenantModuleStateFE | null;
 } {
   const isSuperAdmin = useIsSuperAdmin();
 
@@ -67,7 +71,16 @@ export function usePlan(): {
     return features.includes('*') || features.includes(feature);
   };
 
-  if (isSuperAdmin) return { plan: 'TODO', isBasico: false, hasFeature: () => true, planReady: true };
+  // LOTE 325: modulos por local. Sin datos del backend se comporta como antes (Copiloto siempre; el resto segun plan).
+  const modules = Array.isArray(billingQ.data?.modules) ? (billingQ.data!.modules as TenantModuleStateFE[]) : null;
+  const moduleState = (key: string): TenantModuleStateFE | null => modules?.find(m => m.key === key) ?? null;
+  const hasModule = (key: string): boolean => {
+    const m = moduleState(key);
+    if (m) return m.enabled;
+    return key === 'copiloto' ? true : plan !== 'BASICO';
+  };
 
-  return { plan, isBasico: plan === 'BASICO', hasFeature, planReady: !!billingQ.data || billingQ.isError };
+  if (isSuperAdmin) return { plan: 'TODO', isBasico: false, hasFeature: () => true, planReady: true, hasModule: () => true, moduleState: () => null };
+
+  return { plan, isBasico: plan === 'BASICO', hasFeature, planReady: !!billingQ.data || billingQ.isError, hasModule, moduleState };
 }

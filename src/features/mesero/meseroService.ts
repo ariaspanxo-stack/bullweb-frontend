@@ -125,11 +125,9 @@ export const meseroService = {
   },
 
   // Solicitar la cuenta (nota en la orden → backend emite bill.requested por WebSocket)
+  // LOTE 323 (B4-14): ruta propia: agrega la marca sin pisar la nota del pedido y avisa al POS
   requestBill: async (orderId: string): Promise<any> => {
-    return waiterFetch(`/waiter/orders/${orderId}`, {
-      method: 'PATCH',
-      body:   JSON.stringify({ notes: '⚡ CUENTA SOLICITADA' }),
-    });
+    return waiterFetch(`/waiter/orders/${orderId}/request-bill`, { method: 'POST' });
   },
 
   // Cargar categorías

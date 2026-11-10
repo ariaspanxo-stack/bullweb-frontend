@@ -112,10 +112,15 @@ export function useMeseroSocket(events: MeseroSocketEvents) {
     });
 
     // ── Escuchar solicitudes de mesa (mesero/cuenta) ──
-    socket.on('table_request', (data: Omit<MeseroTableRequest, 'id'>) => {
+    // LOTE 323 (B4-14): un llamado atendido en otro equipo se quita aqui tambien
+    socket.on('table_request.ack', (data: { requestId?: string }) => {
+      if (data?.requestId) setPendingRequests(prev => prev.filter(r => r.id !== data.requestId));
+    });
+
+    socket.on('table_request', (data: Omit<MeseroTableRequest, 'id'> & { requestId?: string | null }) => {
       const request: MeseroTableRequest = {
         ...data,
-        id: `mr_${Date.now()}_${++_idCounter}`,
+        id: data.requestId ? String(data.requestId) : `mr_${Date.now()}_${++_idCounter}`, // LOTE 323 (B4-14)
       };
       setPendingRequests(prev => {
         const isDuplicate = prev.some(r =>

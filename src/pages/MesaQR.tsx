@@ -107,11 +107,9 @@ export default function MesaQR() {
           if (data?.error) backendMessage = data.error;
         } catch { /* keep default */ }
 
-        // Bloquear ambos botones al máximo (límite server-side aplica a la mesa completa)
-        setClicksWaiter(MAX_CLICKS);
-        setClicksBill(MAX_CLICKS);
-        writeClicks(CLICK_KEYS.call_waiter, MAX_CLICKS);
-        writeClicks(CLICK_KEYS.request_bill, MAX_CLICKS);
+        // LOTE 323 (B4-14): el limite del servidor es por tipo: se bloquea solo el boton tocado
+        if (type === 'call_waiter') { setClicksWaiter(MAX_CLICKS); writeClicks(CLICK_KEYS.call_waiter, MAX_CLICKS); }
+        else { setClicksBill(MAX_CLICKS); writeClicks(CLICK_KEYS.request_bill, MAX_CLICKS); }
 
         toast.error(backendMessage, { duration: 6000 });
         return;

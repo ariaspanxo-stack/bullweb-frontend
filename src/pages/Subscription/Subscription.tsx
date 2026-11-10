@@ -510,6 +510,9 @@ export default function Subscription() {
           </div>
         )}
 
+        {/* LOTE 323 (B7-11): historial de pagos de la suscripcion y comprobante (solo lectura, solo administrador) */}
+        {canBill && <BillingHistory />}
+
         {/* Footer */}
         <p className="text-center text-sm text-gray-500 mt-10">
           Pago seguro procesado por{' '}
@@ -525,5 +528,80 @@ export default function Subscription() {
         </p>
       </div>
     </div>
+  );
+}
+
+// ─── LOTE 323 (B7-11): historial de pagos y comprobante ─────────────────────────
+// Solo lectura de GET /billing/payments (administrador, HOTFIX 306). No cobra, no cambia plan ni estado.
+interface BillingPaymentRow {
+  id: string; amount: number; currency?: string; status: string; concept?: string | null;
+  paidAt?: string | null; createdAt: string; invoiceNumber?: string | null; commerceOrder?: string | null;
+}
+const PAY_STATUS: Record<string, string> = { PAID: 'Pagado', PENDING: 'Pendiente', FAILED: 'Rechazado', CANCELLED: 'Anulado', REFUNDED: 'Devuelto' };
+const fmtFecha = (d?: string | null) => (d ? new Date(d).toLocaleDateString('es-CL', { timeZone: 'America/Santiago', day: '2-digit', month: '2-digit', year: 'numeric' }) : '—');
+const fmtMonto = (n: number) => '$' + Math.round(Number(n) || 0).toLocaleString('es-CL');
+
+function printReceipt(p: BillingPaymentRow) {
+  const w = window.open('', '_blank', 'width=420,height=600');
+  if (!w) return;
+  const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
+  w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Comprobante BullWeb</title>
+    <style>body{font-family:system-ui,sans-serif;padding:24px;color:#111}h1{font-size:18px}td{padding:4px 0}td+td{text-align:right;font-weight:700}</style></head>
+    <body><h1>Comprobante de pago - BullWeb Chile</h1><table style="width:100%">
+    <tr><td>Concepto</td><td>${esc(String(p.concept ?? 'Suscripción BullWeb'))}</td></tr>
+    <tr><td>Monto</td><td>${esc(fmtMonto(p.amount))} ${esc(String(p.currency ?? 'CLP'))}</td></tr>
+    <tr><td>Estado</td><td>${esc(PAY_STATUS[p.status] ?? p.status)}</td></tr>
+    <tr><td>Fecha de pago</td><td>${esc(fmtFecha(p.paidAt ?? p.createdAt))}</td></tr>
+    <tr><td>N° de orden</td><td>${esc(String(p.commerceOrder ?? p.id.slice(0, 8)))}</td></tr>
+    ${p.invoiceNumber ? `<tr><td>N° de documento</td><td>${esc(p.invoiceNumber)}</td></tr>` : ''}
+    </table><p style="font-size:12px;color:#555">Pago procesado por Flow.cl</p><script>window.print()</script></body></html>`);
+  w.document.close();
+}
+
+function BillingHistory() {
+  const [rows, setRows] = useState<BillingPaymentRow[] | null>(null);
+  const [err, setErr] = useState(false);
+  useEffect(() => {
+    api.get('/billing/payments')
+      .then((r: any) => { const d = r?.data; setRows(Array.isArray(d) ? d : Array.isArray(d?.data) ? d.data : []); })
+      .catch(() => setErr(true));
+  }, []);
+  return (
+    <section className="mt-10 bg-white rounded-2xl border border-gray-200 p-6">
+      <h2 className="text-lg font-bold text-gray-900 mb-4">Historial de pagos</h2>
+      {err && <p className="text-sm text-gray-500">No se pudo cargar el historial.</p>}
+      {!err && rows === null && <Loader2 className="animate-spin text-orange-500" size={20} />}
+      {!err && rows !== null && rows.length === 0 && <p className="text-sm text-gray-500">Aún no hay pagos registrados.</p>}
+      {!err && rows !== null && rows.length > 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-gray-500 border-b">
+                <th className="py-2 pr-3">Fecha</th><th className="py-2 pr-3">Concepto</th>
+                <th className="py-2 pr-3 text-right">Monto</th><th className="py-2 pr-3">Estado</th><th className="py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((p) => (
+                <tr key={p.id} className="border-b last:border-0">
+                  <td className="py-2 pr-3 whitespace-nowrap">{fmtFecha(p.paidAt ?? p.createdAt)}</td>
+                  <td className="py-2 pr-3">{p.concept ?? 'Suscripción BullWeb'}</td>
+                  <td className="py-2 pr-3 text-right font-bold whitespace-nowrap">{fmtMonto(p.amount)}</td>
+                  <td className="py-2 pr-3">{PAY_STATUS[p.status] ?? p.status}</td>
+                  <td className="py-2 text-right">
+                    {p.status === 'PAID' && (
+                      <button type="button" onClick={() => printReceipt(p)}
+                        className="min-h-[44px] px-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
+                        Comprobante
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }

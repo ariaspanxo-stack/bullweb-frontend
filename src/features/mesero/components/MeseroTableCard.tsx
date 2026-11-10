@@ -82,7 +82,10 @@ export function MeseroTableCard({ table, onClick }: Props) {
         {isOccupied && elapsedMin !== undefined && (
           <div className="text-xs text-gray-500 mt-1 flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />
-            {elapsedMin} min
+            {/* LOTE 323 (B4-12): horas y dias en vez de "1200 min" */}
+            {elapsedMin < 60 ? `${elapsedMin} min`
+              : elapsedMin < 1440 ? `${Math.floor(elapsedMin / 60)} h ${elapsedMin % 60} min`
+              : `${Math.floor(elapsedMin / 1440)} d ${Math.floor((elapsedMin % 1440) / 60)} h`}
           </div>
         )}
 

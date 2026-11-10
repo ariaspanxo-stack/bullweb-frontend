@@ -118,7 +118,7 @@ const menuSections: MenuSection[] = [
       { name: 'Órdenes',          icon: Receipt,         path: '/orders',        permission: 'pos.access'   },
       { name: 'Pedidos Online',   icon: ShoppingBag,     path: '/online-orders', permission: 'pos.access'   },
       { name: 'Ventas',           icon: TrendingUp,      path: '/sales',         permission: ['sales.view', 'sales.today'] }, // HOTFIX 302
-      { name: 'KDS',              icon: Tv,              path: '/kds',           permission: 'kds.view', planRequired: 'TODO' },
+      { name: 'KDS',              icon: Tv,              path: '/kds',           permission: ['kds.view', 'kitchen.view'], /* LOTE 323 (B7-10) */ planRequired: 'TODO' },
     ]
   },
   {
@@ -152,7 +152,7 @@ const menuSections: MenuSection[] = [
       { name: 'App Mesero',      icon: MonitorSmartphone, path: '/admin/mesero-app', permission: 'apps.view', badge: 'Nuevo', featureRequired: 'waiter' },
       { name: 'Mapeo Delivery',  icon: Truck,             path: '/delivery/mappings', permission: 'delivery.view', planRequired: 'TODO' },
       // HOTFIX 300: el Repartidor (delivery.own) entra a sus repartos asignados
-      { name: 'Repartos',        icon: Truck,             path: '/delivery',          permission: 'delivery.own' },
+      { name: 'Repartos',        icon: Truck,             path: '/delivery',          permission: ['delivery.own', 'delivery.view', 'pos.delivery'] }, // LOTE 323 (B7-10): Cajero con pos.delivery de locales antiguos
       { name: 'Fidelización', icon: Heart,             path: '/campaigns',        permission: 'marketing.view', planRequired: 'TODO', visibleLocked: true },
       { name: 'Carta QR',    icon: QrCode,            path: '/carta-qr',         permission: 'marketing.view' },
       // HOTFIX 278: Cupones incluidos en BASICO — gate por feature plan_config (hasFeature('coupons'))

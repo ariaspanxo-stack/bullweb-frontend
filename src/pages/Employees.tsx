@@ -165,7 +165,15 @@ export default function Employees() {
   // ─────────────────────────────────────────────────────────────
   const createEmpMutation = useMutation({
     mutationFn: employeesService.createEmployee,
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['employees'] }); toast.success('Empleado creado'); setIsEmpModalOpen(false); },
+    // LOTE 323 (B7-08): el admin ve el correo con que el empleado entra al panel (nombre.local@bullwebchile.com) y su PIN
+    onSuccess: (d: any) => {
+      qc.invalidateQueries({ queryKey: ['employees'] });
+      const login = d?.loginEmail ?? d?.data?.loginEmail;
+      const pin = d?.tempPin ?? d?.data?.tempPin;
+      if (login) toast.success(`Empleado creado. Entra al panel con ${login}${pin ? ` · PIN ${pin}` : ''}`, { duration: 15000 });
+      else toast.success('Empleado creado');
+      setIsEmpModalOpen(false);
+    },
     onError: (e: any) => toast.error(e?.message ?? e?.data?.error ?? 'Error al crear empleado'),
   });
 

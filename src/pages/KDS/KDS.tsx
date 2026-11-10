@@ -96,6 +96,7 @@ export default function KDS() {
   const queryClient = useQueryClient();
   const [selectedStation, setSelectedStation] = useState<Station>('all');
   const [orders, setOrders] = useState<any[]>([]);
+  const [cancelNotice, setCancelNotice] = useState<string | null>(null); // LOTE 323 (B4-16)
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(
     () => localStorage.getItem('kds_sound') !== 'false'
@@ -303,6 +304,13 @@ export default function KDS() {
       queryClient.invalidateQueries({ queryKey: ['kds'] });
     });
 
+    // LOTE 323 (B4-16): un item quitado del pedido (aunque ya estuviera listo) avisa en cocina y sale de la pantalla
+    socket.on('order.item.cancelled', (d: { name?: string; quantity?: number; reason?: string; orderNumber?: string }) => {
+      queryClient.invalidateQueries({ queryKey: ['kds'] });
+      setCancelNotice(`ANULADO: ${d?.quantity ?? 1}x ${d?.name ?? 'Producto'}${d?.orderNumber ? ` (pedido ${d.orderNumber})` : ''}${d?.reason ? ` — ${d.reason}` : ''}`);
+      if (soundEnabledRef.current && audioRef.current) audioRef.current.play().catch(() => {});
+    });
+
     // Orden marcada urgente desde otra estación
     socket.on('order.urgent', (data: { orderId: string }) => {
       setOrders(prev => prev.map(o => o.id === data.orderId ? { ...o, _urgent: true } : o));
@@ -405,6 +413,13 @@ export default function KDS() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
+      {/* LOTE 323 (B4-16): aviso de item anulado (queda hasta que cocina lo cierra) */}
+      {cancelNotice && (
+        <div className="bg-red-700 text-white px-4 py-3 flex items-center justify-between gap-3 font-bold">
+          <span>{cancelNotice}</span>
+          <button onClick={() => setCancelNotice(null)} className="min-h-[44px] px-4 rounded-lg bg-white/20 hover:bg-white/30">Entendido</button>
+        </div>
+      )}
       {/* FIX 9: Banner de desconexión */}
       {!socketConnected && (
         <div className="fixed top-0 left-0 right-0 z-50 bg-red-500 text-white text-center text-sm font-medium py-2">
@@ -553,9 +568,16 @@ export default function KDS() {
                           {style.badge.label}
                         </span>
                       )}
-                      <span className="text-xs text-white/60 font-mono tabular-nums">
-                        {urgency.minutes}min
-                      </span>
+                      {/* LOTE 323 (B4-12): pedido abierto de un dia anterior: se ve con aviso (antes desaparecia a las 48 h) */}
+                      {new Date(order.createdAt).toLocaleDateString('es-CL', { timeZone: 'America/Santiago' }) !== new Date().toLocaleDateString('es-CL', { timeZone: 'America/Santiago' }) ? (
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">
+                          De días anteriores
+                        </span>
+                      ) : (
+                        <span className="text-xs text-white/60 font-mono tabular-nums">
+                          {urgency.minutes}min
+                        </span>
+                      )}
                     </div>
                   </div>
 

@@ -7,6 +7,7 @@
 import api from './api';
 import { withRetry } from '../utils/withRetry';
 import { toApiModifiers } from '../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
+import { askConfirm } from '../components/ui/askConfirm'; // LOTE 323 (B4-16): modal propio en vez de window.confirm
 import type { 
   Table, 
   Product, 
@@ -456,7 +457,24 @@ class RestaurantService {
 
   async removeItemFromOrder(orderId: string, itemId: string, reason: string): Promise<void> {
     try {
-      await api.delete(`/pos/orders/${orderId}/items/${itemId}`, { reason });
+      try {
+        await api.delete(`/pos/orders/${orderId}/items/${itemId}`, { reason });
+      } catch (e: any) {
+        // LOTE 323 (B4-16): el item ya esta LISTO en cocina: se pide confirmacion antes de quitarlo (cocina recibe aviso)
+        if (e?.status === 409 && e?.data?.code === 'ITEM_READY_CONFIRM') {
+          const ok = await askConfirm({
+            title: 'Ítem listo en cocina',
+            message: 'Este ítem ya está listo en cocina. ¿Quitarlo igual? Cocina recibirá el aviso de anulación.',
+            confirmLabel: 'Quitar igual',
+            cancelLabel: 'Mantener',
+            variant: 'danger',
+          });
+          if (!ok) throw Object.assign(new Error('Se mantuvo el ítem'), { cancelled: true });
+          await api.delete(`/pos/orders/${orderId}/items/${itemId}`, { reason, confirmReady: true });
+        } else {
+          throw e;
+        }
+      }
       _ordersCache = [];
       _ordersCacheTs = 0;
     } catch (error) {

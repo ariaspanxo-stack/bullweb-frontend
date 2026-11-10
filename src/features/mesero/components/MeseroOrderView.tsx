@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom'; // LOTE 323 (Agregar cliente)
 import {
   X, Search, Plus, Minus, Trash2, ChefHat,
   Loader2, MoreHorizontal, ClipboardList, UtensilsCrossed,
@@ -15,6 +16,7 @@ import { MeseroCheckout }      from './MeseroCheckout';
 import { MeseroModifiers }     from './MeseroModifiers';
 import { useWaiterPermission } from '../hooks/useWaiterPermission';
 import { meseroService } from '../meseroService';
+import toast from 'react-hot-toast'; // LOTE 323 (B3-04)
 import { hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 
 // ─────────────────────────────────────────────
@@ -74,15 +76,42 @@ export function MeseroOrderView({
   // ── Pre-cuenta: envía directo a la impresora via Print Agent ──
   const handlePreCuenta = async () => {
     if (!activeOrder?.id) return;
+    // LOTE 323 (B3-04): encola la pre-cuenta real y avisa si salio o por que no (antes no imprimia nada y callaba)
     try {
-      await meseroService.printReceipt(activeOrder.id);
-    } catch {
-      // silencioso — el Print Agent mostrará el error si hay problema de conexión
+      await meseroService.printReceipt(activeOrder.id, 'precuenta');
+      toast.success('Pre-cuenta enviada a la impresora');
+    } catch (e: any) {
+      toast.error(e?.message || 'No se pudo enviar la pre-cuenta');
     }
   };
   const canCharge   = useWaiterPermission('charge');
   const canSplit    = useWaiterPermission('split_bill');
   const canTransfer = useWaiterPermission('transfer_table');
+
+  // ── LOTE 323: Agregar cliente (telefono + nombre, se liga al pedido abierto) ──
+  const canEditOrder = useWaiterPermission('edit_order');
+  const [showAddCustomer, setShowAddCustomer] = useState(false);
+  const [customerLinked, setCustomerLinked]   = useState<{ id: string; name: string } | null>(null);
+  const [custPhone, setCustPhone] = useState('');
+  const [custName, setCustName]   = useState('');
+  const [custSaving, setCustSaving] = useState(false);
+  useEffect(() => { setCustomerLinked(null); }, [activeOrder?.id]);
+  const custPhoneOk = custPhone.replace(/[^0-9]/g, '').length >= 8;
+  const custNameOk  = custName.trim().replace(/[^\p{L}]/gu, '').length >= 2;
+  const handleAddCustomer = async () => {
+    if (!activeOrder?.id || !custPhoneOk || !custNameOk || custSaving) return;
+    setCustSaving(true);
+    try {
+      const r = await meseroService.addCustomer({ phone: custPhone.trim(), name: custName.trim(), orderId: activeOrder.id });
+      setCustomerLinked({ id: r.customerId, name: r.name });
+      toast.success(r.existed ? 'Cliente ya registrado: quedó asociado al pedido' : 'Cliente agregado al pedido');
+      setShowAddCustomer(false); setCustPhone(''); setCustName('');
+    } catch (e: any) {
+      toast.error(e?.message || 'No se pudo agregar el cliente');
+    } finally {
+      setCustSaving(false);
+    }
+  };
 
   // ── Derivados ──
   const sentItems   = cart.filter(i => i.sentToKitchen);
@@ -417,10 +446,29 @@ export function MeseroOrderView({
                 </span>
               )}
             </p>
-            {/* LOTE 322 (CLI-03): la app mesero toma pedidos sin ficha; el cliente se agrega desde el POS al cobrar */}
-            <span data-testid="mesero-cliente-de-paso" className="inline-flex items-center mt-0.5 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-[11px] font-semibold text-gray-600">
-              Cliente de paso
-            </span>
+            {/* LOTE 322 (CLI-03): la app mesero toma pedidos sin ficha. LOTE 323: con el pedido creado, Agregar cliente
+                (telefono + nombre) lo liga al pedido */}
+            {(customerLinked ?? activeOrder?.customerId) ? (
+              <span data-testid="mesero-cliente" className="inline-flex items-center mt-0.5 px-2 py-0.5 rounded-md bg-orange-50 border border-orange-200 text-[11px] font-semibold text-orange-700">
+                👤 {customerLinked?.name ?? activeOrder?.customerName ?? activeOrder?.customers?.name ?? 'Cliente'}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-2 mt-0.5">
+                <span data-testid="mesero-cliente-de-paso" className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-[11px] font-semibold text-gray-600">
+                  Cliente de paso
+                </span>
+                {activeOrder?.id && canEditOrder && (
+                  <button
+                    type="button"
+                    data-testid="mesero-agregar-cliente"
+                    onClick={() => setShowAddCustomer(true)}
+                    className="min-h-[44px] px-3 rounded-lg border border-orange-500 text-orange-600 text-xs font-bold hover:bg-orange-50"
+                  >
+                    + Agregar cliente
+                  </button>
+                )}
+              </span>
+            )}
           </div>
 
           {/* Indicador # ítems nuevos — solo en móvil cuando estás en tab menú */}
@@ -554,6 +602,45 @@ export function MeseroOrderView({
           }}
           onClose={() => setPendingProduct(null)}
         />
+      )}
+
+      {/* ── LOTE 323: modal Agregar cliente (portal, z-100) ── */}
+      {showAddCustomer && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/50" onClick={() => !custSaving && setShowAddCustomer(false)}>
+          <div className="w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl p-5 space-y-4" onClick={e => e.stopPropagation()} role="dialog" aria-label="Agregar cliente">
+            <h3 className="text-lg font-bold text-gray-900">Agregar cliente al pedido</h3>
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700">Teléfono</span>
+              <input
+                data-testid="mesero-cliente-telefono"
+                type="tel" inputMode="tel" autoComplete="off" value={custPhone} onChange={e => setCustPhone(e.target.value)}
+                placeholder="+56 9 1234 5678"
+                className="mt-1 w-full min-h-[44px] px-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+              />
+            </label>
+            <label className="block">
+              <span className="text-sm font-medium text-gray-700">Nombre</span>
+              <input
+                data-testid="mesero-cliente-nombre"
+                type="text" autoComplete="off" value={custName} onChange={e => setCustName(e.target.value)}
+                placeholder="Nombre del cliente"
+                className="mt-1 w-full min-h-[44px] px-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+              />
+            </label>
+            <p className="text-xs text-gray-500">Teléfono y nombre son obligatorios. Si el teléfono ya es de un cliente del local, se asocia ese cliente.</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setShowAddCustomer(false)} disabled={custSaving}
+                className="flex-1 min-h-[44px] rounded-lg border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50">
+                Cancelar
+              </button>
+              <button type="button" data-testid="mesero-cliente-guardar" onClick={handleAddCustomer} disabled={!custPhoneOk || !custNameOk || custSaving}
+                className="flex-1 min-h-[44px] rounded-lg bg-orange-500 text-white font-bold hover:bg-orange-600 disabled:opacity-50">
+                {custSaving ? 'Guardando…' : 'Agregar'}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body,
       )}
     </>
   );

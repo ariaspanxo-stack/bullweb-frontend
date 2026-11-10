@@ -53,7 +53,7 @@ export const PRINT_SETTINGS_DEFAULTS: PrintSettings = {
   cmFooterWidth:    'SIMPLE',
   cmPrintOnClose:   false,
   cmPrintModifiers: true,
-  cmMaxChars:       29,
+  cmMaxChars:       0, // LOTE 323 (B3-19): 0 = automatico
   cmShowCurrency:   true,
   cmIdMode:         'FULL',
   cmIdDigits:       4,

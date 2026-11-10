@@ -947,8 +947,9 @@ export const TabArqueos = () => {
       {confirmDeleteId && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 text-slate-900">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden">
-            <div className="bg-white px-5 py-3">
-              <h3 className="text-white font-bold text-sm tracking-wide">Eliminar Arqueo</h3>
+            <div className="bg-white px-5 py-3 border-b border-gray-200">
+              {/* LOTE 323: el titulo era blanco sobre blanco (no se leia) */}
+              <h3 className="text-gray-900 font-bold text-sm tracking-wide">Eliminar Arqueo</h3>
             </div>
             <div className="px-6 py-5">
               <p className="text-sm text-gray-700 mb-1">

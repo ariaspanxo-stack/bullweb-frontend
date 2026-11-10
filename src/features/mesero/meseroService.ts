@@ -125,11 +125,15 @@ export const meseroService = {
   },
 
   // Solicitar la cuenta (nota en la orden → backend emite bill.requested por WebSocket)
+  // LOTE 323 (B4-14): ruta propia: agrega la marca sin pisar la nota del pedido y avisa al POS
   requestBill: async (orderId: string): Promise<any> => {
-    return waiterFetch(`/waiter/orders/${orderId}`, {
-      method: 'PATCH',
-      body:   JSON.stringify({ notes: '⚡ CUENTA SOLICITADA' }),
-    });
+    return waiterFetch(`/waiter/orders/${orderId}/request-bill`, { method: 'POST' });
+  },
+
+  // LOTE 323 (Agregar cliente): alta acotada (telefono + nombre) y se liga al pedido abierto
+  addCustomer: async (payload: { phone: string; name: string; orderId?: string | null }): Promise<{ customerId: string; name: string; existed: boolean }> => {
+    const r = await waiterFetch('/waiter/customers', { method: 'POST', body: JSON.stringify(payload) });
+    return r?.data;
   },
 
   // Cargar categorías
@@ -245,7 +249,9 @@ export const meseroService = {
   },
 
   // ── Solicitar impresión de boleta (waiter JWT) ────────────
-  printReceipt: async (orderId: string): Promise<void> => {
-    await waiterFetch(`/waiter/orders/${orderId}/print`, { method: 'POST' });
+  // LOTE 323 (B3-04): kind 'precuenta' (pre-cuenta) o 'receipt' (boleta); responde cuantos trabajos se encolaron
+  printReceipt: async (orderId: string, kind: 'precuenta' | 'receipt' = 'receipt'): Promise<{ queued: number; trigger: string }> => {
+    const r = await waiterFetch(`/waiter/orders/${orderId}/print`, { method: 'POST', body: JSON.stringify({ kind }) });
+    return r?.data ?? { queued: 0, trigger: kind };
   },
 };

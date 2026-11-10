@@ -107,11 +107,9 @@ export default function MesaQR() {
           if (data?.error) backendMessage = data.error;
         } catch { /* keep default */ }
 
-        // Bloquear ambos botones al máximo (límite server-side aplica a la mesa completa)
-        setClicksWaiter(MAX_CLICKS);
-        setClicksBill(MAX_CLICKS);
-        writeClicks(CLICK_KEYS.call_waiter, MAX_CLICKS);
-        writeClicks(CLICK_KEYS.request_bill, MAX_CLICKS);
+        // LOTE 323 (B4-14): el limite del servidor es por tipo: se bloquea solo el boton tocado
+        if (type === 'call_waiter') { setClicksWaiter(MAX_CLICKS); writeClicks(CLICK_KEYS.call_waiter, MAX_CLICKS); }
+        else { setClicksBill(MAX_CLICKS); writeClicks(CLICK_KEYS.request_bill, MAX_CLICKS); }
 
         toast.error(backendMessage, { duration: 6000 });
         return;
@@ -217,6 +215,16 @@ export default function MesaQR() {
               Vuelve a escanear el QR de tu mesa para reiniciar.
             </p>
           </div>
+        )}
+
+        {/* LOTE 323 (B5-13): enlace a la carta del local (con la mesa del QR) */}
+        {slug && (
+          <a
+            href={`/carta/${encodeURIComponent(slug)}${mesaIdParam ? `?mesaId=${encodeURIComponent(mesaIdParam)}` : mesaParam ? `?mesa=${encodeURIComponent(mesaParam)}` : ''}`}
+            className="w-full min-h-[48px] rounded-xl border-2 border-orange-500 text-orange-600 font-bold hover:bg-orange-50 inline-flex items-center justify-center"
+          >
+            Ver carta
+          </a>
         )}
 
         <p className="text-xs text-gray-400 mt-4">Escanea este QR solo desde tu mesa</p>

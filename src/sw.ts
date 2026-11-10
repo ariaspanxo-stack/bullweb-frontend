@@ -113,13 +113,16 @@ registerRoute(
 
 // ── Background Sync: encolar POST de pedidos del POS cuando no hay red ──
 // (Fase 2 — Modo Offline)
+// LOTE 323 (B4-17): solo se encola CREAR pedido (POST exacto a /api/pos/orders, siempre con idempotencyKey: el backend
+// no duplica) y por 60 min. Antes entraba todo POST bajo /api/pos/orders (pago, descuento, cupon, cerrar, dividir) y se
+// reenviaba hasta 24 h despues: un cobro o descuento podia aplicarse horas mas tarde.
 const bgSyncPlugin = new BackgroundSyncPlugin('posOrdersQueue', {
-  maxRetentionTime: 24 * 60, // 24 horas en minutos
+  maxRetentionTime: 60, // minutos
 });
 
 registerRoute(
   ({ url, request }) =>
-    url.pathname.startsWith('/api/pos/orders') && request.method === 'POST',
+    url.pathname.replace(/\/+$/, '') === '/api/pos/orders' && request.method === 'POST',
   new NetworkOnly({ plugins: [bgSyncPlugin] }),
   'POST'
 );

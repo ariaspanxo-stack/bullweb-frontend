@@ -52,7 +52,9 @@ test('F9 Inventario completo en pantalla', async ({ page }) => {
   const inventario = async (t: string) => { await goto(page, '/inventory'); await tab(t); };
   const fila = (texto: string) => page.locator('tr').filter({ hasText: texto });
   const post = (p: string) => page.waitForResponse((r) => r.url().includes(`/api${p}`) && ['POST', 'PATCH', 'DELETE'].includes(r.request().method()));
-  const toast = (re: RegExp) => expect(page.getByText(re).first()).toBeVisible({ timeout: 20000 });
+  // LOTE 323: el aviso se busca entre los toasts (role=status); con getByText en toda la pagina, /ficha/i tomaba el enlace
+  // "Fichas tecnicas" de Inventario y la prueba avanzaba antes de la respuesta del servidor
+  const toast = (re: RegExp) => expect(page.locator('[role="status"]').filter({ hasText: re }).first()).toBeVisible({ timeout: 20000 });
 
   const c = creds();
   const token = await loginPanel(page, c.admin);

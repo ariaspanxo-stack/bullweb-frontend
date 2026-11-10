@@ -380,8 +380,20 @@ function ProductCard({
     </div>
   ) : null;
 
+  // LOTE 323 (B5-19): precio con promocion vigente (calculado en el servidor); el de lista queda tachado
+  const promoPrice = (product as any).promoPrice as number | undefined;
+  const promoLabel = (product as any).promoLabel as string | undefined;
   const price = isAvailable
-    ? <span className="font-bold text-gray-900 text-base">{fmtCLP(product.price)}</span>
+    ? (promoPrice != null
+        ? <span className="inline-flex items-baseline gap-1.5 flex-wrap">
+            <span className="font-bold text-orange-600 text-base">{fmtCLP(promoPrice)}</span>
+            <span className="text-gray-400 text-xs line-through">{fmtCLP(product.price)}</span>
+            {promoLabel && <span className="text-[11px] font-bold text-orange-700 bg-orange-100 px-1.5 py-0.5 rounded">{promoLabel}</span>}
+          </span>
+        : <span className="inline-flex items-baseline gap-1.5 flex-wrap">
+            <span className="font-bold text-gray-900 text-base">{fmtCLP(product.price)}</span>
+            {promoLabel && <span className="text-[11px] font-bold text-orange-700 bg-orange-100 px-1.5 py-0.5 rounded">{promoLabel}</span>}
+          </span>)
     : <span className="font-bold text-gray-400 text-sm line-through">{fmtCLP(product.price)}</span>;
 
   const info = (
@@ -2910,8 +2922,14 @@ export default function CartaDigital() {
                 <p
                   className={`text-3xl font-bold mt-4 ${selected.available === false ? 'text-gray-400 line-through' : 'text-gray-900'}`} /* HOTFIX 308: precio en negrita sin píldora */
                 >
-                  {fmtCLP(selected.price)}
+                  {/* LOTE 323 (B5-19): precio con promocion vigente y el de lista tachado */}
+                  {selected.available !== false && (selected as any).promoPrice != null
+                    ? <><span className="text-orange-600">{fmtCLP((selected as any).promoPrice)}</span>{' '}<span className="text-base text-gray-400 line-through font-normal">{fmtCLP(selected.price)}</span></>
+                    : fmtCLP(selected.price)}
                 </p>
+                {(selected as any).promoLabel && selected.available !== false && (
+                  <span className="inline-block mt-2 text-xs font-bold text-orange-700 bg-orange-100 px-2 py-1 rounded">{(selected as any).promoLabel}</span>
+                )}
 
                 {/* ── HOTFIX #233 (F3) — Selector de modificadores ── */}
                 {(selected.modifierGroups?.length ?? 0) > 0 && (

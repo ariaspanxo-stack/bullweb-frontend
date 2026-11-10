@@ -728,6 +728,9 @@ function AgentsSection() {
               const agentVer  = a.version ?? null;
               const vUpToDate = latestVer && agentVer && agentVer === latestVer;
               const vOutdated = latestVer && agentVer && agentVer !== latestVer;
+              // LOTE 323 (B3-16): bajo 2.0.32 el agente imprime con su plantilla propia e ignora los Ajustes de impresion
+              const vParts = String(agentVer ?? '').split('.').map(n => parseInt(n, 10) || 0);
+              const vLegacy = !!agentVer && (vParts[0] < 2 || (vParts[0] === 2 && vParts[1] === 0 && (vParts[2] ?? 0) < 32));
               return (
               <tr key={a.id} className="hover:bg-gray-50">
                 <td className="px-4 py-2.5">
@@ -751,6 +754,11 @@ function AgentsSection() {
                     </span>
                   ) : (
                     <span className="text-xs text-gray-400">v{agentVer}</span>
+                  )}
+                  {vLegacy && (
+                    <p className="mt-1 text-xs text-red-600 font-medium max-w-[220px]">
+                      No aplica los Ajustes de impresión. Reinicia el equipo del agente para que se actualice.
+                    </p>
                   )}
                 </td>
                 <td className="px-4 py-2.5 font-mono text-xs text-gray-500">{a.ip_address ?? '—'}</td>

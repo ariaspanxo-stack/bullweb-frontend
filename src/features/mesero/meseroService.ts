@@ -245,7 +245,9 @@ export const meseroService = {
   },
 
   // ── Solicitar impresión de boleta (waiter JWT) ────────────
-  printReceipt: async (orderId: string): Promise<void> => {
-    await waiterFetch(`/waiter/orders/${orderId}/print`, { method: 'POST' });
+  // LOTE 323 (B3-04): kind 'precuenta' (pre-cuenta) o 'receipt' (boleta); responde cuantos trabajos se encolaron
+  printReceipt: async (orderId: string, kind: 'precuenta' | 'receipt' = 'receipt'): Promise<{ queued: number; trigger: string }> => {
+    const r = await waiterFetch(`/waiter/orders/${orderId}/print`, { method: 'POST', body: JSON.stringify({ kind }) });
+    return r?.data ?? { queued: 0, trigger: kind };
   },
 };

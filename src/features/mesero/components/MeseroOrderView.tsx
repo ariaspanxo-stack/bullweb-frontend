@@ -15,6 +15,7 @@ import { MeseroCheckout }      from './MeseroCheckout';
 import { MeseroModifiers }     from './MeseroModifiers';
 import { useWaiterPermission } from '../hooks/useWaiterPermission';
 import { meseroService } from '../meseroService';
+import toast from 'react-hot-toast'; // LOTE 323 (B3-04)
 import { hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 
 // ─────────────────────────────────────────────
@@ -74,10 +75,12 @@ export function MeseroOrderView({
   // ── Pre-cuenta: envía directo a la impresora via Print Agent ──
   const handlePreCuenta = async () => {
     if (!activeOrder?.id) return;
+    // LOTE 323 (B3-04): encola la pre-cuenta real y avisa si salio o por que no (antes no imprimia nada y callaba)
     try {
-      await meseroService.printReceipt(activeOrder.id);
-    } catch {
-      // silencioso — el Print Agent mostrará el error si hay problema de conexión
+      await meseroService.printReceipt(activeOrder.id, 'precuenta');
+      toast.success('Pre-cuenta enviada a la impresora');
+    } catch (e: any) {
+      toast.error(e?.message || 'No se pudo enviar la pre-cuenta');
     }
   };
   const canCharge   = useWaiterPermission('charge');

@@ -162,14 +162,18 @@ export function MeseroCheckout({
   // ── Imprimir ──────────────────────────────────────────────
   const printMutation = useMutation({
     mutationFn: async () => {
+      // LOTE 323 (B3-04): el backend encola el ticket real (venta pagada) o la pre-cuenta (sin pagar) y dice si salio
       const res = await fetch(`${API_BASE}/waiter/orders/${orderId}/print`, {
         method:  'POST',
-        headers: { Authorization: `Bearer ${getWaiterToken()}` },
+        headers: { Authorization: `Bearer ${getWaiterToken()}`, 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ kind: 'receipt' }),
       });
-      if (res.status === 402) notifyWaiterPaymentRequired(await res.json().catch(() => null)); // Hotfix #277
-      if (!res.ok) throw new Error('Error al solicitar impresión');
+      const json = await res.json().catch(() => null);
+      if (res.status === 402) notifyWaiterPaymentRequired(json); // Hotfix #277
+      if (!res.ok) throw new Error(json?.error || 'Error al solicitar impresión');
+      return json?.data;
     },
-    onSuccess: () => toast.success('Boleta solicitada a impresora 🖨️'),
+    onSuccess: (d: any) => toast.success(d?.trigger === 'precuenta' ? 'Pre-cuenta enviada a la impresora' : 'Boleta enviada a la impresora'),
     onError:   (err: any) => toast.error(err.message),
   });
 

@@ -130,6 +130,12 @@ export const meseroService = {
     return waiterFetch(`/waiter/orders/${orderId}/request-bill`, { method: 'POST' });
   },
 
+  // LOTE 323 (Agregar cliente): alta acotada (telefono + nombre) y se liga al pedido abierto
+  addCustomer: async (payload: { phone: string; name: string; orderId?: string | null }): Promise<{ customerId: string; name: string; existed: boolean }> => {
+    const r = await waiterFetch('/waiter/customers', { method: 'POST', body: JSON.stringify(payload) });
+    return r?.data;
+  },
+
   // Cargar categorías
   getCategories: async (): Promise<any[]> => {
     const d = await waiterFetch('/waiter/menu/categories');

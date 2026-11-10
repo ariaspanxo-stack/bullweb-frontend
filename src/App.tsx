@@ -264,7 +264,7 @@ function AppContent() {
               
               {/* Operaciones */}
     
-              <Route path="kds"    element={<PermissionGuard permission="kds.view"><PlanGuard><KDS /></PlanGuard></PermissionGuard>} />
+              <Route path="kds"    element={<PermissionGuard permission={['kds.view', 'kitchen.view']}><PlanGuard><KDS /></PlanGuard></PermissionGuard>} />
               
               {/* Gestión */}
               <Route path="menu"           element={<Navigate to="/products" replace />} />
@@ -275,7 +275,7 @@ function AppContent() {
               <Route path="customers"      element={<PermissionGuard permission="customers.view"><PlanGuard><Customers /></PlanGuard></PermissionGuard>} />
               <Route path="campaigns"      element={<PermissionGuard permission="marketing.view"><PlanGuard><Campaigns /></PlanGuard></PermissionGuard>} />
               <Route path="carta-qr"       element={<PermissionGuard permission="marketing.view"><CartaQRPage /></PermissionGuard>} />
-              <Route path="delivery"       element={<PermissionGuard permission={['delivery.view', 'delivery.own']}><Delivery /></PermissionGuard>} />
+              <Route path="delivery"       element={<PermissionGuard permission={['delivery.view', 'delivery.own', 'pos.delivery']}><Delivery /></PermissionGuard>} />
               <Route path="delivery/mappings" element={<PermissionGuard permission="delivery.view"><PlanGuard><DeliveryMappings /></PlanGuard></PermissionGuard>} />
               <Route path="employees"      element={<PermissionGuard permission="employees.view"><Employees /></PermissionGuard>} />
               

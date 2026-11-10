@@ -7,6 +7,7 @@ import { getTagConfig } from '../../../utils/customers';
 import customersService from '../../../services/customersService';
 import { usePermission } from '../../../hooks/usePermission';
 import { fmtMoney } from '../../../utils/displayFormat';
+import { GenericoBadge } from '../../../components/ClienteDePaso'; // LOTE 322 (CLI-03)
 
 interface CustomerDetailModalProps {
   isOpen: boolean;
@@ -20,6 +21,15 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
   const [detailedStats, setDetailedStats] = useState<any>(null);
   // LOTE 308b (FID-01): ajuste manual con el saldo a la vista antes de aplicar
   const canAdjust = usePermission('customers.loyalty');
+  // LOTE 322 (CLI-03): ficha generica sin puntos ni canje; marcar/desmarcar con settings.manage
+  const canMarkGeneric = usePermission('settings.manage');
+  const [isGeneric, setIsGeneric] = useState<boolean>(customer?.isGeneric === true);
+  const [markingGeneric, setMarkingGeneric] = useState(false);
+  useEffect(() => { setIsGeneric(customer?.isGeneric === true); }, [customer?.id, customer?.isGeneric]);
+  const toggleGeneric = async () => {
+    setMarkingGeneric(true);
+    try { await customersService.setGeneric(customer.id, !isGeneric); setIsGeneric(!isGeneric); } catch { /* sin cambio */ } finally { setMarkingGeneric(false); }
+  };
   const [balance, setBalance] = useState<number | null>(null);
   const [adjustValue, setAdjustValue] = useState('');
   const [adjustReason, setAdjustReason] = useState('');
@@ -87,6 +97,7 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
                   </span>
                 );
               })}
+              {isGeneric && <GenericoBadge />}
             </div>
           </div>
           <button
@@ -100,7 +111,24 @@ export default function CustomerDetailModal({ isOpen, customer, onClose }: Custo
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           {/* LOTE 308b (FID-01): saldo y ajuste manual de puntos */}
-          {canAdjust && balance !== null && (
+          {/* LOTE 322 (CLI-03): marca de ficha generica */}
+          {canMarkGeneric && (
+            <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-white p-3">
+              <p className="flex-1 min-w-[180px] text-xs text-slate-600">
+                {isGeneric ? 'Ficha genérica: no suma puntos, no canjea y no entra en campañas ni en top clientes.' : 'Marca como genérica las fichas comodín que se usan para no crear cliente.'}
+              </p>
+              <button
+                type="button"
+                data-testid="toggle-generico"
+                disabled={markingGeneric}
+                onClick={toggleGeneric}
+                className="min-h-[44px] px-4 rounded-lg border-2 border-orange-500 text-orange-600 text-sm font-bold hover:bg-orange-50 disabled:opacity-60"
+              >
+                {isGeneric ? 'Quitar marca genérica' : 'Marcar como genérica'}
+              </button>
+            </div>
+          )}
+          {canAdjust && balance !== null && !isGeneric && (
             <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 p-3" data-testid="ajuste-puntos">
               <p className="text-sm text-slate-700">Saldo actual: <span className="font-bold text-slate-900">{balance.toLocaleString('es-CL')} puntos</span></p>
               <div className="mt-2 flex flex-wrap items-center gap-2">

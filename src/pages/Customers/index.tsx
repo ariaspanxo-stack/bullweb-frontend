@@ -15,6 +15,7 @@ import customersService from '../../services/customersService';
 import AddCustomerModal from './components/AddCustomerModal';
 import EditCustomerModal from './components/EditCustomerModal';
 import CustomerDetailModal from './components/CustomerDetailModal';
+import { GenericoBadge } from '../../components/ClienteDePaso'; // LOTE 322 (CLI-03)
 // import TierSettings from './components/TierSettings'; // Niveles desactivado
 import * as XLSX from 'xlsx';
 import toast from 'react-hot-toast';
@@ -43,6 +44,7 @@ export default function Customers() {
   const [archiving, setArchiving] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('all');
+  const [hideGeneric, setHideGeneric] = useState(true); // LOTE 322 (CLI-03): "Ocultar genéricos" activo por defecto
   // const [tierFilter, setTierFilter] = useState<string>('all'); // Niveles desactivado
   // const [riskFilter, setRiskFilter] = useState<boolean>(false); // Niveles desactivado
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -135,8 +137,8 @@ export default function Customers() {
 
   // ── Filtrado por nivel y riesgo (Niveles desactivado) ──
   const filteredCustomers = useMemo(() => {
-    return tabFiltered;
-  }, [tabFiltered]);
+    return hideGeneric ? tabFiltered.filter(c => !c.isGeneric) : tabFiltered; // LOTE 322 (CLI-03)
+  }, [tabFiltered, hideGeneric]);
 
   // Stats globales (siempre sobre el total de clientes cargados)
   const totalCustomers = customers.length;
@@ -382,6 +384,21 @@ export default function Customers() {
             {t.label}
           </button>
         ))}
+        {/* LOTE 322 (CLI-03): fichas genericas (comodin) ocultas por defecto */}
+        <button
+          type="button"
+          data-testid="filtro-ocultar-genericos"
+          aria-pressed={hideGeneric}
+          onClick={() => setHideGeneric(v => !v)}
+          className={`min-h-[44px] px-4 py-2 rounded-lg text-sm font-medium transition-colors inline-flex items-center gap-2 ${
+            hideGeneric ? 'bg-orange-50 text-orange-700 border border-orange-300' : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+          }`}
+        >
+          <span className={`w-4 h-4 rounded border-2 flex items-center justify-center ${hideGeneric ? 'bg-orange-500 border-orange-500' : 'border-slate-300 bg-white'}`}>
+            {hideGeneric && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>}
+          </span>
+          Ocultar genéricos
+        </button>
       </div>
 
       {/* Search + Filtros */}
@@ -487,7 +504,7 @@ export default function Customers() {
                     <tr key={customer.id} className="hover:bg-slate-100 transition-colors">
                       <td className="px-6 py-4">
                         <div>
-                          <div className="font-semibold text-slate-900">{customer.name}</div>
+                          <div className="font-semibold text-slate-900 flex items-center gap-2">{customer.name}{customer.isGeneric && <GenericoBadge />}</div>
                           {customer.sector && (
                             <div className="text-xs text-slate-500">{customer.sector}</div>
                           )}

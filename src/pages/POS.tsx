@@ -481,7 +481,7 @@ export default function POS() {
                           <h3 className="font-bold text-zinc-100 text-lg">
                             Pedido #{order.number}
                           </h3>
-                          <p className="text-sm text-zinc-400">{order.customerName || 'Cliente'}</p>
+                          <p className="text-sm text-zinc-400">{order.customerName || 'Cliente de paso'}</p>
                         </div>
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold
                           ${order.status === 'READY' 

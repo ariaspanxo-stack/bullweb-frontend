@@ -1014,7 +1014,7 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
       const saleData: CreateCounterSaleDTO = {
         type:           'counter',
         cashRegisterId: cashRegister.id,
-        customerName:   customerName || 'Cliente Mostrador',
+        customerName:   customerName || 'Cliente de paso', // LOTE 322 (CLI-03)
         customerPhone:  deliveryPhone?.trim() || undefined, // HOTFIX 299 (B1-09)
         customerId:     customerId || undefined,
         items:          cartItems.map(item => ({

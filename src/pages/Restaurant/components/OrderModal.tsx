@@ -13,7 +13,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   X, Search, Plus, Minus, ShoppingCart, CreditCard,
   Clock, Star, Users, MessageSquare, UserPlus, Loader2, Tag, Pencil,
-  Printer, ChefHat, ClipboardList, CheckCircle, Mail, LayoutGrid, ArrowLeft,
+  Printer, ChefHat, ClipboardList, CheckCircle, LayoutGrid, ArrowLeft,
 } from 'lucide-react';
 import { ModifierGroupsModal, hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 import type {
@@ -23,11 +23,10 @@ import type {
   CartItem,
   SaleItem
 } from '../../../types/restaurant.types';
-import customersService from '../../../services/customersService';
 import { restaurantService } from '../../../services/restaurantService';
 import { posService } from '../../../services/posService';
 import { applyOrderDiscount, discountInputAllowed, discountLimitHint, useAdminPin } from '../../../components/pos/discountControl';
-import CustomerAutocomplete from '../../../components/CustomerAutocomplete';
+import ClienteDePaso, { type ClienteElegido } from '../../../components/ClienteDePaso'; // LOTE 322 (CLI-03)
 import toast from 'react-hot-toast';
 import { usePermission } from '../../../hooks/usePermission';
 import tablesService from '../../../services/tablesService';
@@ -93,11 +92,24 @@ export const OrderModal = ({
   const [clientName, setClientName]                 = useState('');
   const [clientPhone, setClientPhone]               = useState('');
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | undefined>(undefined);
-  const [saveToCustomers, setSaveToCustomers]       = useState(true);
+  const [clientIsGeneric, setClientIsGeneric]       = useState(false); // LOTE 322 (CLI-03)
   // HOTFIX 262: clientes/CRM no está en Básico — sin guardar en Clientes ni find-or-create
   const { isBasico } = usePlan();
-  const [customerEmail, setCustomerEmail]           = useState('');
-  const [marketingOptIn, setMarketingOptIn]         = useState(false);
+  // LOTE 322 (CLI-03): valor del selector; sin ficha y sin nombre = Cliente de paso
+  const clienteValue: ClienteElegido | null = selectedCustomerId
+    ? { id: selectedCustomerId, name: clientName, phone: clientPhone || null, isGeneric: clientIsGeneric }
+    : (clientName.trim() ? { name: clientName } : null);
+  const onClienteChange = (v: ClienteElegido | null) => {
+    setSelectedCustomerId(v?.id);
+    setClientName(v?.name ?? '');
+    setClientPhone(v?.phone ?? '');
+    setClientIsGeneric(v?.isGeneric === true);
+    if (existingOrderId) {
+      restaurantService.updateOrderCustomer(existingOrderId, {
+        customerId: v?.id ?? null, customerName: v?.name ?? null, customerPhone: v?.phone ?? null,
+      }).catch(() => {});
+    }
+  };
   const [pendingProduct, setPendingProduct]         = useState<Product | null>(null);
   const [showModifiersModal, setShowModifiersModal] = useState(false);
   const [orderNote, setOrderNote]                 = useState('');
@@ -945,122 +957,20 @@ export const OrderModal = ({
                           </button>
                         </div>
                       </div>
-                      {/* Cliente (opcional) — mismo estado y setters de hoy */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
-                          <UserPlus size={9} /> Cliente (opcional)
-                        </p>
-                        {selectedCustomerId || (clientName.trim() && existingOrderId) ? (
-                          <div className="flex items-center gap-2 px-2 py-1.5 bg-orange-50 border border-orange-200 rounded-lg">
-                            <span className="text-xs font-medium text-gray-900 flex-1 truncate">{clientName}</span>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setSelectedCustomerId(undefined);
-                                setClientName('');
-                                setClientPhone('');
-                                if (existingOrderId) {
-                                  restaurantService.updateOrderCustomer(existingOrderId, {
-                                    customerId: null, customerName: null, customerPhone: null,
-                                  }).catch(() => {});
-                                }
-                              }}
-                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-gray-400 hover:text-red-500 flex-shrink-0"
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                        ) : (
-                          <CustomerAutocomplete
-                            light
-                            placeholder="Nombre del cliente"
-                            onSaveNew={name => {
-                              setClientName(name);
-                              if (existingOrderId) {
-                                restaurantService.updateOrderCustomer(existingOrderId, {
-                                  customerId: null, customerName: name, customerPhone: null,
-                                }).catch(() => {});
-                              }
-                            }}
-                            onSelect={async c => {
-                              setSelectedCustomerId(c.id);
-                              setClientName(c.name);
-                              setClientPhone(c.phone ?? '');
-                              if (existingOrderId) {
-                                await restaurantService.updateOrderCustomer(existingOrderId, {
-                                  customerId: c.id, customerName: c.name, customerPhone: c.phone ?? null,
-                                }).catch(() => {});
-                              }
-                            }}
-                          />
-                        )}
-                      </div>
                     </div>
-                    {clientName.trim() && !existingOrderId && !isBasico && (
-                      <button
-                        type="button"
-                        onClick={() => setSaveToCustomers(v => !v)}
-                        className={`min-h-[44px] mt-2 flex items-center gap-2 w-full px-3 py-1.5 rounded-xl border-2 transition-all text-xs ${
-                          saveToCustomers ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-dashed border-gray-300 bg-white text-gray-500'
-                        }`}
-                      >
-                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${saveToCustomers ? 'bg-orange-500 border-orange-500' : 'border-gray-300 bg-white'}`}>
-                          {saveToCustomers && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-                        </div>
-                        <UserPlus size={11} />
-                        <span className="font-bold">Guardar "{clientName.trim()}" en Clientes</span>
-                      </button>
-                    )}
-                    {clientName.trim() && !selectedCustomerId && saveToCustomers && !isBasico && (
-                      <div className="mt-2 space-y-2">
-                        {/* ── Hotfix #115: Email opcional (solo creación nueva) ── */}
-                        <div>
-                          <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
-                            <Mail size={9} /> Email
-                            <span className="text-gray-300 normal-case font-normal ml-1">— opcional</span>
-                          </label>
-                          <input
-                            type="email"
-                            placeholder="cliente@ejemplo.com"
-                            value={customerEmail}
-                            onChange={(e) => setCustomerEmail(e.target.value)}
-                            className="w-full px-3 py-1.5 bg-white border-2 border-gray-200 rounded-xl text-xs text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 transition-all"
-                          />
-                        </div>
-                        {/* ── Hotfix #115: Opt-in de marketing (desmarcado por defecto) ── */}
-                        <button
-                          type="button"
-                          onClick={() => setMarketingOptIn(v => !v)}
-                          className={`min-h-[44px] flex items-center gap-2 w-full px-3 py-1.5 rounded-xl border-2 transition-all text-xs ${
-                            marketingOptIn
-                              ? 'border-orange-400 bg-orange-50 text-orange-700'
-                              : 'border-dashed border-gray-300 bg-white text-gray-500'
-                          }`}
-                        >
-                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${marketingOptIn ? 'bg-orange-500 border-orange-500' : 'border-gray-300 bg-white'}`}>
-                            {marketingOptIn && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-                          </div>
-                          <span className="font-bold">Quiero recibir ofertas y promociones por email</span>
-                        </button>
-                      </div>
-                    )}
+                    {/* LOTE 322 (CLI-03): parte en Cliente de paso, con boton Agregar cliente (busca por telefono primero) */}
+                    <div className="mt-2">
+                      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
+                        <UserPlus size={9} /> Cliente
+                      </p>
+                      <ClienteDePaso value={clienteValue} onChange={onClienteChange} allowFichas={!isBasico} />
+                    </div>
                   </div>
                 }
                 /* (CD) MISMA lógica del botón Enviar a Cocina de hoy */
                 onConfirm={async () => {
                   let customerId: string | undefined = selectedCustomerId;
-                  if (!customerId && saveToCustomers && !isBasico && clientName.trim().length >= 2) {
-                    try {
-                      const customer = await customersService.findOrCreate({
-                        name: clientName.trim(),
-                        phone: clientPhone.trim() || undefined,
-                        email: customerEmail.trim() || undefined,
-                        marketingOptIn,
-                      });
-                      customerId = customer.id || undefined; // HOTFIX 307 (B4-19): sin telefono ni correo no hay ficha
-                      if (customerId) toast.success('Vinculado');
-                    } catch { /* no bloquear */ }
-                  }
+                  // LOTE 322 (CLI-03): la ficha solo viene del selector (sin find-or-create por nombre)
                   onSendToKitchen(customerId, clientName.trim() || undefined, clientPhone.trim() || undefined, orderNote.trim() || undefined);
                 }}
                 saving={isSubmitting}
@@ -1145,25 +1055,7 @@ export const OrderModal = ({
                       <button
                         onClick={async () => {
                           let customerId: string | undefined = selectedCustomerId;
-                          if (!customerId && saveToCustomers && !isBasico && clientName.trim().length >= 2) {
-                            try {
-                              const customer = await customersService.findOrCreate({
-                                name: clientName.trim(),
-                                phone: clientPhone.trim() || undefined,
-                                email: customerEmail.trim() || undefined,
-                                marketingOptIn,
-                              });
-                              customerId = customer.id || undefined; // HOTFIX 307 (B4-19)
-                              if (existingOrderId && customerId) {
-                                await restaurantService.updateOrderCustomer(existingOrderId, {
-                                  customerId: customer.id,
-                                  customerName: customer.name,
-                                  customerPhone: clientPhone.trim() || null,
-                                }).catch(() => {});
-                              }
-                              if (customerId) toast.success('Vinculado a la orden');
-                            } catch { /* no bloquear */ }
-                          }
+                          // LOTE 322 (CLI-03): la ficha solo viene del selector
                           onCheckout(
                             customerId,
                             undefined,

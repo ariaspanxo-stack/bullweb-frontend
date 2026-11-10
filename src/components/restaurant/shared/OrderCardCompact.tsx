@@ -235,7 +235,7 @@ export function OrderCardCompact({
           ? <Bike size={16} className="text-slate-500 flex-shrink-0" />
           : <ShoppingBag size={16} className="text-slate-500 flex-shrink-0" />}
         <span className="text-lg font-semibold text-slate-900 truncate flex-1 min-w-0">
-          {toTitleCase(order.customerName || 'Cliente')}
+          {toTitleCase(order.customerName || 'Cliente de paso')}
         </span>
         {elapsed && (
           <span

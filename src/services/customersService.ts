@@ -79,7 +79,7 @@ export interface CustomersPage {
 // ── Service ──────────────────────────────────────────────────────────────────
 class CustomersService {
   /** BUG 7: getAll normaliza shape { success, data, meta } → CustomerPage */
-  async getAll(params?: { search?: string; page?: number; perPage?: number }): Promise<CustomersPage> {
+  async getAll(params?: { search?: string; page?: number; perPage?: number; hideGeneric?: boolean }): Promise<CustomersPage> {
     const response = await api.get<any>('/customers', { params });
     const json = response.data;
     const rawArray: any[] = json?.data ?? (Array.isArray(json) ? json : []);
@@ -113,6 +113,11 @@ class CustomersService {
     return normalizeCustomer(raw);
   }
 
+  /** LOTE 322 (CLI-03): marcar o desmarcar ficha generica (settings.manage) */
+  async setGeneric(id: string, isGeneric: boolean): Promise<void> {
+    await api.patch<any>(`/customers/${id}/generic`, { isGeneric });
+  }
+
   /** Alias compatibilidad */
   async createCustomer(data: Partial<Customer>): Promise<Customer> {
     return this.create(data);
@@ -141,7 +146,7 @@ class CustomersService {
   }
 
   /** Paginado con filtros (alias de getAll) */
-  async getCustomers(params?: { search?: string; page?: number; perPage?: number }): Promise<CustomersPage> {
+  async getCustomers(params?: { search?: string; page?: number; perPage?: number; hideGeneric?: boolean }): Promise<CustomersPage> {
     return this.getAll(params);
   }
 

@@ -239,7 +239,7 @@ export const TabPropinas = ({ filters }: Props) => {
           'Hora':          formatTime(s.startTime),
           'Garzón':        s.waiterName,
           'Tipo':          s.type || '',
-          'Cliente':       s.customerName ?? 'Público',
+          'Cliente':       s.customerName ?? 'Cliente de paso', // LOTE 322
           'Medio de Pago': s.payments?.[0]?.method ?? '',
           'Total Venta':   s.total,
           'Propina (CLP)': tip,
@@ -580,7 +580,7 @@ export const TabPropinas = ({ filters }: Props) => {
                             ⚠️ múltiple
                           </span>
                         )}
-                        <p className="text-xs text-gray-500">{sale.customerName || 'Público'}</p>
+                        <p className="text-xs text-gray-500">{sale.customerName || 'Cliente de paso'}</p>
                       </div>
                     </div>
                     <div className="flex items-center justify-between mt-1">
@@ -645,7 +645,7 @@ export const TabPropinas = ({ filters }: Props) => {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
-                        {sale.customerName || <span className="text-gray-400">Público</span>}
+                        {sale.customerName || <span className="text-gray-400">Cliente de paso</span>}
                       </td>
                       <td className="px-4 py-3 text-sm text-right text-gray-700">
                         {formatCurrency(sale.total)}

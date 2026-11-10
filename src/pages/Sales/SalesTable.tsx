@@ -32,7 +32,7 @@ function handleExport(sales: Sale[]) {
       'Fecha/Hora':     fmtDateTime(s.startTime),
       'Tipo de Venta':  s.type === 'delivery' ? 'Delivery' : s.tableNumber ? `Mesa ${s.tableNumber}` : 'Mostrador',
       'Garzón':         s.waiterName,
-      'Cliente':        s.customerName ?? 'Público',
+      'Cliente':        s.customerName ?? 'Cliente de paso', // LOTE 322
       'Estado':         ESTADO_LABEL[s.status] ?? s.status,
       'Total (CLP)':    s.total,
       'Total fmt':      clp(s.total),
@@ -220,7 +220,7 @@ export const SalesTable = ({
                           {sale.customerName}
                         </button>
                       ) : sale.customerName ||
-                        <span className="text-gray-400">Público</span>
+                        <span className="text-gray-400">Cliente de paso</span>
                       }
                       {/* Hotfix #200 (B1) — badge ⭐ VIP en filas (costo trivial: campo ya viene en el payload) */}
                       <CustomerSegmentBadge segment={sale.customerSegment} />

@@ -271,7 +271,7 @@ export function SaleDetailPanel({ sale, onRefresh }: SaleDetailPanelProps) {
               </button>
             ) : (
               <span className="font-medium text-gray-900 truncate">
-                {sale.customerName || 'Público'}
+                {sale.customerName || 'Cliente de paso'}
               </span>
             )}
             {/* Hotfix #200 (B1) — badge ⭐ VIP junto al cliente; sin segment → sin badge */}

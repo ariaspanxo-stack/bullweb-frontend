@@ -40,6 +40,8 @@ export interface Customer {
   }>;
   loyaltyPoints?: number;
   points?: number;
+  // LOTE 322 (CLI-03): ficha generica (comodin): sin puntos ni canje, fuera de top y campanas
+  isGeneric?: boolean;
   // Nivel de fidelización actual
   currentTierId?: string | null;
   tier?: Tier | null;

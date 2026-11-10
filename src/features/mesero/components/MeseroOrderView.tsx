@@ -417,6 +417,10 @@ export function MeseroOrderView({
                 </span>
               )}
             </p>
+            {/* LOTE 322 (CLI-03): la app mesero toma pedidos sin ficha; el cliente se agrega desde el POS al cobrar */}
+            <span data-testid="mesero-cliente-de-paso" className="inline-flex items-center mt-0.5 px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-[11px] font-semibold text-gray-600">
+              Cliente de paso
+            </span>
           </div>
 
           {/* Indicador # ítems nuevos — solo en móvil cuando estás en tab menú */}

@@ -107,7 +107,7 @@ export function CloseDeliveryOrderModal({ order, onClose, onDone }: CloseDeliver
           </div>
           <div className="flex justify-between gap-2 text-sm">
             <span className="text-gray-500">Cliente</span>
-            <span className="font-semibold text-gray-900 truncate">{order.customerName || 'Cliente'}</span>
+            <span className="font-semibold text-gray-900 truncate">{order.customerName || 'Cliente de paso'}</span>
           </div>
           <div className="flex justify-between items-end gap-2 pt-2 border-t border-gray-100">
             <span className="text-sm text-gray-500">Total</span>

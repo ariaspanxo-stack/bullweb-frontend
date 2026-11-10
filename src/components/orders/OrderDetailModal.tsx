@@ -102,7 +102,7 @@ export default function OrderDetailModal({
             <div>
               <label className="text-sm text-gray-600">Cliente</label>
               <div className="font-medium mt-1">
-                {order.customers?.name || order.customer?.name || order.customerName}
+                {order.customers?.name || order.customer?.name || order.customerName || 'Cliente de paso'}
               </div>
               {(order.customers?.phone || order.customer?.phone) && (
                 <div className="text-sm text-gray-500">{order.customers?.phone || order.customer?.phone}</div>

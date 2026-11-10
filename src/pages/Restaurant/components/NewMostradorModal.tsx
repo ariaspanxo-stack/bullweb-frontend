@@ -19,9 +19,7 @@ import {
   User,
   Phone,
   AlertCircle,
-  Mail,
   MessageSquare,
-  UserPlus,
   ArrowLeft,
   ArrowRight,
   Printer,
@@ -37,8 +35,7 @@ import type {
   CartItem 
 } from '../../../types/restaurant.types';
 import type { ProductModifier } from '../../../types/sales.types';
-import customersService from '../../../services/customersService';
-import toast from 'react-hot-toast';
+import ClienteDePaso, { type ClienteElegido } from '../../../components/ClienteDePaso'; // LOTE 322 (CLI-03)
 import { useRestaurant } from '../../../contexts/RestaurantContext';
 import { useStockConfirm } from '../../../components/restaurant/shared/StockConfirm'; // HOTFIX 305
 import { ModifierGroupsModal, hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
@@ -75,11 +72,14 @@ export const NewMostradorModal = ({
   const deliveryPhone = mostradorDraft.deliveryPhone;
   const setCustomerName = (v: string) => setMostradorDraft({ ...mostradorDraft, customerName: v });
   const setDeliveryPhone = (v: string) => setMostradorDraft({ ...mostradorDraft, deliveryPhone: v });
-  // Hotfix #88: email opcional (estado local) + opt-in de marketing DESMARCADO por defecto
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
-  const [saveToCustomers, setSaveToCustomers] = useState(true);
+  // LOTE 322 (CLI-03): ficha elegida con el selector; null = Cliente de paso
+  const [ficha, setFicha] = useState<ClienteElegido | null>(null);
+  const onFichaChange = (v: ClienteElegido | null) => {
+    setFicha(v);
+    setMostradorDraft({ ...mostradorDraft, customerName: v?.name ?? '', deliveryPhone: v?.phone ?? '' });
+    setError('');
+  };
   // pickupTime removed
   const [searchQuery, setSearchQuery] = useState('');
   // Hotfix 245 C3: null = nivel 1 (baldosas de categorías); id = nivel 2
@@ -127,31 +127,11 @@ export const NewMostradorModal = ({
   const handleCustomerNameChange = useCallback((value: string) => {
     setCustomerName(value);
     setError('');
+    // LOTE 322 (CLI-03): el nombre es solo para llamar; la ficha se elige con el selector
     if (customerSearchTimeout.current) clearTimeout(customerSearchTimeout.current);
-    if (!isBasico && value.trim().length >= 2) {
-      setSearchingCustomer(true);
-      customerSearchTimeout.current = setTimeout(async () => {
-        try {
-          const results = await customersService.search(value.trim());
-          // Filtrar localmente para garantizar que el texto buscado
-          // esté contenido en el nombre o teléfono del resultado
-          const term = value.trim().toLowerCase();
-          const filtered = results.filter(
-            (c: any) =>
-              c.name?.toLowerCase().includes(term) ||
-              c.phone?.toLowerCase().includes(term) ||
-              c.email?.toLowerCase().includes(term)
-          );
-          setCustomerSuggestions(filtered.slice(0, 5));
-          setShowSuggestions(filtered.length > 0);
-        } catch { setCustomerSuggestions([]); }
-        finally { setSearchingCustomer(false); }
-      }, 300);
-    } else {
-      setCustomerSuggestions([]);
-      setShowSuggestions(false);
-      setSearchingCustomer(false);
-    }
+    setCustomerSuggestions([]);
+    setShowSuggestions(false);
+    setSearchingCustomer(false);
   }, [isBasico]);
 
   const handleSelectCustomer = (customer: any) => {
@@ -292,10 +272,7 @@ export const NewMostradorModal = ({
 
   // ========== VALIDACIÓN PASO 1 ==========
   const validateClient = (): boolean => {
-    if (!customerName.trim()) {
-      setError('El nombre del cliente es requerido');
-      return false;
-    }
+    // LOTE 322 (CLI-03): sin nombre es valido (Cliente de paso)
     if (false && !deliveryPhone.trim()) {
       setError('El teléfono es requerido para avisar cuando esté listo');
       return false;
@@ -312,10 +289,6 @@ export const NewMostradorModal = ({
       return;
     }
 
-    if (!customerName.trim()) {
-      setError('El nombre del cliente es requerido');
-      return;
-    }
 
     if (false && !deliveryPhone.trim()) {
       setError('El teléfono es requerido para llamar cuando esté listo');
@@ -325,20 +298,8 @@ export const NewMostradorModal = ({
     setLoading(true);
     setError('');
     try {
-      // PRIMERO: find-or-create cliente SIEMPRE cuando hay nombre (mostrador siempre tiene nombre+teléfono)
-      let customerId: string | undefined;
-      if (!isBasico && customerName.trim().length >= 2) {
-        try {
-          const customer = await customersService.findOrCreate({
-            name: customerName.trim(),
-            phone: deliveryPhone.trim() || undefined,
-            email: customerEmail.trim() || undefined,
-            marketingOptIn,
-          });
-          customerId = customer.id || undefined; // HOTFIX 307 (B4-19)
-          if (customerId) toast.success(`✓ ${customerName.trim()} vinculado a la orden`);
-        } catch { /* no bloquear el pedido */ }
-      }
+      // LOTE 322 (CLI-03): la ficha solo viene del selector (sin find-or-create por nombre)
+      const customerId: string | undefined = ficha?.id;
       // DESPUÉS: crear la orden con el customerId
       await onConfirm(cart, customerName.trim(), deliveryPhone.trim(), undefined, 'cash', customerId);
     } catch (error: any) {
@@ -352,19 +313,7 @@ export const NewMostradorModal = ({
     setLoading(true);
     setError('');
     try {
-      let customerId: string | undefined;
-      if (!isBasico && customerName.trim().length >= 2) {
-        try {
-          const customer = await customersService.findOrCreate({
-            name: customerName.trim(),
-            phone: deliveryPhone.trim() || undefined,
-            email: customerEmail.trim() || undefined,
-            marketingOptIn,
-          });
-          customerId = customer.id || undefined; // HOTFIX 307 (B4-19)
-          if (customerId) toast.success(`✓ ${customerName.trim()} vinculado a la orden`);
-        } catch { /* no bloquear */ }
-      }
+      const customerId: string | undefined = ficha?.id; // LOTE 322 (CLI-03)
       await onConfirm([], customerName.trim(), deliveryPhone.trim(), undefined, 'cash', customerId);
     } catch (error: any) {
       setError(error?.message || 'Error al guardar orden.');
@@ -462,9 +411,13 @@ export const NewMostradorModal = ({
             <p className="flex items-center gap-1.5 text-xs font-bold text-gray-400 uppercase tracking-wider pb-2 border-b border-gray-100">
               <User size={12} className="text-slate-500" />Datos del cliente
             </p>
+            {/* LOTE 322 (CLI-03): parte en Cliente de paso; Agregar cliente busca por telefono primero */}
+            <ClienteDePaso value={ficha} onChange={onFichaChange} allowFichas={!isBasico} />
+            {!ficha && (<>
             <div className="relative">
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <User size={12} />Nombre *
+                <User size={12} />Nombre para llamar
+                <span className="text-gray-300 normal-case font-normal ml-1">— opcional</span>
               </label>
               <div className="relative">
                 <input
@@ -525,66 +478,8 @@ export const NewMostradorModal = ({
                 className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
               />
             </div>
-            {/* ── Hotfix #88: Email opcional ── */}
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                <Mail size={12} />Email
-                <span className="text-gray-300 normal-case font-normal ml-1">— opcional</span>
-              </label>
-              <input
-                type="email"
-                placeholder="cliente@email.com"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
-              />
-            </div>
+            </>)}
           </div>
-          {/* ── Hotfix #88: Opt-in de marketing (desmarcado por defecto) ── */}
-          <button
-            type="button"
-            onClick={() => setMarketingOptIn(v => !v)}
-            className={`min-h-[44px] flex items-center gap-2 w-full px-4 py-3 rounded-xl border-2 transition-all ${
-              marketingOptIn
-                ? 'border-slate-200 bg-slate-50'
-                : 'border-dashed border-gray-300 bg-white'
-            }`}
-          >
-            <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-              marketingOptIn ? 'bg-slate-500 border-slate-200' : 'border-gray-300 bg-white'
-            }`}>
-              {marketingOptIn && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-            </div>
-            <span className={`text-xs font-bold ${
-              marketingOptIn ? 'text-slate-700' : 'text-gray-500'
-            }`}>
-              Quiero recibir ofertas y promociones por email
-            </span>
-          </button>
-          {/* ── Toggle guardar cliente ── */}
-          {customerName.trim() && (
-            <button
-              type="button"
-              onClick={() => setSaveToCustomers(v => !v)}
-              className={`min-h-[44px] flex items-center gap-2 w-full px-4 py-3 rounded-xl border-2 transition-all ${
-                saveToCustomers
-                  ? 'border-slate-200 bg-slate-50'
-                  : 'border-dashed border-gray-300 bg-white'
-              }`}
-            >
-              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-                saveToCustomers ? 'bg-slate-500 border-slate-200' : 'border-gray-300 bg-white'
-              }`}>
-                {saveToCustomers && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round"/></svg>}
-              </div>
-              <UserPlus size={13} className={saveToCustomers ? 'text-slate-700' : 'text-gray-400'} />
-              <span className={`text-xs font-bold ${
-                saveToCustomers ? 'text-slate-700' : 'text-gray-500'
-              }`}>
-                Guardar "{customerName.trim()}" en base de Clientes
-              </span>
-            </button>
-          )}
           {error && (
             <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3">
               <AlertCircle size={14} className="flex-shrink-0" />

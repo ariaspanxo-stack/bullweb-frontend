@@ -38,6 +38,7 @@ import type {
   ProductModifier
 } from '../../../types/restaurant.types';
 import customersService from '../../../services/customersService';
+import ClienteDePaso, { type ClienteElegido } from '../../../components/ClienteDePaso'; // LOTE 322 (CLI-03)
 import { paymentMethodsService } from '../../../services/paymentMethodsService';
 import toast from 'react-hot-toast';
 import { useRestaurant } from '../../../contexts/RestaurantContext';
@@ -97,6 +98,14 @@ export const NewDeliveryModal = ({
   const [cashAmount, setCashAmount] = useState('');
 
   const [saveToCustomers, setSaveToCustomers] = useState(true);
+  // LOTE 322 (CLI-03): ficha elegida con el selector (busca por telefono primero); null = Cliente de paso.
+  // Delivery sigue exigiendo nombre, telefono real y direccion; sin ficha, el telefono liga o crea la ficha en el servidor.
+  const [ficha, setFicha] = useState<ClienteElegido | null>(null);
+  const onFichaChange = (v: ClienteElegido | null) => {
+    setFicha(v);
+    setDeliveryDraft({ ...deliveryDraft, customerName: v?.name ?? '', customerPhone: v?.phone ?? '' });
+    setErrors([]);
+  };
   const [searchQuery, setSearchQuery] = useState('');
   // Hotfix 245 C3: null = nivel 1 (baldosas de categorías); id = nivel 2
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -330,6 +339,8 @@ export const NewDeliveryModal = ({
     const newErrors: string[] = [];
     if (!customerName.trim()) newErrors.push('El nombre es requerido');
     if (!customerPhone.trim()) newErrors.push('El teléfono es requerido');
+    else if (customerPhone.replace(/[^0-9]/g, '').length < 8) newErrors.push('El teléfono debe tener 8 dígitos o más'); // LOTE 322
+    if (ficha?.isGeneric) newErrors.push('Esa es una ficha genérica: para delivery pide el teléfono real del cliente'); // LOTE 322
     if (!customerAddress.trim()) newErrors.push('La dirección es requerida');
     if (!deliveryCity.trim()) newErrors.push('La ciudad/comuna es requerida');
     setErrors(newErrors);
@@ -377,8 +388,8 @@ export const NewDeliveryModal = ({
     setLoading(true);
     try {
       // PRIMERO: find-or-create cliente SIEMPRE (delivery siempre tiene nombre+teléfono obligatorios)
-      let customerId: string | undefined;
-      if (!isBasico && customerName.trim().length >= 2) {
+      let customerId: string | undefined = ficha?.id; // LOTE 322 (CLI-03)
+      if (!customerId && !isBasico && customerName.trim().length >= 2) {
         try {
           const customer = await customersService.findOrCreate({
             name: customerName.trim(),
@@ -386,8 +397,8 @@ export const NewDeliveryModal = ({
             email: customerEmail.trim() || undefined,
             marketingOptIn,
           });
-          customerId = customer.id;
-          toast.success(`✓ ${customerName.trim()} vinculado a la orden`);
+          customerId = customer.id || undefined;
+          if (customerId) toast.success(`✓ ${customerName.trim()} vinculado a la orden`); // LOTE 322: telefono generico no liga
         } catch { /* no bloquear el pedido */ }
       }
       // DESPUÉS: crear la orden con el customerId
@@ -414,8 +425,8 @@ export const NewDeliveryModal = ({
   const handleSaveEmpty = async () => {
     setLoading(true);
     try {
-      let customerId: string | undefined;
-      if (!isBasico && customerName.trim().length >= 2) {
+      let customerId: string | undefined = ficha?.id; // LOTE 322 (CLI-03)
+      if (!customerId && !isBasico && customerName.trim().length >= 2) {
         try {
           const customer = await customersService.findOrCreate({
             name: customerName.trim(),
@@ -423,8 +434,8 @@ export const NewDeliveryModal = ({
             email: customerEmail.trim() || undefined,
             marketingOptIn,
           });
-          customerId = customer.id;
-          toast.success(`✓ ${customerName.trim()} vinculado a la orden`);
+          customerId = customer.id || undefined;
+          if (customerId) toast.success(`✓ ${customerName.trim()} vinculado a la orden`); // LOTE 322: telefono generico no liga
         } catch { /* no bloquear */ }
       }
       await onConfirm(
@@ -536,6 +547,8 @@ export const NewDeliveryModal = ({
               <p className="flex items-center gap-1.5 text-xs font-bold text-gray-400 uppercase tracking-wider pb-2 border-b border-gray-100">
                 <User size={12} className="text-slate-500" />Datos del cliente
               </p>
+              {/* LOTE 322 (CLI-03): parte en Cliente de paso; Agregar cliente busca por telefono primero */}
+              <ClienteDePaso value={ficha} onChange={onFichaChange} allowFichas={!isBasico} />
               <div className="relative">
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                   <User size={12} />Nombre *

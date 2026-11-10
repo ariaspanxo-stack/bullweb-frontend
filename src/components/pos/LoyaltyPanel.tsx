@@ -71,6 +71,16 @@ export const LoyaltyPanel = ({ orderId, customerId, customerName, beforeRedeem, 
     }
   };
 
+  // LOTE 322 (CLI-03): ficha generica: sin puntos ni canje
+  if (balance?.isGeneric === true) {
+    return (
+      <div data-testid="loyalty-generico" className="border border-slate-200 bg-slate-50 rounded-lg p-3 flex items-center gap-2 text-xs text-slate-600">
+        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md border border-gray-300 bg-gray-100 text-[10px] font-bold text-gray-600 uppercase tracking-wide">Genérico</span>
+        <span>{customerName}: ficha genérica, sin puntos ni canje.</span>
+      </div>
+    );
+  }
+
   return (
     <div className="border border-slate-200 bg-white rounded-lg p-3 space-y-2">
       <div className="flex items-center gap-2 text-slate-800 font-semibold text-sm">

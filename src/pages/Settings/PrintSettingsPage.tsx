@@ -90,22 +90,49 @@ function Row({
 }
 
 // Fila de tamaño con 3 selects por zona
+// LOTE 323 (B3-19): en Grande se eligen alto y ancho (Normal los ignora, como hasta hoy)
+const HW_OPTIONS: { value: 'SIMPLE' | 'DOUBLE'; label: string }[] = [
+  { value: 'DOUBLE', label: 'Doble' },
+  { value: 'SIMPLE', label: 'Simple' },
+];
+
 function SizeRow({
   label,
   size,
   onSize,
+  height,
+  width,
+  onHeight,
+  onWidth,
 }: {
   label: string;
   size: PrintSize;
   onSize: (v: PrintSize) => void;
+  height?: 'SIMPLE' | 'DOUBLE';
+  width?: 'SIMPLE' | 'DOUBLE';
+  onHeight?: (v: 'SIMPLE' | 'DOUBLE') => void;
+  onWidth?: (v: 'SIMPLE' | 'DOUBLE') => void;
 }) {
+  const large = sizeValue(size) === 'LARGE';
   return (
-    <div className="flex items-center gap-3 px-5 py-3.5">
+    <div className="flex flex-wrap items-center gap-3 px-5 py-3.5">
       <span className="text-sm font-medium text-gray-700 w-24 flex-shrink-0">{label}</span>
       <div className="flex items-center gap-1">
         <span className="text-xs text-gray-400">Tamaño</span>
         <Select value={sizeValue(size)} onChange={onSize} options={SIZE_OPTIONS} />
       </div>
+      {large && onHeight && onWidth && (
+        <>
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-gray-400">Alto</span>
+            <Select value={height === 'SIMPLE' ? 'SIMPLE' : 'DOUBLE'} onChange={onHeight} options={HW_OPTIONS} />
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-xs text-gray-400">Ancho</span>
+            <Select value={width === 'SIMPLE' ? 'SIMPLE' : 'DOUBLE'} onChange={onWidth} options={HW_OPTIONS} />
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -299,6 +326,30 @@ export default function PrintSettingsPage() {
     setSaved(false);
   };
 
+  // LOTE 323 (B3-19): varios campos de una vez (al pasar a Grande, alto y ancho parten en Doble: igual que antes)
+  const updateMany = (patch: Partial<PrintSettings>) => {
+    setCfg(prev => {
+      const next = { ...prev, ...patch };
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => handleSave(next), 1000);
+      return next;
+    });
+    setSaved(false);
+  };
+  const sizeRowProps = (prefix: 'cm' | 'kd', block: 'Header' | 'Body' | 'Footer') => {
+    const sk = `${prefix}${block}Size` as keyof PrintSettings;
+    const hk = `${prefix}${block}Height` as keyof PrintSettings;
+    const wk = `${prefix}${block}Width` as keyof PrintSettings;
+    return {
+      size:     cfg[sk] as PrintSize,
+      height:   cfg[hk] as 'SIMPLE' | 'DOUBLE',
+      width:    cfg[wk] as 'SIMPLE' | 'DOUBLE',
+      onSize:   (v: PrintSize) => updateMany(v === 'LARGE' ? { [sk]: v, [hk]: 'DOUBLE', [wk]: 'DOUBLE' } as any : { [sk]: v } as any),
+      onHeight: (v: 'SIMPLE' | 'DOUBLE') => update(hk, v as any),
+      onWidth:  (v: 'SIMPLE' | 'DOUBLE') => update(wk, v as any),
+    };
+  };
+
   const handleSave = async (data: PrintSettings = cfg) => {
     try {
       setSaving(true);
@@ -367,9 +418,10 @@ export default function PrintSettingsPage() {
 
         {/* CARD 1 — Tamaño de letra */}
         <Card title="Tamaño de letra">
-          <SizeRow label="Encabezado" size={cfg.cmHeaderSize} onSize={v => update('cmHeaderSize', v)} />
-          <SizeRow label="Cuerpo"     size={cfg.cmBodySize}   onSize={v => update('cmBodySize', v)} />
-          <SizeRow label="Pie"        size={cfg.cmFooterSize} onSize={v => update('cmFooterSize', v)} />
+          {/* LOTE 323 (B3-19): en Grande se eligen alto y ancho */}
+          <SizeRow label="Encabezado" {...sizeRowProps('cm', 'Header')} />
+          <SizeRow label="Cuerpo"     {...sizeRowProps('cm', 'Body')} />
+          <SizeRow label="Pie"        {...sizeRowProps('cm', 'Footer')} />
         </Card>
 
         {/* CARD 2 — Imprimir al cerrar */}
@@ -388,6 +440,25 @@ export default function PrintSettingsPage() {
             label="Imprimir modificadores"
             description="Muestra los modificadores bajo cada producto en la pre-cuenta y la boleta"
             control={<Toggle value={cfg.cmPrintModifiers} onChange={v => update('cmPrintModifiers', v)} />}
+          />
+          {/* LOTE 323 (B3-19 cmMaxChars) */}
+          <Row
+            label="Largo del nombre"
+            description="Automático corta el nombre al ancho del papel; con un número, los nombres largos siguen en la línea de abajo"
+            control={
+              <Select
+                value={String(Number(cfg.cmMaxChars) >= 8 ? cfg.cmMaxChars : 0)}
+                onChange={v => update('cmMaxChars', Number(v))}
+                options={[
+                  { value: '0', label: 'Automático' },
+                  { value: '16', label: '16 letras' },
+                  { value: '20', label: '20 letras' },
+                  { value: '24', label: '24 letras' },
+                  { value: '28', label: '28 letras' },
+                  { value: '32', label: '32 letras' },
+                ]}
+              />
+            }
           />
           <Row
             label="Número de pedido"
@@ -477,9 +548,19 @@ export default function PrintSettingsPage() {
 
         {/* CARD 1 — Tamaño de letra */}
         <Card title="Tamaño de letra">
-          <SizeRow label="Encabezado" size={cfg.kdHeaderSize} onSize={v => update('kdHeaderSize', v)} />
-          <SizeRow label="Cuerpo"     size={cfg.kdBodySize}   onSize={v => update('kdBodySize', v)} />
-          <SizeRow label="Pie"        size={cfg.kdFooterSize} onSize={v => update('kdFooterSize', v)} />
+          {/* LOTE 323 (B3-19): en Grande se eligen alto y ancho */}
+          <SizeRow label="Encabezado" {...sizeRowProps('kd', 'Header')} />
+          <SizeRow label="Cuerpo"     {...sizeRowProps('kd', 'Body')} />
+          <SizeRow label="Pie"        {...sizeRowProps('kd', 'Footer')} />
+        </Card>
+
+        {/* LOTE 323 (B3-19 kdPrintCancel): comanda de anulacion al quitar productos o anular un pedido */}
+        <Card title="Anulaciones">
+          <Row
+            label="Imprimir anulaciones"
+            description="Al quitar un producto ya enviado o anular un pedido, sale una comanda ANULACION (NO PREPARAR) en la impresora de su estación"
+            control={<Toggle value={!!cfg.kdPrintCancel} onChange={v => update('kdPrintCancel', v)} />}
+          />
         </Card>
 
         {/* CARD 2 — Encabezado y pie */}

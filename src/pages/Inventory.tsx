@@ -26,9 +26,10 @@ export default function Inventory() {
   const queryClient = useQueryClient();
   const { confirm: confirmDialog, dialogProps } = useConfirm();
   // HOTFIX 305 (B6-20): en Básico se ve el stock simple (Productos y su historial); ingredientes, compras y proveedores son Full
-  const { isBasico } = usePlan();
-  const [activeTab, setActiveTab] = useState<'ingredients' | 'products' | 'recipes' | 'purchases' | 'movements' | 'suppliers'>(isBasico ? 'products' : 'ingredients');
-  useEffect(() => { if (isBasico && activeTab !== 'products' && activeTab !== 'movements') setActiveTab('products'); }, [isBasico]); // eslint-disable-line react-hooks/exhaustive-deps
+  const { hasModule } = usePlan();
+  const sinInventario = !hasModule('inventario'); // LOTE 325: inventario completo por local (sin fila = plan)
+  const [activeTab, setActiveTab] = useState<'ingredients' | 'products' | 'recipes' | 'purchases' | 'movements' | 'suppliers'>(sinInventario ? 'products' : 'ingredients');
+  useEffect(() => { if (sinInventario && activeTab !== 'products' && activeTab !== 'movements') setActiveTab('products'); }, [sinInventario]); // eslint-disable-line react-hooks/exhaustive-deps
   const [searchQuery, setSearchQuery] = useState('');
   const [showLowStock, setShowLowStock] = useState(false);
 
@@ -46,7 +47,7 @@ export default function Inventory() {
     (activeTab === 'ingredients' && canPurchases) ||
     activeTab === 'recipes' ||
     (activeTab === 'purchases' && canPurchases) ||
-    (activeTab === 'movements' && canAdjustments && !isBasico) ||
+    (activeTab === 'movements' && canAdjustments && !sinInventario) ||
     (activeTab === 'suppliers' && canPurchases);
 
   const [isRecipeModalOpen, setIsRecipeModalOpen] = useState(false);
@@ -76,7 +77,7 @@ export default function Inventory() {
     queryKey: ['ingredients-all'],
     queryFn: () => inventoryService.getIngredients({ perPage: 200 }),
     staleTime: 60000,
-    enabled: !isBasico,
+    enabled: !sinInventario,
   });
   const ingredientsList: any[] = Array.isArray(allIngredients)
     ? allIngredients
@@ -295,7 +296,7 @@ export default function Inventory() {
             Nuevo
           </Button>
         )}
-        {!isBasico && <button
+        {!sinInventario && <button
           onClick={handleExport}
           className="min-h-[44px] flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
         >
@@ -305,7 +306,7 @@ export default function Inventory() {
       </div>
 
       {/* Tabs */}
-      <InventoryTabs activeTab={activeTab} onTabChange={setActiveTab} onlyStockSimple={isBasico} />
+      <InventoryTabs activeTab={activeTab} onTabChange={setActiveTab} onlyStockSimple={sinInventario} />
 
       {/* Contenido por tab */}
       {activeTab === 'ingredients' && (

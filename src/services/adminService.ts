@@ -330,28 +330,6 @@ export interface BlockIpParams {
 }
 
 // ---------------------------------------------------------------------------
-// Feature Flags
-// ---------------------------------------------------------------------------
-export interface FeatureFlag {
-  key:         string;
-  shortKey:    string;
-  label:       string;
-  description: string;
-  category:    string;
-  enabled:     boolean;
-  updatedBy:   string | null;
-  updatedAt:   string | null;
-  definition:  {
-    key: string; label: string; description: string;
-    category: string; default: boolean; dangerous?: boolean;
-  } | null;
-}
-
-export interface FeatureFlagsResult {
-  data: FeatureFlag[];
-}
-
-// ---------------------------------------------------------------------------
 // Email / SMTP
 // ---------------------------------------------------------------------------
 export interface SmtpConfig {
@@ -959,29 +937,6 @@ export const adminService = {
 
   async checkIp(ip: string): Promise<{ ip: string; blocked: boolean }> {
     const { data } = await api.get(`/admin/ip-blocklist/check/${ip}`);
-    return data;
-  },
-
-  // ============================================================
-  // FEATURE FLAGS
-  // ============================================================
-  async getFeatureFlags(): Promise<FeatureFlagsResult> {
-    const { data } = await api.get('/admin/feature-flags');
-    return data;
-  },
-
-  async toggleFeatureFlag(key: string, enabled: boolean): Promise<FeatureFlag> {
-    const { data } = await api.patch(`/admin/feature-flags/${key}/toggle`, { enabled });
-    return data;
-  },
-
-  async resetFeatureFlag(key: string): Promise<FeatureFlag> {
-    const { data } = await api.post(`/admin/feature-flags/${key}/reset`);
-    return data;
-  },
-
-  async createFeatureFlag(params: { shortKey: string; label: string; description?: string; enabled?: boolean }): Promise<FeatureFlag> {
-    const { data } = await api.post('/admin/feature-flags', params);
     return data;
   },
 

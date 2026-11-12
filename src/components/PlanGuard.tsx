@@ -24,6 +24,8 @@ interface PlanGuardProps {
   children: React.ReactNode;
   /** HOTFIX 278: si el plan BASICO incluye esta feature (plan_config), el guard es transparente. */
   feature?: string;
+  /** LOTE 325: modulo por local. Forzado apagado = pantalla de modulo desactivado; forzado encendido = pasa aunque el plan no lo incluya. */
+  module?: string;
 }
 
 const TODO_UNLOCKS: string[] = [
@@ -37,8 +39,33 @@ const TODO_UNLOCKS: string[] = [
   'Control de Asistencia con kiosco',
 ];
 
-export function PlanGuard({ children, feature }: PlanGuardProps) {
-  const { isBasico, hasFeature } = usePlan();
+/** LOTE 325: pantalla clara cuando el superadmin apago el modulo para este local (los datos siguen guardados). */
+export function ModuleDisabled() {
+  return (
+    <div className="flex items-center justify-center w-full min-h-[calc(100vh-140px)] bg-gray-50 px-4 py-10">
+      <div className="w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-sm p-8 text-center" data-testid="module-disabled">
+        <div className="mx-auto w-14 h-14 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center mb-4">
+          <Lock className="w-6 h-6 text-gray-500" />
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">Módulo desactivado</h2>
+        <p className="text-sm text-gray-500 leading-relaxed">Este módulo está desactivado para tu local. Tus datos siguen guardados. Si lo necesitas, escribe a BullWeb.</p>
+      </div>
+    </div>
+  );
+}
+
+/** LOTE 325: guard solo de modulo (para pantallas que no dependen del plan, como Copiloto). */
+export function ModuleGuard({ children, module }: { children: React.ReactNode; module: string }) {
+  const { moduleState } = usePlan();
+  if (moduleState(module)?.state === 'off') return <ModuleDisabled />;
+  return <>{children}</>;
+}
+
+export function PlanGuard({ children, feature, module }: PlanGuardProps) {
+  const { isBasico, hasFeature, moduleState } = usePlan();
+  const forced = module ? moduleState(module)?.state : undefined;
+  if (forced === 'off') return <ModuleDisabled />;
+  if (forced === 'on') return <>{children}</>;
 
   if (!isBasico || (feature && hasFeature(feature))) {
     return <>{children}</>;

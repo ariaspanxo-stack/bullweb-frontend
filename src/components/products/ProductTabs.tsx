@@ -33,7 +33,8 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({
   // ═══════════════════════════════════════════════════════════════
   const MODIFIERS_ENABLED = true;
   // HOTFIX 262: inventario y fichas técnicas no están en Básico — pestañas ocultas
-  const { isBasico } = usePlan();
+  const { hasModule } = usePlan();
+  const sinInventario = !hasModule('inventario'); // LOTE 325: inventario completo por local (sin fila = plan)
 
   const tabs = [
     {
@@ -83,7 +84,7 @@ export const ProductTabs: React.FC<ProductTabsProps> = ({
   return (
     <div className="bg-white border-b border-[#E2E8F0]">
       <div className="flex gap-1 px-6 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {tabs.filter(t => !(isBasico && (t.id === 'ingredientes' || t.id === 'fichas'))).map((tab) => {
+        {tabs.filter(t => !(sinInventario && (t.id === 'ingredientes' || t.id === 'fichas'))).map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
 

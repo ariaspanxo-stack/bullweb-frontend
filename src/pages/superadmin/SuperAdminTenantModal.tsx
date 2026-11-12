@@ -1,6 +1,7 @@
+import { TenantModulesBlock } from "./PlanModulesBlocks"; // LOTE 325
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User, ShoppingCart, Package, LayoutGrid, CreditCard, Trash2, Shield, Plus, ChevronDown, ChevronUp, KeyRound, Eye, EyeOff, Puzzle } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { User, ShoppingCart, Package, LayoutGrid, CreditCard, Trash2, Shield, Plus, ChevronDown, ChevronUp, KeyRound, Eye, EyeOff} from 'lucide-react';
+import { useState } from 'react';
 import toast from 'react-hot-toast';
 import superadminService, { type Tenant } from '@/services/superadmin/superadminService';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
@@ -31,81 +32,6 @@ function StatBox({ icon: Icon, label, value }: { icon: React.ElementType; label:
   );
 }
 
-// ── Módulos opcionales ─────────────────────────────────────────────────────────
-const MODULE_DEFS = [
-  { key: 'fidelizacion', label: 'Fidelización',  price: '$4.990/mes', emoji: '💜' },
-  { key: 'cupones',      label: 'Cupones',        price: '$2.990/mes', emoji: '🎟️' },
-  { key: 'clientes',     label: 'Clientes',       price: '$4.990/mes', emoji: '👥' },
-] as const;
-
-function ModulesSection({
-  tenantId,
-  modules,
-}: {
-  tenantId: string;
-  modules?: { fidelizacion: boolean; cupones: boolean; clientes: boolean };
-}) {
-  const qc = useQueryClient();
-  const [localModules, setLocalModules] = useState(
-    modules ?? { fidelizacion: false, cupones: false, clientes: false }
-  );
-  const [loadingKey, setLoadingKey] = useState<string | null>(null);
-
-  // Sync when detail loads (useEffect re-runs each time 'modules' prop changes)
-  useEffect(() => { if (modules) setLocalModules(modules); }, [modules]);
-
-  const toggle = async (key: 'fidelizacion' | 'cupones' | 'clientes') => {
-    const newVal = !localModules[key];
-    setLoadingKey(key);
-    try {
-      await superadminService.setModule(tenantId, key, newVal);
-      setLocalModules(prev => ({ ...prev, [key]: newVal }));
-      qc.invalidateQueries({ queryKey: ['superadmin', 'tenant', tenantId] });
-      toast.success(`Módulo ${key} ${newVal ? 'activado' : 'desactivado'}`);
-    } catch (err: any) {
-      toast.error(err.message ?? 'Error al actualizar módulo');
-    } finally {
-      setLoadingKey(null);
-    }
-  };
-
-  return (
-    <div className="border border-white/5 rounded-lg overflow-hidden">
-      <div className="flex items-center gap-2 px-3 py-2.5 bg-gray-900/60">
-        <Puzzle className="w-3.5 h-3.5 text-brand-400" />
-        <span className="text-sm font-medium text-gray-300">Módulos opcionales</span>
-      </div>
-      <div className="px-3 py-3 divide-y divide-white/5">
-        {MODULE_DEFS.map(({ key, label, price, emoji }) => {
-          const enabled = localModules[key as keyof typeof localModules];
-          const isLoading = loadingKey === key;
-          return (
-            <div key={key} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
-              <div className="flex items-center gap-2">
-                <span className="text-base">{emoji}</span>
-                <div>
-                  <p className="text-sm text-white font-medium">{label}</p>
-                  <p className="text-xs text-gray-500">{price}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => toggle(key as 'fidelizacion' | 'cupones' | 'clientes')}
-                disabled={isLoading}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:opacity-60 ${
-                  enabled ? 'bg-brand-500' : 'bg-gray-700'
-                }`}
-              >
-                <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${
-                  enabled ? 'translate-x-4' : 'translate-x-0.5'
-                }`} />
-              </button>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }: Props) {
   const qc = useQueryClient();
@@ -430,7 +356,7 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
           </div>
 
           {/* ── Módulos opcionales ── */}
-          <ModulesSection tenantId={initialTenant.id} modules={detail?.modules} />
+          <TenantModulesBlock tenantId={initialTenant.id} />{/* LOTE 325: modulos por local (los premium viejos no tenian endpoint) */}
 
         </div>
 

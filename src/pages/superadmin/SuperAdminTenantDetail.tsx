@@ -18,6 +18,7 @@ import { Modal } from '@/components/ui/superadmin/modal';
 import { SuspendTenantConfirm } from '@/components/superadmin/SuspendTenantConfirm'; // HOTFIX 294
 import { Input, Select } from '@/components/ui/superadmin/input';
 import { OnlinePaymentsBlock } from './OnlinePaymentsBlock'; // LOTE 324
+import { PlanPriceBlock, TenantModulesBlock } from './PlanModulesBlocks'; // LOTE 325
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -246,7 +247,6 @@ export default function SuperAdminTenantDetail() {
   const [changingPlan,   setChangingPlan]   = useState(false);
   const [changingStatus, setChangingStatus] = useState(false);
   const [suspendConfirm, setSuspendConfirm] = useState(false); // HOTFIX 294
-  const [modules, setModules] = useState<Record<string, boolean>>({});
   // Hotfix #219 — Administración de período
   const [extendConfirm, setExtendConfirm] = useState<ExtendConfirmState | null>(null);
   const [customDays, setCustomDays]     = useState('');
@@ -287,7 +287,6 @@ export default function SuperAdminTenantDetail() {
   // Cargar módulos premium desde settings del tenant
   useEffect(() => {
     if (data?.tenant) {
-      setModules((data.tenant.settings as any)?.modules ?? {});
     }
   }, [data?.tenant]);
   const users   = data?.users   ?? [];
@@ -311,19 +310,6 @@ export default function SuperAdminTenantDetail() {
   const sem = tenant ? semaforo(kpis.week ?? 0, tenant.status) : 'red';
   const semColor: Record<string, string> = { green: 'bg-emerald-400', yellow: 'bg-yellow-400', red: 'bg-rose-500' };
 
-  const handleToggleModule = async (moduleKey: string) => {
-    if (!id) return;
-    const prev = { ...modules };
-    const newModules = { ...modules, [moduleKey]: !modules[moduleKey] };
-    setModules(newModules);
-    try {
-      await superadminService.updateModules(id, newModules);
-      toast.success(`Módulo ${newModules[moduleKey] ? 'activado' : 'desactivado'}`);
-    } catch {
-      setModules(prev);
-      toast.error('Error al actualizar módulo');
-    }
-  };
 
   async function handleChangePlan(plan: string) {
     if (!id || !plan) return;
@@ -332,7 +318,10 @@ export default function SuperAdminTenantDetail() {
       await superadminService.changePlan(id, plan);
       queryClient.invalidateQueries({ queryKey: ['superadmin', 'tenant-detail', id] });
       toast.success(`Plan cambiado a ${plan}`);
-    } catch (e: any) { toast.error(e.message); }
+    } catch (e: any) {
+      // LOTE 325: bajar a Basico pide ver el aviso de perdidas en el bloque "Plan y precio"
+      toast.error(e?.code === 'PLAN_CHANGE_CONFIRM_REQUIRED' ? 'Le quita funciones en uso: usa Cambiar plan en el bloque Plan y precio para ver el aviso y confirmar.' : e.message);
+    }
     finally { setChangingPlan(false); }
   }
 
@@ -963,40 +952,9 @@ export default function SuperAdminTenantDetail() {
       {/* LOTE 324: pagos en linea por local (switch y comisiones) */}
       {id && <OnlinePaymentsBlock tenantId={id} />}
 
-      {/* ── MÓDULOS PREMIUM ── */}
-      <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-5">
-        <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider mb-4 flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-brand-500" />
-          Módulos Premium
-        </h3>
-        <div className="space-y-3">
-          {[
-            { key: 'fidelizacion', label: 'Fidelización', price: '$4.990/mes', desc: 'Emails automáticos, campañas, puntos de lealtad' },
-            { key: 'cupones', label: 'Cupones & Promociones', price: '$2.990/mes', desc: 'Descuentos, cupones, promociones' },
-            { key: 'clientes', label: 'Clientes', price: '$4.990/mes', desc: 'Base de datos, historial, segmentación, VIP' },
-          ].map(mod => (
-            <div key={mod.key} className="flex items-center justify-between p-3 bg-gray-800 rounded-xl border border-gray-700">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-sm text-gray-200">{mod.label}</span>
-                  <span className="text-[10px] font-bold text-brand-400 bg-brand-500/10 px-1.5 py-0.5 rounded">{mod.price}</span>
-                </div>
-                <p className="text-xs text-gray-500 mt-0.5">{mod.desc}</p>
-              </div>
-              <button
-                onClick={() => handleToggleModule(mod.key)}
-                className={`ml-3 relative inline-flex h-7 w-12 items-center rounded-full transition-colors flex-shrink-0 ${
-                  modules[mod.key] ? 'bg-emerald-500' : 'bg-gray-600'
-                }`}
-              >
-                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
-                  modules[mod.key] ? 'translate-x-6' : 'translate-x-1'
-                }`} />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
+      {/* LOTE 325: plan y precio, y modulos por local (reemplaza los modulos premium viejos sin endpoint) */}
+      {id && <PlanPriceBlock tenantId={id} planRaw={sub?.plan ?? tenant?.plan} priceCLP={sub?.priceCLP ?? null} />}
+      {id && <TenantModulesBlock tenantId={id} />}
     </div>
   );
 }

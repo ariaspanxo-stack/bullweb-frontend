@@ -17,11 +17,22 @@ async function saFetch<T>(path: string, init?: RequestInit): Promise<T> {
       status?: number; retryAfter?: number;
     };
     e.status = res.status;
+    (e as any).code = err?.code; (e as any).data = err?.data; // LOTE 325: aviso de perdidas del 409
     if (err?.retryAfter != null) e.retryAfter = Number(err.retryAfter);
     throw e;
   }
   const body = await res.json();
   return (body?.data ?? body) as T;
+}
+
+// LOTE 325: plan, precio y modulos por local
+export interface TenantModuleSA { key: string; label: string; enabled: boolean; source: 'plan' | 'forced'; state: 'plan' | 'on' | 'off'; planDefault: boolean }
+export interface TenantModulesSA { plan: 'BASICO' | 'TODO'; modules: TenantModuleSA[] }
+export interface PlanImpactSA {
+  from: 'BASICO' | 'TODO'; to: 'BASICO' | 'TODO'; losesSomething: boolean; targetPriceCLP?: number | null;
+  figures: { ingredientes: number; compras7d: number; clientes: number; movimientosPuntos7d: number; estaciones: number; estacionesSobreTope: number };
+  modulesLost: { key: string; label: string }[];
+  warnings: string[];
 }
 
 // LOTE 324
@@ -332,19 +343,15 @@ const superadminService = {
   }),
   deleteTenantNote:  (tenantId: string, noteId: string) => saFetch<any>(`/superadmin/tenants/${tenantId}/notes/${noteId}`, { method: 'DELETE' }),
 
-  // Módulos opcionales del tenant
-  setModule: (id: string, module: string, enabled: boolean) =>
-    saFetch<{ module: string; enabled: boolean; status: string }>(`/superadmin/tenants/${id}/modules`, {
-      method: 'PATCH',
-      body:   JSON.stringify({ module, enabled }),
-    }),
-
-  // Actualizar todos los módulos premium
-  updateModules: (id: string, modules: Record<string, boolean>) =>
-    saFetch<{ modules: Record<string, boolean> }>(`/superadmin/tenants/${id}/modules`, {
-      method: 'PATCH',
-      body:   JSON.stringify({ modules }),
-    }),
+  // LOTE 325: plan, precio y modulos por local (reemplaza los modulos premium viejos, cuyo endpoint no existia)
+  getTenantModules: (id: string) => saFetch<TenantModulesSA>(`/superadmin/tenants/${id}/modules`),
+  setTenantModule: (id: string, module: string, state: 'plan' | 'on' | 'off') =>
+    saFetch<TenantModulesSA>(`/superadmin/tenants/${id}/modules/${module}`, { method: 'PUT', body: JSON.stringify({ state }) }),
+  getPlanImpact: (id: string, plan: 'BASICO' | 'TODO') => saFetch<PlanImpactSA>(`/superadmin/tenants/${id}/plan-impact?plan=${plan}`),
+  changePlanConfirmed: (id: string, plan: 'BASICO' | 'TODO') =>
+    saFetch<Tenant>(`/superadmin/tenants/${id}/plan`, { method: 'PATCH', body: JSON.stringify({ plan, confirm: true }) }),
+  changePrice: (id: string, priceCLP: number) =>
+    saFetch<{ plan: string; priceCLP: number; previousPriceCLP: number }>(`/superadmin/tenants/${id}/price`, { method: 'PATCH', body: JSON.stringify({ priceCLP }) }),
 };
 
 export default superadminService;

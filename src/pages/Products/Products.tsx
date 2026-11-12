@@ -87,11 +87,12 @@ const Products = () => {
   });
   const [activeTab, setActiveTab] = useState<TabType>('productos');
   // HOTFIX 262: Ingredientes y Fichas no están en Básico (sin llamadas a /inventory)
-  const { isBasico, planReady } = usePlan();
-  const isExcludedTab = (tab: TabType) => isBasico && (tab === 'ingredientes' || tab === 'fichas');
+  const { hasModule, planReady } = usePlan();
+  const sinInventario = !hasModule('inventario'); // LOTE 325: inventario completo por local (sin fila = plan)
+  const isExcludedTab = (tab: TabType) => sinInventario && (tab === 'ingredientes' || tab === 'fichas');
   useEffect(() => {
     if (isExcludedTab(activeTab)) setActiveTab('productos');
-  }, [isBasico]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sinInventario]); // eslint-disable-line react-hooks/exhaustive-deps
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<ProductCategory | null>(null);
   

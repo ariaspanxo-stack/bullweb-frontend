@@ -13,6 +13,8 @@ export interface MpStatus {
   /** LOTE 324: comision BullWeb de pagos con Point (solo lectura) */
   feePointPct?: number;
   liveMode:    boolean;
+  /** LOTE 329: cobrado en linea de la semana (lunes 00:00 hora Chile hasta ahora) */
+  weekOnline?: { count: number; total: number };
 }
 
 export interface MpOrderState {

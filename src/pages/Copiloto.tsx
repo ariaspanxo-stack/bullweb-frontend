@@ -116,7 +116,8 @@ export default function Copiloto() {
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [loadError, setLoadError] = useState(false);
-  const [tab, setTab] = useState<'resumen' | 'preguntar'>('resumen'); // LOTE 321
+  // LOTE 321; LOTE 329: ?tab=preguntar (acceso directo de la portada) abre la pestaña Preguntar
+  const [tab, setTab] = useState<'resumen' | 'preguntar'>(() => (new URLSearchParams(window.location.search).get('tab') === 'preguntar' ? 'preguntar' : 'resumen'));
 
   useEffect(() => {
     (async () => {

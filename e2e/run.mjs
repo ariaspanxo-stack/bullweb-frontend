@@ -78,6 +78,12 @@ async function subirBackend() {
     s.unref();
     console.log('modelo simulado 4398 arriba');
   }
+  // LOTE 329 (traido de e2e-mp-a): MP simulado 4399 para el F5-MP solo con E2E_MP=1 (nada sale a internet); el montaje lo detiene al bajar
+  if (process.env.E2E_MP === '1' && vars.MP_API_URL === 'http://127.0.0.1:4399' && existsSync(resolve(WS, '_deploy', '_mpa_mp_simulado.js'))) {
+    const m = spawn(process.execPath, [resolve(WS, '_deploy', '_mpa_mp_simulado.js')], { env: { ...process.env, ...vars }, detached: true, windowsHide: true, stdio: ['ignore', log, log] });
+    m.unref();
+    console.log('MP simulado 4399 arriba');
+  }
   const child = spawn(process.execPath, ['dist/server.js'], { cwd: work, env: { ...process.env, ...vars }, detached: true, windowsHide: true, stdio: ['ignore', log, log] });
   backendVivo = true;
   child.on('exit', (code, signal) => { backendVivo = false; console.log(`BACKEND LOCAL TERMINO code=${code} signal=${signal}`); });

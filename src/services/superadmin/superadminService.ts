@@ -25,6 +25,18 @@ async function saFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return (body?.data ?? body) as T;
 }
 
+// TAREA 332: cobranza
+export interface CobranzaSA {
+  status: string; plan: string | null; planLabel: 'BÁSICO' | 'FULL'; priceCLP: number | null; graceDays: number;
+  dueAt: string | null; daysToDue: number | null; inGrace: boolean; payUntil: string | null; blockAt: string | null; blocked: boolean;
+  graceConfigurable?: boolean; giveDaysOptions?: number[]; maxGraceDays?: number;
+}
+export interface CarteraRow extends CobranzaSA {
+  id: string; name: string; slug: string; isTest: boolean; lastOrderAt: string | null; lastPaymentAt: string | null;
+  onlinePaymentsEnabled: boolean; mpConnected: boolean; onlinePaymentsConnected: boolean; copilotOn: boolean;
+  severity: 'rojo' | 'amarillo' | null;
+}
+
 // LOTE 325: plan, precio y modulos por local
 export interface TenantModuleSA { key: string; label: string; enabled: boolean; source: 'plan' | 'forced'; state: 'plan' | 'on' | 'off'; planDefault: boolean }
 export interface TenantModulesSA { plan: 'BASICO' | 'TODO'; modules: TenantModuleSA[] }
@@ -352,6 +364,14 @@ const superadminService = {
     saFetch<Tenant>(`/superadmin/tenants/${id}/plan`, { method: 'PATCH', body: JSON.stringify({ plan, confirm: true }) }),
   changePrice: (id: string, priceCLP: number) =>
     saFetch<{ plan: string; priceCLP: number; previousPriceCLP: number }>(`/superadmin/tenants/${id}/price`, { method: 'PATCH', body: JSON.stringify({ priceCLP }) }),
+
+  // TAREA 332: cartera, cobranza por local, Dar dias y dias de gracia
+  getCartera: () => saFetch<CarteraRow[]>('/superadmin/cartera'),
+  getTenantCobranza: (id: string) => saFetch<CobranzaSA>(`/superadmin/tenants/${id}/cobranza`),
+  giveDays: (id: string, days: number, reason: string) =>
+    saFetch<CobranzaSA & { kind: 'trial' | 'periodo'; days: number }>(`/superadmin/tenants/${id}/give-days`, { method: 'POST', body: JSON.stringify({ days, reason }) }),
+  setGraceDays: (id: string, graceDays: number) =>
+    saFetch<CobranzaSA>(`/superadmin/tenants/${id}/grace`, { method: 'PATCH', body: JSON.stringify({ graceDays }) }),
 };
 
 export default superadminService;

@@ -8,6 +8,7 @@ import { Menu, Bell, MessageCircle, User, Settings, LogOut, ChevronRight, Shoppi
 import { useInstallPWA } from '@/components/pwa/InstallPWA';
 import { useAuthStore } from '@/store/authStore';
 import { cn } from '@/lib/utils';
+import { isoToClDate, planLabel, ymdToCl } from '@/lib/planLabel'; // TAREA 332
 import toast from 'react-hot-toast';
 import api from '@/services/api';
 import { notificationsService, type RecentNotification } from '@/services/notificationsService';
@@ -52,10 +53,16 @@ interface BillingStatusResponse {
   status?:      string;   // ACTIVE | TRIAL | PAST_DUE | SUSPENDED | CANCELLED
   trialActive?: boolean;
   daysLeft?:    number;
+  // TAREA 332
+  plan?:        string | null;
+  planLabel?:   string;
+  inGrace?:     boolean;
+  dueAt?:       string | null;
+  payUntil?:    string | null;
 }
 
 interface SubscriptionNotice {
-  id:       'sub-trial-info' | 'sub-trial-last-day' | 'sub-trial-expired' | 'sub-past-due';
+  id:       'sub-grace' | 'sub-trial-expired' | 'sub-past-due';
   severity: 'info' | 'urgent';
   title:    string;
   body:     string;
@@ -75,30 +82,24 @@ function buildSubscriptionNotices(data: BillingStatusResponse): SubscriptionNoti
   const out: SubscriptionNotice[] = [];
   const status      = data?.status;
   const trialActive = data?.trialActive === true;
-  const daysLeft    = data?.daysLeft ?? 0;
+  const label       = data?.planLabel ?? planLabel(data?.plan);
 
-  if (trialActive && daysLeft >= 2 && daysLeft <= 7) {
+  // TAREA 332: los avisos previos al vencimiento (7, 3, 1 y el dia) llegan del servidor como BILLING_NOTICE,
+  // una vez por hito; aqui quedan la gracia y el bloqueo.
+  if (data?.inGrace && data.dueAt && data.payUntil) {
     out.push({
-      id: 'sub-trial-info',
-      severity: 'info',
-      title: `Tu prueba gratuita termina en ${daysLeft} día${daysLeft > 1 ? 's' : ''}`,
-      body:  'Activa tu plan Starter para no perder tus ventas al terminar la prueba.',
-      cta:   'Continuar suscripción',
-    });
-  } else if (trialActive && daysLeft <= 1) {
-    out.push({
-      id: 'sub-trial-last-day',
+      id: 'sub-grace',
       severity: 'urgent',
-      title: '¡Hoy es el último día de tu prueba gratuita!',
-      body:  'Mañana tu cuenta se bloqueará. Activa tu plan ahora para no perder tus ventas.',
-      cta:   'Continuar suscripción',
+      title: `Tu plan ${label} venció el ${isoToClDate(data.dueAt)}`,
+      body:  `Tienes hasta el ${ymdToCl(data.payUntil)} para pagar. Desde el día siguiente el sistema queda bloqueado.`,
+      cta:   'Pagar',
     });
   } else if (!trialActive && status === 'TRIAL') {
     out.push({
       id: 'sub-trial-expired',
       severity: 'urgent',
       title: 'Tu prueba gratuita ha terminado',
-      body:  'Activa tu plan Starter para volver a operar con normalidad.',
+      body:  `Activa tu plan ${label} para volver a operar con normalidad.`,
       cta:   'Continuar suscripción',
     });
   } else if (status === 'PAST_DUE') {
@@ -225,6 +226,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
     if (type === 'TABLE_REQUEST') return <Bell        className="w-4 h-4 text-amber-500" />;
     if (type === 'LOW_REVIEW')    return <Star        className="w-4 h-4 text-amber-500" />; // HOTFIX 273
     if (type === 'COPILOT_SUMMARY' || type === 'COPILOT_ALERT') return <Sparkles className="w-4 h-4 text-orange-500" />; // LOTE COPILOTO 1
+    if (type === 'BILLING_NOTICE') return <CreditCard className="w-4 h-4 text-orange-500" />; // TAREA 332
     return <Bell className="w-4 h-4 text-gray-400" />;
   };
 
@@ -383,8 +385,20 @@ export default function Header({ onMenuClick }: HeaderProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={cn('text-sm truncate', !n.read ? 'font-semibold text-white' : 'text-gray-300')}>{n.title}</p>
-                        <p className="text-xs text-gray-500 truncate">{n.body}</p>
+                        <p className={cn('text-xs text-gray-500', n.type === 'BILLING_NOTICE' ? '' : 'truncate')}>{n.body}</p>
                         <p className="text-xs text-gray-600 mt-0.5">{formatRelative(n.createdAt)}</p>
+                        {/* TAREA 332: aviso de cobranza con pago directo (solo llega a quien administra el local) */}
+                        {n.type === 'BILLING_NOTICE' && (
+                          <button
+                            onClick={() => handleSubPay(n.id)}
+                            disabled={payingSubId !== null}
+                            className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white bg-brand-500 hover:bg-brand-600 transition-colors disabled:opacity-60"
+                          >
+                            {payingSubId === n.id
+                              ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Generando link...</>
+                              : 'Pagar'}
+                          </button>
+                        )}
                       </div>
                       <button onClick={() => dismiss(n.id)} className="text-gray-600 hover:text-gray-400 flex-shrink-0">
                         <X className="w-3.5 h-3.5" />

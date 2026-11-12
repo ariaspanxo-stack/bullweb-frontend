@@ -46,6 +46,15 @@ export interface BillingStatusData {
   features?:     string[] | null;
   /** LOTE 325: modulos efectivos del local (sin fila = plan; con fila manda la fila). null en backends previos. */
   modules?:      TenantModuleStateFE[] | null;
+  /** TAREA 332: nombre unico del plan y gracia (undefined en backends previos). */
+  planLabel?:    'BÁSICO' | 'FULL';
+  dueAt?:        string | null;
+  daysToDue?:    number | null;
+  graceDays?:    number;
+  inGrace?:      boolean;
+  /** Ultimo dia para pagar sin bloqueo, 'YYYY-MM-DD' (fecha Chile). */
+  payUntil?:     string | null;
+  blockAt?:      string | null;
   subscription?: {
     flowSubscriptionId?: string | null;
     plan?:               string | null;

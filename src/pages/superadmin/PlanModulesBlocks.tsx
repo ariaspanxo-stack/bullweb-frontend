@@ -7,9 +7,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, Layers, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 import superadminService, { type PlanImpactSA, type TenantModulesSA } from '@/services/superadmin/superadminService';
+import { planLabel as toPlanLabel } from '@/lib/planLabel'; // TAREA 332
 
 const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL')}`;
-const planLabel = (p?: string | null) => (String(p ?? '').toUpperCase() === 'BASICO' ? 'Básico' : 'Full');
+const planLabel = (p?: string | null) => toPlanLabel(p); // TAREA 332: mapa unico BÁSICO | FULL
 
 const modulesKey = (id: string) => ['superadmin', 'tenant-modules', id];
 

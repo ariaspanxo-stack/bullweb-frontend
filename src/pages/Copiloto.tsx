@@ -173,7 +173,7 @@ export default function Copiloto() {
           <div>
             <h2 className="text-base font-semibold text-gray-900">Activar para este local</h2>
             <p className="text-sm text-gray-500">
-              {history?.plan === 'BASICO' ? 'Tu plan incluye el resumen de cierre. Las alertas son del plan Todo.' : 'Incluye el resumen de cierre y las alertas diarias.'}
+              {history?.plan === 'BASICO' ? 'Tu plan incluye el resumen de cierre. Las alertas son del plan FULL.' : 'Incluye el resumen de cierre y las alertas diarias.'}
             </p>
           </div>
           <button type="button" role="switch" aria-checked={enabled} aria-label="Activar Copiloto" disabled={!settings || busy} onClick={() => save(!enabled)}

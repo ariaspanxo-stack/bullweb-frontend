@@ -331,6 +331,19 @@ export function QrOrderTracking({
           <p className="text-sm font-medium text-green-400">Pago recibido con Mercado Pago{liveStatus.payment.amount != null ? ` · ${fmtCLP(liveStatus.payment.amount)}` : ''}</p>
         </div>
       )}
+      {/* LOTE 324: con enlace de resenas Google del local, boton en la pantalla de pago aprobado */}
+      {liveStatus.payment?.status === 'approved' && liveStatus.googleReviewUrl && (
+        <a
+          href={liveStatus.googleReviewUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid="carta-google-review"
+          className="w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl px-4 text-sm font-bold text-white"
+          style={{ background: REVIEW_ORANGE }}
+        >
+          Califícanos en Google
+        </a>
+      )}
 
       {st === 'PENDING' && (
         <>

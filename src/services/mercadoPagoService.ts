@@ -10,6 +10,8 @@ export interface MpStatus {
   expiresAt:   string | null;
   connectedAt: string | null;
   feePct:      number;
+  /** LOTE 324: comision BullWeb de pagos con Point (solo lectura) */
+  feePointPct?: number;
   liveMode:    boolean;
 }
 

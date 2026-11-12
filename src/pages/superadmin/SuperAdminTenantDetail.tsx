@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/superadmin/button';
 import { Modal } from '@/components/ui/superadmin/modal';
 import { SuspendTenantConfirm } from '@/components/superadmin/SuspendTenantConfirm'; // HOTFIX 294
 import { Input, Select } from '@/components/ui/superadmin/input';
+import { OnlinePaymentsBlock } from './OnlinePaymentsBlock'; // LOTE 324
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -958,6 +959,9 @@ export default function SuperAdminTenantDetail() {
           </div>
         </div>
       </div>
+
+      {/* LOTE 324: pagos en linea por local (switch y comisiones) */}
+      {id && <OnlinePaymentsBlock tenantId={id} />}
 
       {/* ── MÓDULOS PREMIUM ── */}
       <div className="bg-gray-900/60 border border-white/5 rounded-2xl p-5">

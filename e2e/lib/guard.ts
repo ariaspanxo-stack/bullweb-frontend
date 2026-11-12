@@ -13,7 +13,7 @@ export const MARK = 'E2E-PW-';
 export type E2EEnv = 'local' | 'sandbox';
 
 const ALLOWED: Record<E2EEnv, { baseURL: string; hosts: string[]; flows: string[] }> = {
-  local: { baseURL: 'http://127.0.0.1:5175', hosts: ['127.0.0.1:5175', 'localhost:5175'], flows: ['F1', 'F2', 'F5', 'F8', 'F9', 'F10', 'F11', 'F12', 'V1', 'V2'] }, // LOTE 321: F10 solo local (modelo simulado); LOTE 324: F11 pantalla de pedidos; LOTE 325: F12 modulos por local (precondicion SQL, solo local)
+  local: { baseURL: 'http://127.0.0.1:5175', hosts: ['127.0.0.1:5175', 'localhost:5175', '127.0.0.1:4399'], flows: ['F1', 'F2', 'F5', 'F8', 'F9', 'F10', 'F11', 'F12', 'V1', 'V2'] }, // LOTE 321: F10 solo local (modelo simulado); LOTE 324: F11 pantalla de pedidos; LOTE 325: F12 modulos por local (precondicion SQL, solo local); LOTE 329: 127.0.0.1:4399 = MP simulado del montaje (OAuth y checkout del F5-MP), como en e2e-mp-a
   sandbox: { baseURL: 'https://app.bullwebchile.com', hosts: ['app.bullwebchile.com'], flows: ['F1', 'F5', 'F8', 'F9', 'F11'] }, // LOTE 324: F11 deja la pantalla apagada
 };
 

@@ -43,7 +43,7 @@ test('F5 pago Mercado Pago simulado: conectar, rechazo y reintento, aprobado, PO
       await page.getByRole('button', { name: 'Conectar Mercado Pago' }).click();
       await page.waitForURL(/\/settings\/pagos/, { timeout: 30000 });
       await expect(page.getByText('Conectado', { exact: true })).toBeVisible();
-      await expect(page.getByText('Comision BullWeb')).toBeVisible();
+      await expect(page.getByText('Comision BullWeb pago en linea')).toBeVisible(); // LOTE 324 agrego la fila Point
       conectado = true;
       await shot(page, F, 'mp_02_pagos_conectado');
     });

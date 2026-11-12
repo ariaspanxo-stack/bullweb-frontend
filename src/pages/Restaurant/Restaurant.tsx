@@ -22,6 +22,7 @@ import { CloseShiftModal } from '../../components/cash/CloseShiftModal';
 import { OpenShiftModal } from '../../components/cash/OpenShiftModal';
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog';
 import { EmitBoletaButton } from '../../components/pos/EmitBoletaButton';
+import { HomeShortcuts } from '../../components/home/HomeShortcuts'; // LOTE 329
 
 // ==============================================================
 // COMPONENTE INTERNO -- consume contexto
@@ -62,6 +63,7 @@ function RestaurantInner() {
 
       {/* Contenido */}
       <div className="p-6 bg-gray-50 min-h-screen">
+        <HomeShortcuts />{/* LOTE 329: accesos directos de la portada */}
         {ctx.activeTab === 'mesas'     && ctx.hasTabPerm('mesas')     && <MesasTab />}
         {ctx.activeTab === 'mostrador' && ctx.hasTabPerm('mostrador') && <MostradorTab />}
         {ctx.activeTab === 'delivery'  && ctx.hasTabPerm('delivery')  && <DeliveryTab />}

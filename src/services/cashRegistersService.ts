@@ -106,6 +106,12 @@ export const cashRegistersService = {
     return data; // HOTFIX 299: api ya desenvuelve { success, data }
   },
 
+  /** LOTE 329: pagos en linea asentados sin turno y aun sin adoptar (se adoptan al abrir el turno). */
+  async getOnlinePending(): Promise<{ count: number; total: number }> {
+    const { data } = await api.get<any>('/cash-registers/online-pending');
+    return { count: Number(data?.count ?? 0), total: Number(data?.total ?? 0) };
+  },
+
   async getActiveRegister() {
     const { data } = await api.get('/cash-registers/active');
     return data;

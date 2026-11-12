@@ -1,9 +1,9 @@
 // src/components/cash/OpenShiftModal.tsx
 // Modal bloqueante — no se puede cerrar sin abrir sesión
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Loader2, DollarSign, Clock, AlertCircle } from 'lucide-react';
+import { Loader2, DollarSign, Clock, AlertCircle, Globe } from 'lucide-react';
 import { cashRegistersService, type CashRegister } from '../../services/cashRegistersService';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
@@ -29,6 +29,17 @@ export function OpenShiftModal({ register, isOpen, onClose, onSuccess }: OpenShi
   const [notes,       setNotes]       = useState('');
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState<string | null>(null);
+  // LOTE 329: pagos en linea sin turno (se adoptan al abrir, como hoy)
+  const [onlinePending, setOnlinePending] = useState<{ count: number; total: number } | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let alive = true;
+    cashRegistersService.getOnlinePending()
+      .then(r => { if (alive) setOnlinePending(r); })
+      .catch(() => { if (alive) setOnlinePending(null); });
+    return () => { alive = false; };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -45,11 +56,16 @@ export function OpenShiftModal({ register, isOpen, onClose, onSuccess }: OpenShi
     setError(null);
 
     try {
-      await cashRegistersService.openSession(register.id, {
+      const opened: any = await cashRegistersService.openSession(register.id, {
         openingCash: amount,
         notes:       notes || undefined,
       });
       toast.success(`Turno abierto con ${formatCLP(amount)}`);
+      // LOTE 329: la linea pasa a "Pagos en linea adoptados" (arqueo del turno)
+      const adopted = opened?.adoptedOnline;
+      if (Number(adopted?.count ?? 0) > 0) {
+        toast.success(`Pagos en línea adoptados: ${formatCLP(Number(adopted.amount ?? 0))} (${adopted.count})`);
+      }
       onSuccess();
       onClose?.();
     } catch (err: any) {
@@ -89,6 +105,20 @@ export function OpenShiftModal({ register, isOpen, onClose, onSuccess }: OpenShi
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+
+          {/* LOTE 329: pagos en linea sin turno; al abrir se adoptan y pasan al arqueo como "Pagos en línea adoptados" */}
+          {onlinePending && onlinePending.count > 0 && (
+            <div data-testid="online-pending" className="flex items-center justify-between gap-3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3">
+              <span className="flex items-center gap-2 text-sm text-slate-700">
+                <Globe className="w-4 h-4 text-slate-500" />
+                Pagos en línea sin turno
+              </span>
+              <span className="text-sm text-slate-800">
+                <span className="font-bold">{formatCLP(onlinePending.total)}</span>
+                <span className="text-slate-500 ml-1">({onlinePending.count})</span>
+              </span>
+            </div>
+          )}
 
           {/* Monto inicial */}
           <div>

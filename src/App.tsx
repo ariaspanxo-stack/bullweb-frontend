@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 import { homePathFor } from '@/utils/homePath'; // HOTFIX 300
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { PermissionGuard } from '@/components/PermissionGuard';
-import { PlanGuard, ModuleGuard } from '@/components/PlanGuard'; // LOTE 325: ModuleGuard
+import { PlanGuard } from '@/components/PlanGuard'; // LOTE 325: ModuleGuard; LOTE 330: Copiloto pasa a PlanGuard
 import Layout from '@/components/layout/Layout';
 import { FullPageSpinner } from '@/components/ui/Spinner';
 
@@ -286,7 +286,7 @@ function AppContent() {
               <Route path="reports"          element={<PermissionGuard permission="reports.view"><Reports /></PermissionGuard>} />
               <Route path="reports/sales"    element={<Navigate to="/reports" replace />} />
               <Route path="reports/analytics" element={<Navigate to="/reports" replace />} />
-              <Route path="copiloto"         element={<PermissionGuard permission="settings.manage"><ModuleGuard module="copiloto"><Copiloto /></ModuleGuard></PermissionGuard>} />{/* LOTE COPILOTO 1 */}
+              <Route path="copiloto"         element={<PermissionGuard permission="settings.manage"><PlanGuard module="copiloto"><Copiloto /></PlanGuard></PermissionGuard>} />{/* LOTE COPILOTO 1; LOTE 330: PlanGuard, solo Full */}
               
               {/* Sistema */}
               <Route path="settings" element={<AppSettings />} />

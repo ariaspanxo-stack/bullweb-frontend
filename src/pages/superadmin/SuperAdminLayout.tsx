@@ -4,6 +4,7 @@ import { Building2, LayoutDashboard, LogOut, CreditCard, Activity, ShieldCheck, 
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import superadminService from '@/services/superadmin/superadminService';
+import { PortfolioAlertsBell } from './PortfolioAlertsBell'; // TAREA 331
 
 function parseJwt(token: string): { exp?: number } | null {
   try {
@@ -148,9 +149,12 @@ export default function SuperAdminLayout() {
         <div className="flex-1 flex flex-col min-w-0 bg-[#0A0A0B]">
           <header className="sticky top-0 z-40 h-14 border-b border-white/5 bg-gray-950/80 backdrop-blur px-6 flex items-center justify-between flex-shrink-0">
             <span className="text-sm text-gray-500">Super Admin</span>
-            <span className="flex items-center gap-2 text-sm text-gray-400 tabular-nums">
-              <Clock className="w-4 h-4 text-gray-500" />
-              {clock} CLT
+            <span className="flex items-center gap-3">
+              <PortfolioAlertsBell />
+              <span className="flex items-center gap-2 text-sm text-gray-400 tabular-nums">
+                <Clock className="w-4 h-4 text-gray-500" />
+                {clock} CLT
+              </span>
             </span>
           </header>
           <main className="flex-1 overflow-auto p-6 lg:p-8">

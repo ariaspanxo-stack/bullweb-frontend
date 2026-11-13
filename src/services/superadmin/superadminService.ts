@@ -372,6 +372,17 @@ const superadminService = {
     saFetch<CobranzaSA & { kind: 'trial' | 'periodo'; days: number }>(`/superadmin/tenants/${id}/give-days`, { method: 'POST', body: JSON.stringify({ days, reason }) }),
   setGraceDays: (id: string, graceDays: number) =>
     saFetch<CobranzaSA>(`/superadmin/tenants/${id}/grace`, { method: 'PATCH', body: JSON.stringify({ graceDays }) }),
+
+  // TAREA 331: campana de alertas de cartera
+  getPortfolioAlerts: () => saFetch<PortfolioAlertsSA>('/superadmin/portfolio-alerts'),
+  markPortfolioAlertsRead: () => saFetch<{ updated: number }>('/superadmin/portfolio-alerts/read', { method: 'POST' }),
 };
+
+// TAREA 331: alertas de cartera
+export interface PortfolioAlertSA {
+  id: string; kind: 'estado' | 'sin_pedidos' | 'trial_48h' | 'pago' | 'resumen_semanal'; tenantId: string | null;
+  title: string; body: string; emailStatus: string | null; createdAt: string; readAt: string | null;
+}
+export interface PortfolioAlertsSA { ready: boolean; unread: number; items: PortfolioAlertSA[] }
 
 export default superadminService;

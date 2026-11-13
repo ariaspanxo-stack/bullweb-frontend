@@ -167,7 +167,7 @@ const menuSections: MenuSection[] = [
     colorClass: 'text-orange-400',
     items: [
       { name: 'Reportes',       icon: BarChart3,    path: '/reports',        permission: 'reports.view'   },
-      { name: 'Copiloto',       icon: Sparkles,     path: '/copiloto',       permission: 'settings.manage', badge: 'Nuevo', moduleKey: 'copiloto' }, // LOTE COPILOTO 1
+      { name: 'Copiloto',       icon: Sparkles,     path: '/copiloto',       permission: 'settings.manage', badge: 'Nuevo', planRequired: 'TODO', moduleKey: 'copiloto' }, // LOTE COPILOTO 1; LOTE 330: solo Full
       { name: 'Boletas DTE',    icon: ReceiptIcon,  path: '/dte/documentos', permission: 'billing.view', planRequired: 'TODO' },
       { name: 'Facturación SII', icon: FileText,    path: '/apps/dte',       permission: 'billing.config', planRequired: 'TODO' },
     ]

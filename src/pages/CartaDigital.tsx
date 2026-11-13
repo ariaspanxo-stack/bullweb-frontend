@@ -5,6 +5,8 @@ import * as Sentry from '@sentry/react';
 import { QrOrderTracking, normalizeWhatsAppPhone, saveActiveQrOrder, readActiveQrOrder, clearActiveQrOrder, qrTrackingPath } from '../components/carta/QrOrderTracking'; // HOTFIX 272b
 import { useQrOrderStatus, type QrOrderPhase } from '../hooks/useQrOrderStatus'; // HOTFIX 272b — barra fija
 import { isCashMethodName, aaSafeColor, titleCaseName, isExtrasCategoryName } from '../lib/cartaUi'; // HOTFIX 304 / 308
+import { AddressAutocomplete, type AddressPlacesConfig } from '../components/delivery/AddressAutocomplete'; // LOTE 333
+import { textoCotizacion } from '../services/deliveryZonesService'; // LOTE 333 (solo el texto; la carta no usa el cliente api del panel)
 import { ShoppingBag, Search, ChevronLeft, ChevronRight, ChevronDown, Clock, ShoppingCart, Plus, Minus, Trash2, X, CheckCircle, MapPin, Phone, Mail, Instagram, Facebook, Globe, MessageCircle } from 'lucide-react';
 
 const fmtCLP = (n: number) => `$${Math.round(n).toLocaleString('es-CL', { maximumFractionDigits: 0 })}`;
@@ -513,6 +515,10 @@ interface CotizacionEnvioCarta {
   envio_gratis?: boolean;
   bajo_minimo?: boolean;
   falta_minimo?: number | null;
+  tramo?: number | null;          // LOTE 333
+  km_desde?: number | null;       // LOTE 333
+  km_hasta?: number | null;       // LOTE 333
+  comuna_agregada?: string | null; // LOTE 333
 }
 const fmtKmCarta = (km: number | null | undefined) =>
   km == null ? '' : `${(Math.round(km * 10) / 10).toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`;
@@ -971,10 +977,22 @@ function CartSheet({
   const [envioLoading, setEnvioLoading] = useState(false);
   const [envioEsTramos, setEnvioEsTramos] = useState(false);
   const subtotalEnvio = couponApplied ? couponApplied.total : total;
+  // LOTE 333: autocompletado (Places New, solo con clave de navegador) y cotizacion inmediata al elegir o salir del campo
+  const [placesCfg, setPlacesCfg] = useState<AddressPlacesConfig | null>(null);
+  useEffect(() => {
+    if (orderType !== 'delivery' || placesCfg) return;
+    fetch(`/api/public/places-config?tenantSlug=${encodeURIComponent(tenantSlug ?? '')}`)
+      .then(r => (r.ok ? r.json() : null)).then(j => setPlacesCfg(j?.success ? j.data : { key: null, lat: null, lng: null, comuna: null }))
+      .catch(() => setPlacesCfg({ key: null, lat: null, lng: null, comuna: null }));
+  }, [orderType, placesCfg, tenantSlug]);
+  const [envioYa, setEnvioYa] = useState(0);
+  const envioYaVisto = useRef(0);
   useEffect(() => {
     if (orderType !== 'delivery' || form.address.trim().length < 6) { setEnvio(null); setEnvioLoading(false); return; }
     let vivo = true;
     setEnvioLoading(true);
+    const inmediata = envioYa !== envioYaVisto.current;
+    envioYaVisto.current = envioYa;
     const t = setTimeout(async () => {
       try {
         const res = await fetch('/api/public/delivery-quote', {
@@ -990,10 +1008,14 @@ function CartSheet({
       } finally {
         if (vivo) setEnvioLoading(false);
       }
-    }, 700);
+    }, inmediata ? 0 : 700);
     return () => { vivo = false; clearTimeout(t); };
-  }, [orderType, form.address, form.city, subtotalEnvio, tenantSlug]);
+  }, [orderType, form.address, form.city, subtotalEnvio, tenantSlug, envioYa]);
+  const cotizarYa = () => setEnvioYa(n => n + 1);
   const envioTramos = orderType === 'delivery' && envio?.modo === 'TRAMOS' && !envio.sin_cotizacion ? envio : null;
+  // LOTE 333: modo FIJO: el costo fijo del local se muestra (lo confirma el local al aceptar; no se suma al pago en linea)
+  const envioFijoCarta = orderType === 'delivery' && envio?.modo === 'FIJO' && envio.costo != null ? Number(envio.costo) : null;
+  const envioTextoCarta = envioTramos ? textoCotizacion(envioTramos as any) : null;
   const envioBloquea = !!envioTramos && (envioTramos.fuera_de_zona === true || envioTramos.bajo_minimo === true);
   const envioCosto = envioTramos && !envioBloquea ? Number(envioTramos.costo ?? 0) : 0;
 
@@ -1244,7 +1266,13 @@ function CartSheet({
           </div>
           {/* HOTFIX 307 (B5-14): el cliente sabe que el envio se suma antes de confirmar */}
           {orderType === 'delivery' && !(envioTramos && !envioBloquea) && (
-            <p className="text-gray-400 text-xs -mt-2">No incluye el costo de envío: el local lo confirma al aceptar tu pedido.</p>
+            envioFijoCarta != null ? (
+              <p className="text-gray-300 text-xs -mt-2" data-testid="carta-pago-envio-fijo">
+                Envío fijo <span className="font-bold text-white">{fmtCLP(envioFijoCarta)}</span>: total con envío <span className="font-bold text-white">{fmtCLP(payTotal + envioFijoCarta)}</span>. El local lo confirma al aceptar tu pedido.
+              </p>
+            ) : (
+              <p className="text-gray-400 text-xs -mt-2">No incluye el costo de envío: el local lo confirma al aceptar tu pedido.</p>
+            )
           )}
 
           {/* Lista vertical de métodos */}
@@ -1510,8 +1538,13 @@ function CartSheet({
               <label className="block text-sm font-medium text-gray-200 mb-1.5">
                 Dirección de entrega <span className="text-red-400">*</span>
               </label>
-              <textarea
-                value={form.address} onChange={setField('address')} rows={3}
+              <AddressAutocomplete
+                multiline rows={3} dark
+                value={form.address}
+                onChange={(v) => { setForm(f => ({ ...f, address: v })); setErrors(err => ({ ...err, address: '' })); }}
+                onCommit={cotizarYa}
+                config={placesCfg}
+                testId="carta-direccion"
                 placeholder="Calle, número, piso, referencias..."
                 className={`${inputCls('address')} resize-none`}
                 style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff', backgroundColor: '#1f2937' }}
@@ -1527,7 +1560,7 @@ function CartSheet({
                 Ciudad <span className="text-gray-500 font-normal">(opcional)</span>
               </label>
               <input
-                type="text" value={form.city} onChange={setField('city')}
+                type="text" value={form.city} onChange={setField('city')} onBlur={cotizarYa}
                 placeholder="Chillán, Santiago, Concepción..."
                 className={inputCls('city')}
                 style={{ color: '#ffffff', WebkitTextFillColor: '#ffffff', backgroundColor: '#1f2937' }}
@@ -1560,11 +1593,25 @@ function CartSheet({
                   Pedido mínimo <span className="font-bold">{fmtCLP(Number(envio.pedido_minimo ?? 0))}</span>, te faltan <span className="font-bold">{fmtCLP(Number(envio.falta_minimo ?? 0))}</span>
                 </p>
               ) : envio ? (
-                <p className="text-white" data-testid="carta-envio-costo">
-                  {envio.envio_gratis ? <span className="font-bold">Envío gratis</span> : <>Envío <span className="font-bold">{fmtCLP(Number(envio.costo ?? 0))}</span></>}
-                  {envio.km != null && <span className="text-gray-400"> · {envio.estimado ? 'aprox. ' : ''}{fmtKmCarta(envio.km)}</span>}
-                </p>
+                <div className="space-y-1">
+                  <p className="text-white" data-testid="carta-envio-costo">
+                    {envio.envio_gratis ? <span className="font-bold">Envío gratis</span> : <>Envío <span className="font-bold">{fmtCLP(Number(envio.costo ?? 0))}</span></>}
+                    {envio.km != null && <span className="text-gray-400"> · {envio.estimado ? 'aprox. ' : ''}{fmtKmCarta(envio.km)}</span>}
+                    {envio.km_hasta != null && <span className="text-gray-400"> (tramo {(envio.km_desde ?? 0).toLocaleString('es-CL', { maximumFractionDigits: 1 })}–{Number(envio.km_hasta).toLocaleString('es-CL', { maximumFractionDigits: 1 })} km)</span>}
+                  </p>
+                  {/* LOTE 333: total con envio antes de enviar el pedido */}
+                  <p className="text-gray-300" data-testid="carta-envio-total">
+                    Total con envío <span className="font-bold text-white">{fmtCLP(total + envioCosto)}</span>
+                  </p>
+                </div>
               ) : null}
+            </div>
+          )}
+          {/* LOTE 333: modo FIJO: el costo fijo del local y el total con envio, antes de enviar el pedido */}
+          {isDelivery && envioFijoCarta != null && (
+            <div className="rounded-xl p-3 text-sm space-y-1" style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }} data-testid="carta-envio-fijo">
+              <p className="text-white">Envío <span className="font-bold">{fmtCLP(envioFijoCarta)}</span> <span className="text-gray-400">(costo fijo del local)</span></p>
+              <p className="text-gray-300">Total con envío <span className="font-bold text-white">{fmtCLP(total + envioFijoCarta)}</span></p>
             </div>
           )}
 
@@ -1638,7 +1685,7 @@ function CartSheet({
                 ? 'No llegamos a tu dirección: puedes elegir retiro en el local'
                 : envioTramos.bajo_minimo
                   ? `Pedido mínimo ${fmtCLP(Number(envioTramos.pedido_minimo ?? 0))}, te faltan ${fmtCLP(Number(envioTramos.falta_minimo ?? 0))}`
-                  : `🛵 ${envioTramos.envio_gratis ? 'Envío gratis' : `Envío ${fmtCLP(envioCosto)}`}${envioTramos.km != null ? ` · ${envioTramos.estimado ? 'aprox. ' : ''}${fmtKmCarta(envioTramos.km)}` : ''}`}
+                  : `🛵 ${envioTextoCarta ?? (envioTramos.envio_gratis ? 'Envío gratis' : `Envío ${fmtCLP(envioCosto)}`)}`}
             </p>
           ) : (
             <p className="text-center text-gray-500 text-xs mt-2">

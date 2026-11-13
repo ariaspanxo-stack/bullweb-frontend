@@ -111,7 +111,8 @@ export function QrAcceptForm({ isDelivery, subtotal, defaults, initialFee, dark 
       )}
       {hasQuote && (
         <p className={`text-xs ${label}`} data-testid="qr-envio-cotizado">
-          Sugerido por tramos: <span className="font-bold">{formatCurrency(Number(quoteFee))}</span>{quoteTier != null ? ` · tramo ${quoteTier}` : ''}{quoteKm != null ? ` · ${quoteEstimated ? 'aprox. ' : ''}${fmtKm(quoteKm)}` : ''}
+          {/* LOTE 333: mismo orden que en el POS y la carta: km · Envío $X (tramo N); es el costo sugerido */}
+          Calculado: {quoteKm != null ? `${quoteEstimated ? 'aprox. ' : ''}${fmtKm(quoteKm)} · ` : ''}Envío <span className="font-bold">{formatCurrency(Number(quoteFee))}</span>{quoteTier != null ? ` (tramo ${quoteTier})` : ''} · sugerido
         </p>
       )}
       {feeChanged && (

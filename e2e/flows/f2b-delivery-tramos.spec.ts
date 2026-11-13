@@ -30,13 +30,15 @@ test('F2 delivery por tramos: costo sugerido con km, cambio con motivo obligator
       await page.getByPlaceholder('+56 9 1234 5678').fill('+56900031402');
       await page.getByPlaceholder('Calle, número, depto...').fill('Calle T314-B 100');
       await page.getByPlaceholder('Ej: Santiago').fill('Chillan');
-      await expect(page.getByTestId('pos-envio-sugerido')).toContainText('tramo 2');
-      await expect(page.getByTestId('pos-envio-sugerido')).toContainText('2,0 km');
+      // LOTE 333: texto unico "2,0 km · Envío $2.500 (tramo a–b km)" y costo bloqueado hasta "Editar"
+      await expect(page.getByTestId('pos-envio-texto')).toContainText(/2,0 km · Envío \$2\.500 \(tramo [0-9,]+–[0-9,]+ km\)/);
       await expect(page.getByTestId('pos-envio-costo')).toHaveValue('2500');
+      await expect(page.getByTestId('pos-envio-costo')).toHaveAttribute('readonly', '');
       await shot(page, F, 't01_delivery_sugerido');
     });
 
     await test.step('cambiar el costo exige motivo', async () => {
+      await page.getByTestId('pos-envio-editar').click();
       await page.getByTestId('pos-envio-costo').fill('2000');
       await expect(page.getByTestId('pos-envio-motivo')).toBeVisible();
       await shot(page, F, 't02_motivo_visible');

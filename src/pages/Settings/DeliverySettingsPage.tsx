@@ -150,6 +150,12 @@ export default function DeliverySettingsPage() {
             </button>
           ))}
         </div>
+        {/* LOTE 333: causa del sandbox sin cotizar: tramos guardados con el modo en Fijo. Se avisa que no se usan. */}
+        {modo === 'FIJO' && filas.some((f) => String(f.km).trim() && String(f.costo).trim()) && (
+          <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2" data-testid="envio-aviso-fijo">
+            Tus tramos están guardados pero no se usan: con el modo Fijo no se calcula el envío por distancia. Elige "Por tramos" y guarda para que el POS y la carta lo calculen.
+          </p>
+        )}
       </div>
 
       {/* Direccion del local */}

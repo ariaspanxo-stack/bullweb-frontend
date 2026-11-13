@@ -53,6 +53,8 @@ function DigestCard({ d }: { d: CopilotDigest }) {
     ['Pedidos', String(f.pedidos)],
     ['Ticket promedio', clp(f.ticket)],
     ['Contra la semana anterior', f.variacionPct === null ? 'Sin dato' : `${f.variacionPct > 0 ? '+' : ''}${f.variacionPct}%`],
+    // LOTE 333: proyeccion del dia siguiente (la calcula el servidor; siempre dice proyeccion y rango)
+    ...((f as any).proyeccionManana ? [['Para mañana esperamos', `~${clp((f as any).proyeccionManana.monto)} (proyección, entre ${clp((f as any).proyeccionManana.desde)} y ${clp((f as any).proyeccionManana.hasta)})`] as [string, string]] : []),
     ['Propinas', clp(f.propinas)],
     ['Arqueo', arqueo(f)],
     ['Pedidos abiertos', String(f.pedidosAbiertos)],

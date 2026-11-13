@@ -72,7 +72,7 @@ test('F5 envio por tramos: carta 360 px con direccion fuera y dentro de zona, ac
       await cli.getByPlaceholder('Calle, número, piso, referencias...').fill('Calle T314-A 100');
       await expect(cli.getByTestId('carta-envio-costo')).toContainText('$1.500');
       await expect(cli.getByTestId('carta-envio-costo')).toContainText('2,0 km');
-      await expect(cli.getByTestId('carta-envio-pie')).toContainText('Envío $1.500 · 2,0 km');
+      await expect(cli.getByTestId('carta-envio-pie')).toContainText(/2,0 km · Envío \$1\.500 \(tramo [0-9,]+–[0-9,]+ km\)/); // LOTE 333
       await cli.getByTestId('carta-envio-costo').scrollIntoViewIfNeeded();
       await shot(cli, F, 't03_envio_dentro');
       await cli.getByRole('button', { name: /Ir a pagar/ }).click();

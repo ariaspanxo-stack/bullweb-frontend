@@ -46,7 +46,8 @@ import { useStockConfirm } from '../../../components/restaurant/shared/StockConf
 import { ModifierGroupsModal, hasModifierGroups } from '../../../components/restaurant/shared/ModifierGroupsModal'; // HOTFIX 291
 import { useActivePromotions } from '../../../hooks/useActivePromotions'; // HOTFIX 299
 import { priceCartWithPromotions, restaurantCartToPromoLines, type PromoLineResult } from '../../../utils/promoPricing'; // HOTFIX 299
-import { deliveryZonesService, fmtKm, MOTIVOS_CAMBIO_ENVIO, type CotizacionEnvio } from '../../../services/deliveryZonesService'; // LOTE 314
+import { deliveryZonesService, fmtKm, MOTIVOS_CAMBIO_ENVIO, textoCotizacion, type CotizacionEnvio, type PlacesConfig } from '../../../services/deliveryZonesService'; // LOTE 314; LOTE 333
+import { AddressAutocomplete } from '../../../components/delivery/AddressAutocomplete'; // LOTE 333
 
 interface NewDeliveryModalProps {
   products: Product[];
@@ -312,25 +313,46 @@ export const NewDeliveryModal = ({
   // Local con tramos: el servidor sugiere el costo con km; cambiarlo exige motivo (auditoria). FIJO: todo como antes.
   const [envioPos, setEnvioPos] = useState<CotizacionEnvio | null>(null);
   const [envioMotivo, setEnvioMotivo] = useState('');
+  // LOTE 333: costo fijo del local (modo FIJO), cotizacion inmediata al elegir o salir del campo, costo bloqueado con "Editar"
+  const [envioFijo, setEnvioFijo] = useState<number | null>(null);
+  const [envioEditando, setEnvioEditando] = useState(false);
+  const [envioYa, setEnvioYa] = useState(0);
+  const envioYaVisto = useRef(0);
+  const [placesCfg, setPlacesCfg] = useState<PlacesConfig | null>(null);
+  useEffect(() => { deliveryZonesService.places().then(setPlacesCfg).catch(() => setPlacesCfg(null)); }, []);
   useEffect(() => {
     const dir = [customerAddress, deliveryCity].filter(s => s?.trim()).join(', ');
     if (customerAddress.trim().length < 4) { setEnvioPos(null); return; }
     let vivo = true;
+    const inmediata = envioYa !== envioYaVisto.current;
+    envioYaVisto.current = envioYa;
     const t = setTimeout(() => {
       deliveryZonesService.cotizar(dir)
-        .then(r => { if (vivo) setEnvioPos(r?.modo === 'TRAMOS' ? r : null); })
+        .then(r => {
+          if (!vivo) return;
+          setEnvioPos(r?.modo === 'TRAMOS' ? r : null);
+          setEnvioFijo(r?.modo === 'FIJO' && r.costo != null ? Number(r.costo) : null);
+        })
         .catch(() => { if (vivo) setEnvioPos(null); });
-    }, 700);
+    }, inmediata ? 0 : 700);
     return () => { vivo = false; clearTimeout(t); };
-  }, [customerAddress, deliveryCity]);
+  }, [customerAddress, deliveryCity, envioYa]);
+  const cotizarYa = () => setEnvioYa(n => n + 1);
   const envioCotizado = !!envioPos && !envioPos.sin_cotizacion && !envioPos.fuera_de_zona && envioPos.costo_tramo != null;
   const envioSugerido: number | null = envioCotizado
     ? (envioPos!.envio_gratis_desde != null && (subtotal - promoDiscount) >= envioPos!.envio_gratis_desde ? 0 : Number(envioPos!.costo_tramo))
     : null;
   useEffect(() => {
-    if (envioSugerido != null) { setDeliveryCost(String(envioSugerido)); setEnvioMotivo(''); }
+    if (envioSugerido != null) { setDeliveryCost(String(envioSugerido)); setEnvioMotivo(''); setEnvioEditando(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [envioSugerido]);
+  useEffect(() => {
+    // FIJO: el costo fijo del local se prellena si el cajero no escribio uno (sigue editable, como antes)
+    if (envioFijo != null && !deliveryCost.trim()) setDeliveryCost(String(envioFijo));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [envioFijo]);
+  const envioBloqueado = envioCotizado && !envioEditando;
+  const envioTexto = textoCotizacion(envioPos, envioSugerido);
   const envioCambiado = envioSugerido != null && deliveryFeeValue !== envioSugerido;
   const envioMotivoFalta = envioCambiado && !envioMotivo;
 
@@ -621,11 +643,13 @@ export const NewDeliveryModal = ({
                 <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1">
                   <MapPin size={12} />Dirección *
                 </label>
-                <input
-                  type="text"
+                <AddressAutocomplete
                   placeholder="Calle, número, depto..."
                   value={customerAddress}
-                  onChange={(e) => { setCustomerAddress(e.target.value); setErrors([]); }}
+                  onChange={(v) => { setCustomerAddress(v); setErrors([]); }}
+                  onCommit={cotizarYa}
+                  config={placesCfg}
+                  testId="pos-envio-direccion"
                   className="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
                 />
               </div>
@@ -639,6 +663,7 @@ export const NewDeliveryModal = ({
                     placeholder="Ej: Santiago"
                     value={deliveryCity}
                     onChange={(e) => { setDeliveryCity(e.target.value); setErrors([]); }}
+                    onBlur={cotizarYa}
                     className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
                   />
                 </div>
@@ -653,23 +678,41 @@ export const NewDeliveryModal = ({
                       placeholder="2000"
                       value={deliveryCost}
                       onChange={(e) => setDeliveryCost(e.target.value)}
+                      readOnly={envioBloqueado}
+                      aria-readonly={envioBloqueado}
                       data-testid="pos-envio-costo"
-                      className="w-full pl-7 pr-3 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all"
+                      className={`w-full pl-7 ${envioBloqueado ? 'pr-20 bg-slate-100 cursor-not-allowed' : 'pr-3 bg-gray-50'} py-3 border-2 border-gray-200 rounded-xl text-sm font-bold text-gray-900 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all`}
                     />
+                    {/* LOTE 333: costo calculado bloqueado; "Editar" lo libera y el cambio exige motivo (auditado en el servidor) */}
+                    {envioBloqueado && (
+                      <button
+                        type="button"
+                        onClick={() => setEnvioEditando(true)}
+                        data-testid="pos-envio-editar"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 min-h-[44px] px-3 rounded-lg border-2 border-orange-500 text-orange-600 text-xs font-bold bg-white hover:bg-orange-50"
+                      >
+                        Editar
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
               {/* LOTE 314: sugerencia por tramos y motivo si el cajero cambia el costo */}
+              {envioFijo != null && !envioPos && (
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm" data-testid="pos-envio-fijo">
+                  <p className="text-slate-700">Envío fijo del local <span className="font-bold">${fmt(envioFijo)}</span></p>
+                </div>
+              )}
               {envioPos && (
                 <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm space-y-2" data-testid="pos-envio-sugerido">
                   {envioPos.fuera_de_zona ? (
-                    <p className="text-amber-700">Fuera de zona{envioPos.km != null ? ` (${fmtKm(envioPos.km)})` : ''}: ingresa el costo a mano.</p>
+                    <p className="text-amber-700 font-semibold">Fuera de zona{envioPos.km != null ? ` (${fmtKm(envioPos.km)})` : ''}: ingresa el costo a mano.</p>
                   ) : envioPos.sin_cotizacion ? (
                     <p className="text-slate-600">No se pudo ubicar la dirección: costo manual.</p>
                   ) : (
-                    <p className="text-slate-700">
-                      Sugerido <span className="font-bold">{envioSugerido === 0 ? 'Envío gratis' : `$${fmt(envioSugerido ?? 0)}`}</span>
-                      {' · '}{envioPos.estimado ? 'aprox. ' : ''}{fmtKm(envioPos.km)} · tramo {envioPos.tramo}
+                    <p className="text-slate-700" data-testid="pos-envio-texto">
+                      <span className="font-bold">{envioTexto}</span>
+                      {envioPos.comuna_agregada ? <span className="text-slate-500"> · comuna {envioPos.comuna_agregada}</span> : null}
                     </p>
                   )}
                   {envioCotizado && envioPos.pedido_minimo != null && (subtotal - promoDiscount) < envioPos.pedido_minimo && (

@@ -12,6 +12,15 @@ import { Table, Thead, Tr, Th, Td } from '@/components/ui/superadmin/table';
 import { Button } from '@/components/ui/superadmin/button';
 import { PageHeader } from '@/components/ui/superadmin/pageHeader';
 import { EmptyState } from '@/components/ui/superadmin/emptyState';
+import { planLabel } from '@/lib/planLabel'; // TAREA 332
+
+/** TAREA 332: precio del local siempre visible (ficha; si no tiene, el del plan), sin importar el estado. */
+function priceOf(t: any, planPrices?: Record<string, number>): number {
+  const subPrice = Number(t.subscriptions?.priceCLP ?? 0);
+  if (subPrice > 0) return subPrice;
+  const key = planLabel(t.subscriptions?.plan ?? t.plan) === 'BÁSICO' ? 'BASICO' : 'TODO';
+  return Number(planPrices?.[key] ?? 0) || MRR_BY_PLAN_FALLBACK[key];
+}
 
 // ─── Constantes ─────────────────────────────────────────────────────────────
 
@@ -96,19 +105,6 @@ function normalizeWaNumber(raw: string): string {
   return digits.startsWith('56') && digits.length > 9 ? digits : `56${digits}`;
 }
 
-// GATING FASE D1 (deuda #96): el precio de fallback sale de plan_config (tabla,
-// vía getPlans — cache de React Query) — el diccionario hardcodeado murió.
-function getMrr(t: any, planPrices?: Record<string, number>): number {
-  if (t.status === 'SUSPENDED' || t.status === 'CANCELLED' || t.status === 'TRIAL') return 0;
-  // Precio real de la suscripción del tenant (listTenants incluye subscriptions);
-  // fallback a plan_config si priceCLP viene 0/undefined (Hotfix #96 → Fase D1).
-  const subPrice = t.subscriptions?.priceCLP;
-  if (subPrice && subPrice > 0) return subPrice;
-  const fromTable = planPrices?.[t.plan?.toUpperCase() ?? ''];
-  if (fromTable && fromTable > 0) return fromTable;
-  return MRR_BY_PLAN_FALLBACK[t.plan?.toUpperCase() ?? ''] ?? 0;
-}
-
 function fmt$(n: number) { return '$' + n.toLocaleString('es-CL'); }
 
 // ─── Componente ─────────────────────────────────────────────────────────────
@@ -190,7 +186,7 @@ export default function SuperAdminTenants() {
     const result = tenants
       .filter(t => testFilter === 'all' ? true : testFilter === 'real' ? !t.isTest : !!t.isTest)
       .filter(t => !statusFilter || t.status === statusFilter)
-      .filter(t => !planFilter   || t.plan?.toUpperCase() === planFilter)
+      .filter(t => !planFilter   || planLabel(t.subscriptions?.plan ?? t.plan) === planFilter) // TAREA 332
       .filter(t => !q || t.name?.toLowerCase().includes(q.toLowerCase()) || t.slug?.toLowerCase().includes(q.toLowerCase()));
     result.sort((a, b) => {
       const diff = (SEMAFORO_ORDER[calcSemaforo(a)] ?? 3) - (SEMAFORO_ORDER[calcSemaforo(b)] ?? 3);
@@ -208,10 +204,10 @@ export default function SuperAdminTenants() {
 
   // Exportar CSV
   function exportCSV() {
-    const headers = ['Nombre','Slug','Plan','Estado','MRR','Usuarios','Registro','Último acceso','Trial vence','isTest'];
+    const headers = ['Nombre','Slug','Plan','Estado','Precio','Usuarios','Registro','Último acceso','Trial vence','isTest'];
     const rows = filtered.map(t => [
-      t.name ?? '', t.slug ?? '', t.plan?.toUpperCase() ?? '', t.status ?? '',
-      getMrr(t, planPrices), t._count?.users ?? 0,
+      t.name ?? '', t.slug ?? '', planLabel(t.subscriptions?.plan ?? t.plan), t.status ?? '',
+      priceOf(t, planPrices), t._count?.users ?? 0,
       t.created_at ? new Date(t.created_at).toLocaleDateString('es-CL') : '',
       fmtRelative(t.lastLogin).text,
       t.trialEndsAt ? new Date(t.trialEndsAt).toLocaleDateString('es-CL') : '',
@@ -296,7 +292,7 @@ export default function SuperAdminTenants() {
       <ConfirmModal
         isOpen={!!planChangeConfirm}
         title={`¿Cambiar plan de "${planChangeConfirm?.tenant?.name}"?`}
-        message={`Se cambiará el plan a ${planChangeConfirm?.plan?.toUpperCase()}.`}
+        message={`Se cambiará el plan a ${planLabel(planChangeConfirm?.plan)}.`}
         confirmLabel="Sí, cambiar"
         variant="warning"
         onConfirm={() => {
@@ -377,9 +373,8 @@ export default function SuperAdminTenants() {
           className="bg-gray-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-gray-200 focus:border-brand-500 focus:ring-1 focus:ring-brand-500 outline-none"
         >
           <option value="">Todos los planes</option>
-          <option value="STARTER">STARTER</option>
-          <option value="PRO">PRO</option>
-          <option value="ENTERPRISE">ENTERPRISE</option>
+          <option value="BÁSICO">BÁSICO</option>
+          <option value="FULL">FULL</option>
         </select>
 
         {/* Filtro Archivados */}
@@ -416,7 +411,7 @@ export default function SuperAdminTenants() {
                     <Th>Nombre</Th>
                     <Th>Slug</Th>
                     <Th>Plan</Th>
-                    <Th>MRR</Th>
+                    <Th>Precio/mes</Th>
                     <Th className="text-right">Órdenes 7d</Th>
                     <Th>Estado</Th>
                     <Th>Trial vence</Th>
@@ -431,7 +426,7 @@ export default function SuperAdminTenants() {
                     const semInfo = getSemaforoInfo(t);
                     const sem = semInfo.color;
                     const { text: lastAccess, isOld, isOnline } = fmtRelative(t.lastLogin);
-                    const mrr = getMrr(t, planPrices);
+                    const price = priceOf(t, planPrices); // TAREA 332
                     const phone = t.contact_phone ?? t.contactPhone;
                     const email = t.contact_email ?? t.contactEmail;
                     const waNumber = phone ? normalizeWaNumber(phone) : null;
@@ -463,12 +458,12 @@ export default function SuperAdminTenants() {
 
                         {/* Plan */}
                         <Td>
-                          <StatusBadge status={t.plan?.toUpperCase() ?? ''} kind="plan" />
+                          <StatusBadge status={String(t.subscriptions?.plan ?? t.plan ?? '').toUpperCase()} kind="plan" />
                         </Td>
 
-                        {/* MRR */}
+                        {/* TAREA 332: precio del local siempre visible */}
                         <Td className="text-xs">
-                          {mrr > 0 ? <span className="text-emerald-400 font-medium tabular-nums">{fmt$(mrr)}</span> : <span className="text-gray-600">—</span>}
+                          {price > 0 ? <span className="text-white font-bold tabular-nums">{fmt$(price)}</span> : <span className="text-gray-600">—</span>}
                         </Td>
 
                         {/* Órdenes 7d */}
@@ -573,9 +568,8 @@ export default function SuperAdminTenants() {
                               className="text-xs px-2 py-1 rounded-md bg-brand-500/10 hover:bg-brand-500/20 text-brand-400 border border-brand-500/20 cursor-pointer focus:outline-none transition-colors"
                             >
                               <option value="" disabled>Plan ▼</option>
-                              <option value="STARTER">Starter</option>
-                              <option value="PRO">Pro</option>
-                              <option value="ENTERPRISE">Enterprise</option>
+                              <option value="BASICO">BÁSICO</option>
+                              <option value="TODO">FULL</option>
                             </select>
 
                             {t.status === 'TRIAL' && (

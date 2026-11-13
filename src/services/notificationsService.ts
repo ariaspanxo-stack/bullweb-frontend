@@ -9,7 +9,8 @@ export type NotifEventType =
   | 'TABLE_REQUEST'
   | 'LOW_REVIEW' // HOTFIX 273 — reseña QR de 1 o 2 estrellas
   | 'COPILOT_SUMMARY' // LOTE COPILOTO 1
-  | 'COPILOT_ALERT'; // LOTE COPILOTO 1
+  | 'COPILOT_ALERT' // LOTE COPILOTO 1
+  | 'BILLING_NOTICE'; // TAREA 332
 
 export interface RecentNotification {
   id:        string;

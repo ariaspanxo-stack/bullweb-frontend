@@ -19,6 +19,8 @@ import { SuspendTenantConfirm } from '@/components/superadmin/SuspendTenantConfi
 import { Input, Select } from '@/components/ui/superadmin/input';
 import { OnlinePaymentsBlock } from './OnlinePaymentsBlock'; // LOTE 324
 import { PlanPriceBlock, TenantModulesBlock } from './PlanModulesBlocks'; // LOTE 325
+import { CobranzaBlock } from './CobranzaBlock'; // TAREA 332
+import { planLabel } from '@/lib/planLabel'; // TAREA 332
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -499,7 +501,11 @@ export default function SuperAdminTenantDetail() {
             </div>
             <p className="text-gray-500 text-sm font-mono mb-2">@{tenant.slug}</p>
             <div className="flex flex-wrap gap-2 items-center">
-              <StatusBadge status={tenant.plan?.toUpperCase() ?? ''} kind="plan" />
+              <StatusBadge status={String(sub?.plan ?? tenant.plan ?? '').toUpperCase()} kind="plan" />
+              {/* TAREA 332: precio del local siempre visible */}
+              <span className="text-xs px-3 py-1 rounded-full bg-gray-800 text-white font-bold" data-testid="sa-precio-local">
+                {sub?.priceCLP != null ? `${fmtCLP(Number(sub.priceCLP))}/mes` : 'Sin precio'}
+              </span>
               <StatusBadge status={tenant.status} kind="tenant" />
               {tenant.status === 'TRIAL' && tenant.trialEndsAt && (
                 <span className="text-xs px-3 py-1 rounded-full bg-gray-800 text-gray-400">
@@ -526,10 +532,11 @@ export default function SuperAdminTenantDetail() {
                 <Settings className="w-4 h-4" />Plan <ChevronDown className="w-3 h-3" />
               </Button>
               <div className="absolute right-0 top-full mt-1 bg-gray-800 border border-white/10 rounded-xl shadow-2xl min-w-[140px] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10">
-                {(planOptions.length > 0 ? planOptions : ['STARTER', 'PRO', 'ENTERPRISE', 'BULLWEB_COMPLETO_INICIO', 'BASICO', 'TODO']).map(p => (
+                {/* TAREA 332: solo BÁSICO y FULL (TODO); STARTER y los viejos se muestran como FULL */}
+                {['BASICO', 'TODO'].filter(p => planOptions.length === 0 || planOptions.includes(p)).map(p => (
                   <button key={p} onClick={() => handleChangePlan(p)}
-                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-white/5 transition-colors ${tenant.plan?.toUpperCase() === p ? 'text-brand-400 font-semibold' : 'text-gray-300'} first:rounded-t-xl last:rounded-b-xl`}>
-                    {p}
+                    className={`w-full text-left min-h-[44px] px-4 py-2.5 text-sm hover:bg-white/5 transition-colors ${planLabel(sub?.plan ?? tenant.plan) === planLabel(p) ? 'text-brand-400 font-semibold' : 'text-gray-300'} first:rounded-t-xl last:rounded-b-xl`}>
+                    {planLabel(p)}
                   </button>
                 ))}
               </div>
@@ -747,7 +754,7 @@ export default function SuperAdminTenantDetail() {
           {/* (a) Datos REALES de la suscripción (NO plan_config — gap de la auditoría) */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
             {[
-              { label: 'Plan (suscripción)', value: sub ? String(sub.plan).toUpperCase() : '—' },
+              { label: 'Plan (suscripción)', value: sub ? planLabel(sub.plan) : '—' }, // TAREA 332
               { label: 'Precio real',        value: sub?.priceCLP != null ? `${fmtCLP(sub.priceCLP)}/mes` : '—' },
               { label: 'Estado suscripción', value: sub?.status ?? '—' },
               { label: 'Período hasta',      value: fmtDate(sub?.currentPeriodEnd, { day: '2-digit', month: 'long', year: 'numeric' }) },
@@ -907,15 +914,15 @@ export default function SuperAdminTenantDetail() {
           {/* Plan */}
           <div>
             <label className="text-xs text-gray-500 mb-1 block">Plan activo</label>
+            {/* TAREA 332: BÁSICO | FULL (sin precios fijos viejos; el precio del local esta en Plan y precio) */}
             <select
-              value={tenant.plan?.toUpperCase()}
+              value={planLabel(sub?.plan ?? tenant.plan) === 'BÁSICO' ? 'BASICO' : 'TODO'}
               onChange={e => handleChangePlan(e.target.value)}
               disabled={changingPlan}
-              className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500"
+              className="w-full min-h-[44px] bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-teal-500"
             >
-              <option value="STARTER">STARTER · {fmtCLP(28_000)}/mes</option>
-              <option value="PRO">PRO · {fmtCLP(40_000)}/mes</option>
-              <option value="ENTERPRISE">ENTERPRISE · {fmtCLP(80_000)}/mes</option>
+              <option value="BASICO">BÁSICO</option>
+              <option value="TODO">FULL</option>
             </select>
           </div>
           {/* Estado */}
@@ -954,6 +961,8 @@ export default function SuperAdminTenantDetail() {
 
       {/* LOTE 325: plan y precio, y modulos por local (reemplaza los modulos premium viejos sin endpoint) */}
       {id && <PlanPriceBlock tenantId={id} planRaw={sub?.plan ?? tenant?.plan} priceCLP={sub?.priceCLP ?? null} />}
+      {/* TAREA 332: vencimiento, gracia y Dar dias con motivo */}
+      {id && <CobranzaBlock tenantId={id} />}
       {id && <TenantModulesBlock tenantId={id} />}
     </div>
   );

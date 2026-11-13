@@ -133,7 +133,7 @@ export default function SuperAdminActivity() {
               <div key={t.id} className="flex items-center justify-between bg-gray-900/60 rounded-lg px-3 py-2">
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="text-sm font-medium text-white truncate">{t.name}</span>
-                  <StatusBadge status={t.plan?.toUpperCase() ?? ''} kind="plan" />
+                  <StatusBadge status={String(t.subscriptions?.plan ?? t.plan ?? '').toUpperCase()} kind="plan" />
                 </div>
                 <a
                   href={`https://wa.me/?text=${WA_MSG(t.name)}`}
@@ -212,7 +212,7 @@ export default function SuperAdminActivity() {
                 <Tr key={t.id} highlight={noActivity7d}>
                   <Td className="font-medium text-white">{t.name}</Td>
                   <Td>
-                    <StatusBadge status={t.plan?.toUpperCase() ?? ''} kind="plan" />
+                    <StatusBadge status={String(t.subscriptions?.plan ?? t.plan ?? '').toUpperCase()} kind="plan" />
                   </Td>
                   <Td>
                     <StatusBadge status={t.status} kind="tenant" />

@@ -11,6 +11,8 @@ import { StatusBadge } from '@/components/ui/superadmin/statusBadge';
 import { SemaforoDot } from '@/components/ui/superadmin/semaforoDot';
 import { PageHeader } from '@/components/ui/superadmin/pageHeader';
 import { Button } from '@/components/ui/superadmin/button';
+import { CarteraTable } from './CarteraTable'; // TAREA 332
+import { planLabel } from '@/lib/planLabel'; // TAREA 332
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate();
@@ -119,12 +121,17 @@ export default function SuperAdminDashboard() {
         </div>
       )}
 
-      {/* Distribución por plan */}
+      {/* TAREA 332: Cartera — todos los locales con vencimiento, pagos y avisos */}
+      <CarteraTable />
+
+      {/* Distribución por plan (TAREA 332: agrupada con el mapa unico BÁSICO | FULL) */}
       {metrics?.planCounts && Object.keys(metrics.planCounts).length > 0 && (
         <div className="bg-gray-900/60 border border-white/5 rounded-xl p-5 mb-6">
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-4">Distribución por plan</h2>
           <div className="space-y-2">
-            {Object.entries(metrics.planCounts).map(([plan, count]) => (
+            {Object.entries(Object.entries(metrics.planCounts).reduce<Record<string, number>>((acc, [p, c]) => {
+              const k = planLabel(p); acc[k] = (acc[k] ?? 0) + Number(c); return acc;
+            }, {})).map(([plan, count]) => (
               <div key={plan} className="flex items-center gap-3">
                 <span className="text-xs text-gray-400 w-24 uppercase font-medium">{plan}</span>
                 <div className="flex-1 bg-gray-800 rounded-full h-2">
@@ -218,7 +225,7 @@ export default function SuperAdminDashboard() {
                   >
                     <td className="py-2.5 pr-4 font-medium text-white">{t.name}</td>
                     <td className="py-2.5 pr-4">
-                      <StatusBadge status={t.plan?.toUpperCase() ?? ''} kind="plan" />
+                      <StatusBadge status={String(t.subscriptions?.plan ?? t.plan ?? '').toUpperCase()} kind="plan" />
                     </td>
                     <td className="py-2.5 pr-4">
                       <StatusBadge status={t.status} kind="tenant" />
@@ -264,7 +271,7 @@ export default function SuperAdminDashboard() {
                     <td className="py-2.5 font-medium text-white">{t.name}</td>
                     <td className="py-2.5 text-gray-400 font-mono text-xs">{t.slug}</td>
                     <td className="py-2.5">
-                      <StatusBadge status={t.plan?.toUpperCase() ?? ''} kind="plan" />
+                      <StatusBadge status={String(t.subscriptions?.plan ?? t.plan ?? '').toUpperCase()} kind="plan" />
                     </td>
                     <td className="py-2.5">
                       <StatusBadge status={t.status} kind="tenant" />

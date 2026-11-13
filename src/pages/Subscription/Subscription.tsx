@@ -10,6 +10,7 @@ import { usePlan } from '@/hooks/usePlan';
 // HOTFIX #218 (P0-1): la ficha consume la query COMPARTIDA ['billing','status']
 // — sin loadStatus propio (antes: fetch al montar + polling 30s duplicado).
 import { useBillingStatus } from '@/hooks/useBillingStatus';
+import { isoToClDate, planLabel, ymdToCl } from '@/lib/planLabel'; // TAREA 332
 import { createPortal } from 'react-dom'; // HOTFIX 306
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
@@ -23,6 +24,10 @@ interface BillingStatus {
   // Hotfix #199-1: precio EFECTIVO plano (ficha con fallback 34.000) — el mismo
   // criterio del cobro (/flow/create). DISPLAY = COBRO.
   priceCLP?:    number;
+  // TAREA 332: gracia (undefined en backends previos)
+  inGrace?:     boolean;
+  dueAt?:       string | null;
+  payUntil?:    string | null;
   subscription: {
     flowSubscriptionId: string | null;
     plan:               string;
@@ -167,7 +172,7 @@ export default function Subscription() {
   // ── Helpers de display ──────────────────────────────────────────────────────
 
   // STARTER→TODO como el backend lo resuelve (normalizePlan de la Fase A).
-  const planDisplay = isBasico ? 'Básico' : 'Full';
+  const planDisplay = planLabel(billingStatus?.subscription?.plan ?? billingStatus?.plan ?? (isBasico ? 'BASICO' : 'TODO')); // TAREA 332: mapa unico
   const priceFmt    = billingStatus?.priceCLP
     ? `$${billingStatus.priceCLP.toLocaleString('es-CL')}`
     : null;
@@ -178,8 +183,9 @@ export default function Subscription() {
   const trialVencido =
     billingStatus?.status === 'TRIAL' && billingStatus?.trialActive === false;
   // El CTA de pago vive en PAST_DUE **y** en el limbo del trial vencido.
+  // TAREA 332: tambien dentro de la gracia (plan vencido, aun sin bloqueo), sea TRIAL o ACTIVE.
   const debePagar =
-    billingStatus?.status === 'PAST_DUE' || trialVencido;
+    billingStatus?.status === 'PAST_DUE' || trialVencido || billingStatus?.inGrace === true;
 
   // ─── Render ─────────────────────────────────────────────────────────────────
 
@@ -208,7 +214,7 @@ export default function Subscription() {
               <PartyPopper className="w-8 h-8 text-slate-700" />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              ¡Ya eres Full!
+              ¡Ya eres FULL!
             </h2>
             <p className="text-gray-600 max-w-md mx-auto mb-6">
               Tu upgrade está confirmado. Todos los módulos de BullWeb quedaron
@@ -315,6 +321,17 @@ export default function Subscription() {
               )}
             </div>
 
+            {/* TAREA 332: gracia — plan vencido, sigue operando hasta payUntil */}
+            {billingStatus.inGrace && billingStatus.dueAt && billingStatus.payUntil && (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-300 rounded-xl flex items-center gap-3" data-testid="sub-gracia">
+                <AlertTriangle className="text-yellow-600 flex-shrink-0" size={18} />
+                <p className="text-sm text-yellow-900">
+                  Tu plan venció el <strong>{isoToClDate(billingStatus.dueAt)}</strong>, tienes hasta el <strong>{ymdToCl(billingStatus.payUntil)}</strong> para pagar.
+                  Desde el día siguiente el sistema queda bloqueado.
+                </p>
+              </div>
+            )}
+
             {/* Trial: aviso preventivo (banner existente, conservado) */}
             {billingStatus.trialActive && (
               <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3">
@@ -338,13 +355,16 @@ export default function Subscription() {
                 <AlertTriangle className="text-red-500 flex-shrink-0" size={22} />
                 <div>
                   <p className="font-semibold text-red-800">
-                    {trialVencido
-                      ? 'Tu período de prueba ha terminado'
-                      : 'Tu suscripción está vencida'}
+                    {billingStatus?.inGrace
+                      ? `Tu plan ${planDisplay} venció` // TAREA 332
+                      : trialVencido
+                        ? 'Tu período de prueba ha terminado'
+                        : 'Tu suscripción está vencida'}
                   </p>
                   <p className="text-sm text-red-700">
-                    Paga ahora y recupera el acceso completo en segundos — tus datos
-                    siguen intactos.
+                    {billingStatus?.inGrace && billingStatus.payUntil
+                      ? `Paga antes del fin del ${ymdToCl(billingStatus.payUntil)} para no perder el acceso.`
+                      : 'Paga ahora y recupera el acceso completo en segundos — tus datos siguen intactos.'}
                   </p>
                 </div>
               </div>
@@ -378,9 +398,9 @@ export default function Subscription() {
                   <Rocket size={28} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Desbloquea el plan Full</h3>
+                  <h3 className="text-xl font-bold">Desbloquea el plan FULL</h3>
                   <p className="text-slate-500 text-sm">
-                    Tu Básico funciona. El Full lo multiplica — todo BullWeb por $34.000/mes.
+                    Tu BÁSICO funciona. El FULL lo multiplica — todo BullWeb por $34.000/mes.
                   </p>
                 </div>
               </div>
@@ -409,7 +429,7 @@ export default function Subscription() {
                 ) : (
                   <>
                     <Sparkles size={18} />
-                    Mejorar a Full $34.000/mes
+                    Mejorar a FULL $34.000/mes
                   </>
                 )}
               </button>
@@ -419,7 +439,7 @@ export default function Subscription() {
             </div>
             {awaitingUpgrade && (
               <p className="mt-3 text-slate-500 text-xs italic">
-                Verificando tu pago cada 30 segundos… al confirmarse, esta pantalla se convertirá en tu bienvenida al plan Full.
+                Verificando tu pago cada 30 segundos… al confirmarse, esta pantalla se convertirá en tu bienvenida al plan FULL.
               </p>
             )}
           </div>

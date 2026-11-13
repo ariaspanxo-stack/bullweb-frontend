@@ -12,6 +12,7 @@ import { useTableRequestAlerts } from '@/hooks/useTableRequestAlerts';
 import TableRequestAlert from '@/components/TableRequestAlert';
 import SuspendedOverlay from '@/components/SuspendedOverlay';
 import PaymentRequiredOverlay from '@/components/PaymentRequiredOverlay';
+import GraceBanner from '@/components/GraceBanner'; // TAREA 332
 import CrispChat from '@/components/CrispChat';
 import { toast } from 'react-hot-toast';
 import api from '@/services/api';
@@ -140,6 +141,8 @@ export default function Layout() {
 
       {/* Overlay de pago requerido (402 — suscripción/trial vencido) */}
       <PaymentRequiredOverlay />
+      {/* TAREA 332: aviso amarillo de gracia (plan vencido, aun sin bloqueo) */}
+      <GraceBanner />
       {/* Banner de impersonación SuperAdmin */}
       <ImpersonateBanner />
       {/* Banner global de mantenimiento */}

@@ -1,4 +1,6 @@
-type BadgeKind = 'tenant' | 'payment' | 'plan' | 'order' | 'audit';
+import { planLabel } from '@/lib/planLabel'; // TAREA 332
+
+type BadgeKind ='tenant' | 'payment' | 'plan' | 'order' | 'audit';
 
 type BadgeStyle = {
   label: string;
@@ -51,11 +53,16 @@ const MAPS: Record<BadgeKind, Record<string, BadgeStyle>> = {
     CREATE_PAYMENT:    { label: '💳 Pago registrado', pill: SEMANTIC.emerald },
     CREATE_TENANT:     { label: '🏪 Nuevo cliente',   pill: SEMANTIC.brand },
     UPDATE_PLAN_PRICE: { label: '💲 Cambio precio plan', pill: SEMANTIC.brand },
+    GIVE_DAYS:          { label: '📅 Dar días',        pill: SEMANTIC.sky },   // TAREA 332
+    GRACE_DAYS_CHANGED: { label: '⏳ Días de gracia',  pill: SEMANTIC.sky },   // TAREA 332
   },
 };
 
 export function StatusBadge({ status, kind }: { status: string; kind: BadgeKind }) {
-  const entry = MAPS[kind]?.[status] ?? { label: status, pill: SEMANTIC.gray };
+  // TAREA 332: el plan siempre se muestra con el mapa unico BÁSICO | FULL (STARTER y TODO -> FULL)
+  const entry = kind === 'plan'
+    ? { label: planLabel(status), pill: planLabel(status) === 'FULL' ? SEMANTIC.brand : SEMANTIC.sky }
+    : MAPS[kind]?.[status] ?? { label: status, pill: SEMANTIC.gray };
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset ${entry.pill}`}>
       {entry.label}

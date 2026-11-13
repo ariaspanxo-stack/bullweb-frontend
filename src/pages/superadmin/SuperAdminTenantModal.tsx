@@ -9,6 +9,7 @@ import { SuspendTenantConfirm } from '@/components/superadmin/SuspendTenantConfi
 import { StatusBadge } from '@/components/ui/superadmin/statusBadge';
 import { Button } from '@/components/ui/superadmin/button';
 import { Modal } from '@/components/ui/superadmin/modal';
+import { planLabel } from '@/lib/planLabel'; // TAREA 332
 
 interface Props {
   tenant: Tenant;
@@ -144,7 +145,7 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
           <div className="grid grid-cols-2 gap-3">
             <div>
               <p className="text-gray-500 text-xs mb-1">Plan</p>
-              <StatusBadge status={t.plan?.toUpperCase() ?? ''} kind="plan" />
+              <StatusBadge status={String(t.subscriptions?.plan ?? t.plan ?? '').toUpperCase()} kind="plan" />
             </div>
             <div>
               <p className="text-gray-500 text-xs mb-1">Estado</p>
@@ -214,20 +215,24 @@ export default function SuperAdminTenantModal({ tenant: initialTenant, onClose }
           <div>
             <p className="text-gray-500 text-xs mb-1.5 font-medium">Cambiar plan</p>
             <div className="flex gap-2">
-              {['STARTER', 'PRO', 'ENTERPRISE'].map(p => (
-                <button
-                  key={p}
-                  onClick={() => changePlanMut.mutate(p)}
-                  disabled={isPending || t.plan?.toUpperCase() === p}
-                  className={`flex-1 text-xs py-1.5 rounded-lg transition-colors disabled:opacity-50 ${
-                    t.plan?.toUpperCase() === p
-                      ? 'bg-brand-500 text-white'
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-white/10'
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
+              {/* TAREA 332: BÁSICO | FULL (STARTER y TODO se muestran FULL) */}
+              {['BASICO', 'TODO'].map(p => {
+                const actual = planLabel(t.subscriptions?.plan ?? t.plan) === planLabel(p);
+                return (
+                  <button
+                    key={p}
+                    onClick={() => changePlanMut.mutate(p)}
+                    disabled={isPending || actual}
+                    className={`flex-1 min-h-[44px] text-xs py-1.5 rounded-lg transition-colors disabled:opacity-50 ${
+                      actual
+                        ? 'bg-brand-500 text-white'
+                        : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-white/10'
+                    }`}
+                  >
+                    {planLabel(p)}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

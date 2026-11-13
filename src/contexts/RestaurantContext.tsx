@@ -407,14 +407,17 @@ export function RestaurantProvider({ children }: { children: ReactNode }) {
   // HOTFIX 262: la config DTE se consulta solo cuando el plan se conoce y lo incluye
   // (Básico no tiene boletas: sin llamada, botón de boleta oculto).
   useEffect(() => {
+    // LOTE 334-B: la boleta depende del modulo por local 'facturacion' (no del plan) y de que el local la tenga
+    // activa; /dte/settings lo puede leer quien emite boletas (antes /engine/config pedia billing.config y el
+    // cajero con billing.issue_boleta nunca veia el boton). Modulo apagado = 403 = sin boton.
     if (!planReady) return;
-    if (isBasico) { setDteIsConfigured(false); return; }
+    void isBasico;
     const perms = (user?.role?.permissions ?? []) as string[];
     const hasBillingPerm =
       perms.includes('ALL_PERMISSIONS') || perms.some(p => p.startsWith('billing.'));
     if (hasBillingPerm) {
-      api.get('/dte/engine/config')
-        .then(({ data }) => setDteIsConfigured(!!(data as any)?.active))
+      api.get('/dte/settings')
+        .then(({ data }) => { const s = ((data as any)?.data ?? data) as any; setDteIsConfigured(!!(s?.enabled && s?.active && s?.boletaPorDefecto !== 'nunca')); })
         .catch((err: any) => {
           if (err?.status === 403 || err?.status === 404) {
             setDteIsConfigured(false);

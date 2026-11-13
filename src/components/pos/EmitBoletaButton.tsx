@@ -10,10 +10,10 @@
  * visibilidad sobre fondo oscuro, evitando problemas de herencia de Tailwind.
  */
 import { createPortal } from 'react-dom';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { usePermission } from '@/hooks/usePermission';
 import api from '@/services/api';
-import { adminService } from '@/services/adminService'; // HOTFIX 302
 import toast from 'react-hot-toast';
 import { Link } from 'react-router-dom';
 import { Printer, CheckCircle, Loader2, X, Download } from 'lucide-react';
@@ -44,8 +44,30 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
   // espera hasta 25s antes de declarar timeout propio.
   const EMIT_TIMEOUT_MS = 25_000;
 
+  // LOTE 334-B: preferencia del local (siempre / preguntar / nunca) y switch del modulo 'facturacion'.
+  const settingsQ = useQuery({
+    queryKey: ['dte-settings'],
+    queryFn: () => api.get('/dte/settings').then((r: any) => (r?.data?.data ?? r?.data) as { enabled: boolean; active: boolean; boletaPorDefecto: 'siempre' | 'preguntar' | 'nunca' }),
+    staleTime: 60_000,
+    retry: false,
+    enabled: isConfigured && canIssueBoleta,
+  });
+  const modo = settingsQ.data?.enabled && settingsQ.data?.active ? settingsQ.data.boletaPorDefecto : null;
+  const autoDone = useRef<string | null>(null);
+  useEffect(() => {
+    // "Emitir siempre": la boleta sale sola al cobrar y se imprime con su timbre (una vez por venta).
+    if (modo !== 'siempre' || !orderId || autoDone.current === orderId) return;
+    autoDone.current = orderId;
+    setOpen(true);
+    emitir(true);
+  }, [modo, orderId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleEmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    await emitir(false);
+  };
+
+  const emitir = async (auto: boolean) => {
     setEmittedDoc(null);
     setPrinted(false);
     setEmitError(null);
@@ -65,9 +87,16 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
 
       // Éxito: la vista post-emisión (folio, Track ID, PDF, imprimir) REVIVE.
       const doc = (data as any)?.data ?? data;
+      if (doc?.status === 'PENDING') {
+        // LOTE 334-B: el SII no respondio en 15 s; el backend guarda el resultado cuando llegue.
+        setTimedOut(true);
+        setEmitError('El SII no respondio a tiempo. La boleta quedo pendiente: revisala en Boletas DTE en unos minutos.');
+        return;
+      }
       setEmittedDoc(doc);
       toast.success('Boleta emitida correctamente');
       onEmitted?.(doc);
+      if (auto) imprimir(doc, true);
     } catch (err: any) {
       if (err?.message === 'EMIT_TIMEOUT' || err?.code === 'ECONNABORTED') {
         // Timeout: la boleta quedó PENDING en backend con reintento disponible.
@@ -85,26 +114,20 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
   const handleRetry = () => {
     setEmitError(null);
     setTimedOut(false);
-    handleEmit({ preventDefault: () => {} } as React.FormEvent);
+    emitir(false);
   };
 
-  const handlePrint = async () => {
-    if (!orderId) return;
+  const handlePrint = () => imprimir(emittedDoc, printed === false && !reprinted.current);
+  const reprinted = useRef(false);
+
+  // LOTE 334-B: la boleta se imprime con su timbre PDF417 y leyendas SII (antes salia el ticket de venta sin timbre).
+  // El backend elige la primera impresora de caja activa con agente (mismo criterio del HOTFIX 302).
+  const imprimir = async (doc: any, primera: boolean) => {
+    if (!doc?.id) return;
     setPrinting(true);
     try {
-      // HOTFIX 302: impresora predeterminada = la primera de caja (receipt) activa, con agente y sin mantenimiento,
-      // en el orden de Impresiones (sort_order). Antes se enviaba printer_id undefined y el backend respondia 400.
-      const printers = await adminService.listPrinters();
-      const def = printers.find((p: any) => p.is_active && p.type === 'receipt' && p.agent_id && !p.maintenance_mode);
-      if (!def) {
-        toast.error('No hay impresora de caja activa con agente. Configurala en Impresoras.');
-        return;
-      }
-      await api.post('/admin/printers/reprint', {
-        order_id: orderId,
-        printer_id: def.id,
-        type: 'receipt',
-      });
+      await api.post(`/dte/documents/${doc.id}/print`, { primera });
+      reprinted.current = true;
       toast.success('Boleta enviada a impresora');
       setPrinted(true);
     } catch (err: any) {
@@ -144,6 +167,8 @@ export function EmitBoletaButton({ orderId, isConfigured, onEmitted }: EmitBolet
   };
 
   if (!canIssueBoleta) return null;
+  // LOTE 334-B: modulo apagado o "nunca emitir" = sin boton
+  if (isConfigured && (settingsQ.isError || modo === 'nunca' || (settingsQ.data && !modo))) return null;
 
   if (!isConfigured) {
     return (

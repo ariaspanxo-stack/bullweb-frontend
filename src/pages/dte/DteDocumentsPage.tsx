@@ -9,12 +9,24 @@ import {
   Ban,
   RefreshCw,
   AlertTriangle,
+  Printer,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import api from '@/services/api';
 import toast from 'react-hot-toast';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+// LOTE 334-B: estado del envio al SII en palabras
+function siiLabel(doc: any): string {
+  const s = String(doc?.siiStatus ?? '').toUpperCase();
+  if (['EPR', 'RLV', 'DOK'].includes(s)) return 'SII: aceptada';
+  if (s === 'RPR') return 'SII: aceptada con reparos';
+  if (['RCH', 'RPT', 'RFR', 'RCT', 'RSC', 'VOF'].includes(s)) return 'SII: rechazada';
+  if (doc?.siiTrackId) return s ? `SII: en proceso (${s})` : 'SII: enviada, esperando respuesta';
+  if (doc?.status === 'ERROR') return 'No enviada al SII';
+  return '';
+}
 
 function fmtCLP(n: number) {
   return '$' + (n ?? 0).toLocaleString('es-CL');
@@ -83,10 +95,10 @@ export function DteDocumentsPage() {
     setLoading(true);
     setLoadError(null);
     try {
-      // 1. Verificar configuración DTE
-      const cfgRes  = await api.get('/dte/engine/config');
+      // 1. Verificar configuración DTE (LOTE 334-B: /dte/settings lo puede leer quien tiene billing.view)
+      const cfgRes  = await api.get('/dte/settings');
       const cfgData = (cfgRes.data as any)?.data ?? (cfgRes.data as any);
-      const isConfigured = !!(cfgData?.configured);
+      const isConfigured = !!(cfgData?.enabled);
       const isActive     = !!(cfgData?.active);
       setConfigured(isConfigured);
       setActive(isActive);
@@ -127,6 +139,30 @@ export function DteDocumentsPage() {
   useEffect(() => { load(); }, [load]);
 
   // ── Acciones ──────────────────────────────────────────────────────────────
+
+  // LOTE 334-B: PDF desde el XML firmado y reimpresion termica con timbre PDF417
+  const handlePdf = async (doc: any) => {
+    try {
+      const res = await api.get(`/dte/documents/${doc.id}/pdf`, { responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data as BlobPart], { type: 'application/pdf' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${doc.dteType === 61 ? 'nota-credito' : 'boleta'}-${doc.folioNumber ?? doc.id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error('No se pudo generar el PDF');
+    }
+  };
+
+  const handlePrint = async (docId: string) => {
+    try {
+      await api.post(`/dte/documents/${docId}/print`, {});
+      toast.success('Boleta enviada a la impresora');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error ?? err?.response?.data?.message ?? 'No se pudo imprimir');
+    }
+  };
 
   const handleRetry = async (docId: string) => {
     try {
@@ -531,7 +567,7 @@ export function DteDocumentsPage() {
                   return (
                     <tr key={doc.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 font-mono text-gray-700 text-sm">
-                        {doc.folioNumber ? `#${doc.folioNumber}` : '—'}
+                        {doc.dteType === 61 ? 'NC ' : ''}{doc.folioNumber ? `#${doc.folioNumber}` : '—'}
                       </td>
                       <td className="px-4 py-3 text-gray-500 text-xs">
                         {fmtFecha(doc.issuedAt ?? doc.createdAt)}
@@ -552,25 +588,28 @@ export function DteDocumentsPage() {
                           <st.Icon className="w-3 h-3" />
                           {st.label}
                         </span>
+                        {/* LOTE 334-B: estado de envio al SII visible */}
+                        <p className="text-[11px] text-gray-500 mt-1" title={doc.errorMessage ?? ''}>{siiLabel(doc)}</p>
                       </td>
                       <td className="px-4 py-3">
-                        {doc.pdfUrl ? (
-                          <a
-                            href={doc.pdfUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-slate-500 hover:text-slate-700 transition-colors"
-                            title="Descargar PDF"
-                          >
+                        {(doc.status === 'ISSUED' || doc.status === 'CANCELLED') ? (
+                          <button onClick={() => handlePdf(doc)} title="Descargar PDF"
+                            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors">
                             <Download className="w-4 h-4" />
-                          </a>
+                          </button>
                         ) : (
                           <span className="text-gray-300">—</span>
                         )}
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          {doc.status === 'ISSUED' && (
+                          {(doc.status === 'ISSUED' || doc.status === 'CANCELLED') && doc.dteType !== 61 && (
+                            <button onClick={() => handlePrint(doc.id)} title="Reimprimir con timbre"
+                              className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center text-slate-500 hover:text-slate-700 transition-colors">
+                              <Printer className="w-4 h-4" />
+                            </button>
+                          )}
+                          {doc.status === 'ISSUED' && doc.dteType !== 61 && (
                             <button
                               onClick={() => setCancelModal({
                                 docId: doc.id,

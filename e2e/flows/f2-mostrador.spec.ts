@@ -86,15 +86,20 @@ test('F2 turno, Mostrador con modificador obligatorio, comanda, Preparar y Listo
   await test.step('comanda en cocina: Preparar y Listo por item', async () => {
     const cocina = await page.context().newPage();
     await goto(cocina, '/kds');
-    const tarjeta = cocina.locator('div').filter({ hasText: new RegExp(cliente, 'i') }).filter({ hasText: /Barros Luco/i }).filter({ has: cocina.getByRole('button', { name: /Urgente/ }) }).last();
+    // TAREA 335: ticket del KDS para TV; un toque en el item lo avanza (pendiente -> preparando -> listo)
+    const tarjeta = cocina.getByTestId('kds-ticket').filter({ hasText: new RegExp(cliente, 'i') });
     await expect(tarjeta).toBeVisible({ timeout: 30000 });
-    await expect(tarjeta.getByText(/Barros Luco/i)).toBeVisible();
+    await expect(tarjeta.getByText(/Barros Luco/i).first()).toBeVisible();
     await shot(cocina, F, '07_comanda_kds');
 
-    await tarjeta.getByRole('button', { name: 'Iniciar' }).first().click();
-    await expect(tarjeta.getByRole('button', { name: 'Listo' })).toHaveCount(1);
+    const item1 = tarjeta.getByTestId('kds-item').nth(0);
+    const item2 = tarjeta.getByTestId('kds-item').nth(1);
+    await item1.click();
+    await expect(item1).toHaveAttribute('data-status', 'PREPARING');
     await shot(cocina, F, '08_item1_preparando');
-    await tarjeta.getByRole('button', { name: 'Listo' }).click();
+    await expect(item1).toBeEnabled();
+    await item1.click();
+    await expect(item1).toHaveAttribute('data-status', 'READY');
     await expect.poll(async () => {
       const r = await api(cocina, 'GET', `/pos/orders/${order.id}`, token);
       return r.data.order_items.filter((i: any) => i.status === 'READY').length;
@@ -105,12 +110,17 @@ test('F2 turno, Mostrador con modificador obligatorio, comanda, Preparar y Listo
     const parcial = await api(cocina, 'GET', `/pos/orders/${order.id}`, token);
     expect(parcial.data.order_items.filter((i: any) => i.status === 'PENDING').length).toBe(1);
 
-    await tarjeta.getByRole('button', { name: 'Iniciar' }).first().click();
-    await tarjeta.getByRole('button', { name: 'Listo' }).click();
+    await expect(item2).toBeEnabled();
+    await item2.click();
+    await expect(item2).toHaveAttribute('data-status', 'PREPARING');
+    await expect(item2).toBeEnabled();
+    await item2.click();
     await expect.poll(async () => {
       const r = await api(cocina, 'GET', `/pos/orders/${order.id}`, token);
       return r.data.order_items.filter((i: any) => i.status === 'READY').length;
     }).toBe(2);
+    await cocina.getByTestId('kds-vista-listos').click(); // TAREA 335: el pedido terminado queda en Listos
+    await expect(cocina.getByTestId('kds-ticket').filter({ hasText: new RegExp(cliente, 'i') })).toBeVisible();
     await shot(cocina, F, '10_items_listos');
     await cocina.close();
   });

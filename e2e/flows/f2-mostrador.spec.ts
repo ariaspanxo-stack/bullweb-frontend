@@ -136,15 +136,16 @@ test('F2 turno, Mostrador con modificador obligatorio, comanda, Preparar y Listo
     const pagaCon = (Math.ceil(total / 1000) + 2) * 1000;
     const vuelto = pagaCon - total;
     const metodo = page.locator('select').filter({ has: page.locator('option', { hasText: /efectivo/i }) }).first();
-    const valor = await metodo.locator('option', { hasText: /efectivo/i }).first().getAttribute('value');
+    // TAREA 335: el proxy /api del montaje (vite preview) se atasca ~50 s a ratos (tambien en la base desplegada); margen de 90 s solo aqui
+    const valor = await metodo.locator('option', { hasText: /efectivo/i }).first().getAttribute('value', { timeout: 90_000 });
     await metodo.selectOption(valor as string);
     await page.getByPlaceholder(/^Venta:/).first().fill(String(pagaCon));
     await expect(page.getByText('Vuelto', { exact: true })).toBeVisible();
     await expect(page.getByText(`$${fmt(vuelto)}`, { exact: true }).first()).toBeVisible();
     await shot(page, F, '11_vuelto');
 
-    const pago = page.waitForResponse((r) => /\/api\/pos\/orders\/[^/]+\/pay|\/api\/payments|\/pay/.test(r.url()) && r.request().method() === 'POST');
-    await page.getByRole('button', { name: /^Cobrar \$/ }).click();
+    const pago = page.waitForResponse((r) => /\/api\/pos\/orders\/[^/]+\/pay|\/api\/payments|\/pay/.test(r.url()) && r.request().method() === 'POST', { timeout: 90_000 });
+    await page.getByRole('button', { name: /^Cobrar \$/ }).click({ timeout: 90_000 });
     expect((await pago).status()).toBeLessThan(300);
     await expect.poll(async () => (await api(page, 'GET', `/pos/orders/${order.id}`, token)).data.status).toBe('PAID');
     await shot(page, F, '12_pagado');

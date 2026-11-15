@@ -16,6 +16,7 @@ import ProductTabs from '../../components/products/ProductTabs';
 import type { TabType } from '../../components/products/ProductTabs';
 import { ImportMenuModal } from '../../components/products/ImportMenuModal'; // HOTFIX 268
 import { useIsSuperAdmin } from '../../hooks/useIsSuperAdmin';
+import { useAuthStore } from '../../store/authStore'; // LOTE 337
 import CategoriesTab from '../../components/products/CategoriesTab';
 import StationsTab from '../../components/products/StationsTab';
 import { PAGE_BG } from '../../components/products/productsUi';
@@ -100,7 +101,12 @@ const Products = () => {
   // F-7: queryClient para invalidar caché compartida con /inventory
   const queryClient = useQueryClient();
   const canManage = usePermission('products.manage');
-  const isSuperAdmin = useIsSuperAdmin(); // HOTFIX 268: Importar carta solo SuperAdmin
+  const isSuperAdmin = useIsSuperAdmin(); // HOTFIX 268
+  // LOTE 337: Importar carta tambien para el administrador del local (incluye "viendo como", que entra con ese usuario).
+  // Mismo criterio que RestaurantHeader; el servidor valida rol de sistema y fija el tenant del token.
+  const authUser = useAuthStore(s => s.user) as any;
+  const isLocalAdmin = ((authUser?.role?.permissions ?? []) as string[]).includes('ALL_PERMISSIONS') || authUser?.role?.name === 'Administrador';
+  const canImportMenu = isSuperAdmin || isLocalAdmin;
   const [isImportOpen, setIsImportOpen] = useState(false);
 
   // Cargar datos por tab (lazy)
@@ -834,7 +840,7 @@ const Products = () => {
             products={products}
             categories={categoriesWithCounts}
             onAddProduct={handleCreateProduct}
-            onImportMenu={isSuperAdmin ? () => setIsImportOpen(true) : undefined}
+            onImportMenu={canImportMenu ? () => setIsImportOpen(true) : undefined}
             onEditProduct={handleEditProduct}
             onDuplicateProduct={handleDuplicateProduct}
             onDeleteProduct={handleDeleteProduct}
@@ -889,8 +895,8 @@ const Products = () => {
         )}
       </div>
 
-      {/* HOTFIX 268: Importar carta (solo SuperAdmin) */}
-      {isSuperAdmin && (
+      {/* HOTFIX 268 / LOTE 337: Importar carta (SuperAdmin o admin del local) */}
+      {canImportMenu && (
         <ImportMenuModal
           isOpen={isImportOpen}
           onClose={() => setIsImportOpen(false)}

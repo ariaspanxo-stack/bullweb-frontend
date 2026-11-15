@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { Copy, RefreshCw, ExternalLink } from 'lucide-react';
 import api from '@/services/api';
+import { usePlan } from '@/hooks/usePlan'; // LOTE 334-B
 import {
   integrationsService,
   type PlatformId,
@@ -107,9 +108,12 @@ export default function AppsPage() {
     refetchInterval: 60_000,
   });
 
-  // Configuración DTE
+  // Configuración DTE (LOTE 334-B: solo con el modulo 'facturacion' encendido para el local)
+  const { hasModule } = usePlan();
+  const dteVisible = hasModule('facturacion');
   const { data: dteConfig } = useQuery({
     queryKey: ['dte-config'],
+    enabled: dteVisible,
     queryFn: () => api.get('/dte/engine/config').then((r) => r.data.data as { configured: boolean; active: boolean } | null),
   });
   const dteActive = dteConfig?.active ?? false;
@@ -380,7 +384,8 @@ export default function AppsPage() {
         </div>
       )}
 
-      {/* DTE / LibreDTE */}
+      {/* DTE — boleta electronica SII */}
+      {dteVisible && (<>
       <div className="mt-8 mb-4">
         <h2 className="text-sm font-semibold text-gray-400 tracking-wider">Otras integraciones</h2>
       </div>
@@ -393,7 +398,7 @@ export default function AppsPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-gray-800">DTE / LibreDTE</h3>
+                <h3 className="font-semibold text-gray-800">Boleta electrónica SII</h3>
                 <span className="bg-slate-100 text-slate-700 text-xs px-2 py-0.5 rounded-full font-medium">Facturación DTE</span>
               </div>
               <p className="text-sm text-gray-500 mt-0.5">Boletas y facturas electrónicas · SII Chile</p>
@@ -430,13 +435,14 @@ export default function AppsPage() {
         {!dteActive && (
           <div className="border-t border-gray-100 bg-gray-50/50 px-5 py-3">
             <div className="flex flex-wrap gap-6 text-xs text-gray-500">
-              {['✅ Boletas tipo 39', '✅ Facturas tipo 33', '✅ Notas de crédito', '✅ Sincronización SII'].map((f) => (
+              {['✅ Boletas tipo 39', '✅ Notas de crédito', '✅ Timbre en la impresora', '✅ Estado SII'].map((f) => (
                 <span key={f}>{f}</span>
               ))}
             </div>
           </div>
         )}
       </div>
+      </>)}
 
       {/* Modal configuración */}
       {configuringPlatform && (

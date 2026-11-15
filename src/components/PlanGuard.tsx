@@ -66,6 +66,8 @@ export function PlanGuard({ children, feature, module }: PlanGuardProps) {
   const forced = module ? moduleState(module)?.state : undefined;
   if (forced === 'off') return <ModuleDisabled />;
   if (forced === 'on') return <>{children}</>;
+  // LOTE 334-B: boleta electronica sin fila = apagada para todo plan
+  if (module === 'facturacion' && moduleState(module)?.enabled === false) return <ModuleDisabled />;
 
   if (!isBasico || (feature && hasFeature(feature))) {
     return <>{children}</>;

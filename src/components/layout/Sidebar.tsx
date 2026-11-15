@@ -168,8 +168,8 @@ const menuSections: MenuSection[] = [
     items: [
       { name: 'Reportes',       icon: BarChart3,    path: '/reports',        permission: 'reports.view'   },
       { name: 'Copiloto',       icon: Sparkles,     path: '/copiloto',       permission: 'settings.manage', badge: 'Nuevo', planRequired: 'TODO', moduleKey: 'copiloto' }, // LOTE COPILOTO 1; LOTE 330: solo Full
-      { name: 'Boletas DTE',    icon: ReceiptIcon,  path: '/dte/documentos', permission: 'billing.view', planRequired: 'TODO' },
-      { name: 'Facturación SII', icon: FileText,    path: '/apps/dte',       permission: 'billing.config', planRequired: 'TODO' },
+      { name: 'Boletas DTE',    icon: ReceiptIcon,  path: '/dte/documentos', permission: 'billing.view', planRequired: 'TODO', moduleKey: 'facturacion' }, // LOTE 334-B
+      { name: 'Facturación',    icon: FileText,     path: '/apps/dte',       permission: 'billing.config', planRequired: 'TODO', moduleKey: 'facturacion' }, // LOTE 334-B: Config > Facturacion
     ]
   },
   {
@@ -328,7 +328,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   /** true si el plan del usuario permite el item (BASICO no ve planRequired:'TODO') */
   const planAllows = (item: { planRequired?: 'TODO'; featureRequired?: string; moduleKey?: string }): boolean => {
     // LOTE 325: con fila del modulo manda la fila (encendido = visible aunque el plan no lo incluya).
-    if (item.moduleKey) { const st = moduleState(item.moduleKey)?.state; if (st === 'on') return true; if (st === 'off') return false; }
+    if (item.moduleKey) { const ms = moduleState(item.moduleKey); const st = ms?.state; if (st === 'on') return true; if (st === 'off') return false; if (ms && ms.enabled === false && item.moduleKey === 'facturacion') return false; } // LOTE 334-B: facturacion sin fila = apagada
     // HOTFIX #230: item con gate por feature (plan_config) — visible si el plan
     // incluye la feature (TODO/grandfathered siempre true por el fallback del hook).
     if (item.featureRequired) return hasFeature(item.featureRequired);

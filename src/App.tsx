@@ -90,6 +90,7 @@ const KioskPage       = lazy(() => import('@/pages/KioskPage'));
 const CartaDigital    = lazy(() => import('@/pages/CartaDigital'));
 const CartaPedido     = lazy(() => import('@/pages/CartaPedido')); // HOTFIX 272b
 const ReceiptPage     = lazy(() => import('@/pages/ReceiptPage'));
+const BoletaPublicaPage = lazy(() => import('@/pages/BoletaPublicaPage')); // LOTE 334-B
 const CartaQRPage     = lazy(() => import('@/pages/CartaQRPage'));
 const MesaQR          = lazy(() => import('@/pages/MesaQR'));
 
@@ -193,7 +194,7 @@ function AppContent() {
   // Rutas públicas que deben renderizar inmediatamente, sin esperar la verificación de auth.
   // IMPORTANTE: '/' se valida con igualdad exacta, porque startsWith('/') sería true para TODAS las rutas.
   const isPublicRoute =
-    ['/register', '/login', '/forgot-password', '/reset-password', '/pago-resultado'].some((p) =>
+    ['/register', '/login', '/forgot-password', '/reset-password', '/pago-resultado', '/boleta/'].some((p) =>
       location.pathname.startsWith(p),
     ) || location.pathname === '/';
 
@@ -226,6 +227,7 @@ function AppContent() {
             <Route path="/carta/:slug/pedido/:orderId" element={<CartaPedido />} /> {/* HOTFIX 272b */}
             <Route path="/mesa/:slug"  element={<MesaQR />} />
             <Route path="/r/:orderId"  element={<ReceiptPage />} />
+            <Route path="/boleta/:folio" element={<BoletaPublicaPage />} /> {/* LOTE 334-B: consulta publica SII */}
             <Route path="/tv/:token"  element={<TvBoard />} /> {/* LOTE 324 */}
 
             {/* App Mesero — login PWA (sin auth) */}
@@ -300,9 +302,9 @@ function AppContent() {
               <Route path="profile"  element={<Profile />} />
               <Route path="profile/password" element={<ChangePasswordPage />} />{/* HOTFIX 307 */}
               <Route path="profile/restaurant" element={<PermissionGuard permission="settings.manage"><RestaurantProfilePage /></PermissionGuard>} />{/* HOTFIX 306 (B7-02) */}
-              <Route path="apps/dte" element={<PermissionGuard permission="billing.config"><PlanGuard><DteConfigPage /></PlanGuard></PermissionGuard>} />
+              <Route path="apps/dte" element={<PermissionGuard permission="billing.config"><PlanGuard module="facturacion"><DteConfigPage /></PlanGuard></PermissionGuard>} />
               <Route path="apps" element={<PermissionGuard permission="apps.view"><AppsPage /></PermissionGuard>} />
-              <Route path="dte/documentos" element={<PermissionGuard permission="billing.view"><PlanGuard><DteDocumentsPage /></PlanGuard></PermissionGuard>} />
+              <Route path="dte/documentos" element={<PermissionGuard permission="billing.view"><PlanGuard module="facturacion"><DteDocumentsPage /></PlanGuard></PermissionGuard>} />
               <Route path="coupons" element={<PermissionGuard permission="coupons.view"><PlanGuard feature="coupons"><CouponsPage /></PlanGuard></PermissionGuard>} /> {/* HOTFIX 278: Cupones en BASICO */}
               <Route path="promotions" element={<PermissionGuard permission="products.view"><PromotionsPage /></PermissionGuard>} />
 

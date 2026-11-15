@@ -1,710 +1,435 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// TAREA 335: KDS visual para TV. Cuadricula de tickets tipo comanda con semaforo por tiempo (umbrales por local en Config > KDS),
+// un toque por item (pendiente -> preparando -> listo), "Todo listo", pestanas En cocina / Listos (10 min) / Antiguos (cron 03:00),
+// filtro "Solo retrasados". Rendimiento: un solo pedido de datos (todas las estaciones, filtro en el cliente con identidad estable),
+// tickets memo y reloj compartido: una actualizacion por socket solo repinta el ticket que cambio.
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback, memo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import io, { Socket } from 'socket.io-client';
 import { staffSocketAuth } from '@/lib/socketAuth';
-import {
-  Maximize,
-  Volume2,
-  VolumeX,
-  Clock,
-  AlertCircle,
-  AlertTriangle,
-  StickyNote,
-  CheckCircle,
-  Play,
-} from 'lucide-react';
+import { Maximize, Minimize, Volume2, VolumeX, ChefHat, Flame } from 'lucide-react';
 import api from '@/services/api';
 import { useAuthStore } from '@/store/authStore';
 import { useSuspendedGuard } from '@/hooks/useSuspendedGuard';
+import { useNow } from './kdsClock';
+import { KdsTicket, type TicketMode } from './KdsTicket';
+import {
+  type Thresholds, DEFAULT_THRESHOLDS, READY_WINDOW_MS, forStation, fullyReady, lastReadyAt, sortOrders,
+  levelFor, createdMs, isManualUrgent, itemsOf, nextStatus,
+} from './kdsModel';
 
-type Station = string;
+const KDS_CSS = `
+.kds-root { font-size: 18px; background: #111418; }
+.kds-root:fullscreen { overflow-y: auto; width: 100vw; height: 100vh; }
+@media (min-width: 1600px) { .kds-root { font-size: 24px; } }
+.kds-grid { display: grid; gap: 0.75em; grid-template-columns: repeat(auto-fill, minmax(min(15em, 100%), 1fr)); align-items: start; }
+@keyframes kds-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } 50% { box-shadow: 0 0 0 0.35em rgba(239, 68, 68, 0.45); } }
+.kds-pulse { animation: kds-pulse 2s ease-in-out infinite; }
+@keyframes kds-leave { to { opacity: 0; transform: translateY(-0.6em) scale(0.96); } }
+.kds-leaving { animation: kds-leave 300ms ease-in forwards; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .kds-pulse { animation: none; } .kds-leaving { animation-duration: 1ms; } }
+`;
 
-// Paleta de colores cíclica para las estaciones dinámicas del tenant
-const STATION_COLORS = [
-  'from-orange-600 to-orange-500',
-  'from-blue-600 to-blue-500',
-  'from-purple-600 to-purple-500',
-  'from-pink-600 to-pink-500',
-  'from-emerald-600 to-emerald-500',
-  'from-cyan-600 to-cyan-500',
-  'from-amber-600 to-amber-500',
-  'from-indigo-600 to-indigo-500',
-];
+const AUDIO_SRC = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBWF3l7';
 
-// ── Urgencia ────────────────────────────────────────────────────────────────────────
-type UrgencyLevel = 'normal' | 'warning' | 'urgent' | 'critical';
+const unwrap = (res: any) => res?.data?.data ?? res?.data ?? [];
 
-function getUrgency(
-  createdAt: string,
-  priority = 0,
-  _urgent = false,
-): { level: UrgencyLevel; minutes: number; isManual: boolean } {
-  const minutes = Math.min(180, Math.floor(
-    (Date.now() - new Date(createdAt).getTime()) / 60_000
-  ));
-  const isManual = priority === 1 || _urgent;
-  if (isManual || minutes >= 25) return { level: 'critical', minutes, isManual };
-  if (minutes >= 15)             return { level: 'urgent',   minutes, isManual };
-  if (minutes >= 10)             return { level: 'warning',  minutes, isManual };
-  return                                { level: 'normal',   minutes, isManual };
+function playReadyChime() {
+  try {
+    const ctx = new AudioContext();
+    [0, 0.15].forEach((delay) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 1047;
+      gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.12);
+      osc.start(ctx.currentTime + delay);
+      osc.stop(ctx.currentTime + delay + 0.12);
+    });
+    setTimeout(() => ctx.close().catch(() => {}), 500); // FIX 14
+  } catch { /* AudioContext bloqueado */ }
 }
 
-const urgencyStyles: Record<UrgencyLevel, {
-  border: string;
-  header: string;
-  badge: { text: string; label: string } | null;
-}> = {
-  normal:   { border: 'border-zinc-700',                            header: 'bg-zinc-800',      badge: null },
-  warning:  { border: 'border-yellow-500/60',                       header: 'bg-yellow-900/30', badge: { text: 'bg-yellow-500/20 text-yellow-300',          label: '⏱ 10+ min'   } },
-  urgent:   { border: 'border-orange-500/80',                       header: 'bg-orange-900/40', badge: { text: 'bg-orange-500/20 text-orange-300',          label: '⚠️ ATRASADO' } },
-  critical: { border: 'border-red-500 shadow-red-500/20 shadow-lg', header: 'bg-red-900/50',    badge: { text: 'bg-red-500/30 text-red-300 animate-pulse',  label: '🔴 URGENTE'  } },
-};
+const Clock = memo(function Clock() {
+  const hhmm = useNow((n) => new Date(Math.floor(n / 60_000) * 60_000).toLocaleTimeString('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', minute: '2-digit' }));
+  return <span className="font-black text-white tabular-nums text-[1.4em]" data-testid="kds-reloj">{hhmm}</span>;
+});
 
-// ── Tiempos máximos por estación en minutos (FIX 10) ─────────────────────────────────────
-const MAX_MINUTES_BY_STATION: Record<string, number> = {
-  hot: 15, cold: 20, bar: 10, desserts: 12, all: 20, unassigned: 20,
-};
-
-// ── Barra de tiempo por ítem ─────────────────────────────────────────────────────
-function ItemTiming({ item, now, station = 'all' }: { item: any; now: number; station?: string }) {
-  if (item.status !== 'PREPARING' || !item.preparingAt) return null;
-  const maxMs      = (MAX_MINUTES_BY_STATION[station] ?? 20) * 60_000;
-  const elapsedMs  = now - new Date(item.preparingAt).getTime();
-  const elapsedMin = Math.floor(elapsedMs / 60_000);
-  const pct        = Math.min(100, (elapsedMs / maxMs) * 100);
-  const barColor   =
-    pct >= 90 ? 'bg-red-500'    :
-    pct >= 60 ? 'bg-orange-400' :
-    pct >= 30 ? 'bg-yellow-400' :
-               'bg-green-400';
-  return (
-    <div className="mt-1.5 space-y-0.5">
-      <div className="h-1 bg-zinc-700 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-1000 ${barColor}`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <p className="text-xs text-zinc-500 text-right tabular-nums">
-        {elapsedMin === 0 ? 'recién iniciado' : `${elapsedMin} min preparando`}
-      </p>
-    </div>
-  );
-}
+const stamp = (to: string) => (to === 'PREPARING' ? { preparingAt: new Date().toISOString() } : to === 'READY' ? { readyAt: new Date().toISOString() } : { preparingAt: null, readyAt: null });
 
 export default function KDS() {
   const queryClient = useQueryClient();
-  const [selectedStation, setSelectedStation] = useState<Station>('all');
+  const [selectedStation, setSelectedStation] = useState<string>('all');
+  const [view, setView] = useState<TicketMode>('cocina');
+  const [onlyLate, setOnlyLate] = useState(false);
   const [orders, setOrders] = useState<any[]>([]);
   const [cancelNotice, setCancelNotice] = useState<string | null>(null); // LOTE 323 (B4-16)
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(
-    () => localStorage.getItem('kds_sound') !== 'false'
-  );
-  const [now, setNow] = useState(Date.now());
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(() => {
+    try { return localStorage.getItem('kds_sound') !== 'false'; } catch { return true; }
+  });
   const [socketConnected, setSocketConnected] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
-  const [confirmedCount, setConfirmedCount] = useState(0);
-
-  // LOCK UI anti-doble-click (Quick Win UX): bloquea el botón del item que se
-  // está actualizando hasta que la API responde. Evita peticiones duplicadas y
-  // reduce la ventana de race condition entre dos cocineros sobre el mismo item.
-  const [updatingItemId, setUpdatingItemId] = useState<string | null>(null);
+  // Pedidos con una escritura en curso (anti doble toque por ticket)
+  const [busy, setBusy] = useState<Set<string>>(() => new Set());
 
   const socketRef = useRef<Socket | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null); // TAREA 335: pantalla completa solo del KDS (modo TV, sin menu lateral)
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  // Refs para evitar closures obsoletas dentro del socket (montado una sola vez)
-  const selectedStationRef = useRef<Station>(selectedStation);
-  const soundEnabledRef = useRef<boolean>(soundEnabled);
-  const user = useAuthStore(s => s.user);
+  const selectedStationRef = useRef(selectedStation);
+  const soundEnabledRef = useRef(soundEnabled);
+  const user = useAuthStore((s) => s.user);
   const userRef = useRef(user);
   useEffect(() => { userRef.current = user; }, [user]);
+  useEffect(() => { selectedStationRef.current = selectedStation; }, [selectedStation]);
+  useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
   const isSuspended = useSuspendedGuard();
 
-  // Estaciones dinámicas del tenant — consultadas al montar (refactor estaciones dinámicas)
-  // FIX 64: usa el endpoint /kitchen/stations para garantizar que los UUIDs
-  // de las tabs coincidan exactamente con la DB.
+  // Estaciones del tenant (FIX 64: UUID iguales a la BD)
   const { data: tenantStations = [] } = useQuery<any[]>({
     queryKey: ['kds-stations'],
-    queryFn: async () => {
-      const res = await api.get('/kitchen/stations');
-      return res.data?.data ?? res.data ?? [];
-    },
+    queryFn: async () => unwrap(await api.get('/kitchen/stations')),
     staleTime: 5 * 60 * 1000,
     refetchInterval: isSuspended ? false : 60_000,
   });
-
-  // Tabs: "Todas" + estaciones reales del tenant (id/name) + "Sin asignar"
   const stations = useMemo(() => ([
-    { id: 'all',        name: 'Todas',       icon: null, color: 'from-zinc-600 to-zinc-500', emoji: '🍽️' },
-    ...tenantStations
-      .filter((s: any) => s && s.id && s.active !== false)
-      .map((s: any, i: number) => ({
-        id: String(s.id),
-        name: s.name || 'Estación',
-        icon: null,
-        color: STATION_COLORS[i % STATION_COLORS.length],
-        emoji: null,
-      })),
-    { id: 'unassigned', name: 'Sin asignar', icon: null, color: 'from-gray-500 to-gray-400', emoji: '❓' },
+    { id: 'all', name: 'Todas' },
+    ...tenantStations.filter((s: any) => s && s.id && s.active !== false).map((s: any) => ({ id: String(s.id), name: s.name || 'Estación' })),
+    { id: 'unassigned', name: 'Sin asignar' },
   ]), [tenantStations]);
-
-  // Si la estación seleccionada fue eliminada del tenant, volver a "Todas"
   useEffect(() => {
-    if (!stations.some(s => s.id === selectedStation)) {
-      setSelectedStation('all');
-    }
+    if (!stations.some((s) => s.id === selectedStation)) setSelectedStation('all');
   }, [stations, selectedStation]);
 
-  // Query inicial de órdenes
-  const { data: initialOrders = [], isFetching, isFetched } = useQuery<any[]>({
-    queryKey: ['kds', selectedStation],
-    queryFn: async () => {
-      if (selectedStation === 'all') {
-        const response = await api.get('/kds/orders');
-        return response.data;
-      }
-      if (selectedStation === 'unassigned') {
-        // FIX 63: el backend se encarga del filtrado (products.stationId y
-        // order_items.stationId nulos/vacíos). Sin filtro client-side roto.
-        const response = await api.get('/kds/station/unassigned');
-        return response.data;
-      }
-      const response = await api.get(`/kds/station/${selectedStation}`);
-      return response.data;
-    },
-    refetchInterval: isSuspended ? false : 10000, // Refetch cada 10 segundos como fallback (FIX 7)
+  // Umbrales del semaforo del local (Config > KDS)
+  const { data: thresholdsRaw } = useQuery<Thresholds>({
+    queryKey: ['kds-settings'],
+    queryFn: async () => unwrap(await api.get('/kds/settings')),
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: isSuspended ? false : 5 * 60_000,
+  });
+  const thresholds = useMemo<Thresholds>(() => {
+    const a = Number(thresholdsRaw?.amberMin), r = Number(thresholdsRaw?.redMin);
+    return Number.isFinite(a) && Number.isFinite(r) && a >= 1 && r > a ? { amberMin: a, redMin: r } : DEFAULT_THRESHOLDS;
+  }, [thresholdsRaw?.amberMin, thresholdsRaw?.redMin]);
+
+  // Pedidos del dia: un solo pedido para todas las estaciones (contadores por pestana); el filtro es el mismo del backend (FIX 63)
+  const { data: initialOrders = [], isFetched } = useQuery<any[]>({
+    queryKey: ['kds', 'all'],
+    queryFn: async () => unwrap(await api.get('/kds/orders')),
+    refetchInterval: isSuspended ? false : 10_000, // FIX 7: respaldo del socket
+  });
+  // Pedidos de dias anteriores archivados a las 03:00 (pestana Antiguos)
+  const { data: archived = [] } = useQuery<any[]>({
+    queryKey: ['kds', 'archived'],
+    queryFn: async () => unwrap(await api.get('/kds/archived')),
+    refetchInterval: isSuspended ? false : 60_000,
   });
 
-  // HOTFIX 307 (B4-08): un pedido nuevo suena tambien cuando llega por recarga (order.new no llega a la pantalla de
-  // todas las estaciones y orders.changed solo avisa que algo cambio). La primera carga de cada estacion no suena.
-  const seenOrdersRef = useRef<{ station: string; ids: Set<string> } | null>(null);
+  // HOTFIX 307 (B4-08): un pedido nuevo suena tambien cuando llega por recarga; la primera carga no suena.
+  const seenOrdersRef = useRef<Set<string> | null>(null);
   useEffect(() => {
     setOrders(initialOrders);
     if (!isFetched) return;
-    const station = String(selectedStation);
-    const seen = seenOrdersRef.current?.station === station ? seenOrdersRef.current : null;
     const ids = initialOrders.map((o: any) => o.id);
-    if (seen && ids.some((id: string) => !seen.ids.has(id)) && soundEnabledRef.current && audioRef.current) {
+    const seen = seenOrdersRef.current;
+    if (seen && ids.some((id: string) => !seen.has(id)) && soundEnabledRef.current && audioRef.current) {
       audioRef.current.play().catch(() => {});
     }
-    seenOrdersRef.current = { station, ids: new Set([...(seen?.ids ?? []), ...ids]) };
+    seenOrdersRef.current = new Set([...(seen ?? []), ...ids]);
   }, [initialOrders, isFetched]);
 
-  // FIX 6: solo actualizar el badge cuando el fetch completa (evitar número stale)
+  // WebSocket: se crea UNA vez; el cambio de estacion solo cambia de room
   useEffect(() => {
-    if (!isFetching) {
-      setConfirmedCount(orders.length);
-    }
-  }, [orders, isFetching]);
-
-  // Stats globales KDS — FIX 15
-  const { data: kdsStats } = useQuery({
-    queryKey: ['kds-stats'],
-    queryFn: async () => {
-      const res = await api.get('/kds/stats');
-      return res.data?.data ?? res.data;
-    },
-    refetchInterval: isSuspended ? false : 10000,
-  });
-
-  // Sincronizar refs con el estado actual
-  useEffect(() => { selectedStationRef.current = selectedStation; }, [selectedStation]);
-  useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
-
-  // Actualizar temporizadores cada minuto (barras de progreso ItemTiming)
-  useEffect(() => {
-    if (isSuspended) return;
-    const interval = setInterval(() => setNow(Date.now()), 10_000); // FIX 13: 10s
-    return () => clearInterval(interval);
-  }, [isSuspended]);
-
-  // WebSocket — se crea UNA sola vez al montar. Nunca se destruye por cambio de estación.
-  useEffect(() => {
-    const SOCKET_URL = import.meta.env.VITE_WS_URL
-      || import.meta.env.VITE_API_URL?.replace('/api', '')
-      || 'http://localhost:4200';
-
-    const socket = io(SOCKET_URL, {
-      transports: ['polling', 'websocket'], // polling primero → más estable detrás de Nginx
-      path: '/socket.io',
-      auth: staffSocketAuth, // TAREA 281: handshake autenticado
-    });
+    const SOCKET_URL = import.meta.env.VITE_WS_URL || import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:4200';
+    const socket = io(SOCKET_URL, { transports: ['polling', 'websocket'], path: '/socket.io', auth: staffSocketAuth }); // TAREA 281
     socketRef.current = socket;
+    const invalidate = () => queryClient.invalidateQueries({ queryKey: ['kds'] });
 
-    // Al (re)conectar, unirse a la estación actual y al room global KDS
     socket.on('connect', () => {
       setSocketConnected(true);
       setReconnecting(false);
       const tid = userRef.current?.tenantId;
       if (tid) {
         socket.emit('joinTenantRoom', { tenantId: tid, room: selectedStationRef.current });
-        // Bug 2 fix: también unirse al room 'kds' para recibir broadcasts de urgencia
         socket.emit('joinTenantRoom', { tenantId: tid, room: 'kds' });
       }
     });
+    socket.on('disconnect', () => { setSocketConnected(false); setReconnecting(true); });
 
-    // FIX 9: indicador de desconexion
-    socket.on('disconnect', () => {
-      setSocketConnected(false);
-      setReconnecting(true);
-    });
-
-    // Nueva orden
     socket.on('order.new', (order: any) => {
-      seenOrdersRef.current?.ids.add(order?.id); // HOTFIX 307 (B4-08): no suena dos veces
-      setOrders(prev => [order, ...prev.filter(o => o.id !== order?.id)]);
-      if (soundEnabledRef.current && audioRef.current) {
-        audioRef.current.play().catch(() => {});
-      }
+      if (!order?.id) return;
+      seenOrdersRef.current?.add(order.id);
+      setOrders((prev) => [order, ...prev.filter((o) => o.id !== order.id)]);
+      if (soundEnabledRef.current && audioRef.current) audioRef.current.play().catch(() => {});
     });
-
-    // HOTFIX 307 (B4-08): cualquier escritura de pedidos del local recarga la pantalla sin esperar los 10 s
     let changedTimer: ReturnType<typeof setTimeout> | null = null;
-    socket.on('orders.changed', () => {
+    socket.on('orders.changed', () => { // HOTFIX 307 (B4-08)
       if (changedTimer) clearTimeout(changedTimer);
-      changedTimer = setTimeout(() => { queryClient.invalidateQueries({ queryKey: ['kds'] }); }, 300);
+      changedTimer = setTimeout(invalidate, 300);
     });
-
-    // Orden actualizada
+    // Solo cambia el pedido que llego (si trae items; si no, se conservan los de pantalla)
     socket.on('order.updated', (order: any) => {
-      setOrders(prev => prev.map(o => (o.id === order.id ? order : o)));
+      if (!order?.id) return;
+      setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, ...order, items: itemsOf(order).length ? itemsOf(order) : o.items } : o)));
     });
-
-    // Orden pagada (PAID) — eliminar la tarjeta del KDS
-    socket.on('order.paid', (data: { orderId: string }) => {
-      setOrders(prev => prev.filter(o => o.id !== data.orderId));
-    });
-
-    // Orden lista (remover de pantalla) — BUG 4: shape ya es objeto directo tras fix backend
+    socket.on('order.paid', (data: { orderId: string }) => setOrders((prev) => prev.filter((o) => o.id !== data.orderId)));
+    // TAREA 335: un pedido listo no desaparece: pasa a la pestana Listos (10 min)
     socket.on('order.ready', (order: any) => {
-      setOrders(prev => prev.filter(o => o.id !== order.id));
-      if (soundEnabledRef.current) {
-        try {
-          const ctx = new AudioContext();
-          const delays = [0, 0.15];
-          delays.forEach((delay) => {
-            const osc  = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain); gain.connect(ctx.destination);
-            osc.frequency.value = 1047;
-            gain.gain.setValueAtTime(0.3, ctx.currentTime + delay);
-            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + 0.12);
-            osc.start(ctx.currentTime + delay);
-            osc.stop(ctx.currentTime + delay + 0.12);
-          });
-          // FIX 14: cerrar AudioContext tras reproducir
-          setTimeout(() => ctx.close().catch(() => {}), 500);
-        } catch { /* AudioContext bloqueado */ }
-      }
+      const ts = new Date().toISOString();
+      setOrders((prev) => prev.map((o) => (o.id === order?.id
+        ? { ...o, status: 'READY', items: itemsOf(o).map((i: any) => (i.status === 'PENDING' || i.status === 'PREPARING' ? { ...i, status: 'READY', readyAt: ts } : i)) }
+        : o)));
+      invalidate();
+      if (soundEnabledRef.current) playReadyChime();
     });
-
-    // TAREA 280: avance por ítem marcado desde otra pantalla (otra estación o la tarjeta del POS)
-    socket.on('order.items.progress', () => {
-      queryClient.invalidateQueries({ queryKey: ['kds'] });
-    });
-
-    // LOTE 323 (B4-16): un item quitado del pedido (aunque ya estuviera listo) avisa en cocina y sale de la pantalla
-    socket.on('order.item.cancelled', (d: { name?: string; quantity?: number; reason?: string; orderNumber?: string }) => {
-      queryClient.invalidateQueries({ queryKey: ['kds'] });
+    socket.on('order.items.progress', invalidate); // TAREA 280
+    socket.on('order.item.cancelled', (d: { name?: string; quantity?: number; reason?: string; orderNumber?: string }) => { // LOTE 323 (B4-16)
+      invalidate();
       setCancelNotice(`ANULADO: ${d?.quantity ?? 1}x ${d?.name ?? 'Producto'}${d?.orderNumber ? ` (pedido ${d.orderNumber})` : ''}${d?.reason ? ` — ${d.reason}` : ''}`);
       if (soundEnabledRef.current && audioRef.current) audioRef.current.play().catch(() => {});
     });
+    socket.on('order.urgent', (data: { orderId: string }) => setOrders((prev) => prev.map((o) => (o.id === data.orderId ? { ...o, _urgent: true } : o))));
+    socket.on('order.recalled', invalidate);
 
-    // Orden marcada urgente desde otra estación
-    socket.on('order.urgent', (data: { orderId: string }) => {
-      setOrders(prev => prev.map(o => o.id === data.orderId ? { ...o, _urgent: true } : o));
-    });
+    return () => { if (changedTimer) clearTimeout(changedTimer); socket.disconnect(); socketRef.current = null; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Orden recuperada (recall)
-    socket.on('order.recalled', (order: any) => {
-      setOrders(prev => {
-        const exists = prev.find(o => o.id === order.id);
-        if (exists) return prev.map(o => (o.id === order.id ? order : o));
-        return [order, ...prev];
-      });
-    });
-
-    return () => {
-      socket.disconnect();
-      socketRef.current = null;
-    };
-  }, []); // ← Sin dependencias: el socket vive toda la vida del componente
-
-  // Cambio de estación — solo emite al socket existente, sin recrearlo
   useEffect(() => {
     const socket = socketRef.current;
-    if (!socket?.connected) return; // si no está conectado, 'connect' se encargará
+    if (!socket?.connected) return;
     const tid = userRef.current?.tenantId;
     if (tid) socket.emit('joinTenantRoom', { tenantId: tid, room: selectedStation });
-    return () => {
-      if (tid) socket.emit('leaveTenantRoom', { tenantId: tid, room: selectedStation });
-    };
+    return () => { if (tid) socket.emit('leaveTenantRoom', { tenantId: tid, room: selectedStation }); };
   }, [selectedStation]);
 
-  // Toggle mute con persistencia en localStorage
-  const toggleSound = () => {
-    setSoundEnabled(prev => {
-      const next = !prev;
-      localStorage.setItem('kds_sound', String(next));
-      return next;
-    });
-  };
-
-  // Fullscreen
+  useEffect(() => {
+    const onFs = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFs);
+    return () => document.removeEventListener('fullscreenchange', onFs);
+  }, []);
   const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
+    if (!document.fullscreenElement) (rootRef.current ?? document.documentElement).requestFullscreen?.().catch(() => {});
+    else document.exitFullscreen?.().catch(() => {});
   };
-
-  // Mutations — Lock UI anti-doble-click por item
-  const preparingMutation = useMutation({
-    mutationFn: async (itemId: string) => {
-      setUpdatingItemId(itemId);
-      const response = await api.put(`/kds/item/${itemId}/preparing`);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['kds'] });
-    },
-    onSettled: () => setUpdatingItemId(null),
+  const toggleSound = () => setSoundEnabled((prev) => {
+    const next = !prev;
+    try { localStorage.setItem('kds_sound', String(next)); } catch { /* sin almacenamiento */ }
+    return next;
   });
 
-  const readyMutation = useMutation({
-    mutationFn: async (itemId: string) => {
-      setUpdatingItemId(itemId);
-      const response = await api.put(`/kds/item/${itemId}/ready`);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['kds'] });
-    },
-    onSettled: () => setUpdatingItemId(null),
-  });
+  // ── Escrituras: cambio optimista solo del pedido tocado + API; al terminar (o si falla) se recarga ──
+  const patchItems = useCallback((orderId: string, fn: (i: any) => any) => {
+    const apply = (list: any[]) => list.map((o) => (o.id === orderId ? { ...o, items: itemsOf(o).map(fn) } : o));
+    setOrders((prev) => apply(prev));
+    queryClient.setQueryData<any[]>(['kds', 'archived'], (prev) => (prev ? apply(prev) : prev));
+  }, [queryClient]);
 
-  const recallMutation = useMutation({
-    mutationFn: async (itemId: string) => {
-      setUpdatingItemId(itemId);
-      const response = await api.put(`/kds/item/${itemId}/recall`);
-      return response.data;
-    },
-    onSuccess: () => {
+  const withBusy = useCallback(async (orderId: string, work: () => Promise<void>) => {
+    setBusy((s) => new Set(s).add(orderId));
+    try { await work(); } catch { /* el estado real llega con la recarga */ } finally {
+      setBusy((s) => { const n = new Set(s); n.delete(orderId); return n; });
       queryClient.invalidateQueries({ queryKey: ['kds'] });
-    },
-    onSettled: () => setUpdatingItemId(null),
-  });
-
-  const URGENCY_ORDER = { critical: 0, urgent: 1, warning: 2, normal: 3 } as const;
-  const sortedOrders = [...orders].sort((a, b) => {
-    const ua = getUrgency(a.createdAt, a.priority ?? 0, a._urgent ?? false);
-    const ub = getUrgency(b.createdAt, b.priority ?? 0, b._urgent ?? false);
-    if (URGENCY_ORDER[ua.level] !== URGENCY_ORDER[ub.level]) {
-      return URGENCY_ORDER[ua.level] - URGENCY_ORDER[ub.level];
     }
-    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-  });
+  }, [queryClient]);
 
-  const currentStation = stations.find(s => s.id === selectedStation);
+  const onItem = useCallback((order: any, item: any) => {
+    const to = nextStatus(item.status);
+    if (!to) return;
+    patchItems(order.id, (i) => (i.id === item.id ? { ...i, status: to, ...stamp(to) } : i));
+    withBusy(order.id, async () => { await api.put(`/kds/item/${item.id}/${to === 'PREPARING' ? 'preparing' : 'ready'}`); });
+  }, [patchItems, withBusy]);
+
+  const onAllReady = useCallback((order: any) => {
+    const ids = itemsOf(order).filter((i: any) => i.status === 'PENDING' || i.status === 'PREPARING').map((i: any) => i.id);
+    if (!ids.length) return;
+    const set = new Set(ids);
+    patchItems(order.id, (i) => (set.has(i.id) ? { ...i, status: 'READY', ...stamp('READY') } : i));
+    withBusy(order.id, async () => { for (const id of ids) await api.put(`/kds/item/${id}/ready`); });
+  }, [patchItems, withBusy]);
+
+  const onRecall = useCallback((order: any, item: any) => {
+    patchItems(order.id, (i) => (i.id === item.id ? { ...i, status: 'PENDING', ...stamp('PENDING') } : i));
+    withBusy(order.id, async () => { await api.put(`/kds/item/${item.id}/recall`); });
+  }, [patchItems, withBusy]);
+
+  const onUrgent = useCallback((order: any) => {
+    api.patch(`/kds/order/${order.id}/urgent`)
+      .then(() => setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, _urgent: true } : o))))
+      .catch(() => {});
+  }, []);
+
+  // ── Listas por estacion (identidad estable por pedido) ──
+  const sorted = useMemo(() => sortOrders(orders), [orders]);
+  const byStation = useMemo(() => sorted.map((o) => forStation(o, selectedStation)).filter(Boolean) as any[], [sorted, selectedStation]);
+  const active = useMemo(() => byStation.filter((o) => !fullyReady(o)), [byStation]);
+  const readyAll = useMemo(() => byStation.filter((o) => fullyReady(o)), [byStation]);
+  const archivedShown = useMemo(() => sortOrders(archived).map((o) => forStation(o, selectedStation)).filter(Boolean) as any[], [archived, selectedStation]);
+
+  // Contador por estacion: pedidos en curso con items de esa estacion
+  const stationCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const s of stations) m[s.id] = sorted.reduce((n, o) => { const f = forStation(o, s.id); return f && !fullyReady(f) ? n + 1 : n; }, 0);
+    return m;
+  }, [stations, sorted]);
+
+  // Reloj grueso (10 s) solo para el filtro de retrasados y la ventana de 10 min de Listos
+  const tick = useNow((n) => Math.floor(n / 10_000));
+  const readyShown = useMemo(() => {
+    const now = tick * 10_000 + 9_999;
+    return readyAll.filter((o) => { const t = lastReadyAt(o); return !t || now - t <= READY_WINDOW_MS; })
+      .sort((a, b) => lastReadyAt(b) - lastReadyAt(a));
+  }, [readyAll, tick]);
+
+  // Salida animada (300 ms) del ticket que queda todo listo en En cocina
+  const [exiting, setExiting] = useState<Set<string>>(() => new Set());
+  const prevActive = useRef<{ key: string; ids: Set<string> } | null>(null);
+  useLayoutEffect(() => {
+    const ids = new Set(active.map((o) => o.id));
+    const prev = prevActive.current;
+    prevActive.current = { key: selectedStation, ids };
+    if (!prev || prev.key !== selectedStation) return;
+    const readyIds = new Set(readyAll.map((o) => o.id));
+    const gone = [...prev.ids].filter((id) => !ids.has(id) && readyIds.has(id));
+    if (!gone.length) return;
+    setExiting((s) => new Set([...s, ...gone]));
+    setTimeout(() => setExiting((s) => { const n = new Set(s); gone.forEach((g) => n.delete(g)); return n; }), 300);
+  }, [active, readyAll, selectedStation]);
+
+  const cocinaShown = useMemo(() => {
+    const base = byStation.filter((o) => !fullyReady(o) || exiting.has(o.id));
+    if (!onlyLate) return base;
+    const now = tick * 10_000;
+    return base.filter((o) => levelFor(now - createdMs(o), thresholds, isManualUrgent(o)) !== 'green');
+  }, [byStation, exiting, onlyLate, tick, thresholds]);
+
+  const lateCount = useMemo(() => {
+    const now = tick * 10_000;
+    return active.filter((o) => levelFor(now - createdMs(o), thresholds, isManualUrgent(o)) !== 'green').length;
+  }, [active, tick, thresholds]);
+
+  const list = view === 'cocina' ? cocinaShown : view === 'listos' ? readyShown : archivedShown;
+  const stationName = stations.find((s) => s.id === selectedStation)?.name ?? 'Todas';
+
+  const tabs: { id: TicketMode; label: string; count: number }[] = [
+    { id: 'cocina', label: 'En cocina', count: active.length },
+    { id: 'listos', label: 'Listos', count: readyShown.length },
+    { id: 'antiguos', label: 'Antiguos', count: archivedShown.length },
+  ];
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
-      {/* LOTE 323 (B4-16): aviso de item anulado (queda hasta que cocina lo cierra) */}
+    <div ref={rootRef} className="kds-root min-h-screen text-zinc-100" data-testid="kds-root">
+      <style>{KDS_CSS}</style>
       {cancelNotice && (
-        <div className="bg-red-700 text-white px-4 py-3 flex items-center justify-between gap-3 font-bold">
+        <div className="bg-red-700 text-white px-[0.8em] py-[0.5em] flex items-center justify-between gap-[0.6em] font-bold text-[1em]" role="alert">
           <span>{cancelNotice}</span>
-          <button onClick={() => setCancelNotice(null)} className="min-h-[44px] px-4 rounded-lg bg-white/20 hover:bg-white/30">Entendido</button>
+          <button onClick={() => setCancelNotice(null)} className="min-h-[44px] px-[0.8em] rounded-lg bg-white/20 hover:bg-white/30">Entendido</button>
         </div>
       )}
-      {/* FIX 9: Banner de desconexión */}
       {!socketConnected && (
-        <div className="fixed top-0 left-0 right-0 z-50 bg-red-500 text-white text-center text-sm font-medium py-2">
-          ⚠️ Sin conexión en tiempo real — las órdenes pueden no actualizarse{reconnecting ? ' · Reconectando...' : ''}
+        <div className="bg-red-700 text-white text-center font-bold py-[0.3em] text-[0.85em]" role="status">
+          Sin conexión en tiempo real: los pedidos se recargan cada 10 s{reconnecting ? ' · Reconectando…' : ''}
         </div>
       )}
+      <audio ref={audioRef} preload="auto"><source src={AUDIO_SRC} type="audio/wav" /></audio>
 
-      {/* Audio element */}
-      <audio ref={audioRef} preload="auto">
-        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBWF3l7" type="audio/wav" />
-      </audio>
-
-      {/* Header */}
-      <div className="bg-zinc-900 border-b border-zinc-800 p-4">
-        <div className="flex items-center justify-between max-w-[2000px] mx-auto">
-          {/* Estaciones */}
-          <div className="flex gap-2">
-            {stations.map(station => {
-              const Icon = station.icon;
-              const isActive = selectedStation === station.id;
-              const count = isActive ? orders.length : 0;
-              return (
-                <button
-                  key={station.id}
-                  onClick={() => setSelectedStation(station.id as Station)}
-                  className={`flex items-center gap-2 px-6 py-3 rounded-lg font-bold transition-all ${
-                    isActive
-                      ? `bg-gradient-to-r ${station.color} text-white shadow-lg scale-105`
-                      : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
-                  }`}
-                >
-                  {Icon ? <Icon className="w-5 h-5" /> : station.emoji ? <span>{station.emoji}</span> : null}
-                  {station.name}
-                  {count > 0 && (
-                    <span className="ml-1 bg-white/20 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-                      {count}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+      {/* Barra superior */}
+      <div className="sticky top-0 z-10 bg-[#0B0D10] border-b border-zinc-800 px-[0.75em] py-[0.5em] space-y-[0.5em]">
+        <div className="flex flex-wrap items-center gap-[0.5em]">
+          <div className="flex gap-[0.3em]" role="tablist" aria-label="Vista">
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                role="tab"
+                aria-selected={view === t.id}
+                data-testid={`kds-vista-${t.id}`}
+                onClick={() => setView(t.id)}
+                className={`min-h-[48px] px-[0.8em] rounded-xl font-black text-[0.95em] flex items-center gap-[0.4em] border-2 ${
+                  view === t.id ? 'bg-[#F97316] border-[#F97316] text-[#111418]' : 'bg-zinc-900 border-zinc-700 text-zinc-100 hover:bg-zinc-800'
+                }`}
+              >
+                {t.label}
+                <span className={`min-w-[1.6em] text-center rounded-full px-[0.35em] text-[0.9em] ${view === t.id ? 'bg-[#111418] text-white' : 'bg-zinc-700 text-white'}`}>{t.count}</span>
+              </button>
+            ))}
           </div>
-
-          {/* Controles */}
-          <div className="flex items-center gap-4">
-            {/* FIX 9: LED de conexión WebSocket */}
-            <div className="flex items-center gap-1.5">
-              <div className={`w-2.5 h-2.5 rounded-full ${
-                socketConnected ? 'bg-green-400 animate-pulse'
-                  : reconnecting ? 'bg-yellow-400 animate-ping'
-                  : 'bg-red-500'
-              }`} />
-              <span className="text-xs text-zinc-400">
-                {socketConnected ? 'En vivo' : reconnecting ? 'Reconectando...' : 'Sin conexión'}
-              </span>
-            </div>
-
-            <div className="text-right">
-              <div className="text-2xl font-bold flex items-center justify-end gap-2">
-                {isFetching && (
-                  <svg className="w-4 h-4 animate-spin text-white/40" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                )}
-                <span className={isFetching ? 'text-white/40' : ''}>{confirmedCount}</span>
-              </div>
-              <div className="text-xs text-zinc-500">
-                {kdsStats ? `${(kdsStats.pending ?? 0) + (kdsStats.preparing ?? 0)} activos totales` : 'en esta estación'}
-              </div>
-            </div>
-
-            <button
-              onClick={toggleSound}
-              className="w-12 h-12 rounded-lg bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors"
-            >
-              {soundEnabled ? (
-                <Volume2 className="w-5 h-5" />
-              ) : (
-                <VolumeX className="w-5 h-5" />
-              )}
-            </button>
-
-            <button
-              onClick={toggleFullscreen}
-              className="w-12 h-12 rounded-lg bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition-colors"
-            >
-              <Maximize className="w-5 h-5" />
-            </button>
-          </div>
+          <div className="flex-1" />
+          <button
+            onClick={() => setOnlyLate((v) => !v)}
+            aria-pressed={onlyLate}
+            data-testid="kds-solo-retrasados"
+            className={`min-h-[48px] px-[0.7em] rounded-xl font-bold text-[0.85em] flex items-center gap-[0.35em] border-2 ${
+              onlyLate ? 'border-red-400 bg-red-500/20 text-red-100' : 'border-zinc-700 bg-zinc-900 text-zinc-100 hover:bg-zinc-800'
+            }`}
+          >
+            <Flame className="w-[1.1em] h-[1.1em]" aria-hidden /> Solo retrasados ({lateCount})
+          </button>
+          <button onClick={toggleSound} aria-label={soundEnabled ? 'Silenciar' : 'Activar sonido'} title={soundEnabled ? 'Sonido activado' : 'Sonido apagado'}
+            className="w-12 h-12 rounded-xl bg-zinc-900 border-2 border-zinc-700 hover:bg-zinc-800 flex items-center justify-center">
+            {soundEnabled ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6 text-zinc-400" />}
+          </button>
+          <button onClick={toggleFullscreen} aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'} title="Pantalla completa"
+            className="w-12 h-12 rounded-xl bg-zinc-900 border-2 border-zinc-700 hover:bg-zinc-800 flex items-center justify-center">
+            {isFullscreen ? <Minimize className="w-6 h-6" /> : <Maximize className="w-6 h-6" />}
+          </button>
+          <Clock />
+          <span className="flex items-center gap-[0.3em] text-[0.85em] text-zinc-300" data-testid="kds-en-vivo">
+            <span className={`w-[0.55em] h-[0.55em] rounded-full ${socketConnected ? 'bg-green-500' : reconnecting ? 'bg-amber-400' : 'bg-red-500'}`} aria-hidden />
+            {socketConnected ? 'En vivo' : reconnecting ? 'Reconectando' : 'Sin conexión'}
+          </span>
+        </div>
+        <div className="flex gap-[0.3em] overflow-x-auto pb-[0.1em]" role="tablist" aria-label="Estación">
+          {stations.map((s) => {
+            const on = selectedStation === s.id;
+            return (
+              <button
+                key={s.id}
+                role="tab"
+                aria-selected={on}
+                onClick={() => setSelectedStation(s.id)}
+                className={`shrink-0 min-h-[44px] px-[0.75em] rounded-lg font-bold text-[0.85em] flex items-center gap-[0.35em] border-2 ${
+                  on ? 'border-[#F97316] bg-[#F97316]/15 text-white' : 'border-zinc-800 bg-zinc-900 text-zinc-200 hover:bg-zinc-800'
+                }`}
+              >
+                {s.name}
+                <span className="min-w-[1.5em] text-center rounded-full bg-zinc-700 text-white px-[0.3em]">{stationCounts[s.id] ?? 0}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Grid de órdenes */}
-      <div className="p-6 max-w-[2000px] mx-auto">
-        {orders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[70vh]">
-            <CheckCircle className="w-24 h-24 text-green-500 mb-4" />
-            <h2 className="text-3xl font-bold text-zinc-100 mb-2">
-              ¡Todo al día!
+      {/* Cuadricula */}
+      <main className="p-[0.75em]">
+        {list.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-[65vh] text-center" data-testid="kds-vacio">
+            <ChefHat className="w-[6em] h-[6em] text-zinc-400 mb-[0.4em]" aria-hidden />
+            <h2 className="text-[2em] font-black text-white">
+              {view === 'cocina' ? (onlyLate ? 'Sin pedidos retrasados' : 'Cocina al día') : view === 'listos' ? 'Sin pedidos listos' : 'Sin pedidos antiguos'}
             </h2>
-            <p className="text-zinc-500">No hay órdenes pendientes en {currentStation?.name}</p>
+            <p className="text-zinc-300 text-[0.9em] mt-[0.2em]">
+              {view === 'cocina' ? `No hay pedidos pendientes en ${stationName}` : view === 'listos' ? 'Aquí quedan 10 minutos los pedidos terminados' : 'Los pedidos de días anteriores se archivan a las 03:00'}
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-            {sortedOrders.map(order => {
-              const urgency = getUrgency(order.createdAt, order.priority ?? 0, order._urgent ?? false);
-              const style   = urgencyStyles[urgency.level];
-
-              return (
-                <div
-                  key={order.id}
-                  className={`border-2 rounded-2xl flex flex-col overflow-hidden transition-all duration-500 ${
-                    urgency.level === 'critical' ? 'bg-red-900/30' : 'bg-zinc-900'
-                  } ${style.border}`}
-                >
-                  {/* Header */}
-                  <div className={`px-4 py-3 flex items-center justify-between ${style.header}`}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-black text-white truncate text-xl">
-                        {order.tables || order.tableNumber
-                          ? `Mesa ${order.tableNumber ?? order.tables?.number}`
-                          : order.customerName || order.customer?.name || order.customers?.name
-                          ? String(order.customerName ?? order.customer?.name ?? order.customers?.name)
-                              .toLowerCase()
-                              .replace(/^\w/, (c: string) => c.toUpperCase())
-                          : `#${order.number || order.id.slice(0, 6)}`}
-                      </span>
-                      {order.type !== 'DINE_IN' && (
-                        <span className="text-xs bg-white/10 text-white/70 px-2 py-0.5 rounded-full shrink-0">
-                          {/* HOTFIX #241 — pedidos QR "Servir en mi mesa" viajan
-                              como TAKEAWAY; si la orden tiene mesa (tables por
-                              tableId, o "Mesa N" preservada en notes), el badge
-                              la muestra en vez de "Para llevar". */}
-                          {order.type === 'TAKEAWAY'
-                            ? ((order.tables || order.tableNumber)
-                                ? `Mesa ${order.tableNumber ?? order.tables?.number}`
-                                : 'Para llevar')
-                            : 'Delivery'}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {style.badge && (
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${style.badge.text}`}>
-                          {style.badge.label}
-                        </span>
-                      )}
-                      {/* LOTE 323 (B4-12): pedido abierto de un dia anterior: se ve con aviso (antes desaparecia a las 48 h) */}
-                      {new Date(order.createdAt).toLocaleDateString('es-CL', { timeZone: 'America/Santiago' }) !== new Date().toLocaleDateString('es-CL', { timeZone: 'America/Santiago' }) ? (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300">
-                          De días anteriores
-                        </span>
-                      ) : (
-                        <span className="text-xs text-white/60 font-mono tabular-nums">
-                          {urgency.minutes}min
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Items */}
-                  <div className="p-4 space-y-3 flex-1">
-                    {order.items?.map((item: any) => (
-                      <div
-                        key={item.id}
-                        className={`p-3 rounded-lg transition-all ${
-                          item.status === 'READY'
-                            ? 'bg-green-500/20 border border-green-500'
-                            : item.status === 'PREPARING'
-                            ? 'bg-yellow-500/20 border border-yellow-500'
-                            : 'bg-zinc-800 border border-zinc-700'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between mb-1">
-                          <div className="flex-1 min-w-0">
-                            <div className="text-lg font-bold">
-                              {item.quantity}x {item.products?.name || item.name || 'Producto'}
-                            </div>
-
-                            {item.modifiers && Array.isArray(item.modifiers) && item.modifiers.length > 0 && (
-                              <div className="bg-amber-500/20 border border-amber-400 rounded-md px-2 py-1 mt-1 inline-block">
-                                {item.modifiers.map((m: any, i: number) => (
-                                  <div key={i} className="text-amber-300 font-bold text-base flex items-center gap-1">
-                                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                                    <span>{typeof m === 'string' ? m : m.name}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {item.notes && (
-                              <div className="bg-amber-500/20 border border-amber-400 rounded-md px-2 py-1 mt-1 inline-block">
-                                <div className="text-amber-300 font-bold text-base flex items-center gap-1">
-                                  <StickyNote className="w-4 h-4 flex-shrink-0" />
-                                  <span>{item.notes}</span>
-                                </div>
-                              </div>
-                            )}
-
-                            <ItemTiming item={item} now={now} station={selectedStation} />
-                          </div>
-
-                          {item.status === 'READY' && (
-                            <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 ml-2 mt-0.5" />
-                          )}
-                        </div>
-
-                        <div className="flex gap-2 mt-2">
-                          {item.status === 'PENDING' && (
-                            <button
-                              onClick={() => preparingMutation.mutate(item.id)}
-                              disabled={updatingItemId === item.id || preparingMutation.isPending}
-                              className={`w-full font-bold py-3 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-2 text-base ${
-                                updatingItemId === item.id
-                                  ? 'bg-zinc-600 text-zinc-300 cursor-wait'
-                                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-                              }`}
-                            >
-                              <Play className="w-5 h-5" />
-                              {updatingItemId === item.id ? '...' : 'Iniciar'}
-                            </button>
-                          )}
-
-                          {item.status === 'PREPARING' && (
-                            <button
-                              onClick={() => readyMutation.mutate(item.id)}
-                              disabled={updatingItemId === item.id || readyMutation.isPending}
-                              className={`w-full font-bold py-3 px-3 min-h-[44px] rounded-lg transition-colors flex items-center justify-center gap-2 text-base ${
-                                updatingItemId === item.id
-                                  ? 'bg-zinc-600 text-zinc-300 cursor-wait'
-                                  : 'bg-green-600 hover:bg-green-700 text-white'
-                              }`}
-                            >
-                              <CheckCircle className="w-5 h-5" />
-                              {updatingItemId === item.id ? '...' : 'Listo'}
-                            </button>
-                          )}
-
-                          {item.status === 'READY' && (
-                            <button
-                              onClick={() => recallMutation.mutate(item.id)}
-                              disabled={updatingItemId === item.id || recallMutation.isPending}
-                              className={`w-full font-bold py-3 px-3 min-h-[44px] rounded-lg transition-colors text-sm ${
-                                updatingItemId === item.id
-                                  ? 'bg-zinc-600 text-zinc-300 cursor-wait'
-                                  : 'bg-zinc-700 hover:bg-zinc-600 text-white'
-                              }`}
-                            >
-                              {updatingItemId === item.id ? '...' : 'Recuperar'}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Footer */}
-                  <div className="text-xs text-zinc-500 border-t border-zinc-800 px-4 py-2 flex items-center justify-between">
-                    <div>
-                      <div>Hora: {new Date(order.createdAt).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })}</div>
-                      {order.customerName && <div className="mt-0.5">Cliente: {order.customerName}</div>}
-                    </div>
-
-                    {urgency.level !== 'critical' && (
-                      <button
-                        onClick={() =>
-                          api.patch(`/kds/order/${order.id}/urgent`)
-                            .then(() => setOrders(prev =>
-                              prev.map(o => o.id === order.id ? { ...o, _urgent: true } : o)
-                            ))
-                            .catch(() => {})
-                        }
-                        className="text-xs text-red-400/60 hover:text-red-400 hover:bg-red-500/10 px-2 py-1 rounded-lg transition-colors"
-                      >
-                        🔴 Urgente
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+          <div className="kds-grid">
+            {list.map((o) => (
+              <KdsTicket
+                key={o.id}
+                order={o}
+                mode={view}
+                thresholds={thresholds}
+                leaving={view === 'cocina' && exiting.has(o.id)}
+                busy={busy.has(o.id)}
+                onItem={onItem}
+                onAllReady={onAllReady}
+                onRecall={onRecall}
+                onUrgent={onUrgent}
+              />
+            ))}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }

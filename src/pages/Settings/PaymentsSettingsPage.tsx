@@ -126,6 +126,22 @@ export default function PaymentsSettingsPage() {
           </dl>
         )}
 
+        {/* Linea informativa fija: tarifa propia de Mercado Pago */}
+        {status && (
+          <p className="text-xs text-gray-500" data-testid="pagos-tarifa-mp">
+            Mercado Pago descuenta además{' '}
+            <a
+              href="https://www.mercadopago.cl/herramientas-para-vender/check-out"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline text-gray-700 hover:text-gray-900"
+            >
+              su propia tarifa
+            </a>{' '}
+            (desde 2,89 % + IVA según el plazo de liberación que elijas en tu cuenta MP)
+          </p>
+        )}
+
         {status && !status.available && !connected && (
           <p className="text-sm text-gray-500">Mercado Pago aun no esta habilitado en BullWeb.</p>
         )}

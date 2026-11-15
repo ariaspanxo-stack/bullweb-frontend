@@ -86,15 +86,20 @@ test('F2 turno, Mostrador con modificador obligatorio, comanda, Preparar y Listo
   await test.step('comanda en cocina: Preparar y Listo por item', async () => {
     const cocina = await page.context().newPage();
     await goto(cocina, '/kds');
-    const tarjeta = cocina.locator('div').filter({ hasText: new RegExp(cliente, 'i') }).filter({ hasText: /Barros Luco/i }).filter({ has: cocina.getByRole('button', { name: /Urgente/ }) }).last();
+    // TAREA 335: ticket del KDS para TV; un toque en el item lo avanza (pendiente -> preparando -> listo)
+    const tarjeta = cocina.getByTestId('kds-ticket').filter({ hasText: new RegExp(cliente, 'i') });
     await expect(tarjeta).toBeVisible({ timeout: 30000 });
-    await expect(tarjeta.getByText(/Barros Luco/i)).toBeVisible();
+    await expect(tarjeta.getByText(/Barros Luco/i).first()).toBeVisible();
     await shot(cocina, F, '07_comanda_kds');
 
-    await tarjeta.getByRole('button', { name: 'Iniciar' }).first().click();
-    await expect(tarjeta.getByRole('button', { name: 'Listo' })).toHaveCount(1);
+    const item1 = tarjeta.getByTestId('kds-item').nth(0);
+    const item2 = tarjeta.getByTestId('kds-item').nth(1);
+    await item1.click();
+    await expect(item1).toHaveAttribute('data-status', 'PREPARING');
     await shot(cocina, F, '08_item1_preparando');
-    await tarjeta.getByRole('button', { name: 'Listo' }).click();
+    await expect(item1).toBeEnabled();
+    await item1.click();
+    await expect(item1).toHaveAttribute('data-status', 'READY');
     await expect.poll(async () => {
       const r = await api(cocina, 'GET', `/pos/orders/${order.id}`, token);
       return r.data.order_items.filter((i: any) => i.status === 'READY').length;
@@ -105,12 +110,17 @@ test('F2 turno, Mostrador con modificador obligatorio, comanda, Preparar y Listo
     const parcial = await api(cocina, 'GET', `/pos/orders/${order.id}`, token);
     expect(parcial.data.order_items.filter((i: any) => i.status === 'PENDING').length).toBe(1);
 
-    await tarjeta.getByRole('button', { name: 'Iniciar' }).first().click();
-    await tarjeta.getByRole('button', { name: 'Listo' }).click();
+    await expect(item2).toBeEnabled();
+    await item2.click();
+    await expect(item2).toHaveAttribute('data-status', 'PREPARING');
+    await expect(item2).toBeEnabled();
+    await item2.click();
     await expect.poll(async () => {
       const r = await api(cocina, 'GET', `/pos/orders/${order.id}`, token);
       return r.data.order_items.filter((i: any) => i.status === 'READY').length;
     }).toBe(2);
+    await cocina.getByTestId('kds-vista-listos').click(); // TAREA 335: el pedido terminado queda en Listos
+    await expect(cocina.getByTestId('kds-ticket').filter({ hasText: new RegExp(cliente, 'i') })).toBeVisible();
     await shot(cocina, F, '10_items_listos');
     await cocina.close();
   });
@@ -126,15 +136,16 @@ test('F2 turno, Mostrador con modificador obligatorio, comanda, Preparar y Listo
     const pagaCon = (Math.ceil(total / 1000) + 2) * 1000;
     const vuelto = pagaCon - total;
     const metodo = page.locator('select').filter({ has: page.locator('option', { hasText: /efectivo/i }) }).first();
-    const valor = await metodo.locator('option', { hasText: /efectivo/i }).first().getAttribute('value');
+    // TAREA 335: el proxy /api del montaje (vite preview) se atasca ~50 s a ratos (tambien en la base desplegada); margen de 90 s solo aqui
+    const valor = await metodo.locator('option', { hasText: /efectivo/i }).first().getAttribute('value', { timeout: 90_000 });
     await metodo.selectOption(valor as string);
     await page.getByPlaceholder(/^Venta:/).first().fill(String(pagaCon));
     await expect(page.getByText('Vuelto', { exact: true })).toBeVisible();
     await expect(page.getByText(`$${fmt(vuelto)}`, { exact: true }).first()).toBeVisible();
     await shot(page, F, '11_vuelto');
 
-    const pago = page.waitForResponse((r) => /\/api\/pos\/orders\/[^/]+\/pay|\/api\/payments|\/pay/.test(r.url()) && r.request().method() === 'POST');
-    await page.getByRole('button', { name: /^Cobrar \$/ }).click();
+    const pago = page.waitForResponse((r) => /\/api\/pos\/orders\/[^/]+\/pay|\/api\/payments|\/pay/.test(r.url()) && r.request().method() === 'POST', { timeout: 90_000 });
+    await page.getByRole('button', { name: /^Cobrar \$/ }).click({ timeout: 90_000 });
     expect((await pago).status()).toBeLessThan(300);
     await expect.poll(async () => (await api(page, 'GET', `/pos/orders/${order.id}`, token)).data.status).toBe('PAID');
     await shot(page, F, '12_pagado');

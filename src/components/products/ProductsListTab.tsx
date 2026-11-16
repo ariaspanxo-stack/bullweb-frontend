@@ -4,6 +4,7 @@ import {
   Search,
   Plus,
   FileUp,
+  Image as ImageIcon,
   Grid3x3,
   Table as TableIcon,
   Package,
@@ -41,6 +42,8 @@ interface ProductsListTabProps {
   categories: ProductCategory[];
   onAddProduct: () => void;
   onImportMenu?: () => void; // HOTFIX 268: solo SuperAdmin
+  onAssignImages?: () => void; // LOTE 338: SuperAdmin o admin del local
+  placeholderIds?: Set<string>; // LOTE 338: productos con "Imagen referencial"
   onEditProduct: (product: Product) => void;
   onDuplicateProduct: (product: Product) => void;
   onDeleteProduct: (product: Product) => void;
@@ -61,6 +64,8 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
   categories,
   onAddProduct,
   onImportMenu,
+  onAssignImages,
+  placeholderIds,
   onEditProduct,
   onDuplicateProduct,
   onDeleteProduct,
@@ -248,6 +253,12 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
               <button onClick={onImportMenu} className={BTN_OUTLINE}>
                 <FileUp className="w-5 h-5" />
                 Importar carta
+              </button>
+            )}
+            {onAssignImages && (
+              <button onClick={onAssignImages} className={BTN_OUTLINE} data-testid="assign-images-button">
+                <ImageIcon className="w-5 h-5" />
+                Asignar imágenes faltantes
               </button>
             )}
             {canManage && (
@@ -474,6 +485,21 @@ export const ProductsListTab: React.FC<ProductsListTabProps> = ({
                         </span>
                       )}
                     </div>
+
+                    {/* LOTE 338: imagen referencial (solo en el panel; la carta publica no muestra etiqueta) */}
+                    {imageSrc && placeholderIds?.has(product.id) && (
+                      <div className="absolute bottom-1.5 left-1.5 right-1.5 flex items-center justify-between gap-1 z-10" data-testid="placeholder-badge">
+                        <span className="px-1.5 py-0.5 rounded bg-white/85 text-[10px] font-medium text-[#475569]">Imagen referencial</span>
+                        {canManage && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onEditProduct(product); }}
+                            className="min-h-[44px] px-2 rounded-md bg-white/90 text-[11px] font-bold text-[#0F172A] hover:bg-white"
+                          >
+                            Cambiar foto
+                          </button>
+                        )}
+                      </div>
+                    )}
 
                     {!product.available && (
                       <div className="absolute inset-0 flex items-center justify-center bg-[#0F172A]/50">

@@ -1486,6 +1486,24 @@ export const adminService = {
     return data;
   },
 
+  // ── LOTE 338: imagenes referenciales (biblioteca) del local del token ──
+  async imageLibraryPreview(): Promise<ImageLibraryPreview> {
+    const { data } = await api.get<ImageLibraryPreview>('/admin/image-library/preview');
+    return data;
+  },
+  async imageLibraryRun(): Promise<ImageLibraryJob> {
+    const { data } = await api.post<ImageLibraryJob>('/admin/image-library/run', {});
+    return data;
+  },
+  async imageLibraryJob(): Promise<ImageLibraryJob | null> {
+    const { data } = await api.get<ImageLibraryJob | null>('/admin/image-library/job');
+    return data;
+  },
+  async imageLibraryPlaceholders(): Promise<string[]> {
+    const { data } = await api.get<string[]>('/admin/image-library/placeholders');
+    return Array.isArray(data) ? data : [];
+  },
+
   async menuImportStations(tenantId: string): Promise<{ id: string; name: string }[]> {
     const { data } = await api.get<{ id: string; name: string }[]>('/admin/menu-import/stations', { params: { tenantId } });
     return data;
@@ -2395,6 +2413,17 @@ export interface PrintersHealth {
 // ── Fase 6: Notificaciones + Routing + QR ─────────────────────────────────────
 
 // HOTFIX 268
+// LOTE 338
+export interface ImageLibraryPreview {
+  sinFoto: number; desdeBiblioteca: number; conImagenNueva: number; aGenerar: number; sinFamilia: number; bloqueadasPorTope: number;
+  costoClp: number; clasificacionesTexto: number; trial: { tope: number; usadas: number } | null;
+  familias: { familia: string; categoria: string; productos: number; imagenes: number; accion: 'biblioteca' | 'generar' | 'tope_trial' }[];
+  sinFamiliaProductos: string[];
+}
+export interface ImageLibraryJob {
+  id: string; estado: 'corriendo' | 'terminado' | 'error'; total: number; hechos: number; asignadas: number; generadas: number;
+  sinFamilia: number; bloqueadasPorTope: number; costoUsd: number; errores: { producto: string; error: string }[]; inicio: string; fin: string | null;
+}
 export interface MenuImportRow { categoria: string; nombre: string; precio: number; descripcion: string; avisos?: string[] }
 export interface MenuImportParseResult { fuente: 'imagen' | 'pdf' | 'excel'; filas: MenuImportRow[]; costo: { model: string; promptTokens: number; outputTokens: number; costUsd: number } | null; cupo?: number | null /* LOTE 337 */ }
 export interface MenuImportCommitItem { categoria: string; nombre: string; precio: number; descripcion?: string; stationId?: string | null }

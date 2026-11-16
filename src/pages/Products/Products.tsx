@@ -15,6 +15,8 @@ import ConfirmDialog from '../../components/common/ConfirmDialog';
 import ProductTabs from '../../components/products/ProductTabs';
 import type { TabType } from '../../components/products/ProductTabs';
 import { ImportMenuModal } from '../../components/products/ImportMenuModal'; // HOTFIX 268
+import { AssignImagesModal } from '../../components/products/AssignImagesModal'; // LOTE 338
+import { adminService } from '../../services/adminService'; // LOTE 338
 import { useIsSuperAdmin } from '../../hooks/useIsSuperAdmin';
 import { useAuthStore } from '../../store/authStore'; // LOTE 337
 import CategoriesTab from '../../components/products/CategoriesTab';
@@ -108,6 +110,15 @@ const Products = () => {
   const isLocalAdmin = ((authUser?.role?.permissions ?? []) as string[]).includes('ALL_PERMISSIONS') || authUser?.role?.name === 'Administrador';
   const canImportMenu = isSuperAdmin || isLocalAdmin;
   const [isImportOpen, setIsImportOpen] = useState(false);
+  // LOTE 338: imagenes referenciales
+  const [isAssignOpen, setIsAssignOpen] = useState(false);
+  const [placeholderIds, setPlaceholderIds] = useState<Set<string>>(new Set());
+  const loadPlaceholders = () => {
+    if (!canImportMenu) return;
+    adminService.imageLibraryPlaceholders().then((ids) => setPlaceholderIds(new Set(ids))).catch(() => setPlaceholderIds(new Set()));
+  };
+  // se recarga con la lista de productos: si el dueno sube su foto, la etiqueta desaparece al guardar
+  useEffect(() => { loadPlaceholders(); }, [canImportMenu, products]);
 
   // Cargar datos por tab (lazy)
   const loadTabData = async (tab: string, force = false) => {
@@ -841,6 +852,8 @@ const Products = () => {
             categories={categoriesWithCounts}
             onAddProduct={handleCreateProduct}
             onImportMenu={canImportMenu ? () => setIsImportOpen(true) : undefined}
+            onAssignImages={canImportMenu ? () => setIsAssignOpen(true) : undefined}
+            placeholderIds={placeholderIds}
             onEditProduct={handleEditProduct}
             onDuplicateProduct={handleDuplicateProduct}
             onDeleteProduct={handleDeleteProduct}
@@ -901,6 +914,15 @@ const Products = () => {
           isOpen={isImportOpen}
           onClose={() => setIsImportOpen(false)}
           onImported={() => { loadTabData('productos', true); }}
+        />
+      )}
+
+      {/* LOTE 338: Asignar imagenes faltantes (SuperAdmin o admin del local) */}
+      {canImportMenu && (
+        <AssignImagesModal
+          isOpen={isAssignOpen}
+          onClose={() => setIsAssignOpen(false)}
+          onDone={() => { loadTabData('productos', true); loadPlaceholders(); }}
         />
       )}
 

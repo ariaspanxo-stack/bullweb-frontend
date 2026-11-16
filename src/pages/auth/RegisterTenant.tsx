@@ -272,7 +272,7 @@ export default function RegisterTenant() {
                   $34.000<span className="text-xs font-semibold text-slate-400">/mes</span>
                 </p>
                 <ul className="space-y-0.5">
-                  {['Todo lo del Básico', 'Boletas electrónicas SII', 'KDS cocina, inventario y fichas', 'Clientes, fidelización y cupones'].map(f => (
+                  {['Todo lo del Básico', 'Boletas SII (disponible en diciembre)', 'KDS cocina, inventario y fichas', 'Clientes, fidelización y cupones'].map(f => (
                     <li key={f} className="flex items-center gap-1.5 text-[11px] text-slate-600">
                       <Check className="w-3 h-3 text-indigo-500 flex-shrink-0" />
                       {f}

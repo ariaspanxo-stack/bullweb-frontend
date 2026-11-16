@@ -2396,7 +2396,7 @@ export interface PrintersHealth {
 
 // HOTFIX 268
 export interface MenuImportRow { categoria: string; nombre: string; precio: number; descripcion: string; avisos?: string[] }
-export interface MenuImportParseResult { fuente: 'imagen' | 'pdf' | 'excel'; filas: MenuImportRow[]; costo: { model: string; promptTokens: number; outputTokens: number; costUsd: number } | null }
+export interface MenuImportParseResult { fuente: 'imagen' | 'pdf' | 'excel'; filas: MenuImportRow[]; costo: { model: string; promptTokens: number; outputTokens: number; costUsd: number } | null; cupo?: number | null /* LOTE 337 */ }
 export interface MenuImportCommitItem { categoria: string; nombre: string; precio: number; descripcion?: string; stationId?: string | null }
 export interface MenuImportCommitResult { tenantId: string; categoriasCreadas: number; productosCreados: number; productosActualizados: number; conflictos: { nombre: string; motivo: string }[]; errores: { nombre: string; error: string }[] }
 

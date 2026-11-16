@@ -1,4 +1,6 @@
-// HOTFIX 268: Importar carta desde foto, PDF o Excel (solo SuperAdmin).
+// HOTFIX 268: Importar carta desde foto, PDF o Excel.
+// LOTE 337: SuperAdmin elige el restaurante; el admin del local (tambien en "viendo como") importa solo a su local,
+// con tope diario de lecturas con IA que valida el servidor.
 // 1) subir archivo -> 2) tabla editable (categoria, nombre, precio, descripcion, estacion, incluir) -> 3) Crear todo -> resumen.
 import React, { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
@@ -6,6 +8,7 @@ import { FileUp, Loader2, X, Trash2 } from 'lucide-react';
 import { useToast } from '../Toast';
 import { adminService, type MenuImportCommitResult, type Tenant } from '../../services/adminService';
 import { useAuthStore } from '../../store/authStore';
+import { useIsSuperAdmin } from '../../hooks/useIsSuperAdmin';
 import { formatCurrency } from '../../lib/utils';
 import { BTN_OUTLINE, BTN_PRIMARY } from './productsUi';
 
@@ -33,6 +36,8 @@ const INPUT = 'w-full min-h-[44px] px-2 border border-gray-300 rounded-lg text-s
 export const ImportMenuModal: React.FC<Props> = ({ isOpen, onClose, onImported }) => {
   const toast = useToast();
   const user = useAuthStore(s => s.user) as any;
+  const isSuperAdmin = useIsSuperAdmin(); // LOTE 337
+  const [cupo, setCupo] = useState<number | null>(null);
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [tenantId, setTenantId] = useState<string>('');
   const [stations, setStations] = useState<{ id: string; name: string }[]>([]);
@@ -45,6 +50,8 @@ export const ImportMenuModal: React.FC<Props> = ({ isOpen, onClose, onImported }
 
   useEffect(() => {
     if (!isOpen) return;
+    // LOTE 337: el admin del local no lista restaurantes; queda fijo a su local (el servidor lo impone igual)
+    if (!isSuperAdmin) { setTenants([]); setTenantId(user?.tenantId ?? ''); return; }
     adminService.listTenants().then(list => {
       setTenants(list);
       setTenantId(prev => prev || user?.tenantId || list[0]?.id || '');
@@ -56,7 +63,7 @@ export const ImportMenuModal: React.FC<Props> = ({ isOpen, onClose, onImported }
     adminService.menuImportStations(tenantId).then(setStations).catch(() => setStations([]));
   }, [tenantId]);
 
-  const reset = () => { setFiles([]); setRows([]); setFuente(''); setCosto(null); setResult(null); };
+  const reset = () => { setFiles([]); setRows([]); setFuente(''); setCosto(null); setCupo(null); setResult(null); };
   const close = () => { if (busy) return; reset(); onClose(); };
 
   const pickFiles = (list: FileList | null) => {
@@ -73,6 +80,7 @@ export const ImportMenuModal: React.FC<Props> = ({ isOpen, onClose, onImported }
       const r = await adminService.menuImportParse(files);
       setFuente(r.fuente);
       setCosto(r.costo?.costUsd ?? null);
+      setCupo(r.cupo ?? null);
       setRows(r.filas.map((f, i) => ({
         key: i, incluir: !(f.avisos?.length), categoria: f.categoria, nombre: f.nombre,
         precio: String(f.precio || ''), descripcion: f.descripcion ?? '', stationId: '', avisos: f.avisos,
@@ -112,7 +120,7 @@ export const ImportMenuModal: React.FC<Props> = ({ isOpen, onClose, onImported }
   };
 
   if (!isOpen) return null;
-  const tenantName = tenants.find(t => t.id === tenantId)?.name ?? '';
+  const tenantName = isSuperAdmin ? (tenants.find(t => t.id === tenantId)?.name ?? '') : 'tu local';
 
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 text-slate-900" role="dialog" aria-modal="true" aria-label="Importar carta">
@@ -128,12 +136,19 @@ export const ImportMenuModal: React.FC<Props> = ({ isOpen, onClose, onImported }
         <div className="px-6 py-4 space-y-4 overflow-y-auto">
           {/* Restaurante destino y archivo */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <label className="block">
-              <span className="block text-sm font-medium text-gray-700 mb-1">Restaurante</span>
-              <select value={tenantId} onChange={e => setTenantId(e.target.value)} className={INPUT} disabled={!!busy}>
-                {tenants.map(t => <option key={t.id} value={t.id}>{t.name} ({t.slug})</option>)}
-              </select>
-            </label>
+            {isSuperAdmin ? (
+              <label className="block">
+                <span className="block text-sm font-medium text-gray-700 mb-1">Restaurante</span>
+                <select value={tenantId} onChange={e => setTenantId(e.target.value)} className={INPUT} disabled={!!busy}>
+                  {tenants.map(t => <option key={t.id} value={t.id}>{t.name} ({t.slug})</option>)}
+                </select>
+              </label>
+            ) : (
+              <div>
+                <span className="block text-sm font-medium text-gray-700 mb-1">Restaurante</span>
+                <p className="text-sm text-[#475569]">Se importa a tu local. Hasta 5 lecturas con IA (foto o PDF) por día; el Excel no tiene tope.</p>
+              </div>
+            )}
             <div>
               <span className="block text-sm font-medium text-gray-700 mb-1">Archivo (hasta 10 fotos, 1 PDF de 10 páginas o 1 Excel; 10 MB c/u)</span>
               <div className="flex items-center gap-2">
@@ -163,7 +178,7 @@ export const ImportMenuModal: React.FC<Props> = ({ isOpen, onClose, onImported }
           {rows.length > 0 && (
             <>
               <p className="text-sm text-[#475569]">
-                {rows.length} filas leídas ({fuente}){costo !== null ? ` · costo estimado US$ ${costo.toFixed(4)}` : ''} · {incluidas.length} incluidas
+                {rows.length} filas leídas ({fuente}){isSuperAdmin && costo !== null ? ` · costo estimado US$ ${costo.toFixed(4)}` : ''}{cupo !== null ? ` · lectura con IA ${cupo} de 5 de hoy` : ''} · {incluidas.length} incluidas
                 {invalidas.length > 0 && <span className="text-[#B91C1C]"> · {invalidas.length} incluidas sin nombre o precio</span>}
               </p>
               <div className="overflow-x-auto border border-gray-200 rounded-xl">

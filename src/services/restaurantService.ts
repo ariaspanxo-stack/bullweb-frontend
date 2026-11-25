@@ -288,10 +288,13 @@ class RestaurantService {
       // Si es error de red (sin respuesta del servidor), el Service Worker ya
       // encoló el POST en la cola de Background Sync. Retornamos un mock para
       // que la UI no se caiga y el carrito se limpie normalmente.
+      // HOTFIX 422 (24-11): el cliente HTTP es fetch y nunca trae error.response; un error con status (422, 400, 409...)
+      // es una respuesta del servidor y su motivo (error.message) llega a la pantalla, no es "sin conexion".
       const isNetworkError =
-        error.code === 'ERR_NETWORK' ||
-        error.code === 'ECONNABORTED' ||
-        !error.response;
+        !error?.status && (
+          error.code === 'ERR_NETWORK' ||
+          error.code === 'ECONNABORTED' ||
+          !error.response);
       if (isNetworkError) {
         console.warn('[RS] ⚠️ Sin conexión: pedido encolado en Background Sync.');
         return {

@@ -36,12 +36,29 @@ const FLUJOS_LOCAL = ['F1', 'F2', 'F5', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13'];
 const listaFlujos = (flujo ?? (env === 'local' ? FLUJOS_LOCAL.join('|') : 'F1|F5|F8|F9')).split('|').filter(Boolean);
 if (env === 'local' && !sinMontaje && !mantener && !bajar && listaFlujos.length > 1) {
   const resumenFlujos = [];
+  const puertosLibres = () => {
+    for (let i = 0; i < 30; i++) {
+      const r = spawnSync('powershell.exe', ['-NoProfile', '-Command', '(Get-NetTCPConnection -State Listen -LocalPort 4299,5175 -ErrorAction SilentlyContinue | Measure-Object).Count'], { encoding: 'utf8' });
+      if (String(r.stdout).trim() === '0') return true;
+      spawnSync('powershell.exe', ['-NoProfile', '-Command', 'Start-Sleep -Seconds 1']);
+    }
+    return false;
+  };
   for (const f of listaFlujos) {
     const args = [fileURLToPath(import.meta.url), 'local', '--flujo', f, ...(refPedida ? ['--ref', refPedida] : []), ...(arbol ? ['--arbol'] : [])];
-    console.log(`\n######## FLUJO ${f}: montaje limpio`);
     const t = Date.now();
-    const r = spawnSync(process.execPath, args, { stdio: 'inherit', env: process.env });
-    resumenFlujos.push(`${r.status === 0 ? 'OK   ' : 'FALLA'} ${f} rc=${r.status} ${Math.round((Date.now() - t) / 1000)} s`);
+    let r = null; let nota = '';
+    // Un reintento solo si el flujo cayo por el preview antes de correr pruebas (falla de montaje, no del flujo).
+    for (let intento = 1; intento <= 2; intento++) {
+      if (!puertosLibres()) console.log('AVISO: 4299 o 5175 siguen ocupados tras 30 s');
+      console.log(`\n######## FLUJO ${f}: montaje limpio${intento > 1 ? ' (REINTENTO por preview)' : ''}`);
+      r = spawnSync(process.execPath, args, { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8', env: process.env, maxBuffer: 1 << 26 });
+      process.stdout.write(r.stdout ?? ''); process.stderr.write(r.stderr ?? '');
+      const salida = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+      if (r.status === 0 || !/preview 5175 no respondio/.test(salida) || /== RESULTADO/.test(salida)) break;
+      nota = ' (1 reintento por preview)';
+    }
+    resumenFlujos.push(`${r.status === 0 ? 'OK   ' : 'FALLA'} ${f} rc=${r.status} ${Math.round((Date.now() - t) / 1000)} s${nota}`);
   }
   console.log(`\n== RESUMEN POR FLUJO (montaje limpio cada uno)\n${resumenFlujos.join('\n')}`);
   process.exit(resumenFlujos.every((l) => l.startsWith('OK')) ? 0 : 1);
@@ -139,10 +156,12 @@ async function subirPreview() {
   const pvLog = openSync(resolve(RUN, 'preview.log'), 'w');
   const child = spawn('npx', ['vite', 'preview', '--config', 'e2e/vite.e2e.config.ts', '--mode', 'e2e'], { cwd: FE, shell: true, detached: true, stdio: ['ignore', pvLog, pvLog] });
   child.unref();
-  for (let i = 0; i < 30; i++) {
-    try { if ((await fetch('http://127.0.0.1:5175/login')).ok) return; } catch { /* aun no */ }
+  // LOTE 342: con un montaje por flujo el preview a veces tarda mas de 30 s en responder; se espera hasta 90 s y se muestra su log si no llega.
+  for (let i = 0; i < 90; i++) {
+    try { if ((await fetch('http://127.0.0.1:5175/login')).ok) { if (i > 30) console.log(`preview 5175 respondio a los ${i} s`); return; } } catch { /* aun no */ }
     await espera(1000);
   }
+  console.log(`preview.log (final): ${readFileSync(resolve(RUN, 'preview.log'), 'utf8').slice(-600)}`);
   throw new Error('preview 5175 no respondio');
 }
 

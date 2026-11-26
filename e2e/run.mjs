@@ -1,6 +1,8 @@
 // E2E-1: script unico. npm run e2e:local (F1 F2 F5 F8 contra bullweb_test) y npm run e2e:sandbox (F1 F5 F8 contra el sandbox, con limpieza).
 // local: montaje -> usuarios -> build -> preview -> playwright -> limpieza -> baja con huella. sandbox: playwright -> limpieza por SSH con conteos.
 // Banderas: --ref lote-307 (solo local: backend y frontend de esa rama por git archive, sin cambiar el arbol), --sin-montaje (el montaje ya esta arriba y no se baja), --flujo F1 (solo ese flujo).
+// LOTE 342: en local lo normal es git archive (sin --ref: frontend master y backend main) y un montaje limpio por flujo;
+// --arbol compila el frontend desde el arbol de trabajo y --sin-montaje reutiliza un montaje: los dos muestran un aviso.
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, openSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -13,15 +15,54 @@ const RUN = resolve(here, '.run');
 mkdirSync(RUN, { recursive: true });
 
 const [, , env, ...flags] = process.argv;
-if (env !== 'local' && env !== 'sandbox') { console.error('uso: run.mjs <local|sandbox> [--sin-montaje] [--flujo F1]'); process.exit(2); }
+if (env !== 'local' && env !== 'sandbox') { console.error('uso: run.mjs <local|sandbox> [--ref rama] [--flujo F1] [--arbol] [--sin-montaje] [--mantener] [--bajar]'); process.exit(2); }
 const sinMontaje = flags.includes('--sin-montaje');
 const mantener = flags.includes('--mantener'); // LOTE 309: deja el montaje arriba para iterar
 const bajar = flags.includes('--bajar'); // LOTE 309: solo limpia y baja un montaje dejado con --mantener
 const flujo = flags.includes('--flujo') ? flags[flags.indexOf('--flujo') + 1] : null;
-const ref = flags.includes('--ref') ? flags[flags.indexOf('--ref') + 1] : null;
-if (ref && env !== 'local') { console.error('--ref solo aplica a local'); process.exit(2); }
-if (ref && !/^[\w./-]+$/.test(ref)) { console.error('ref invalida'); process.exit(2); }
-if (ref) process.env.E2E_BACKEND_REF = process.env.E2E_BACKEND_REF ?? ref; // E2E_BACKEND_REF deja elegir otra rama de backend (main frente a master)
+const refPedida = flags.includes('--ref') ? flags[flags.indexOf('--ref') + 1] : null;
+// LOTE 342: lo normal en local es compilar desde git (frontend master y backend main, o la rama de --ref en los dos repos).
+// Compilar el frontend desde el arbol de trabajo solo con --arbol: el 26-11 eso dejo a F1 colgado en el PIN del mesero.
+const arbol = flags.includes('--arbol');
+if (refPedida && env !== 'local') { console.error('--ref solo aplica a local'); process.exit(2); }
+if (refPedida && arbol) { console.error('--ref y --arbol se excluyen'); process.exit(2); }
+if (refPedida && !/^[\w./-]+$/.test(refPedida)) { console.error('ref invalida'); process.exit(2); }
+const ref = env === 'local' && !arbol ? (refPedida ?? 'master') : null; // frontend a probar (git archive)
+if (refPedida) process.env.E2E_BACKEND_REF = process.env.E2E_BACKEND_REF ?? refPedida; // sin --ref el montaje usa backend main
+if (env === 'local' && arbol) console.log('AVISO --arbol: el frontend se compila desde el arbol de trabajo (archivos sin commit y .env locales incluidos). No sirve como prueba de un commit; lo normal es --ref.');
+if (env === 'local' && sinMontaje) console.log('AVISO --sin-montaje: se reutiliza un montaje que ya corrio otros flujos. El estado que dejaron (stock, turnos, pedidos) se arrastra; el 26-11 F2 y F9 fallaron asi y pasaron con montaje limpio.');
+// LOTE 342: lo normal en local es un montaje limpio por flujo. Con mas de un flujo (o sin --flujo) este mismo script se llama una vez por flujo.
+const FLUJOS_LOCAL = ['F1', 'F2', 'F5', 'F8', 'F9', 'F10', 'F11', 'F12', 'F13'];
+const listaFlujos = (flujo ?? (env === 'local' ? FLUJOS_LOCAL.join('|') : 'F1|F5|F8|F9')).split('|').filter(Boolean);
+if (env === 'local' && !sinMontaje && !mantener && !bajar && listaFlujos.length > 1) {
+  const resumenFlujos = [];
+  const puertosLibres = () => {
+    for (let i = 0; i < 30; i++) {
+      const r = spawnSync('powershell.exe', ['-NoProfile', '-Command', '(Get-NetTCPConnection -State Listen -LocalPort 4299,5175 -ErrorAction SilentlyContinue | Measure-Object).Count'], { encoding: 'utf8' });
+      if (String(r.stdout).trim() === '0') return true;
+      spawnSync('powershell.exe', ['-NoProfile', '-Command', 'Start-Sleep -Seconds 1']);
+    }
+    return false;
+  };
+  for (const f of listaFlujos) {
+    const args = [fileURLToPath(import.meta.url), 'local', '--flujo', f, ...(refPedida ? ['--ref', refPedida] : []), ...(arbol ? ['--arbol'] : [])];
+    const t = Date.now();
+    let r = null; let nota = '';
+    // Un reintento solo si el flujo cayo por el preview antes de correr pruebas (falla de montaje, no del flujo).
+    for (let intento = 1; intento <= 2; intento++) {
+      if (!puertosLibres()) console.log('AVISO: 4299 o 5175 siguen ocupados tras 30 s');
+      console.log(`\n######## FLUJO ${f}: montaje limpio${intento > 1 ? ' (REINTENTO por preview)' : ''}`);
+      r = spawnSync(process.execPath, args, { stdio: ['ignore', 'pipe', 'pipe'], encoding: 'utf8', env: process.env, maxBuffer: 1 << 26 });
+      process.stdout.write(r.stdout ?? ''); process.stderr.write(r.stderr ?? '');
+      const salida = `${r.stdout ?? ''}${r.stderr ?? ''}`;
+      if (r.status === 0 || !/preview 5175 no respondio/.test(salida) || /== RESULTADO/.test(salida)) break;
+      nota = ' (1 reintento por preview)';
+    }
+    resumenFlujos.push(`${r.status === 0 ? 'OK   ' : 'FALLA'} ${f} rc=${r.status} ${Math.round((Date.now() - t) / 1000)} s${nota}`);
+  }
+  console.log(`\n== RESUMEN POR FLUJO (montaje limpio cada uno)\n${resumenFlujos.join('\n')}`);
+  process.exit(resumenFlujos.every((l) => l.startsWith('OK')) ? 0 : 1);
+}
 
 const dotenv = () => Object.fromEntries(readFileSync(resolve(FE, '.env.e2e'), 'utf8').split(/\r?\n/).map((l) => l.match(/^([A-Z0-9_]+)=(.*)$/)).filter(Boolean).map((m) => [m[1], m[2].trim()]));
 const GIT_BASH = 'C:/Program Files/Git/bin/bash.exe';
@@ -115,16 +156,18 @@ async function subirPreview() {
   const pvLog = openSync(resolve(RUN, 'preview.log'), 'w');
   const child = spawn('npx', ['vite', 'preview', '--config', 'e2e/vite.e2e.config.ts', '--mode', 'e2e'], { cwd: FE, shell: true, detached: true, stdio: ['ignore', pvLog, pvLog] });
   child.unref();
-  for (let i = 0; i < 30; i++) {
-    try { if ((await fetch('http://127.0.0.1:5175/login')).ok) return; } catch { /* aun no */ }
+  // LOTE 342: con un montaje por flujo el preview a veces tarda mas de 30 s en responder; se espera hasta 90 s y se muestra su log si no llega.
+  for (let i = 0; i < 90; i++) {
+    try { if ((await fetch('http://127.0.0.1:5175/login')).ok) { if (i > 30) console.log(`preview 5175 respondio a los ${i} s`); return; } } catch { /* aun no */ }
     await espera(1000);
   }
+  console.log(`preview.log (final): ${readFileSync(resolve(RUN, 'preview.log'), 'utf8').slice(-600)}`);
   throw new Error('preview 5175 no respondio');
 }
 
 function correrPlaywright() {
   // LOTE 321: cada flujo con limite de palabra (F1 no debe tomar F10)
-  const grep = (flujo ?? (env === 'local' ? 'F1|F2|F5|F8|F9|F10|F11|F13' : 'F1|F5|F8|F9')).split('|').map((x) => `${x}(?![0-9])`).join('|');
+  const grep = listaFlujos.map((x) => `${x}(?![0-9])`).join('|');
   return npx(['playwright', 'test', '--config', 'e2e/playwright.config.ts', '--grep', `"${grep}"`], { E2E_ENV: env, E2E_FECHA: process.env.E2E_FECHA ?? fechaLocal() });
 }
 function fechaLocal() {
@@ -160,10 +203,19 @@ if (bajar) {
 }
 let rc = 1;
 let antes = [];
+// LOTE 342: F12 necesita el sandbox local en plan TODO 19.900 con Fidelizacion apagada; se prepara aqui y se revierte en el finally.
+const conF12 = env === 'local' && listaFlujos.includes('F12');
+let f12Preparado = false;
 try {
   if (env === 'local') {
     if (!sinMontaje) { prepararLocal(); await subirBackend(); }
     if (!sinMontaje || !existsSync(resolve(here, '.dist/index.html'))) await subirPreview();
+  }
+  if (conF12) {
+    const p = psqlFile(resolve(here, 'sql/f12_preparar.sql'));
+    console.log(`F12 precondicion rc=${p.rc}: ${p.out.trim()}`);
+    if (p.rc !== 0) throw new Error('precondicion de F12 fallo');
+    f12Preparado = true;
   }
   antes = conteo();
   if (antes.length !== 13) throw new Error(`conteo inicial incompleto (${antes.length} de 13)`); // LOTE 310: + compras
@@ -188,6 +240,11 @@ try {
     console.log(`conteo despues:\n${despues.join('\n')}\nconteos_identicos=${antes.length > 0 && distintos.length === 0 ? 'si' : 'NO'}`);
     if (distintos.length > 0 || antes.length === 0) { console.log(`DISTINTOS: ${distintos.join(' ; ')}`); rc = rc || 1; }
   };
+  if (f12Preparado) {
+    const r = psqlFile(resolve(here, 'sql/f12_revertir.sql'));
+    console.log(`F12 precondicion revertida rc=${r.rc}: ${r.out.trim()}`);
+    if (r.rc !== 0 || !/plan_precio=STARTER\|29000 filas_modulo=0/.test(r.out)) { console.log('F12 REVERSION NO VERIFICADA'); rc = rc || 1; }
+  }
   if (env === 'local') {
     const l = psqlFile(resolve(here, 'sql/limpieza.sql'));
     console.log(`limpieza local rc=${l.rc}: ${l.out.trim()}`);

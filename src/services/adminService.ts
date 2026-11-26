@@ -1477,7 +1477,8 @@ export const adminService = {
   async menuImportParse(files: File[]): Promise<MenuImportParseResult> {
     const fd = new FormData();
     files.forEach(f => fd.append('files', f));
-    const { data } = await api.postForm<MenuImportParseResult>('/admin/menu-import/parse', fd, 120_000);
+    // LOTE 340-C: 180 s (el backend corta Gemini a los 150 s y nginx esta ruta a los 180 s)
+    const { data } = await api.postForm<MenuImportParseResult>('/admin/menu-import/parse', fd, 180_000);
     return data;
   },
 
